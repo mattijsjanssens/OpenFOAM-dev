@@ -1,0 +1,34 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  dev                                   |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+Build  : dev-9711774b2831
+Exec   : Test-IOdictionary2
+Date   : Mar 15 2016
+Time   : 14:17:34
+Host   : "bb"
+PID    : 985
+Case   : /home/mattijs/OpenFOAM/mattijs-dev/run/Customers/Mattijs/IOdictionary2
+nProcs : 1
+sigFpe : Enabling floating point exception trapping (FOAM_SIGFPE).
+fileModificationChecking : Monitoring run-time modified files using timeStampMaster
+allowSystemOperations : Allowing user-supplied system call operations
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+Create time
+
+
+
+--> FOAM FATAL IO ERROR: 
+cannot find file
+
+file: /home/mattijs/OpenFOAM/mattijs-dev/run/Customers/Mattijs/IOdictionary2/system/controlDict at line 0.
+
+    From function regIOobject::readStream()
+    in file db/regIOobject/regIOobjectRead.C at line 72.
+
+FOAM exiting
+
