@@ -28,6 +28,7 @@ License
 #include "demandDrivenData.H"
 #include "dictionary.H"
 #include "data.H"
+#include "IOdictionary2.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -285,15 +286,15 @@ Foam::GeometricField<Type, PatchField, GeoMesh>::GeometricField
     const Mesh& mesh,
     const dimensionSet& ds,
     const Field<Type>& iField,
-    const PtrList<PatchField<Type>>& ptfl,
-    fileEventNo_(this->eventNo())
+    const PtrList<PatchField<Type>>& ptfl
 )
 :
     DimensionedField<Type, GeoMesh>(io, mesh, ds, iField),
     timeIndex_(this->time().timeIndex()),
     field0Ptr_(NULL),
     fieldPrevIterPtr_(NULL),
-    boundaryField_(mesh.boundary(), *this, ptfl)
+    boundaryField_(mesh.boundary(), *this, ptfl),
+    fileEventNo_(this->eventNo())
 {
     if (debug)
     {
@@ -990,147 +991,88 @@ writeData(Ostream& os) const
 //XXXXXXXXXXXXXXXXXXXXXXXXX
 //MEJ
 template<class Type, template<class> class PatchField, class GeoMesh>
-bool Foam::GeometricField<Type, PatchField, GeoMesh>::readFromParent()
-{
-    bool ok = false;
-    if
-    (
-       &db()
-     != dynamic_cast<const objectRegistry*>(&db().time())
-    )
-    {
-        const IOdictionary2* parentPtr =
-            lookupObjectPtr<regIOobject>(db().parent(), name(), false);
-        if (parentPtr)
-        {
-            IOdictionary2& parent = const_cast<IOdictionary2&>(*parentPtr);
-
-            ok = parent.readFromParent();
-
-            //- Problem: event numbers are local to objectRegistry
-            //  so objects on different registries cannot be compared.
-            //  Instead store the event number from the event of the
-            //  level at which the file was read
-            if (parent.fileEventNo_ > fileEventNo_)
-            {
-                autoPtr<Istream> str(parent.readPart(*this));
-                ok = readData(str());
-                setUpToDate();
-                fileEventNo_ = parent.fileEventNo_;
-            }
-            return ok;
-        }
-    }
-    else
-    {
-        // Highest registered. This is always based on file!
-        // It will be updated by readIfMotified
-        //ok = readData(readStream(typeName));
-        //close();
-    }
-
-    return ok;
-}
-template<class Type, template<class> class PatchField, class GeoMesh>
-bool Foam::GeometricField<Type, PatchField, GeoMesh>::writeToParent()
-{
-    bool ok = false;
-    if
-    (
-       &db()
-     != dynamic_cast<const objectRegistry*>(&db().time())
-    )
-    {
-        const Type* parentPtr =
-            lookupObjectPtr<Type>(db().parent(), name(), false);
-        if (parentPtr)
-        {
-            Type& parent = const_cast<Type&>(*parentPtr);
-
-            // Update parent from *this
-            {
-                OStringStream os;
-                writeData(os);
-                IStringStream is(os.str());
-                ok = parent.readPart(*this, is);
-            }
-
-            // Update parent
-            parent.writeToParent<Type>();
-
-            return ok;
-        }
-    }
-    else
-    {
-        // Highest registered. This is always based on file!
-        // It will be written itself (hopefully) through the
-        // objectRegistry::write()
-    }
-
-    return ok;
-}
-template<class Type, template<class> class PatchField, class GeoMesh>
 bool Foam::GeometricField<Type, PatchField, GeoMesh>::read()
 {
-    // Check if there is a registered parent and if so read from that
-    bool ok = readFromParent<IOdictionary2>();
-    if (ok)
-    {
-        //Pout << "IOdictionary2::read() : read from parent" << endl;
-        return ok;
-    }
+    bool isTime =(&this->db() == dynamic_cast<const objectRegistry*>(&this->db().time()));
 
-    if
-    (
-       &db()
-     != dynamic_cast<const objectRegistry*>(&db().time())
-    )
-    {
-        // See if can read from file anywhere along the path up. Construct
-        // and register intermediate IOdictionaries as we go along.
+    // 1. Check if there is a registered parent and if so read from that
 
+    if (!isTime)
+    {
         //IOobject parentIO(*this, db().parent());
         IOobject parentIO
         (
-            name(),
-            instance(),
-            local(),
-            db().parent(),
-            readOpt(),
-            writeOpt(),
-            registerObject()
+            this->name(),
+            this->instance(),
+            this->local(),
+            this->db().parent(),
+            this->readOpt(),
+            this->writeOpt(),
+            this->registerObject()
         );
 
-        //Pout<< "IOdictionary2::read() :"
-        //    << " : parent object:" << parentIO.objectPath()
-        //    << " : this event:" << fileEventNo_ << endl;
-
-        IOdictionary2* parentPtr = readFileAndRegister(parentIO);
+        const IOdictionary2* parentPtr =
+            IOdictionary2::lookupObjectPtr<IOdictionary2>
+            (
+                parentIO.db(),
+                parentIO.name(),
+                true
+            );
 
         if (parentPtr)
         {
-            //Pout << "IOdictionary2::read() : read parent file" << endl;
-            // Read contents by trying again - this should trigger the
-            // readFromParent()
+            const IOdictionary2& parent = *parentPtr;
+
+            word key
+            (
+                IOdictionary2::scopedKey
+                (
+                    this->name(),
+                    this->db().dbDir(),
+                    parent.db().dbDir()
+                )
+            );
+
+            const entry* ePtr = parent.lookupScopedEntryPtr
+            (
+                key,
+                false,
+                true            // allow pattern match
+            );
+            if (!ePtr)
+            {
+                FatalIOErrorInFunction(parent)
+                    << "Did not find entry " << key
+                    << " in parent dictionary " << this->name()
+                    << exit(FatalIOError);
+            }
+
+            this->readFields(ePtr->dict());
+            return true;
+        }
+
+
+        // 2. Search for parent file
+        autoPtr<IOobject> fileIO = IOdictionary2::findFile(parentIO);
+        if (fileIO.valid())
+        {
+            // Read from file
+            IOdictionary2* dictPtr = new IOdictionary2(fileIO);
+            dictPtr->store();
+
+            // Recurse to find the newly stored object
             return read();
         }
     }
 
-    // Read normal
-    ok = readData(readStream(typeName));
-    close();
-    setUpToDate();
-    fileEventNo_ = eventNo();
-    //Pout<< "IOdictionary2::read() :"
-    //    << " read " << objectPath() << " eve:" << fileEventNo_ << endl;
 
+    // 3. Normal, local reading
+    bool ok = this->readData(this->readStream(typeName));
+    this->close();
+    this->setUpToDate();
+    this->fileEventNo_ = this->eventNo();
     return ok;
 }
-
-
-
-
 //MEJ
 //XXXXXXXXXXXXXXXXXXXXXXXXX
 

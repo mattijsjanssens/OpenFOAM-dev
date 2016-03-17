@@ -496,55 +496,54 @@ public:
 
         // To be moved into objectRegistry
 
-            //- Lookup object. Optionally recursive
-            template<class Type>
-            static const Type* lookupObjectPtr
-            (
-                const objectRegistry& obr,
-                const word& name,
-                const bool recurse
-            )
-            {
-                objectRegistry::const_iterator iter = obr.find(name);
-                if (iter != obr.end())
-                {
-                    return dynamic_cast<const Type*>(iter());
-                }
-                else if
-                (
-                    recurse
-                 && &obr != dynamic_cast<const objectRegistry*>(&obr.time())
-                )
-                {
-                    return lookupObjectPtr<Type>(obr.parent(), name, recurse);
-                }
-                else
-                {
-                    return NULL;
-                }
-            }
+//             //- Lookup object. Optionally recursive
+//             static const Type* lookupObjectPtr
+//             (
+//                 const objectRegistry& obr,
+//                 const word& name,
+//                 const bool recurse
+//             )
+//             {
+//                 objectRegistry::const_iterator iter = obr.find(name);
+//                 if (iter != obr.end())
+//                 {
+//                     return dynamic_cast<const Type*>(iter());
+//                 }
+//                 else if
+//                 (
+//                     recurse
+//                  && &obr != dynamic_cast<const objectRegistry*>(&obr.time())
+//                 )
+//                 {
+//                     return lookupObjectPtr<Type>(obr.parent(), name, recurse);
+//                 }
+//                 else
+//                 {
+//                     return NULL;
+//                 }
+//             }
 
         // regIOobject
 
             //- WriteData member function required by regIOobject
             virtual bool writeData(Ostream&) const;
 
-            //- Return stream for obj to read itself
-            virtual autoPtr<Istream> readPart(const IOobject& obj) const;
-
-            //- Read part from Istream
-            virtual bool readPart(const IOobject& child, Istream&);
+//             //- Return stream for obj to read itself
+//             virtual autoPtr<Istream> readPart(const IOobject& obj) const;
+// 
+//             //- Read part from Istream
+//             virtual bool readPart(const IOobject& child, Istream&);
 
             //- Read dictionary from parent or file
             virtual bool read();
 
-            //- Write using given format, version and compression
-            virtual bool writeObject
-            (
-                IOstream::streamFormat,
-                IOstream::versionNumber,
-                IOstream::compressionType
-            ) const;
+//             //- Write using given format, version and compression
+//             virtual bool writeObject
+//             (
+//                 IOstream::streamFormat,
+//                 IOstream::versionNumber,
+//                 IOstream::compressionType
+//             ) const;
 
 
 
