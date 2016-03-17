@@ -26,7 +26,8 @@ License
 #include "IOdictionary2.H"
 #include "Pstream.H"
 #include "Time.H"
-#include "ITstream.H"
+#include "IOstreams.H"
+#include "SubList.H"
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
@@ -161,6 +162,214 @@ bool Foam::IOdictionary2::writeData(Ostream& os) const
 }
 
 
+//XXXXXX
+void Foam::IOdictionary2::setScoped
+(
+    dictionary& dict,
+    const UList<word>& scope,
+    const dictionary& subDict
+)
+{
+    if (scope.size() == 1)
+    {
+        dict.set(scope[0], subDict);
+    }
+    else
+    {
+        const dictionary& levelDict = dict.subDict(scope[0]);
+
+        setScoped
+        (
+            const_cast<dictionary&>(levelDict),
+            SubList<word>(scope, scope.size()-1, 1),
+            subDict
+        );
+    }
+}
+Foam::word Foam::IOdictionary2::scopedKey
+(
+    const word& name,
+    const fileName& dir,
+    const fileName& topDir
+)
+{
+    wordList dirElems(dir.components());
+
+    label start = topDir.components().size();
+
+    word key(':');
+    for (label i = start; i < dirElems.size(); i++)
+    {
+        key += dirElems[i];
+        if (i < dirElems.size()-1)
+        {
+            key += '.';
+        }
+    }
+    return key;
+}
+Foam::autoPtr<Foam::IOobject> Foam::IOdictionary2::findFile
+(
+    const IOobject& io
+)
+{
+    fileName fName(io.filePath());
+    if (isFile(fName))
+    {
+        InfoInFunction
+            << "    Found file " << fName << endl;
+        return autoPtr<IOobject>(new IOobject(io));
+    }
+
+    bool isTime =
+    (
+       &io.db()
+     == dynamic_cast<const objectRegistry*>(&io.db().time())
+    );
+
+    if (!isTime)
+    {
+        //IOobject parentIO(io, io.db().parent());
+        IOobject parentIO
+        (
+            io.name(),
+            io.instance(),
+            io.local(),
+            io.db().parent(),
+            io.readOpt(),
+            io.writeOpt(),
+            io.registerObject()
+        );
+        return findFile(parentIO);
+    }
+    else
+    {
+        return autoPtr<IOobject>(NULL);
+    }
+}
+bool Foam::IOdictionary2::read2()
+{
+    bool isTime =(&db() == dynamic_cast<const objectRegistry*>(&db().time()));
+
+    // 1. Check if there is a registered parent and if so read from that
+
+    if (!isTime)
+    {
+        //IOobject parentIO(*this, db().parent());
+        IOobject parentIO
+        (
+            name(),
+            instance(),
+            local(),
+            db().parent(),
+            readOpt(),
+            writeOpt(),
+            registerObject()
+        );
+
+        const IOdictionary2* parentPtr = lookupObjectPtr<IOdictionary2>
+        (
+            parentIO.db(),
+            parentIO.name(),
+            true
+        );
+
+        if (parentPtr)
+        {
+            const IOdictionary2& parent = *parentPtr;
+
+            word key(scopedKey(name(), db().dbDir(), parent.db().dbDir()));
+
+            const entry* ePtr = parent.lookupScopedEntryPtr
+            (
+                key,
+                false,
+                true            // allow pattern match
+            );
+            if (!ePtr)
+            {
+                FatalIOErrorInFunction(parent)
+                    << "Did not find entry " << key
+                    << " in parent dictionary " << name()
+                    << exit(FatalIOError);
+            }
+
+            dictionary::operator=(ePtr->dict());
+            return true;
+        }
+
+
+        // 2. Search for parent file
+        autoPtr<IOobject> fileIO = findFile(parentIO);
+        if (fileIO.valid())
+        {
+            // Read from file
+            IOdictionary2* dictPtr = new IOdictionary2(fileIO);
+            dictPtr->store();
+
+            // Recurse to find the newly stored object
+            return read2();
+        }
+    }
+
+
+    // 3. Normal, local reading
+    bool ok = readData(readStream(typeName));
+    close();
+    setUpToDate();
+    fileEventNo_ = eventNo();
+
+    return ok;
+}
+bool Foam::IOdictionary2::writeObject2
+(
+    IOstream::streamFormat fmt,
+    IOstream::versionNumber ver,
+    IOstream::compressionType cmp
+) const
+{
+    bool isTime =(&db() == dynamic_cast<const objectRegistry*>(&db().time()));
+
+    // 1. Check if there is a registered parent and if so read from that
+
+    if (!isTime)
+    {
+        //IOobject parentIO(*this, db().parent());
+        IOobject parentIO
+        (
+            name(),
+            instance(),
+            local(),
+            db().parent(),
+            readOpt(),
+            writeOpt(),
+            registerObject()
+        );
+
+        const IOdictionary2* parentPtr = lookupObjectPtr<IOdictionary2>
+        (
+            parentIO.db(),
+            parentIO.name(),
+            true
+        );
+
+        if (parentPtr)
+        {
+            IOdictionary2& parent = const_cast<IOdictionary2&>(*parentPtr);
+
+            wordList dirElems(db().dbDir().components());
+            label start = parent.db().dbDir().components().size();
+
+            SubList<word> scope(dirElems, dirElems.size()-start, start);
+            setScoped(parent, scope, *this);
+        }
+    }
+
+    return regIOobject::writeObject(fmt, ver, cmp);
+}
+//XXXXXX
+
+
 Foam::IOdictionary2* Foam::IOdictionary2::readFileAndRegister
 (
     const IOobject& io
@@ -195,9 +404,9 @@ Foam::IOdictionary2* Foam::IOdictionary2::readFileAndRegister
 
         dictPtr->store();
 
-        //Pout<< "IOdictionary2::readFileAndRegister() :"
-        //    << " read dictionary:" << *dictPtr
-        //    << " event:" << dictPtr->fileEventNo_ << endl;
+        Pout<< "IOdictionary2::readFileAndRegister() :"
+            << " read dictionary:" << *dictPtr
+            << " event:" << dictPtr->fileEventNo_ << endl;
 
         return dictPtr;
     }
@@ -232,9 +441,9 @@ Foam::IOdictionary2* Foam::IOdictionary2::readFileAndRegister
             // Override fileEvent with that of parent
             dictPtr->fileEventNo_ = parentPtr->fileEventNo_;
 
-            //Pout<< "IOdictionary2::readFileAndRegister() :"
-            ///    << " created Istream dictionary:" << dictPtr->objectPath()
-            //    << " event:" << dictPtr->fileEventNo_ << endl;
+            Pout<< "IOdictionary2::readFileAndRegister() :"
+                << " created Istream dictionary:" << dictPtr->objectPath()
+                << " event:" << dictPtr->fileEventNo_ << endl;
 
             return dictPtr;
         }
@@ -281,97 +490,110 @@ Foam::autoPtr<Foam::Istream> Foam::IOdictionary2::readPart
 }
 
 
-// // If the object is already registered: read from parent
-// bool Foam::IOdictionary2::readFromParent()
-// {
-//     //Pout<< "IOdictionary2::readFromParent() :"
-//     //    << " :" << objectPath()
-//     //    << " ev:" << fileEventNo_ << endl;
-// 
-//     bool ok = false;
-//     if
-//     (
-//        &db()
-//      != dynamic_cast<const objectRegistry*>(&db().time())
-//     )
-//     {
-//         // Pout<< "IOdictionary2::readFromParent() :"
-//         //     << " : searching for:" << name()
-//         //     << " in parent:" << db().parent().name()
-//         //     << " with contents:" << db().parent().sortedToc()
-//         //     << endl;
-// 
-// 
-//         const IOdictionary2* parentPtr =
-//             lookupObjectPtr<IOdictionary2>(db().parent(), name(), false);
-//         if (parentPtr)
-//         {
-//             IOdictionary2& parent = const_cast<IOdictionary2&>(*parentPtr);
-// 
-//             //Pout<< "IOdictionary2::readFromParent() :"
-//             //    << " : found parent object:" << parent.objectPath()
-//             //    << " evmet:" << parent.fileEventNo_ << endl;
-// 
-//             ok = parent.readFromParent();
-// 
-//             //Pout<< "IOdictionary2::readFromParent() :"
-//             //    << " : read parent " << parent.objectPath()
-//             //    << "  ok:" << ok
-//             //    << " parent event:" << parent.fileEventNo_
-//             //    << " my event:" << fileEventNo_ << endl;
-// 
-//             //- Problem: event numbers are local to objectRegistry
-//             //  so objects on different registries cannot be compared.
-//             //  Instead store the event number from the event of the
-//             //  level at which the file was read
-//             if (parent.fileEventNo_ > fileEventNo_)
-//             {
-//                 //Pout<< "IOdictionary2::readFromParent() :"
-//                 //    << " : get stream from parent " << parent.objectPath()
-//                 //    << endl;
-// 
-//                 autoPtr<Istream> str(parent.readPart(*this));
-//                 ok = readData(str());
-//                 setUpToDate();
-//                 fileEventNo_ = parent.fileEventNo_;
-//                 //Pout<< "IOdictionary2::readFromParent() :"
-//                 //    << " read myself:" << objectPath()
-//                 //    << " event:" << fileEventNo_
-//                 //    << " from parent:" << parent.objectPath()
-//                 //    << " event:" << parent.fileEventNo_ << endl;
-//             }
-//             return ok;
-//         }
-//     }
-//     else
-//     {
-//         // Highest registered. This is always based on file!
-//         // It will be updated by readIfMotified
-//         //ok = readData(readStream(typeName));
-//         //close();
-//     }
-// 
-//     return ok;
-// }
+// If the object is already registered: read from parent
+bool Foam::IOdictionary2::readFromParent()
+{
+    bool ok = false;
+
+    bool isTime =(&db() == dynamic_cast<const objectRegistry*>(&db().time()));
+
+    if (!isTime)
+    {
+        const IOdictionary2* parentPtr =
+            lookupObjectPtr<IOdictionary2>(db().parent(), name(), false);
+        if (parentPtr)
+        {
+            IOdictionary2& parent = const_cast<IOdictionary2&>(*parentPtr);
+
+            Pout<< "IOdictionary2::readFromParent() :"
+                << " : found parent object:" << parent.objectPath()
+                << " evmet:" << parent.fileEventNo_ << endl;
+
+            ok = parent.readFromParent();
+
+            Pout<< "IOdictionary2::readFromParent() :"
+                << " : read parent " << parent.objectPath()
+                << "  ok:" << ok
+                << " parent event:" << parent.fileEventNo_
+                << " my event:" << fileEventNo_ << endl;
+
+            //- Problem: event numbers are local to objectRegistry
+            //  so objects on different registries cannot be compared.
+            //  Instead store the event number from the event of the
+            //  level at which the file was read
+            if (parent.fileEventNo_ > fileEventNo_)
+            {
+                Pout<< "IOdictionary2::readFromParent() :"
+                    << " : get stream from parent " << parent.objectPath()
+                    << endl;
+
+                //Note: can use stream or just use subDict
+                //autoPtr<Istream> str(parent.readPart(*this));
+                //ok = readData(str());
+
+                const dictionary& dict = parent.subDict(db().name());
+                dictionary::operator=(dict);
+                ok = true;
+
+
+                setUpToDate();
+                fileEventNo_ = parent.fileEventNo_;
+                Pout<< "IOdictionary2::readFromParent() :"
+                    << " read myself:" << objectPath()
+                    << " event:" << fileEventNo_
+                    << " from parent:" << parent.objectPath()
+                    << " event:" << parent.fileEventNo_ << endl;
+            }
+            return ok;
+        }
+    }
+    else
+    {
+        // Highest registered. This is always based on file!
+        // It will be updated by readIfMotified
+        //ok = readData(readStream(typeName));
+        //close();
+    }
+
+    return ok;
+}
 
 
 bool Foam::IOdictionary2::read()
 {
     //Pout<< "IOdictionary2::read()" << endl;
 
-    // Check if there is a registered parent and if so read from that
-    bool ok = readFromParent<IOdictionary2>();
-    if (ok)
+    bool isTime =(&db() == dynamic_cast<const objectRegistry*>(&db().time()));
+
+    // 1. Check if there is a registered parent and if so read from that
+
+    if (!isTime)
     {
-        //Pout << "IOdictionary2::read() : read from parent" << endl;
-        return ok;
+        const IOdictionary2* parentPtr =
+            lookupObjectPtr<IOdictionary2>(db().parent(), name(), false);
+        if (parentPtr)
+        {
+            // Have parent dictionary. Make sure it is uptodate with
+            // higher levels and (ultimately) file
+
+            IOdictionary2& parent = const_cast<IOdictionary2&>(*parentPtr); 
+
+            bool ok = parent.readFromParent();
+            if (ok)
+            {
+                autoPtr<Istream> str(parent.readPart(*this));
+                ok = readData(str());
+                setUpToDate();
+                fileEventNo_ = parent.fileEventNo_;
+                return ok;
+            }
+        }
     }
 
-    if
-    (
-       &db()
-     != dynamic_cast<const objectRegistry*>(&db().time())
-    )
+
+    // 2. Check if there is a file at higher levels
+
+    if (!isTime)
     {
         // See if can read from file anywhere along the path up. Construct
         // and register intermediate IOdictionaries as we go along.
@@ -396,7 +618,7 @@ bool Foam::IOdictionary2::read()
 
         if (parentPtr)
         {
-            //Pout << "IOdictionary2::read() : read parent file" << endl;
+            Pout << "IOdictionary2::read() : read parent file" << endl;
             // Read contents by trying again - this should trigger the
             // readFromParent()
             return read();
@@ -404,17 +626,13 @@ bool Foam::IOdictionary2::read()
     }
 
     // Read normal
-    ok = readData(readStream(typeName));
+    bool ok = readData(readStream(typeName));
     close();
     setUpToDate();
     fileEventNo_ = eventNo();
-    //Pout<< "IOdictionary2::read() :"
-    //    << " read " << objectPath() << " eve:" << fileEventNo_ << endl;
 
     return ok;
 }
-
-//XXXXXXXXXX
 bool Foam::IOdictionary2::readPart
 (
     const IOobject& child,

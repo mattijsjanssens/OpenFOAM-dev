@@ -107,7 +107,7 @@ Foam::IOdictionary2::IOdictionary2(const IOobject& io, const bool allowIndirect)
     fileEventNo_(labelMin)
 {
     Pout<< "IOdictionary2::IOdictionary2 :" << objectPath() << endl;
-    read();
+    read2();
 }
 
 

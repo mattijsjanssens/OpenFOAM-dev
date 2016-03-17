@@ -49,6 +49,34 @@ int main(int argc, char *argv[])
 //     Pout<< "Mesh:" << mesh.name() << endl;
 //     Pout<< "Mesh.db():" << mesh.dbDir() << endl;
 
+{
+    IOdictionary bla
+    (
+        IOobject
+        (
+            "bla",
+            runTime.system(),
+            runTime,
+            IOobject::MUST_READ_IF_MODIFIED,
+            IOobject::NO_WRITE
+        )
+    );
+    Pout<< "bla:" << bla << endl;
+
+    const entry* ePtr = bla.lookupScopedEntryPtr
+    (
+        ":level1.level2A.level3A",
+        false,
+        true            // allow pattern match
+    );
+    if (ePtr)
+    {
+        Pout<< "found entry : isDict:" << ePtr->isDict() << endl;
+        ePtr->write(Pout);
+    }
+}
+
+
     objectRegistry level1
     (
         IOobject
@@ -144,7 +172,7 @@ int main(int argc, char *argv[])
 
     // Note that this does not actually write the file; it only updates
     // the levels; the actual file writing is done by the object registry
-    dictB.writeObject
+    dictB.writeObject2
     (
         dictB.time().writeFormat(),
         IOstream::currentVersion,
@@ -156,8 +184,6 @@ int main(int argc, char *argv[])
 
     // Manually enforce writing:
     //runTime.lookupObject<IOdictionary2>("bla").regIOobject::write();
-
-
 
 
 

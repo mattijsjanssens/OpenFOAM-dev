@@ -147,7 +147,7 @@ public:
             }
 
             //- Read from parent (if it is registered)
-            template<class Type>
+            //template<class Type>
             bool readFromParent();
 
             //- Write to parent (if it is registered)
@@ -172,6 +172,31 @@ public:
             IOstream::compressionType
         ) const;
 
+//XXXXX
+        //- Override/set entry. Move into dictionary
+        static void setScoped
+        (
+            dictionary& dict,
+            const UList<word>& scope,
+            const dictionary&
+        );
+        //- Construct key for use in dictionary scoped lookup
+        static word scopedKey(const word&, const fileName&, const fileName&);
+
+        //- Search up for file
+        static autoPtr<IOobject> findFile(const IOobject& io);
+
+        //- Read dictionary from parent or file
+        virtual bool read2();
+
+        //- Write using given format, version and compression
+        virtual bool writeObject2
+        (
+            IOstream::streamFormat,
+            IOstream::versionNumber,
+            IOstream::compressionType
+        ) const;
+//XXXXX
 
     // Member operators
 

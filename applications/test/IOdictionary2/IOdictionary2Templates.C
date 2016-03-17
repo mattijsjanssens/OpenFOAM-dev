@@ -29,78 +29,78 @@ License
 
 // * * * * * * * * * * * * * * * Members Functions * * * * * * * * * * * * * //
 
-template<class Type>
-bool Foam::IOdictionary2::readFromParent()
-{
-    //Pout<< "IOdictionary2::readFromParent() :"
-    //    << " :" << objectPath()
-    //    << " ev:" << fileEventNo_ << endl;
-
-    bool ok = false;
-    if
-    (
-       &db()
-     != dynamic_cast<const objectRegistry*>(&db().time())
-    )
-    {
-        // Pout<< "IOdictionary2::readFromParent() :"
-        //     << " : searching for:" << name()
-        //     << " in parent:" << db().parent().name()
-        //     << " with contents:" << db().parent().sortedToc()
-        //     << endl;
-
-
-        const Type* parentPtr =
-            lookupObjectPtr<Type>(db().parent(), name(), false);
-        if (parentPtr)
-        {
-            Type& parent = const_cast<Type&>(*parentPtr);
-
-            //Pout<< "IOdictionary2::readFromParent() :"
-            //    << " : found parent object:" << parent.objectPath()
-            //    << " evmet:" << parent.fileEventNo_ << endl;
-
-            ok = parent.readFromParent<Type>();
-
-            //Pout<< "IOdictionary2::readFromParent() :"
-            //    << " : read parent " << parent.objectPath()
-            //    << "  ok:" << ok
-            //    << " parent event:" << parent.fileEventNo_
-            //    << " my event:" << fileEventNo_ << endl;
-
-            //- Problem: event numbers are local to objectRegistry
-            //  so objects on different registries cannot be compared.
-            //  Instead store the event number from the event of the
-            //  level at which the file was read
-            if (parent.fileEventNo_ > fileEventNo_)
-            {
-                //Pout<< "IOdictionary2::readFromParent() :"
-                //    << " : get stream from parent " << parent.objectPath()
-                //    << endl;
-
-                autoPtr<Istream> str(parent.readPart(*this));
-                ok = readData(str());
-                setUpToDate();
-                fileEventNo_ = parent.fileEventNo_;
-                //Pout<< "IOdictionary2::readFromParent() :"
-                //    << " read myself:" << objectPath()
-                //    << " event:" << fileEventNo_
-                //    << " from parent:" << parent.objectPath()
-                //    << " event:" << parent.fileEventNo_ << endl;
-            }
-            return ok;
-        }
-    }
-    else
-    {
-        // Highest registered. This is always based on file!
-        // It will be updated by readIfMotified
-        //ok = readData(readStream(typeName));
-        //close();
-    }
-
-    return ok;
-}
+// template<class Type>
+// bool Foam::IOdictionary2::readFromParent()
+// {
+//     //Pout<< "IOdictionary2::readFromParent() :"
+//     //    << " :" << objectPath()
+//     //    << " ev:" << fileEventNo_ << endl;
+// 
+//     bool ok = false;
+//     if
+//     (
+//        &db()
+//      != dynamic_cast<const objectRegistry*>(&db().time())
+//     )
+//     {
+//         // Pout<< "IOdictionary2::readFromParent() :"
+//         //     << " : searching for:" << name()
+//         //     << " in parent:" << db().parent().name()
+//         //     << " with contents:" << db().parent().sortedToc()
+//         //     << endl;
+// 
+// 
+//         const Type* parentPtr =
+//             lookupObjectPtr<Type>(db().parent(), name(), false);
+//         if (parentPtr)
+//         {
+//             Type& parent = const_cast<Type&>(*parentPtr);
+// 
+//             //Pout<< "IOdictionary2::readFromParent() :"
+//             //    << " : found parent object:" << parent.objectPath()
+//             //    << " evmet:" << parent.fileEventNo_ << endl;
+// 
+//             ok = parent.readFromParent<Type>();
+// 
+//             //Pout<< "IOdictionary2::readFromParent() :"
+//             //    << " : read parent " << parent.objectPath()
+//             //    << "  ok:" << ok
+//             //    << " parent event:" << parent.fileEventNo_
+//             //    << " my event:" << fileEventNo_ << endl;
+// 
+//             //- Problem: event numbers are local to objectRegistry
+//             //  so objects on different registries cannot be compared.
+//             //  Instead store the event number from the event of the
+//             //  level at which the file was read
+//             if (parent.fileEventNo_ > fileEventNo_)
+//             {
+//                 //Pout<< "IOdictionary2::readFromParent() :"
+//                 //    << " : get stream from parent " << parent.objectPath()
+//                 //    << endl;
+// 
+//                 autoPtr<Istream> str(parent.readPart(*this));
+//                 ok = readData(str());
+//                 setUpToDate();
+//                 fileEventNo_ = parent.fileEventNo_;
+//                 //Pout<< "IOdictionary2::readFromParent() :"
+//                 //    << " read myself:" << objectPath()
+//                 //    << " event:" << fileEventNo_
+//                 //    << " from parent:" << parent.objectPath()
+//                 //    << " event:" << parent.fileEventNo_ << endl;
+//             }
+//             return ok;
+//         }
+//     }
+//     else
+//     {
+//         // Highest registered. This is always based on file!
+//         // It will be updated by readIfMotified
+//         //ok = readData(readStream(typeName));
+//         //close();
+//     }
+// 
+//     return ok;
+// }
 
 //- Write to parent (if it is registered)
 template<class Type>
