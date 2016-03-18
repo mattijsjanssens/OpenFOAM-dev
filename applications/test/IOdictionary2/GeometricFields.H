@@ -31,7 +31,6 @@ Description
 #ifndef GeometricFields_H
 #define GeometricFields_H
 
-#include "GeometricFieldFunctionsM.H"
 #include "GeometricScalarField.H"
 //#include "GeometricVectorField.H"
 #include "GeometricTensorField.H"
