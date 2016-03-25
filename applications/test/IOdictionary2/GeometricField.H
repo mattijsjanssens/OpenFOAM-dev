@@ -537,13 +537,13 @@ public:
             //- Read dictionary from parent or file
             virtual bool read();
 
-//             //- Write using given format, version and compression
-//             virtual bool writeObject
-//             (
-//                 IOstream::streamFormat,
-//                 IOstream::versionNumber,
-//                 IOstream::compressionType
-//             ) const;
+            //- Write using given format, version and compression
+            virtual bool writeObject
+            (
+                IOstream::streamFormat,
+                IOstream::versionNumber,
+                IOstream::compressionType
+            ) const;
 
 
 

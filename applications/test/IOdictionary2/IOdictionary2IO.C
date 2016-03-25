@@ -321,6 +321,100 @@ bool Foam::IOdictionary2::read2()
 
     return ok;
 }
+bool Foam::IOdictionary2::modified() const
+{
+    bool isTime =(&db() == dynamic_cast<const objectRegistry*>(&db().time()));
+
+    // Check if there is a registered parent and if so check that one
+
+    if (!isTime)
+    {
+        //IOobject parentIO(*this, db().parent());
+        IOobject parentIO
+        (
+            name(),
+            instance(),
+            local(),
+            db().parent(),
+            readOpt(),
+            writeOpt(),
+            registerObject()
+        );
+
+        const IOdictionary2* parentPtr = lookupObjectPtr<IOdictionary2>
+        (
+            parentIO.db(),
+            parentIO.name(),
+            true
+        );
+
+        if (parentPtr)
+        {
+            return parentPtr->modified();
+        }
+    }
+    return regIOobject::modified();
+}
+bool Foam::IOdictionary2::readIfModified()
+{
+    bool isTime =(&db() == dynamic_cast<const objectRegistry*>(&db().time()));
+
+    // Check if there is a registered parent and if so check that one
+
+    if (!isTime)
+    {
+        //IOobject parentIO(*this, db().parent());
+        IOobject parentIO
+        (
+            name(),
+            instance(),
+            local(),
+            db().parent(),
+            readOpt(),
+            writeOpt(),
+            registerObject()
+        );
+
+        const IOdictionary2* parentPtr = lookupObjectPtr<IOdictionary2>
+        (
+            parentIO.db(),
+            parentIO.name(),
+            true
+        );
+
+        if (parentPtr)
+        {
+            IOdictionary2& parent = const_cast<IOdictionary2&>(*parentPtr);
+            bool haveRead = parent.readIfModified();
+
+            if (haveRead)
+            {
+                // Read myself from parent
+                word key(scopedKey(name(), db().dbDir(), parent.db().dbDir()));
+
+                const entry* ePtr = parent.lookupScopedEntryPtr
+                (
+                    key,
+                    false,
+                    true            // allow pattern match
+                );
+                if (!ePtr)
+                {
+                    FatalIOErrorInFunction(parent)
+                        << "Did not find entry " << key
+                        << " in parent dictionary " << name()
+                        << exit(FatalIOError);
+                }
+
+                dictionary::operator=(ePtr->dict());
+
+                return true;
+            }
+        }
+    }
+
+    return regIOobject::readIfModified();
+}
 bool Foam::IOdictionary2::writeObject2
 (
     IOstream::streamFormat fmt,
@@ -330,7 +424,7 @@ bool Foam::IOdictionary2::writeObject2
 {
     bool isTime =(&db() == dynamic_cast<const objectRegistry*>(&db().time()));
 
-    // 1. Check if there is a registered parent and if so read from that
+    // 1. Check if there is a registered parent and if so write to it
 
     if (!isTime)
     {
@@ -362,6 +456,7 @@ bool Foam::IOdictionary2::writeObject2
 
             SubList<word> scope(dirElems, dirElems.size()-start, start);
             setScoped(parent, scope, *this);
+            return true;
         }
     }
 

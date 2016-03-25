@@ -72,6 +72,91 @@ void Foam::GeometricField<Type, PatchField, GeoMesh>::readFields
 template<class Type, template<class> class PatchField, class GeoMesh>
 void Foam::GeometricField<Type, PatchField, GeoMesh>::readFields()
 {
+    bool isTime =
+    (
+       &this->db()
+     == dynamic_cast<const objectRegistry*>(&this->db().time())
+    );
+
+DebugVar(isTime);
+
+    // 1. Check if there is a registered parent and if so read from that
+
+    if (!isTime)
+    {
+        //IOobject parentIO(*this, db().parent());
+        IOobject parentIO
+        (
+            this->name(),
+            this->instance(),
+            this->local(),
+            this->db().parent(),
+            this->readOpt(),
+            this->writeOpt(),
+            this->registerObject()
+        );
+
+        const IOdictionary2* parentPtr =
+            IOdictionary2::lookupObjectPtr<IOdictionary2>
+            (
+                parentIO.db(),
+                parentIO.name(),
+                true
+            );
+
+        if (parentPtr)
+        {
+            const IOdictionary2& parent = *parentPtr;
+
+DebugVar(parent);
+
+
+            word key
+            (
+                IOdictionary2::scopedKey
+                (
+                    this->name(),
+                    this->db().dbDir(),
+                    parent.db().dbDir()
+                )
+            );
+
+            const entry* ePtr = parent.lookupScopedEntryPtr
+            (
+                key,
+                false,
+                true            // allow pattern match
+            );
+            if (!ePtr)
+            {
+                FatalIOErrorInFunction(parent)
+                    << "Did not find entry " << key
+                    << " in parent dictionary " << this->name()
+                    << exit(FatalIOError);
+            }
+
+            this->readFields(ePtr->dict());
+            return;
+        }
+
+
+        // 2. Search for parent file
+        autoPtr<IOobject> fileIO = IOdictionary2::findFile(parentIO);
+        if (fileIO.valid())
+        {
+DebugVar(fileIO().objectPath());
+
+            // Read from file
+            IOdictionary2* dictPtr = new IOdictionary2(fileIO());
+            dictPtr->store();
+
+            // Recurse to find the newly stored object
+            readFields();
+            return;
+        }
+    }
+
+DebugVar("Normal, local reading");
     const IOdictionary dict
     (
         IOobject
@@ -87,8 +172,11 @@ void Foam::GeometricField<Type, PatchField, GeoMesh>::readFields()
     );
 
     this->close();
+    this->fileEventNo_ = this->eventNo();
 
     readFields(dict);
+
+    this->setUpToDate();
 }
 
 
@@ -993,7 +1081,13 @@ writeData(Ostream& os) const
 template<class Type, template<class> class PatchField, class GeoMesh>
 bool Foam::GeometricField<Type, PatchField, GeoMesh>::read()
 {
-    bool isTime =(&this->db() == dynamic_cast<const objectRegistry*>(&this->db().time()));
+    bool isTime =
+    (
+       &this->db()
+     == dynamic_cast<const objectRegistry*>(&this->db().time())
+    );
+
+DebugVar(isTime);
 
     // 1. Check if there is a registered parent and if so read from that
 
@@ -1022,6 +1116,9 @@ bool Foam::GeometricField<Type, PatchField, GeoMesh>::read()
         if (parentPtr)
         {
             const IOdictionary2& parent = *parentPtr;
+
+DebugVar(parent);
+
 
             word key
             (
@@ -1056,8 +1153,10 @@ bool Foam::GeometricField<Type, PatchField, GeoMesh>::read()
         autoPtr<IOobject> fileIO = IOdictionary2::findFile(parentIO);
         if (fileIO.valid())
         {
+DebugVar(fileIO().objectPath());
+
             // Read from file
-            IOdictionary2* dictPtr = new IOdictionary2(fileIO);
+            IOdictionary2* dictPtr = new IOdictionary2(fileIO());
             dictPtr->store();
 
             // Recurse to find the newly stored object
@@ -1065,6 +1164,7 @@ bool Foam::GeometricField<Type, PatchField, GeoMesh>::read()
         }
     }
 
+DebugVar("Normal, local reading");
 
     // 3. Normal, local reading
     bool ok = this->readData(this->readStream(typeName));
@@ -1072,6 +1172,120 @@ bool Foam::GeometricField<Type, PatchField, GeoMesh>::read()
     this->setUpToDate();
     this->fileEventNo_ = this->eventNo();
     return ok;
+}
+template<class Type, template<class> class PatchField, class GeoMesh>
+bool Foam::GeometricField<Type, PatchField, GeoMesh>::writeObject
+(
+    IOstream::streamFormat fmt,
+    IOstream::versionNumber ver,
+    IOstream::compressionType cmp
+) const
+{
+    bool isTime =
+    (
+       &this->db()
+     == dynamic_cast<const objectRegistry*>(&this->db().time())
+    );
+
+    // 1. Check if there is a registered parent and if so write to it
+
+    if (!isTime)
+    {
+        //IOobject parentIO(*this, db().parent());
+        IOobject parentIO
+        (
+            this->name(),
+            this->instance(),
+            this->local(),
+            this->db().parent(),
+            this->readOpt(),
+            this->writeOpt(),
+            this->registerObject()
+        );
+
+        const IOdictionary2* parentPtr =
+            IOdictionary2::lookupObjectPtr<IOdictionary2>
+            (
+                parentIO.db(),
+                parentIO.name(),
+                true
+            );
+
+        if (parentPtr)
+        {
+            IOdictionary2& parent = const_cast<IOdictionary2&>(*parentPtr);
+
+            wordList dirElems(this->db().dbDir().components());
+            label start = parent.db().dbDir().components().size();
+
+            SubList<word> scope(dirElems, dirElems.size()-start, start);
+
+            // Construct dictionary with empty entries. These get overwritten
+            // later
+
+            {
+                Field<Type> intFld(2);
+                intFld[0] = pTraits<Type>::one;
+                intFld[1] = 2.0*pTraits<Type>::one;
+
+                OStringStream os;
+                intFld.writeEntry("", os);
+                IStringStream is(os.str());
+
+                Pout<< "os:" << os.str() << endl;
+
+
+                //token::Compound<Field<Type>> tkn(is);
+                token t(is);
+                //is.read(t);
+                //t = token::compound::New(Field<Type>::typeName, is).ptr();
+                DebugVar(t.info());
+            }
+
+            dictionary emptyDict;
+            Field<Type> intFld(0);
+            emptyDict.add("internalField", intFld);
+            Field<Field<Type>> bouFld(0);
+            emptyDict.add("boundaryField", bouFld);
+            IOdictionary2::setScoped(parent, scope, emptyDict);
+
+            word key
+            (
+                IOdictionary2::scopedKey
+                (
+                    this->name(),
+                    this->db().dbDir(),
+                    parent.db().dbDir()
+                )
+            );
+            {
+                const entry* ePtr = parent.lookupScopedEntryPtr
+                (
+                    key + ".internalField",
+                    false,
+                    true            // allow pattern match
+                );
+                ePtr->write(Pout);
+                ITstream& str = ePtr->stream();
+                DebugVar(str.info());
+                forAll(str, i)
+                {
+                    DebugVar(str[i].info());
+                }
+            }
+            {
+                const entry* ePtr = parent.lookupScopedEntryPtr
+                (
+                    key + ".boundaryField",
+                    false,
+                    true            // allow pattern match
+                );
+                ePtr->write(Pout);
+            }
+        }
+    }
+
+    return regIOobject::writeObject(fmt, ver, cmp);
 }
 //MEJ
 //XXXXXXXXXXXXXXXXXXXXXXXXX

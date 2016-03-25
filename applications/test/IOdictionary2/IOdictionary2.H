@@ -189,6 +189,13 @@ public:
         //- Read dictionary from parent or file
         virtual bool read2();
 
+        //- Return true if the object's file (or files for objectRegistry)
+        //  have been modified. (modified state is cached by Time)
+        virtual bool modified() const;
+
+        //- Read object if modified (as set by call to modified)
+        virtual bool readIfModified();
+
         //- Write using given format, version and compression
         virtual bool writeObject2
         (

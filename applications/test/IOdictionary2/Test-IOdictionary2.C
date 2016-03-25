@@ -33,6 +33,10 @@ Description
 #include "OSspecific.H"
 #include "IOdictionary2.H"
 #include "polyMesh.H"
+#include "pointMesh.H"
+#include "pointFields.H"
+#include "scalarList.H"
+#include "vectorList.H"
 
 using namespace Foam;
 
@@ -44,37 +48,40 @@ int main(int argc, char *argv[])
     #include "addRegionOption.H"
     #include "setRootCase.H"
     #include "createTime.H"
-//     #include "createNamedPolyMesh.H"
+    #include "createNamedPolyMesh.H"
 // 
 //     Pout<< "Mesh:" << mesh.name() << endl;
 //     Pout<< "Mesh.db():" << mesh.dbDir() << endl;
 
-{
-    IOdictionary bla
-    (
-        IOobject
-        (
-            "bla",
-            runTime.system(),
-            runTime,
-            IOobject::MUST_READ_IF_MODIFIED,
-            IOobject::NO_WRITE
-        )
-    );
-    Pout<< "bla:" << bla << endl;
+// {
+//     IOdictionary bla
+//     (
+//         IOobject
+//         (
+//             "bla",
+//             runTime.system(),
+//             runTime,
+//             IOobject::MUST_READ_IF_MODIFIED,
+//             IOobject::NO_WRITE
+//         )
+//     );
+//     Pout<< "bla:" << bla << endl;
+// 
+//     const entry* ePtr = bla.lookupScopedEntryPtr
+//     (
+//         ":level1.level2A.level3A",
+//         false,
+//         true            // allow pattern match
+//     );
+//     if (ePtr)
+//     {
+//         Pout<< "found entry : isDict:" << ePtr->isDict() << endl;
+//         ePtr->write(Pout);
+//     }
+// }
 
-    const entry* ePtr = bla.lookupScopedEntryPtr
-    (
-        ":level1.level2A.level3A",
-        false,
-        true            // allow pattern match
-    );
-    if (ePtr)
-    {
-        Pout<< "found entry : isDict:" << ePtr->isDict() << endl;
-        ePtr->write(Pout);
-    }
-}
+    
+
 
 
     objectRegistry level1
@@ -111,79 +118,111 @@ int main(int argc, char *argv[])
         )
     );
 
-    IOdictionary2 dictA
+//     IOdictionary2 dictA
+//     (
+//         IOobject
+//         (
+//             "bla",
+//             runTime.system(),
+//             level3A,
+//             IOobject::MUST_READ_IF_MODIFIED,
+//             IOobject::NO_WRITE
+//         ),
+//         true
+//     );
+// 
+//     Pout<< "dictA:" << dictA << endl << endl;
+
+
+{
+    const pointMesh& pMesh = pointMesh::New(mesh);
+    pointVectorField displacement
     (
         IOobject
         (
-            "bla",
-            runTime.system(),
+            "pointDisplacement",
+            runTime.timeName(),
             level3A,
-            IOobject::MUST_READ_IF_MODIFIED,
-            IOobject::NO_WRITE
+            IOobject::MUST_READ,
+            IOobject::AUTO_WRITE
         ),
-        true
+        pMesh
+        //dimensionedVector("zero", dimLength, vector::zero)
     );
+    DebugVar(displacement.objectPath());
+    DebugVar(displacement);
 
-    Pout<< "dictA:" << dictA << endl << endl;
+    displacement.internalField() = vector::one;
+    displacement.correctBoundaryConditions();
 
-    // Path B
-    // ~~~~~~
-
-    objectRegistry level2B
-    (
-        IOobject
-        (
-            "level2B",
-            runTime.system(),
-            level1
-        )
-    );
-
-    objectRegistry level3B
-    (
-        IOobject
-        (
-            "level3B",
-            runTime.system(),
-            level2B
-        )
-    );
-
-    IOdictionary2 dictB
-    (
-        IOobject
-        (
-            "bla",
-            runTime.system(),
-            level3B,
-            IOobject::MUST_READ_IF_MODIFIED,
-            IOobject::NO_WRITE
-        ),
-        true
-    );
-
-    Pout<< "dictB:" << dictB << endl << endl;
-
-
-    // Do some writing
-    // ~~~~~~~~~~~~~~~
-    dictB.add("newEntry", 123);
-
-
-    // Note that this does not actually write the file; it only updates
-    // the levels; the actual file writing is done by the object registry
-    dictB.writeObject2
-    (
-        dictB.time().writeFormat(),
-        IOstream::currentVersion,
-        dictB.time().writeCompression()
-    );
-
+    displacement.write();
     // After:
-    Pout<< "TOP:" << runTime.lookupObject<IOdictionary2>("bla") << endl;
+    Pout<< "TOP:" << runTime.lookupObject<IOdictionary2>("pointDisplacement")
+        << endl;
+}
+
+// 
+//     // Path B
+//     // ~~~~~~
+// 
+//     objectRegistry level2B
+//     (
+//         IOobject
+//         (
+//             "level2B",
+//             runTime.system(),
+//             level1
+//         )
+//     );
+// 
+//     objectRegistry level3B
+//     (
+//         IOobject
+//         (
+//             "level3B",
+//             runTime.system(),
+//             level2B
+//         )
+//     );
+// 
+//     IOdictionary2 dictB
+//     (
+//         IOobject
+//         (
+//             "bla",
+//             runTime.system(),
+//             level3B,
+//             IOobject::MUST_READ_IF_MODIFIED,
+//             IOobject::NO_WRITE
+//         ),
+//         true
+//     );
+// 
+//     Pout<< "dictB:" << dictB << endl << endl;
+// 
+// 
+//     // Do some writing
+//     // ~~~~~~~~~~~~~~~
+//     dictB.add("newEntry", 123);
+// 
+// 
+//     // Note that this does not actually write the file; it only updates
+//     // the levels; the actual file writing is done by the object registry
+//     dictB.writeObject2
+//     (
+//         dictB.time().writeFormat(),
+//         IOstream::currentVersion,
+//         dictB.time().writeCompression()
+//     );
+// 
+//     // After:
+//     Pout<< "TOP:" << runTime.lookupObject<IOdictionary2>("bla") << endl;
 
     // Manually enforce writing:
     //runTime.lookupObject<IOdictionary2>("bla").regIOobject::write();
+
+
+
 
 
 
