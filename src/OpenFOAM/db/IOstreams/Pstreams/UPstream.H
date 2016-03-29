@@ -489,7 +489,18 @@ public:
         //- Abort program
         static void abort();
 
-
+        //- Exchange contiguous data of sendSize bytes with all processors
+        //  (in the communicator).
+        //  sendData should contain the data in consecutive order
+        //  (so should be nProcs*sendSize). After return recvData
+        //  (sized nProcs*sendSize) contains the data from the other processors.
+        static void allToAll
+        (
+            const char* sendBuf,
+            const std::streamsize sendSize,
+            char* recvBuf,
+            const label communicator = 0
+        );
 };
 
 

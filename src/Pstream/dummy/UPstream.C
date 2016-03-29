@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -79,6 +79,21 @@ void Foam::sumReduce
 
 void Foam::reduce(scalar&, const sumOp<scalar>&, const int, const label, label&)
 {}
+
+
+void Foam::UPstream::allToAll
+(
+    const char* sendBuf,
+    const std::streamsize sendSize,
+    char* recvBuf,
+    const label communicator
+)
+{
+    for (label i = 0; i < sendSize; i++)
+    {
+        recvBuf[i] = sendBuf[i];
+    }
+}
 
 
 void Foam::UPstream::allocatePstreamCommunicator

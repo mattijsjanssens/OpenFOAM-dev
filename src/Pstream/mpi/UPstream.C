@@ -295,6 +295,36 @@ void Foam::reduce
 }
 
 
+void Foam::UPstream::allToAll
+(
+    const char* sendBuf,
+    const std::streamsize sendSize,
+    char* recvBuf,
+    const label communicator
+)
+{
+    if
+    (
+	    MPI_Alltoall
+	    (
+	        sendBuf,
+	        sendSize,   // Number of bytes per entry
+	        MPI_BYTE,
+	        recvBuf,
+	        sendSize,
+	        MPI_BYTE,
+	        PstreamGlobals::MPICommunicators_[communicator]
+	    )
+    )
+    {
+        FatalErrorInFunction
+            << "MPI_Alltoall failed for " << sendSize
+            << " bytes on communicator " << communicator
+            << Foam::abort(FatalError);
+    }
+}
+
+
 void Foam::UPstream::allocatePstreamCommunicator
 (
     const label parentIndex,

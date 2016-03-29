@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -274,7 +274,7 @@ void Pstream::scatterList
         }
 
         // Send to my downstairs neighbours
-        forAll(myComm.below(), belowI)
+        forAllReverse(myComm.below(), belowI)
         {
             label belowID = myComm.below()[belowI];
             const labelList& notBelowLeaves = comms[belowID].allNotBelow();
