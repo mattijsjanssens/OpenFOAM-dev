@@ -1242,46 +1242,47 @@ bool Foam::GeometricField<Type, PatchField, GeoMesh>::writeObject
                 DebugVar(t.info());
             }
 
-            dictionary emptyDict;
-            Field<Type> intFld(0);
-            emptyDict.add("internalField", intFld);
-            Field<Field<Type>> bouFld(0);
-            emptyDict.add("boundaryField", bouFld);
-            IOdictionary2::setScoped(parent, scope, emptyDict);
+            dictionary fldDict;
+            //Field<Type> intFld(0);
+            fldDict.add("internalField", this->internalField());
+            //Field<Field<Type>> bouFld(0);
+            fldDict.add("boundaryField", this->boundaryField());
+            IOdictionary2::setScoped(parent, scope, fldDict);
 
-            word key
-            (
-                IOdictionary2::scopedKey
-                (
-                    this->name(),
-                    this->db().dbDir(),
-                    parent.db().dbDir()
-                )
-            );
-            {
-                const entry* ePtr = parent.lookupScopedEntryPtr
-                (
-                    key + ".internalField",
-                    false,
-                    true            // allow pattern match
-                );
-                ePtr->write(Pout);
-                ITstream& str = ePtr->stream();
-                DebugVar(str.info());
-                forAll(str, i)
-                {
-                    DebugVar(str[i].info());
-                }
-            }
-            {
-                const entry* ePtr = parent.lookupScopedEntryPtr
-                (
-                    key + ".boundaryField",
-                    false,
-                    true            // allow pattern match
-                );
-                ePtr->write(Pout);
-            }
+            // word key
+            // (
+            //     IOdictionary2::scopedKey
+            //     (
+            //         this->name(),
+            //         this->db().dbDir(),
+            //         parent.db().dbDir()
+            //     )
+            // );
+            // {
+            //     const entry* ePtr = parent.lookupScopedEntryPtr
+            //     (
+            //         key + ".internalField",
+            //         false,
+            //         true            // allow pattern match
+            //     );
+            //     ePtr->write(Pout);
+            //     ITstream& str = ePtr->stream();
+            //     DebugVar(str.info());
+            //     forAll(str, i)
+            //     {
+            //         DebugVar(str[i].info());
+            //     }
+            // }
+            // {
+            //     const entry* ePtr = parent.lookupScopedEntryPtr
+            //     (
+            //         key + ".boundaryField",
+            //         false,
+            //         true            // allow pattern match
+            //     );
+            //     ePtr->write(Pout);
+            // }
+            return true;
         }
     }
 

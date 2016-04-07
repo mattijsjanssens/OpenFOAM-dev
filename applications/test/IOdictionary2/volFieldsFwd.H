@@ -52,11 +52,11 @@ template<class Type, template<class> class PatchField, class GeoMesh>
 class GeometricField;
 
 typedef GeometricField<scalar, fvPatchField, volMesh> volScalarField;
-typedef GeometricField<vector, fvPatchField, volMesh> volVectorField;
-typedef GeometricField<sphericalTensor, fvPatchField, volMesh>
-    volSphericalTensorField;
-typedef GeometricField<symmTensor, fvPatchField, volMesh> volSymmTensorField;
-typedef GeometricField<tensor, fvPatchField, volMesh> volTensorField;
+// typedef GeometricField<vector, fvPatchField, volMesh> volVectorField;
+// typedef GeometricField<sphericalTensor, fvPatchField, volMesh>
+//     volSphericalTensorField;
+// typedef GeometricField<symmTensor, fvPatchField, volMesh> volSymmTensorField;
+// typedef GeometricField<tensor, fvPatchField, volMesh> volTensorField;
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
