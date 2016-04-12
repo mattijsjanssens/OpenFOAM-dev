@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -25,6 +25,7 @@ License
 
 #include "objectRegistry.H"
 #include "stringListOps.H"
+#include "Time.H"
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
@@ -201,6 +202,31 @@ const Type& Foam::objectRegistry::lookupObject(const word& name) const
     }
 
     return NullObjectRef<Type>();
+}
+
+
+template<class Type>
+const Type* Foam::objectRegistry::lookupObjectPtr
+(
+    const word& name,
+    const bool recurse
+) const
+{
+    objectRegistry::const_iterator iter = find(name);
+    if (iter != end())
+    {
+        return dynamic_cast<const Type*>(iter());
+    }
+    else if
+    (
+        recurse
+     && this != dynamic_cast<const objectRegistry*>(&time())
+    )
+    {
+        return parent().lookupObjectPtr<Type>(name, recurse);
+    }
+
+    return NULL;
 }
 
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -236,6 +236,13 @@ public:
             bool registerObject=true
         );
 
+        //- Construct from copy resetting registry
+        IOobject
+        (
+            const IOobject& io,
+            const objectRegistry& registry
+        );
+
         //- Clone
         Foam::autoPtr<IOobject> clone() const
         {
@@ -369,6 +376,10 @@ public:
             //- Return complete path + object name if the file exists
             //  either in the case/processor or case otherwise null
             fileName filePath() const;
+
+            //- Return filePath of object or (recursively) of parent. Returns
+            //  NULL if not found
+            autoPtr<IOobject> findFile() const;
 
 
         // Reading

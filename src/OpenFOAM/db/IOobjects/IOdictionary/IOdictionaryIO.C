@@ -25,6 +25,7 @@ License
 
 #include "IOdictionary.H"
 #include "Pstream.H"
+#include "objectRegistry.H"
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
@@ -156,6 +157,184 @@ bool Foam::IOdictionary::writeData(Ostream& os) const
 {
     dictionary::write(os, false);
     return os.good();
+}
+
+
+bool Foam::IOdictionary::read()
+{
+    // 1. Check if there is a registered parent and if so read from that
+
+    if (!db().isTime())
+    {
+        IOobject parentIO(*this, db().parent());
+
+        const IOdictionary* parentPtr =
+            parentIO.db().lookupObjectPtr<IOdictionary>
+            (
+                parentIO.name(),
+                true
+            );
+
+        if (parentPtr)
+        {
+            const IOdictionary& parent = *parentPtr;
+
+            word key(scopedName(db().dbDir(), parent.db().dbDir()));
+
+            const entry* ePtr = parent.lookupScopedEntryPtr
+            (
+                key,
+                false,
+                true            // allow pattern match
+            );
+            if (!ePtr)
+            {
+                FatalIOErrorInFunction(parent)
+                    << "Did not find entry " << key
+                    << " in parent dictionary " << name()
+                    << exit(FatalIOError);
+            }
+
+            dictionary::operator=(ePtr->dict());
+            return true;
+        }
+
+
+        // 2. Search for parent file
+        autoPtr<IOobject> fileIO = parentIO.findFile();
+        if (fileIO.valid())
+        {
+            // Read from file
+            IOdictionary* dictPtr = new IOdictionary(fileIO());
+            dictPtr->store();
+
+            // Recurse to find the newly stored object
+            return read();
+        }
+    }
+
+
+    // 3. Normal, local reading
+    bool ok = readData(readStream(typeName));
+    close();
+    setUpToDate();
+
+    return ok;
+}
+
+
+bool Foam::IOdictionary::modified() const
+{
+    // Check if there is a registered parent and if so check that one
+
+    if (!db().isTime())
+    {
+        IOobject parentIO(*this, db().parent());
+
+        const IOdictionary* parentPtr =
+            parentIO.db().lookupObjectPtr<IOdictionary>
+            (
+                parentIO.name(),
+                true
+            );
+
+        if (parentPtr)
+        {
+            return parentPtr->modified();
+        }
+    }
+    return regIOobject::modified();
+}
+
+
+bool Foam::IOdictionary::readIfModified()
+{
+    // Check if there is a registered parent and if so check that one
+
+    if (!db().isTime())
+    {
+        IOobject parentIO(*this, db().parent());
+
+        const IOdictionary* parentPtr =
+            parentIO.db().lookupObjectPtr<IOdictionary>
+            (
+                parentIO.name(),
+                true
+            );
+
+        if (parentPtr)
+        {
+            IOdictionary& parent = const_cast<IOdictionary&>(*parentPtr);
+            bool haveRead = parent.readIfModified();
+
+            if (haveRead)
+            {
+                // Read myself from parent
+                word key(scopedName(db().dbDir(), parent.db().dbDir()));
+
+                const entry* ePtr = parent.lookupScopedEntryPtr
+                (
+                    key,
+                    false,
+                    true            // allow pattern match
+                );
+                if (!ePtr)
+                {
+                    FatalIOErrorInFunction(parent)
+                        << "Did not find entry " << key
+                        << " in parent dictionary " << name()
+                        << exit(FatalIOError);
+                }
+
+                dictionary::operator=(ePtr->dict());
+
+                return true;
+            }
+        }
+    }
+
+    return regIOobject::readIfModified();
+}
+
+
+bool Foam::IOdictionary::writeObject
+(
+    IOstream::streamFormat fmt,
+    IOstream::versionNumber ver,
+    IOstream::compressionType cmp
+) const
+{
+    // 1. Check if there is a registered parent and if so write to it
+
+    if (!db().isTime())
+    {
+        IOobject parentIO(*this, db().parent());
+
+        const IOdictionary* parentPtr =
+            parentIO.db().lookupObjectPtr<IOdictionary>
+            (
+                parentIO.name(),
+                true
+            );
+
+        if (parentPtr)
+        {
+            IOdictionary& parent = const_cast<IOdictionary&>(*parentPtr);
+
+            word scope
+            (
+                dictionary::scopedName
+                (
+                    db().dbDir(),
+                    parent.db().dbDir()
+                )
+            );
+            parent.setScoped(scope, *this);
+            return true;
+        }
+    }
+
+    return regIOobject::writeObject(fmt, ver, cmp);
 }
 
 

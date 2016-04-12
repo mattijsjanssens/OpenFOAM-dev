@@ -463,6 +463,16 @@ public:
             template<class T>
             void set(const keyType&, const T&);
 
+            //- Assign a subdictionary entry, overwrite any existing entry.
+            //  Subdictionary provided by scope.
+            void setScoped(const UList<word>& scope, const dictionary&);
+
+            //- Assign a subdictionary entry, overwrite any existing entry
+            void setScoped(const word& keyword, const dictionary&);
+
+            //- Helper: convert relative path to scoped key
+            static word scopedName(const fileName& dir, const fileName& topDir);
+
             //- Remove an entry specified by keyword
             bool remove(const word&);
 

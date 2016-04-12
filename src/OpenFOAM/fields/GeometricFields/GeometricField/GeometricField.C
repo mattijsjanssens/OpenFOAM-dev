@@ -71,6 +71,73 @@ void Foam::GeometricField<Type, PatchField, GeoMesh>::readFields
 template<class Type, template<class> class PatchField, class GeoMesh>
 void Foam::GeometricField<Type, PatchField, GeoMesh>::readFields()
 {
+    // 1. Check if there is a registered parent and if so read from that
+
+    if (!this->db().isTime())
+    {
+        IOobject parentIO(*this, this->db().parent());
+
+        const IOdictionary* parentPtr =
+            parentIO.db().lookupObjectPtr<IOdictionary>
+            (
+                parentIO.name(),
+                true
+            );
+
+        if (parentPtr)
+        {
+            const IOdictionary& parent = *parentPtr;
+
+            word key
+            (
+                dictionary::scopedName
+                (
+                    this->db().dbDir(),
+                    parent.db().dbDir()
+                )
+            );
+
+            const entry* ePtr = parent.lookupScopedEntryPtr
+            (
+                key,
+                false,
+                true            // allow pattern match
+            );
+            if (!ePtr)
+            {
+                FatalIOErrorInFunction(parent)
+                    << "Did not find entry " << key
+                    << " in parent dictionary " << this->name()
+                    << exit(FatalIOError);
+            }
+
+            this->readFields(ePtr->dict());
+            return;
+        }
+
+
+        // 2. Search for parent file
+        autoPtr<IOobject> fileIO = parentIO.findFile();
+        if (fileIO.valid())
+        {
+            // Tbd: if findFile is same as current path do not load it.
+            // Problem is that IOdictionary(const IOobject&) checks header
+            // so will exit if it sees a GeometricField type instead of
+            // dictionary. Once this is solved we can have IOdictionary in
+            // same directory as GeometricField.
+            if (fileIO().objectPath() != this->objectPath())
+            {
+                // Read from file
+                IOdictionary* dictPtr = new IOdictionary(fileIO());
+                dictPtr->store();
+
+                // Recurse to find the newly stored object
+                readFields();
+                return;
+            }
+        }
+    }
+
     const IOdictionary dict
     (
         IOobject
@@ -105,7 +172,12 @@ bool Foam::GeometricField<Type, PatchField, GeoMesh>::readIfPresent()
             << " suggests that a read constructor for field " << this->name()
             << " would be more appropriate." << endl;
     }
-    else if (this->readOpt() == IOobject::READ_IF_PRESENT && this->headerOk())
+    else if
+    (
+        this->readOpt() == IOobject::READ_IF_PRESENT
+     && //this->headerOk()
+        IOdictionary::objectHeaderOk(*this)
+    )
     {
         readFields();
 
@@ -142,7 +214,8 @@ bool Foam::GeometricField<Type, PatchField, GeoMesh>::readOldTimeIfPresent()
         this->registerObject()
     );
 
-    if (field0.headerOk())
+    //if (field0.headerOk())
+    if (IOdictionary::objectHeaderOk(field0))
     {
         if (debug)
         {
@@ -968,6 +1041,135 @@ writeData(Ostream& os) const
 {
     os << *this;
     return os.good();
+}
+
+
+template<class Type, template<class> class PatchField, class GeoMesh>
+bool Foam::GeometricField<Type, PatchField, GeoMesh>::read()
+{
+    // 1. Check if there is a registered parent and if so read from that
+
+    if (!this->db().isTime())
+    {
+        IOobject parentIO(*this, this->db().parent());
+
+        const IOdictionary* parentPtr =
+            parentIO.db().lookupObjectPtr<IOdictionary>
+            (
+                parentIO.name(),
+                true
+            );
+
+        if (parentPtr)
+        {
+            const IOdictionary& parent = *parentPtr;
+
+            word key
+            (
+                dictionary::scopedName
+                (
+                    this->db().dbDir(),
+                    parent.db().dbDir()
+                )
+            );
+
+            const entry* ePtr = parent.lookupScopedEntryPtr
+            (
+                key,
+                false,
+                true            // allow pattern match
+            );
+            if (!ePtr)
+            {
+                FatalIOErrorInFunction(parent)
+                    << "Did not find entry " << key
+                    << " in parent dictionary " << this->name()
+                    << exit(FatalIOError);
+            }
+
+            this->readFields(ePtr->dict());
+            return true;
+        }
+
+
+        // 2. Search for parent file
+        autoPtr<IOobject> fileIO = parentIO.findFile();
+        if (fileIO.valid())
+        {
+            // Tbd: if findFile is same as current path do not load it.
+            // Problem is that IOdictionary(const IOobject&) checks header
+            // so will exit if it sees a GeometricField type instead of
+            // dictionary. Once this is solved we can have IOdictionary in
+            // same directory as GeometricField.
+            if (fileIO().objectPath() != this->objectPath())
+            {
+                IOdictionary* dictPtr = new IOdictionary(fileIO());
+                dictPtr->store();
+
+                // Recurse to find the newly stored object
+                return read();
+            }
+        }
+    }
+
+    // 3. Normal, local reading
+    bool ok = this->readData(this->readStream(typeName));
+    this->close();
+    this->setUpToDate();
+    return ok;
+}
+
+
+template<class Type, template<class> class PatchField, class GeoMesh>
+bool Foam::GeometricField<Type, PatchField, GeoMesh>::writeObject
+(
+    IOstream::streamFormat fmt,
+    IOstream::versionNumber ver,
+    IOstream::compressionType cmp
+) const
+{
+    // 1. Check if there is a registered parent and if so write to it
+
+    if (!this->db().isTime())
+    {
+        IOobject parentIO(*this, this->db().parent());
+
+        const IOdictionary* parentPtr =
+            parentIO.db().lookupObjectPtr<IOdictionary>
+            (
+                parentIO.name(),
+                true
+            );
+
+        if (parentPtr)
+        {
+            IOdictionary& parent = const_cast<IOdictionary&>(*parentPtr);
+
+             word scope
+            (
+                dictionary::scopedName
+                (
+                    this->db().dbDir(),
+                    parent.db().dbDir()
+                )
+            );
+
+            // Note: inefficient - multiple copies of field. Should instead
+            // insert transfer dictionary into parentDict
+            dictionary fldDict;
+            {
+                OStringStream os(IOstream::BINARY);
+                os  << *this;
+                IStringStream is(os.str(), IOstream::BINARY);
+                fldDict = dictionary(is);
+            }
+            parent.setScoped(scope, fldDict);
+
+            return true;
+        }
+    }
+
+    return regIOobject::writeObject(fmt, ver, cmp);
 }
 
 

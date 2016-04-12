@@ -180,8 +180,16 @@ public:
             template<class Type>
             const Type& lookupObject(const word& name) const;
 
+            //- Lookup and return a pointer to the object of the given Type.
+            //  Optionally recurses. Return NULL if not found.
+            template<class Type>
+            const Type* lookupObjectPtr(const word&, const bool recurse) const;
+
             //- Return new event number.
             label getEvent() const;
+
+            //- Is the objectRegistry time
+            bool isTime() const;
 
 
         // Edit

@@ -210,6 +210,25 @@ Foam::IOobject::IOobject
 }
 
 
+Foam::IOobject::IOobject
+(
+    const IOobject& io,
+    const objectRegistry& registry
+)
+:
+    name_(io.name_),
+    headerClassName_(io.headerClassName_),
+    note_(io.note_),
+    instance_(io.instance_),
+    local_(io.local_),
+    db_(registry),
+    rOpt_(io.rOpt_),
+    wOpt_(io.wOpt_),
+    registerObject_(io.registerObject_),
+    objState_(io.objState_)
+{}
+
+
 // * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * * //
 
 Foam::IOobject::~IOobject()
@@ -364,6 +383,27 @@ Foam::fileName Foam::IOobject::filePath() const
         }
 
         return fileName::null;
+    }
+}
+
+
+Foam::autoPtr<Foam::IOobject> Foam::IOobject::findFile() const
+{
+    fileName fName(filePath());
+    if (isFile(fName))
+    {
+        InfoInFunction
+            << "    Found file " << fName << endl;
+        return autoPtr<IOobject>(new IOobject(*this));
+    }
+
+    if (!db().isTime())
+    {
+        return IOobject(*this, db().parent()).findFile();
+    }
+    else
+    {
+        return autoPtr<IOobject>(NULL);
     }
 }
 

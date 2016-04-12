@@ -29,6 +29,7 @@ License
 #include "regExp.H"
 #include "OSHA1stream.H"
 #include "DynamicList.H"
+#include "SubList.H"
 
 /* * * * * * * * * * * * * * * Static Member Data  * * * * * * * * * * * * * */
 
@@ -238,7 +239,7 @@ const Foam::dictionary& Foam::dictionary::topDict() const
     }
     else
     {
-        return p;
+        return *this;
     }
 }
 
@@ -877,6 +878,153 @@ void Foam::dictionary::set(const entry& e)
 void Foam::dictionary::set(const keyType& k, const dictionary& d)
 {
     set(new dictionaryEntry(k, *this, d));
+}
+
+
+void Foam::dictionary::setScoped(const UList<word>& scope, const dictionary& d)
+{
+    if (scope.size() == 1)
+    {
+        set(scope[0], d);
+    }
+    else
+    {
+        const dictionary& levelDict = d.subDict(scope[0]);
+
+        const_cast<dictionary&>(levelDict).setScoped
+        (
+            SubList<word>(scope, scope.size()-1, 1),
+            d
+        );
+    }
+}
+void Foam::dictionary::setScoped(const word& keyword, const dictionary& d)
+{
+    if (keyword[0] == ':')
+    {
+        // Go up to top level and recurse to find entries
+        const_cast<dictionary&>(topDict()).setScoped
+        (
+            keyword.substr(1, keyword.size()-1),
+            d
+        );
+        return;
+    }
+    else
+    {
+        string::size_type dotPos = keyword.find('.');
+
+        if (dotPos == string::npos)
+        {
+            // Non-scoped lookup
+            set(keyword, d);
+            return;
+        }
+        else
+        {
+            if (dotPos == 0)
+            {
+                // Starting with a '.'. Go up for every 2nd '.' found
+
+                const dictionary* dictPtr = this;
+
+                string::size_type begVar = dotPos + 1;
+                string::const_iterator iter =
+                    keyword.begin() + begVar;
+                string::size_type endVar = begVar;
+                while
+                (
+                    iter != keyword.end()
+                 && *iter == '.'
+                )
+                {
+                    ++iter;
+                    ++endVar;
+
+                    // Go to parent
+                    if (&dictPtr->parent() == &dictionary::null)
+                    {
+                        FatalIOErrorInFunction
+                        (
+                            *this
+                        )   << "No parent of current dictionary"
+                            << " when searching for "
+                            <<  keyword.substr
+                                (
+                                    begVar,
+                                    keyword.size()-begVar
+                                )
+                            << exit(FatalIOError);
+                    }
+                    dictPtr = &dictPtr->parent();
+                }
+
+                const_cast<dictionary&>(*dictPtr).setScoped
+                (
+                    keyword.substr(endVar),
+                    d
+                );
+                return;
+            }
+            else
+            {
+                // Extract the first word
+                word firstWord = keyword.substr(0, dotPos);
+
+                const entry* entPtr = lookupScopedEntryPtr
+                (
+                    firstWord,
+                    false,          //recursive
+                    false
+                );
+
+                if (!entPtr || !entPtr->isDict())
+                {
+                    FatalIOErrorInFunction
+                    (
+                        *this
+                    )   << "keyword " << firstWord
+                        << " is undefined in dictionary "
+                        << name() << " or is not a dictionary"
+                        << endl
+                        << "Valid keywords are " << keys()
+                        << exit(FatalIOError);
+                }
+
+                const dictionary& firstDict = entPtr->dict();
+                const_cast<dictionary&>(firstDict).setScoped
+                (
+                    keyword.substr(dotPos, keyword.size()-dotPos),
+                    d
+                );
+                return;
+            }
+        }
+    }
+}
+
+
+Foam::word Foam::dictionary::scopedName
+(
+    const fileName& dir,
+    const fileName& topDir
+)
+{
+    // TDB: avoid creating lists
+    wordList dirElems(dir.components());
+
+    label start = topDir.components().size();
+
+    word key(':');
+    for (label i = start; i < dirElems.size(); i++)
+    {
+        key += dirElems[i];
+        if (i < dirElems.size()-1)
+        {
+            key += '.';
+        }
+    }
+    return key;
 }
 
 

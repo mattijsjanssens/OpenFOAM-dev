@@ -97,10 +97,34 @@ public:
         const word& name() const;
 
         //- ReadData function required for regIOobject read operation
-        bool readData(Istream&);
+        virtual bool readData(Istream&);
 
         //- WriteData function required for regIOobject write operation
-        bool writeData(Ostream&) const;
+        virtual bool writeData(Ostream&) const;
+
+        //- Read dictionary from parent or file
+        virtual bool read();
+
+        //- Return true if the object's file (or files for objectRegistry)
+        //  have been modified. (modified state is cached by Time)
+        virtual bool modified() const;
+
+        //- Read object if modified (as set by call to modified)
+        virtual bool readIfModified();
+
+        //- Write using given format, version and compression
+        virtual bool writeObject
+        (
+            IOstream::streamFormat,
+            IOstream::versionNumber,
+            IOstream::compressionType
+        ) const;
+
+        //- Helper: check that file (or parent IOdictionary) is present.
+        //  - checks IOobject::headerOk
+        //  - checks for registered IOdictionary with entry for IO present
+        //  - checks for higher level file
+        static bool objectHeaderOk(const IOobject&);
 
 
     // Member operators

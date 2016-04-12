@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -181,6 +181,66 @@ Foam::IOdictionary::~IOdictionary()
 const Foam::word& Foam::IOdictionary::name() const
 {
     return regIOobject::name();
+}
+
+
+bool Foam::IOdictionary::objectHeaderOk(const IOobject& io)
+{
+    // 1. Local check
+    if (const_cast<IOobject&>(io).headerOk())
+    {
+        return true;
+    }
+
+    if (!io.db().isTime())
+    {
+        // 2. Check if there is a registered parent and if so check that
+
+        IOobject parentIO(io, io.db().parent());
+
+        const IOdictionary* parentPtr =
+            parentIO.db().lookupObjectPtr<IOdictionary>
+            (
+                parentIO.name(),
+                true
+            );
+
+        if (parentPtr)
+        {
+            const IOdictionary& parent = *parentPtr;
+
+            word key
+            (
+                scopedName(io.db().dbDir(), parent.db().dbDir())
+            );
+
+            const entry* ePtr = parent.lookupScopedEntryPtr
+            (
+                key,
+                false,
+                true            // allow pattern match
+            );
+            if (ePtr && ePtr->isDict())
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+
+        // 3. Search for parent file
+
+        autoPtr<IOobject> fileIO = parentIO.findFile();
+        if (fileIO.valid() && fileIO().headerOk())
+        {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 

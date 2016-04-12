@@ -488,7 +488,18 @@ public:
         ) const;
 
         //- WriteData member function required by regIOobject
-        bool writeData(Ostream&) const;
+        virtual bool writeData(Ostream&) const;
+
+        //- Read dictionary from parent or file
+        virtual bool read();
+
+        //- Write using given format, version and compression
+        virtual bool writeObject
+        (
+            IOstream::streamFormat,
+            IOstream::versionNumber,
+            IOstream::compressionType
+        ) const;
 
         //- Return transpose (only if it is a tensor field)
         tmp<GeometricField<Type, PatchField, GeoMesh>> T() const;

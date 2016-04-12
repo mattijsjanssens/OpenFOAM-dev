@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -39,6 +39,12 @@ defineTypeNameAndDebug(objectRegistry, 0);
 bool Foam::objectRegistry::parentNotTime() const
 {
     return (&parent_ != dynamic_cast<const objectRegistry*>(&time_));
+}
+
+
+bool Foam::objectRegistry::isTime() const
+{
+    return &db() == dynamic_cast<const objectRegistry*>(&db().time());
 }
 
 
@@ -303,9 +309,25 @@ void Foam::objectRegistry::rename(const word& newName)
 
 bool Foam::objectRegistry::modified() const
 {
+    // Check objects at the top-level first to save the
+    // recursion when having 'indirect' regIOobjects
+
     forAllConstIter(HashTable<regIOobject*>, *this, iter)
     {
-        if (iter()->modified())
+        const regIOobject& rio = *iter();
+
+        if (!isA<objectRegistry>(rio) && rio.modified())
+        {
+            return true;
+        }
+    }
+
+    forAllConstIter(HashTable<regIOobject*>, *this, iter)
+    {
+        const regIOobject& rio = *iter();
+
+        // Recurse to test objectRegistries
+        if (isA<objectRegistry>(rio) && rio.modified())
         {
             return true;
         }
@@ -317,8 +339,14 @@ bool Foam::objectRegistry::modified() const
 
 void Foam::objectRegistry::readModifiedObjects()
 {
+    // Check objects at the top-level first to save the
+    // recursion when having 'indirect' regIOobjects
+
+    // 1. Read local objects first
     for (iterator iter = begin(); iter != end(); ++iter)
     {
+        regIOobject& rio = *iter();
+
         if (objectRegistry::debug)
         {
             Pout<< "objectRegistry::readModifiedObjects() : "
@@ -326,7 +354,28 @@ void Foam::objectRegistry::readModifiedObjects()
                 << iter.key() << endl;
         }
 
-        iter()->readIfModified();
+        if (!isA<objectRegistry>(rio))
+        {
+            rio.readIfModified();
+        }
+    }
+
+    // 2. Recurse to read sub-objects
+    for (iterator iter = begin(); iter != end(); ++iter)
+    {
+        regIOobject& rio = *iter();
+
+        if (objectRegistry::debug)
+        {
+            Pout<< "objectRegistry::readModifiedObjects() : "
+                << name() << " : Considering reading object "
+                << iter.key() << endl;
+        }
+
+        if (isA<objectRegistry>(rio))
+        {
+            rio.readIfModified();
+        }
     }
 }
 
@@ -347,21 +396,41 @@ bool Foam::objectRegistry::writeObject
 {
     bool ok = true;
 
+    // Recurse first so any 'indirect' regIOobjects get hit first
+    // before their parent is written
+
     forAllConstIter(HashTable<regIOobject*>, *this, iter)
     {
-        if (objectRegistry::debug)
-        {
-            Pout<< "objectRegistry::write() : "
-                << name() << " : Considering writing object "
-                << iter.key()
-                << " with writeOpt " << iter()->writeOpt()
-                << " to file " << iter()->objectPath()
-                << endl;
-        }
+        const regIOobject& rio = *iter();
 
-        if (iter()->writeOpt() != NO_WRITE)
+        if (rio.writeOpt() != NO_WRITE && isA<objectRegistry>(rio))
         {
-            ok = iter()->writeObject(fmt, ver, cmp) && ok;
+            if (objectRegistry::debug)
+            {
+                Pout<< "objectRegistry::write() : "
+                    << name() << " : Recursing into "
+                    << iter.key() << endl;
+            }
+            ok = rio.writeObject(fmt, ver, cmp) && ok;
+        }
+    }
+
+    forAllConstIter(HashTable<regIOobject*>, *this, iter)
+    {
+        const regIOobject& rio = *iter();
+
+        if (rio.writeOpt() != NO_WRITE && !isA<objectRegistry>(rio))
+        {
+            if (objectRegistry::debug)
+            {
+                Pout<< "objectRegistry::write() : "
+                    << name() << " : Considering writing object "
+                    << iter.key()
+                    << " with writeOpt " << rio.writeOpt()
+                    << " to file " << rio.objectPath()
+                    << endl;
+            }
+            ok = rio.writeObject(fmt, ver, cmp) && ok;
         }
     }
 
