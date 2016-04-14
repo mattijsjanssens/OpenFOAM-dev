@@ -132,6 +132,67 @@ void Foam::IOdictionary::readFile(const bool masterOnly)
     }
 }
 
+bool Foam::IOdictionary::readObjectOrFile(const bool masterOnly)
+{
+    // 1. Check if there is a registered parent and if so read from that
+
+    if (!db().isTime())
+    {
+        IOobject parentIO(*this, db().parent());
+
+        const IOdictionary* parentPtr =
+            parentIO.db().lookupObjectPtr<IOdictionary>
+            (
+                parentIO.name(),
+                true
+            );
+
+        if (parentPtr)
+        {
+            const IOdictionary& parent = *parentPtr;
+
+            word key(dictionary::scopedName(db().dbDir(), parent.db().dbDir()));
+
+            const entry* ePtr = parent.lookupScopedEntryPtr
+            (
+                key,
+                false,
+                true            // allow pattern match
+            );
+            if (!ePtr)
+            {
+                FatalIOErrorInFunction(parent)
+                    << "Did not find entry " << key
+                    << " in parent dictionary " << name()
+                    << exit(FatalIOError);
+            }
+
+            dictionary::operator=(ePtr->dict());
+            return true;
+        }
+
+
+        // 2. Search for parent file
+        autoPtr<IOobject> fileIO(parentIO.findFile(masterOnly));
+
+        if (fileIO.valid())
+        {
+            // Read from file
+            IOdictionary* dictPtr = new IOdictionary(fileIO);
+            dictPtr->store();
+
+            // Recurse to find the newly stored object
+            return readObjectOrFile(masterOnly);
+        }
+    }
+
+
+    // 3. Normal, local reading
+    readFile(masterOnly);
+
+    return true;
+}
+
 
 // * * * * * * * * * * * * * * * Members Functions * * * * * * * * * * * * * //
 
@@ -201,7 +262,12 @@ bool Foam::IOdictionary::read()
 
 
         // 2. Search for parent file
-        autoPtr<IOobject> fileIO = parentIO.findFile();
+
+        bool masterOnly =
+            regIOobject::fileModificationChecking == timeStampMaster
+         || regIOobject::fileModificationChecking == inotifyMaster;
+
+        autoPtr<IOobject> fileIO = parentIO.findFile(masterOnly);
         if (fileIO.valid())
         {
             // Read from file

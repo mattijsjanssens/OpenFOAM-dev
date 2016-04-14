@@ -71,13 +71,13 @@ Foam::IOdictionary::IOdictionary(const IOobject& io)
         {
             if (Pstream::master())
             {
-                isHeaderOk = headerOk();
+                isHeaderOk = objectHeaderOk(*this); //headerOk();
             }
             Pstream::scatter(isHeaderOk);
         }
         else
         {
-            isHeaderOk = headerOk();
+            isHeaderOk = objectHeaderOk(*this); //headerOk();
         }
     }
 
@@ -91,7 +91,7 @@ Foam::IOdictionary::IOdictionary(const IOobject& io)
      || isHeaderOk
     )
     {
-        readFile(masterOnly);
+        readObjectOrFile(masterOnly);
     }
 
     dictionary::name() = IOobject::objectPath();
@@ -127,13 +127,13 @@ Foam::IOdictionary::IOdictionary(const IOobject& io, const dictionary& dict)
         {
             if (Pstream::master())
             {
-                isHeaderOk = headerOk();
+                isHeaderOk = objectHeaderOk(*this); //headerOk();
             }
             Pstream::scatter(isHeaderOk);
         }
         else
         {
-            isHeaderOk = headerOk();
+            isHeaderOk = objectHeaderOk(*this); //headerOk();
         }
     }
 
@@ -147,7 +147,7 @@ Foam::IOdictionary::IOdictionary(const IOobject& io, const dictionary& dict)
      || isHeaderOk
     )
     {
-        readFile(masterOnly);
+        readObjectOrFile(masterOnly);
     }
     else
     {
@@ -233,7 +233,7 @@ bool Foam::IOdictionary::objectHeaderOk(const IOobject& io)
 
         // 3. Search for parent file
 
-        autoPtr<IOobject> fileIO = parentIO.findFile();
+        autoPtr<IOobject> fileIO = parentIO.findFile(false);
         if (fileIO.valid() && fileIO().headerOk())
         {
             return true;

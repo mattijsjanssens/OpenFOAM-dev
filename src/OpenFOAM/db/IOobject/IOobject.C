@@ -387,19 +387,38 @@ Foam::fileName Foam::IOobject::filePath() const
 }
 
 
-Foam::autoPtr<Foam::IOobject> Foam::IOobject::findFile() const
+Foam::autoPtr<Foam::IOobject> Foam::IOobject::findFile
+(
+    const bool masterOnly
+) const
 {
-    fileName fName(filePath());
-    if (isFile(fName))
+    bool foundFile = false;
+    if (Pstream::master() || !masterOnly)
     {
-        InfoInFunction
-            << "    Found file " << fName << endl;
+        fileName fName(filePath());
+
+        foundFile = isFile(fName);
+
+        if (foundFile)
+        {
+            InfoInFunction
+                << "    Found file " << fName << endl;
+        }
+    }
+
+    if (masterOnly && Pstream::parRun())
+    {
+        Pstream::scatter(foundFile);
+    }
+
+    if (foundFile)
+    {
         return autoPtr<IOobject>(new IOobject(*this));
     }
 
     if (!db().isTime())
     {
-        return IOobject(*this, db().parent()).findFile();
+        return IOobject(*this, db().parent()).findFile(masterOnly);
     }
     else
     {

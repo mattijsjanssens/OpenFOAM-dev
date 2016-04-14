@@ -379,7 +379,7 @@ public:
 
             //- Return filePath of object or (recursively) of parent. Returns
             //  NULL if not found
-            autoPtr<IOobject> findFile() const;
+            autoPtr<IOobject> findFile(const bool masterOnly) const;
 
 
         // Reading

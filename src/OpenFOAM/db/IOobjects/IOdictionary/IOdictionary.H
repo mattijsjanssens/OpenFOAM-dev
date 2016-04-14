@@ -68,6 +68,9 @@ class IOdictionary
         //  (typeName instead of type()) because of use in constructor.
         void readFile(const bool);
 
+        //- Read dictionary from database or file. Parallel aware.
+        bool readObjectOrFile(const bool masterOnly);
+
 
 public:
 

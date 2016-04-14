@@ -117,7 +117,7 @@ void Foam::GeometricField<Type, PatchField, GeoMesh>::readFields()
 
 
         // 2. Search for parent file
-        autoPtr<IOobject> fileIO = parentIO.findFile();
+        autoPtr<IOobject> fileIO = parentIO.findFile(false);
         if (fileIO.valid())
         {
             // Tbd: if findFile is same as current path do not load it.
@@ -1093,7 +1093,7 @@ bool Foam::GeometricField<Type, PatchField, GeoMesh>::read()
 
 
         // 2. Search for parent file
-        autoPtr<IOobject> fileIO = parentIO.findFile();
+        autoPtr<IOobject> fileIO = parentIO.findFile(false);
         if (fileIO.valid())
         {
             // Tbd: if findFile is same as current path do not load it.
