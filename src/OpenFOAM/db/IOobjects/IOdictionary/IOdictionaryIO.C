@@ -159,15 +159,25 @@ bool Foam::IOdictionary::readObjectOrFile(const bool masterOnly)
                 false,
                 true            // allow pattern match
             );
-            if (!ePtr)
+            if (ePtr && ePtr->isDict())
             {
-                FatalIOErrorInFunction(parent)
-                    << "Did not find entry " << key
-                    << " in parent dictionary " << name()
-                    << exit(FatalIOError);
+                dictionary::operator=(ePtr->dict());
+                return true;
             }
 
-            dictionary::operator=(ePtr->dict());
+            // TBD: do we want to fall back to
+            //      - reading the top-level: dictionary::operator=parent
+            //      - read the original file
+            //      - fatal error and force user to provide region entry.
+
+            WarningInFunction
+                << "Did not find entry " << key
+                << " in parent dictionary " << parent.name()
+                << endl;//    << exit(FatalIOError);
+
+            // 3. Normal, local reading
+            //dictionary::operator=(parent);
+            readFile(masterOnly);
             return true;
         }
 
@@ -178,6 +188,7 @@ bool Foam::IOdictionary::readObjectOrFile(const bool masterOnly)
         if (fileIO.valid())
         {
             // Read from file
+            fileIO().registerObject() = true;
             IOdictionary* dictPtr = new IOdictionary(fileIO);
             dictPtr->store();
 
@@ -271,6 +282,7 @@ bool Foam::IOdictionary::read()
         if (fileIO.valid())
         {
             // Read from file
+            fileIO().registerObject() = true;
             IOdictionary* dictPtr = new IOdictionary(fileIO());
             dictPtr->store();
 

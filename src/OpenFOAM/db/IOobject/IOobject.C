@@ -402,7 +402,7 @@ Foam::autoPtr<Foam::IOobject> Foam::IOobject::findFile
         if (foundFile)
         {
             InfoInFunction
-                << "    Found file " << fName << endl;
+                << "Found file " << fName << endl;
         }
     }
 

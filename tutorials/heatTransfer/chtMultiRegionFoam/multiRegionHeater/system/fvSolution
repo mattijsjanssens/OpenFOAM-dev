@@ -19,4 +19,104 @@ PIMPLE
     nOuterCorrectors 1;
 }
 
+"(topAir|bottomWater)"
+{
+    solvers
+    {
+        rho
+        {
+            solver          PCG;
+            preconditioner  DIC;
+            tolerance       1e-7;
+            relTol          0.1;
+        }
+
+        rhoFinal
+        {
+            $rho;
+            tolerance       1e-7;
+            relTol          0;
+        }
+
+        p_rgh
+        {
+            solver           GAMG;
+            tolerance        1e-7;
+            relTol           0.01;
+
+            smoother         GaussSeidel;
+
+            cacheAgglomeration  true;
+            nCellsInCoarsestLevel 10;
+            agglomerator     faceAreaPair;
+            mergeLevels      1;
+        }
+
+        p_rghFinal
+        {
+            $p_rgh;
+            tolerance        1e-7;
+            relTol           0;
+        }
+
+        "(U|h|k|epsilon|R)"
+        {
+            solver           PBiCG;
+            preconditioner   DILU;
+            tolerance        1e-7;
+            relTol           0.1;
+        }
+
+        "(U|h|k|epsilon|R)Final"
+        {
+            $U;
+            tolerance        1e-7;
+            relTol           0;
+        }
+    }
+
+    PIMPLE
+    {
+        momentumPredictor   on;
+        nCorrectors         2;
+        nNonOrthogonalCorrectors 0;
+    }
+
+    relaxationFactors
+    {
+        equations
+        {
+            "h.*"           1;
+            "U.*"           1;
+        }
+    }
+}
+
+
+"(leftSolid|heater|rightSolid)"
+{
+    solvers
+    {
+        h
+        {
+            solver           PCG;
+            preconditioner   DIC;
+            tolerance        1e-06;
+            relTol           0.1;
+        }
+
+        hFinal
+        {
+            $h;
+            tolerance        1e-06;
+            relTol           0;
+        }
+    }
+
+    PIMPLE
+    {
+        nNonOrthogonalCorrectors 0;
+    }
+}
+
 // ************************************************************************* //
