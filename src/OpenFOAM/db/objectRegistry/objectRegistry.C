@@ -44,7 +44,7 @@ bool Foam::objectRegistry::parentNotTime() const
 
 bool Foam::objectRegistry::isTime() const
 {
-    return &db() == dynamic_cast<const objectRegistry*>(&db().time());
+    return this == dynamic_cast<const objectRegistry*>(&db().time());
 }
 
 
