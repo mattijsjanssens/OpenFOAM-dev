@@ -10,21 +10,53 @@ FoamFile
     version     2.0;
     format      ascii;
     class       dictionary;
-    object      changeDictionaryDict;
+    object      p;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-dictionaryReplacement
+topAir
 {
-    boundary
+    dimensions      [1 -1 -2 0 0 0 0];
+
+    internalField   uniform 1e5;
+
+    boundaryField
     {
-        minZ
+        ".*"
         {
-            type            patch;
+            type            calculated;
+            value           $internalField;
         }
-        maxZ
+    }
+}
+bottomWater
+{
+    dimensions      [1 -1 -2 0 0 0 0];
+
+    internalField   uniform 0;
+
+    boundaryField
+    {
+        ".*"
         {
-            type            patch;
+            type            calculated;
+            value           $internalField;
+        }
+    }
+}
+
+"(heater|leftSolid|rightSolid)"
+{
+    dimensions      [1 -1 -2 0 0 0 0];
+
+    internalField   uniform 0;
+
+    boundaryField
+    {
+        ".*"
+        {
+            type            calculated;
+            value           $internalField;
         }
     }
 }

@@ -9,30 +9,26 @@ runApplication blockMesh
 runApplication topoSet
 runApplication splitMeshRegions -cellZones -overwrite
 
-# remove fluid fields from solid regions (important for post-processing)
+rm -rf 0 && cp -r 0.org 0
+
+# Change patch type to 'patch' (was 'wall'). Not really necessary
 for i in heater leftSolid rightSolid
-do
-   rm -f 0*/$i/{nut,alphat,epsilon,k,U,p_rgh}
-done
-
-
-for i in bottomWater topAir heater leftSolid rightSolid
 do
    runApplication -s $i  changeDictionary -region $i
 done
 
 
 #-- Run on single processor
-#runApplication `getApplication`
+runApplication `getApplication`
 
-# Decompose
-runApplication decomposePar -allRegions
-
-# Run
-runParallel `getApplication`
-
-# Reconstruct
-runApplication reconstructPar -allRegions
+## Decompose
+#runApplication decomposePar -allRegions
+#
+## Run
+#runParallel `getApplication`
+#
+## Reconstruct
+#runApplication reconstructPar -allRegions
 
 
 echo

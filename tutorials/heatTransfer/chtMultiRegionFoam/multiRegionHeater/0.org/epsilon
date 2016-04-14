@@ -10,21 +10,34 @@ FoamFile
     version     2.0;
     format      ascii;
     class       dictionary;
-    object      changeDictionaryDict;
+    object      epsilon;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-dictionaryReplacement
+"(topAir|bottomWater)"
 {
-    boundary
+    dimensions      [0 2 -3 0 0 0 0];
+
+    internalField   uniform 0.01;
+
+    boundaryField
     {
-        minZ
+        ".*"
         {
-            type            patch;
+            type            epsilonWallFunction;
+            value           $internalField;
         }
-        maxZ
+
+        minX
         {
-            type            patch;
+            type            fixedValue;
+            value           $internalField;
+        }
+        maxX
+        {
+            type            inletOutlet;
+            inletValue      $internalField;
+            value           $internalField;
         }
     }
 }
