@@ -14,19 +14,46 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-dictionaryReplacement
+heater
 {
-    boundary
+    dictionaryReplacement
     {
-        minZ
+        boundary
         {
-            type            patch;
-        }
-        maxZ
-        {
-            type            patch;
+            minY
+            {
+                type            patch;
+            }
+            minZ
+            {
+                type            patch;
+            }
+            maxZ
+            {
+                type            patch;
+            }
         }
     }
 }
+
+"(leftSolid|rightSolid)"
+{
+    dictionaryReplacement
+    {
+        boundary
+        {
+            minZ
+            {
+                type            patch;
+            }
+            maxZ
+            {
+                type            patch;
+            }
+        }
+    }
+}
+
+
 
 // ************************************************************************* //

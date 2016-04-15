@@ -260,23 +260,36 @@ int main(int argc, char *argv[])
             ++nProcs;
         }
 
-        // get requested numberOfSubdomains
-        const label nDomains = readLabel
-        (
-            IOdictionary
+        label nDomains = 1;
+        {
+            // Create objectRegistry for the region. This is so the
+            // IOdictionary indirect reading gets a chance to search up.
+            objectRegistry region
             (
                 IOobject
                 (
-                    "decomposeParDict",
-                    runTime.time().system(),
-                    regionDir,          // use region if non-standard
+                    regionName,
+                    runTime.timeName(),
                     runTime,
-                    IOobject::MUST_READ_IF_MODIFIED,
-                    IOobject::NO_WRITE,
-                    false
+                    IOobject::MUST_READ
                 )
-            ).lookup("numberOfSubdomains")
-        );
+            );
+            nDomains = readLabel
+            (
+                IOdictionary
+                (
+                    IOobject
+                    (
+                        "decomposeParDict",
+                        runTime.time().system(),
+                        region,
+                        IOobject::MUST_READ_IF_MODIFIED,
+                        IOobject::NO_WRITE,
+                        false
+                    )
+                ).lookup("numberOfSubdomains")
+            );
+        }
 
         if (decomposeFieldsOnly)
         {

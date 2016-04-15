@@ -17,44 +17,21 @@ FoamFile
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+// To keep argList checking happy
 numberOfSubdomains  4;
 
-//- Keep owner and neighbour on same processor for faces in zones:
-// preserveFaceZones (heater solid1 solid3);
-
-method          scotch;
-// method          hierarchical;
-// method          simple;
-// method          manual;
-
-simpleCoeffs
+".*"
 {
-    n           (2 2 1);
-    delta       0.001;
+    numberOfSubdomains  ${:numberOfSubdomains};
+
+    method              hierarchical;
+    hierarchicalCoeffs
+    {
+        n           (2 2 1);
+        delta       0.001;
+        order       xyz;
+    }
 }
-
-hierarchicalCoeffs
-{
-    n           (2 2 1);
-    delta       0.001;
-    order       xyz;
-}
-
-
-manualCoeffs
-{
-    dataFile    "decompositionData";
-}
-
-
-//// Is the case distributed
-//distributed     yes;
-//// Per slave (so nProcs-1 entries) the directory above the case.
-//roots
-//(
-//    "/tmp"
-//    "/tmp"
-//);
 
 
 // ************************************************************************* //
