@@ -452,6 +452,32 @@ int main(int argc, char *argv[])
 
             Info<< "Time = " << runTime.timeName() << endl;
 
+            // In case of multi-region support load the 'parent' IOdictionaries
+            PtrList<IOdictionary> parentDicts;
+            if (mesh.name() != fvMesh::defaultRegion)
+            {
+                // Search for list of runTime objects for this time
+                IOobjectList objects(runTime, runTime.timeName());
+
+                wordList masterNames
+                (
+                    objects.sortedNames
+                    (
+                        IOdictionary::typeName
+                    )
+                );
+                Pstream::scatter(masterNames);
+
+                parentDicts.setSize(masterNames.size());
+                forAll(masterNames, i)
+                {
+                    Info<< "Loading dictionary " << masterNames[i] << endl;
+                    const IOobject& io = *objects[masterNames[i]];
+                    parentDicts.set(i, new IOdictionary(io));
+                }
+            }
+
+
             // Search for list of objects for this time
             IOobjectList objects(mesh, runTime.timeName());
 

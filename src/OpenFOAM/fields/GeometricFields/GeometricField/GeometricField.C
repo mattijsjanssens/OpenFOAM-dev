@@ -1164,6 +1164,7 @@ bool Foam::GeometricField<Type, PatchField, GeoMesh>::writeObject
                 fldDict = dictionary(is);
             }
             parent.setScoped(scope, fldDict);
+            parent.writeOpt() = IOobject::AUTO_WRITE;
 
             return true;
         }
