@@ -70,4 +70,20 @@ bool Foam::IOobject::writeHeader(Ostream& os) const
 }
 
 
+Foam::dictionary Foam::IOobject::headerDict(const word& type) const
+{
+    OStringStream formatOs;
+    formatOs << db().time().writeFormat();
+    word format(IStringStream(formatOs.str())());
+
+    dictionary d;
+    d.add("version", IOstream::currentVersion);
+    d.add("format", format);
+    d.add("class", type);
+    d.add("location", instance()/db().dbDir()/local());
+    d.add("object", name());
+    return d;
+}
+
+
 // ************************************************************************* //

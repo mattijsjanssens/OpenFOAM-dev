@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -44,8 +44,7 @@ bool IOdictionary2::writeDictionaries
 
 Foam::IOdictionary2::IOdictionary2(const IOobject& io)
 :
-    regIOobject(io),
-    fileEventNo_(labelMin)
+    regIOobject(io)
 {
     // Temporary warning
     if (debug && io.readOpt() == IOobject::MUST_READ)
@@ -72,13 +71,13 @@ Foam::IOdictionary2::IOdictionary2(const IOobject& io)
         {
             if (Pstream::master())
             {
-                isHeaderOk = headerOk();
+                isHeaderOk = objectHeaderOk(*this); //headerOk();
             }
             Pstream::scatter(isHeaderOk);
         }
         else
         {
-            isHeaderOk = headerOk();
+            isHeaderOk = objectHeaderOk(*this); //headerOk();
         }
     }
 
@@ -92,30 +91,16 @@ Foam::IOdictionary2::IOdictionary2(const IOobject& io)
      || isHeaderOk
     )
     {
-        readFile(masterOnly);
-        setUpToDate();
-        fileEventNo_ = eventNo();
+        readObjectOrFile(masterOnly);
     }
 
     dictionary::name() = IOobject::objectPath();
 }
 
 
-Foam::IOdictionary2::IOdictionary2(const IOobject& io, const bool allowIndirect)
-:
-    regIOobject(io),
-    fileEventNo_(labelMin)
-{
-    Pout<< "IOdictionary2::IOdictionary2 :" << objectPath() << endl;
-    read2();
-}
-
-
-
 Foam::IOdictionary2::IOdictionary2(const IOobject& io, const dictionary& dict)
 :
-    regIOobject(io),
-    fileEventNo_(labelMin)
+    regIOobject(io)
 {
     // Temporary warning
     if (debug && io.readOpt() == IOobject::MUST_READ)
@@ -142,13 +127,13 @@ Foam::IOdictionary2::IOdictionary2(const IOobject& io, const dictionary& dict)
         {
             if (Pstream::master())
             {
-                isHeaderOk = headerOk();
+                isHeaderOk = objectHeaderOk(*this); //headerOk();
             }
             Pstream::scatter(isHeaderOk);
         }
         else
         {
-            isHeaderOk = headerOk();
+            isHeaderOk = objectHeaderOk(*this); //headerOk();
         }
     }
 
@@ -162,31 +147,26 @@ Foam::IOdictionary2::IOdictionary2(const IOobject& io, const dictionary& dict)
      || isHeaderOk
     )
     {
-        readFile(masterOnly);
+        readObjectOrFile(masterOnly);
     }
     else
     {
         dictionary::operator=(dict);
     }
 
-    setUpToDate();
-    fileEventNo_ = eventNo();
     dictionary::name() = IOobject::objectPath();
 }
 
 
 Foam::IOdictionary2::IOdictionary2(const IOobject& io, Istream& is)
 :
-    regIOobject(io),
-    fileEventNo_(labelMin)
+    regIOobject(io)
 {
     dictionary::name() = IOobject::objectPath();
     // Note that we do construct the dictionary null and read in afterwards
     // so that if there is some fancy massaging due to a functionEntry in
     // the dictionary at least the type information is already complete.
     is  >> *this;
-    setUpToDate();
-    fileEventNo_ = eventNo();
 }
 
 
@@ -201,6 +181,150 @@ Foam::IOdictionary2::~IOdictionary2()
 const Foam::word& Foam::IOdictionary2::name() const
 {
     return regIOobject::name();
+}
+
+
+bool Foam::IOdictionary2::objectHeaderOk(const IOobject& io)
+{
+    IOobject parentIO(io, io.db().parent());
+
+    if (!io.db().isTime())
+    {
+        // 1. Check if there is a registered parent and if so check that
+
+        const IOdictionary2* parentPtr =
+            parentIO.db().lookupObjectPtr<IOdictionary2>
+            (
+                parentIO.name(),
+                true
+            );
+
+        if (parentPtr)
+        {
+            const IOdictionary2& parent = *parentPtr;
+
+            word key
+            (
+                scopedName(io.db().dbDir(), parent.db().dbDir())
+            );
+
+            const entry* ePtr = parent.lookupScopedEntryPtr
+            (
+                key,
+                false,
+                true            // allow pattern match
+            );
+            if (ePtr && ePtr->isDict())
+            {
+                const dictionary& dict = ePtr->dict();
+                // Check that has FoamFile entry. Move into IOobjectReadHeader.
+                // Cannot yet since we don't have an IOdictionary
+                // (headerOk not yet member function)
+                if (dict.found("FoamFile"))
+                {
+                    // Make sure FoamFile contents is correct
+                    const dictionary& headerDict = dict.subDict("FoamFile");
+                    const word className(headerDict.lookup("class"));
+                    const word headerObject(headerDict.lookup("object"));
+                }
+
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+    }
+
+
+    // 2. Local check
+    if (const_cast<IOobject&>(io).headerOk())
+    {
+        return true;
+    }
+
+
+    if (!io.db().isTime())
+    {
+        // 3. Search for parent file
+
+        autoPtr<IOobject> fileIO = parentIO.findFile(false);
+        if (fileIO.valid() && fileIO().headerOk())
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
+Foam::autoPtr<Foam::IOobject> Foam::IOdictionary2::lookupClass
+(
+    const fileName& dbDir,
+    const word& ClassName
+) const
+{
+    word key(scopedName(dbDir, db().dbDir()));
+
+    const entry* ePtr = lookupScopedEntryPtr
+    (
+        key,
+        false,
+        true            // allow pattern match
+    );
+    if (ePtr && ePtr->isDict())
+    {
+        const dictionary& dict = ePtr->dict();
+
+        autoPtr<IOobject> ioPtr(new IOobject(*this));
+        if (ioPtr().readHeader(dict))
+        {
+            if (ioPtr().headerClassName() == ClassName)
+            {
+                return ioPtr;
+            }
+        }
+    }
+
+    return autoPtr<IOobject>(NULL);
+}
+
+
+Foam::IOobjectList Foam::IOdictionary2::lookupClass
+(
+    const word& ClassName,
+    const IOobjectList& fileObjects,
+    const PtrList<IOdictionary2>& parentObjects,
+    const fileName& dbDir
+)
+{
+    IOobjectList objectsOfClass(fileObjects.size()+parentObjects.size());
+
+    // 1. From file objects
+    forAllConstIter(IOobjectList, fileObjects, iter)
+    {
+        if (iter()->headerClassName() == ClassName)
+        {
+            objectsOfClass.insert(iter.key(), new IOobject(*iter()));
+        }
+    }
+
+    // 2. From parent objects
+    forAll(parentObjects, i)
+    {
+        const IOdictionary2& dict = parentObjects[i];
+
+        autoPtr<IOobject> ioPtr(dict.lookupClass(dbDir, ClassName));
+        if (ioPtr.valid())
+        {
+            IOobject* io = ioPtr.ptr();
+
+            objectsOfClass.insert(io->name(), io);
+        }
+    }
+    return objectsOfClass;
 }
 
 

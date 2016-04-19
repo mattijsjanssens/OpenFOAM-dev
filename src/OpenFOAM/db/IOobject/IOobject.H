@@ -387,6 +387,9 @@ public:
             //- Read header
             bool readHeader(Istream&);
 
+            //- Read header from dictionary
+            bool readHeader(const dictionary&);
+
             //- Read and check header info
             bool headerOk();
 
@@ -411,6 +414,9 @@ public:
 
             //- Write header. Allow override of type
             bool writeHeader(Ostream&, const word& objectType) const;
+
+            //- Construct header dictionary
+            dictionary headerDict(const word& objectType) const;
 
 
         // Error Handling

@@ -111,7 +111,9 @@ void Foam::GeometricField<Type, PatchField, GeoMesh>::readFields()
                     << exit(FatalIOError);
             }
 
-            this->readFields(ePtr->dict());
+            const dictionary& dict = ePtr->dict();
+            this->readHeader(dict);
+            this->readFields(dict);
             return;
         }
 
@@ -128,6 +130,7 @@ void Foam::GeometricField<Type, PatchField, GeoMesh>::readFields()
             if (fileIO().objectPath() != this->objectPath())
             {
                 // Read from file
+                fileIO().registerObject() = true;
                 IOdictionary* dictPtr = new IOdictionary(fileIO());
                 dictPtr->store();
 
@@ -1087,7 +1090,9 @@ bool Foam::GeometricField<Type, PatchField, GeoMesh>::read()
                     << exit(FatalIOError);
             }
 
-            this->readFields(ePtr->dict());
+            const dictionary& dict = ePtr->dict();
+            this->readHeader(dict);
+            this->readFields(dict);
             return true;
         }
 
@@ -1103,6 +1108,7 @@ bool Foam::GeometricField<Type, PatchField, GeoMesh>::read()
             // same directory as GeometricField.
             if (fileIO().objectPath() != this->objectPath())
             {
+                fileIO().registerObject() = true;
                 IOdictionary* dictPtr = new IOdictionary(fileIO());
                 dictPtr->store();
 
@@ -1164,6 +1170,21 @@ bool Foam::GeometricField<Type, PatchField, GeoMesh>::writeObject
                 fldDict = dictionary(is);
             }
             parent.setScoped(scope, fldDict);
+
+            // Add the header
+            {
+                dictionary dict(this->headerDict(this->type()));
+
+                const entry* entPtr = parent.lookupScopedEntryPtr
+                (
+                    scope,
+                    false,          //recursive
+                    false
+                );
+
+                const_cast<dictionary&>(entPtr->dict()).set("FoamFile", dict);
+            }
+
             parent.writeOpt() = IOobject::AUTO_WRITE;
 
             return true;

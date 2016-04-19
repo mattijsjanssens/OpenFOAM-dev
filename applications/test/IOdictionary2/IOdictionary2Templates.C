@@ -101,55 +101,55 @@ License
 // 
 //     return ok;
 // }
-
-//- Write to parent (if it is registered)
-template<class Type>
-bool Foam::IOdictionary2::writeToParent()
-{
-    //Pout<< "IOdictionary2::writeToParent() :"
-    //    << " :" << objectPath()
-    //    << " ev:" << fileEventNo_ << endl;
-
-    bool ok = false;
-    if
-    (
-       &db()
-     != dynamic_cast<const objectRegistry*>(&db().time())
-    )
-    {
-        const Type* parentPtr =
-            lookupObjectPtr<Type>(db().parent(), name(), false);
-        if (parentPtr)
-        {
-            Type& parent = const_cast<Type&>(*parentPtr);
-
-            Pout<< "IOdictionary2::writeToParent() :"
-                << " : found parent object:" << parent.objectPath()
-                << " evmet:" << parent.fileEventNo_ << endl;
-
-            // Update parent from *this
-            {
-                OStringStream os;
-                writeData(os);
-                IStringStream is(os.str());
-                ok = parent.readPart(*this, is);
-            }
-
-            // Update parent
-            parent.writeToParent<Type>();
-
-            return ok;
-        }
-    }
-    else
-    {
-        // Highest registered. This is always based on file!
-        // It will be written itself (hopefully) through the
-        // objectRegistry::write()
-    }
-
-    return ok;
-}
+//
+// //- Write to parent (if it is registered)
+// template<class Type>
+// bool Foam::IOdictionary2::writeToParent()
+// {
+//     //Pout<< "IOdictionary2::writeToParent() :"
+//     //    << " :" << objectPath()
+//     //    << " ev:" << fileEventNo_ << endl;
+//
+//     bool ok = false;
+//     if
+//     (
+//        &db()
+//      != dynamic_cast<const objectRegistry*>(&db().time())
+//     )
+//     {
+//         const Type* parentPtr =
+//             lookupObjectPtr<Type>(db().parent(), name(), false);
+//         if (parentPtr)
+//         {
+//             Type& parent = const_cast<Type&>(*parentPtr);
+//
+//             Pout<< "IOdictionary2::writeToParent() :"
+//                 << " : found parent object:" << parent.objectPath()
+//                 << " evmet:" << parent.fileEventNo_ << endl;
+//
+//             // Update parent from *this
+//             {
+//                 OStringStream os;
+//                 writeData(os);
+//                 IStringStream is(os.str());
+//                 ok = parent.readPart(*this, is);
+//             }
+//
+//             // Update parent
+//             parent.writeToParent<Type>();
+//
+//             return ok;
+//         }
+//     }
+//     else
+//     {
+//         // Highest registered. This is always based on file!
+//         // It will be written itself (hopefully) through the
+//         // objectRegistry::write()
+//     }
+//
+//     return ok;
+// }
 
 
 // ************************************************************************* //

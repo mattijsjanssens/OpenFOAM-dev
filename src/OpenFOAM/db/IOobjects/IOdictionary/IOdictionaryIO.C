@@ -161,14 +161,20 @@ bool Foam::IOdictionary::readObjectOrFile(const bool masterOnly)
             );
             if (ePtr && ePtr->isDict())
             {
-                dictionary::operator=(ePtr->dict());
+                const dictionary& dict = ePtr->dict();
+                readHeader(dict);
+                dictionary::operator=(dict);
                 return true;
             }
 
-            // TBD: do we want to fall back to
+            // TBD: ?do we want to fall back to
             //      - reading the top-level: dictionary::operator=parent
             //      - read the original file
             //      - fatal error and force user to provide region entry.
+            // With reading-the-original-file we have the problem of keeping
+            // any region entries. Also we then write as a subdictionary
+            // and these get copied.
+
 
             WarningInFunction
                 << "Did not find entry " << key
@@ -267,7 +273,9 @@ bool Foam::IOdictionary::read()
                     << exit(FatalIOError);
             }
 
-            dictionary::operator=(ePtr->dict());
+            const dictionary& dict = ePtr->dict();
+            readHeader(dict);
+            dictionary::operator=(dict);
             return true;
         }
 
@@ -364,8 +372,9 @@ bool Foam::IOdictionary::readIfModified()
                         << exit(FatalIOError);
                 }
 
-                dictionary::operator=(ePtr->dict());
-
+                const dictionary& dict = ePtr->dict();
+                readHeader(dict);
+                dictionary::operator=(dict);
                 return true;
             }
         }
@@ -407,7 +416,24 @@ bool Foam::IOdictionary::writeObject
                     parent.db().dbDir()
                 )
             );
+
+            // Add dictionary
             parent.setScoped(scope, *this);
+
+            // Add the header
+            {
+                dictionary dict(headerDict(type()));
+
+                const entry* entPtr = parent.lookupScopedEntryPtr
+                (
+                    scope,
+                    false,          //recursive
+                    false
+                );
+
+                const_cast<dictionary&>(entPtr->dict()).set("FoamFile", dict);
+            }
+
             return true;
         }
     }

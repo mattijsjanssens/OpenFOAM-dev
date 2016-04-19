@@ -41,6 +41,7 @@ SourceFiles
 
 #include "dictionary.H"
 #include "regIOobject.H"
+#include "IOobjectList.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -128,6 +129,22 @@ public:
         //  - checks for registered IOdictionary with entry for IO present
         //  - checks for higher level file
         static bool objectHeaderOk(const IOobject&);
+
+        //- Find for given scope if there is an object of class
+        autoPtr<IOobject> lookupClass
+        (
+            const fileName&,
+            const word& ClassName
+        ) const;
+
+        //- Helper: merge IOobjectList (from files) with that of database lookup
+        static IOobjectList lookupClass
+        (
+            const word& ClassName,
+            const IOobjectList& fileObjects,
+            const PtrList<IOdictionary>& parentObjects,
+            const fileName& dbDir
+        );
 
 
     // Member operators

@@ -41,8 +41,7 @@ SourceFiles
 
 #include "dictionary.H"
 #include "regIOobject.H"
-#include "objectRegistry.H"
-#include "IOstreams.H"
+#include "IOobjectList.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -62,9 +61,6 @@ class IOdictionary2
 
         static bool writeDictionaries;
 
-        //- eventNo (on database holding file) of last update
-        label fileEventNo_;
-
 
     // Private Member Functions
 
@@ -73,8 +69,15 @@ class IOdictionary2
         //  (typeName instead of type()) because of use in constructor.
         void readFile(const bool);
 
-        //- Read IOdictionary and register
-        static IOdictionary2* readFileAndRegister(const IOobject& io);
+        //- Read dictionary from database or file. Parallel aware.
+        bool readObjectOrFile(const bool masterOnly);
+
+        //- Read header from FoamFile entry. Returns true if found.
+        bool readHeader(const dictionary&);
+
+        //- Return FoamFile header as dictionary
+        dictionary headerDict(const word& type) const;
+
 
 public:
 
@@ -91,9 +94,6 @@ public:
 
         //- Construct given an IOobject and Istream
         IOdictionary2(const IOobject&, Istream&);
-
-        //- Construct given an IOobject with parent-reading
-        IOdictionary2(const IOobject&, const bool allowIndirect);
 
 
     //- Destructor
@@ -112,82 +112,8 @@ public:
         //- WriteData function required for regIOobject write operation
         virtual bool writeData(Ostream&) const;
 
-
-
-    // New
-
-        // To be moved into objectRegistry
-
-            //- Lookup object. Optionally recursive
-            template<class Type>
-            static const Type* lookupObjectPtr
-            (
-                const objectRegistry& obr,
-                const word& name,
-                const bool recurse
-            )
-            {
-                objectRegistry::const_iterator iter = obr.find(name);
-                if (iter != obr.end())
-                {
-                    return dynamic_cast<const Type*>(iter());
-                }
-                else if
-                (
-                    recurse
-                 && &obr != dynamic_cast<const objectRegistry*>(&obr.time())
-                )
-                {
-                    return lookupObjectPtr<Type>(obr.parent(), name, recurse);
-                }
-                else
-                {
-                    return NULL;
-                }
-            }
-
-            //- Read from parent (if it is registered)
-            //template<class Type>
-            bool readFromParent();
-
-            //- Write to parent (if it is registered)
-            template<class Type>
-            bool writeToParent();
-
-
-        //- Return stream for obj to read itself
-        virtual autoPtr<Istream> readPart(const IOobject& obj) const;
-
-        //- Read part from Istream
-        virtual bool readPart(const IOobject& child, Istream&);
-
         //- Read dictionary from parent or file
         virtual bool read();
-
-        //- Write using given format, version and compression
-        virtual bool writeObject
-        (
-            IOstream::streamFormat,
-            IOstream::versionNumber,
-            IOstream::compressionType
-        ) const;
-
-//XXXXX
-        //- Override/set entry. Move into dictionary
-        static void setScoped
-        (
-            dictionary& dict,
-            const UList<word>& scope,
-            const dictionary&
-        );
-        //- Construct key for use in dictionary scoped lookup
-        static word scopedKey(const word&, const fileName&, const fileName&);
-
-        //- Search up for file
-        static autoPtr<IOobject> findFile(const IOobject& io);
-
-        //- Read dictionary from parent or file
-        virtual bool read2();
 
         //- Return true if the object's file (or files for objectRegistry)
         //  have been modified. (modified state is cached by Time)
@@ -197,13 +123,35 @@ public:
         virtual bool readIfModified();
 
         //- Write using given format, version and compression
-        virtual bool writeObject2
+        virtual bool writeObject
         (
             IOstream::streamFormat,
             IOstream::versionNumber,
             IOstream::compressionType
         ) const;
-//XXXXX
+
+        //- Helper: check that file (or parent IOdictionary) is present.
+        //  - checks IOobject::headerOk
+        //  - checks for registered IOdictionary with entry for IO present
+        //  - checks for higher level file
+        static bool objectHeaderOk(const IOobject&);
+
+        //- Find for given scope if there is an object of class
+        autoPtr<IOobject> lookupClass
+        (
+            const fileName&,
+            const word& ClassName
+        ) const;
+
+        //- Helper: merge IOobjectList (from files) with that of database lookup
+        static IOobjectList lookupClass
+        (
+            const word& ClassName,
+            const IOobjectList& fileObjects,
+            const PtrList<IOdictionary2>& parentObjects,
+            const fileName& dbDir
+        );
+
 
     // Member operators
 
@@ -215,12 +163,6 @@ public:
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-#ifdef NoRepository
-    #include "IOdictionary2Templates.C"
-#endif
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
