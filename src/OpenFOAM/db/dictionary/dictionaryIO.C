@@ -40,7 +40,7 @@ Foam::dictionary::dictionary
     dictionaryName(parentDict.name() + '.' + name),
     parent_(parentDict)
 {
-    read(is);
+    read(is, true);
 }
 
 

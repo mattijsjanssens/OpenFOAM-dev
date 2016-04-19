@@ -37,6 +37,8 @@ Description
 #include "pointFields.H"
 #include "scalarList.H"
 #include "vectorList.H"
+#include "OTstream.H"
+#include "zeroGradientPointPatchFields.H"
 
 using namespace Foam;
 
@@ -49,9 +51,108 @@ int main(int argc, char *argv[])
     #include "setRootCase.H"
     #include "createTime.H"
     #include "createNamedPolyMesh.H"
-// 
-//     Pout<< "Mesh:" << mesh.name() << endl;
-//     Pout<< "Mesh.db():" << mesh.dbDir() << endl;
+//
+// {
+//     IOdictionary2 displacement
+//     (
+//         IOobject
+//         (
+//             "pointDisplacement",
+//             mesh.time().timeName(),
+//             mesh,
+//             IOobject::READ_IF_PRESENT,
+//             IOobject::AUTO_WRITE
+//         )
+//     );
+//
+//     DebugVar(IOdictionary2::objectHeaderOk(displacement));
+//
+//     displacement.set("someEntry", "someValue");
+//
+//     runTime++;
+//     displacement.instance() = displacement.time().timeName();
+// //     displacement.writeObject
+// //     (
+// //         runTime.writeFormat(),
+// //         IOstream::currentVersion,
+// //         runTime.writeCompression()
+// //     );
+//
+//     runTime.write();
+//
+//
+//
+// return 0;
+
+//     const word key(":level1.level2A.level3A");
+//
+//     // Lookup
+//     {
+//         const entry* ePtr = displacement.lookupScopedEntryPtr
+//         (
+//             key,
+//             false,
+//             true            // allow pattern match
+//         );
+//         if (ePtr)
+//         {
+//             Pout<< "found entry : isDict:" << ePtr->isDict() << endl;
+//             ePtr->write(Pout);
+//         }
+//     }
+//     // Change
+//     {
+//         dictionary subDict;
+//         subDict.set("internalField", 123);
+//         displacement.dictionary::setScoped(key, subDict);
+//     }
+//     // Lookup
+//     {
+//         const entry* ePtr = displacement.lookupScopedEntryPtr
+//         (
+//             key,
+//             false,
+//             true            // allow pattern match
+//         );
+//         if (ePtr)
+//         {
+//             Pout<< "found entry : isDict:" << ePtr->isDict() << endl;
+//             ePtr->write(Pout);
+//         }
+//     }
+//
+//     DebugVar(displacement);
+//     return 0;
+// }
+
+//     {
+//         OTstream os("bla", 100);
+//         os << "some string" << endl;
+//         os << 123 << endl;
+//         os << 66.88 << endl;
+//         os << word("ABC") << endl;
+//
+//
+//         List<char> buf(3);
+//         buf[0] = 'a';
+//         buf[1] = 'b';
+//         buf[2] = 'c';
+//         os.write(buf.begin(), buf.size()*sizeof(char));
+//
+//         os.print(Pout);
+//     }
+//     {
+//         OTstream os("bla", 100);
+//
+//         dictionary d;
+//         d.add("one", label(1));
+//         d.add("two", 2.0);
+//         d.write(os);
+//
+//         os.print(Pout);
+//     }
+
+
 
 // {
 //     IOdictionary bla
@@ -66,7 +167,7 @@ int main(int argc, char *argv[])
 //         )
 //     );
 //     Pout<< "bla:" << bla << endl;
-// 
+//
 //     const entry* ePtr = bla.lookupScopedEntryPtr
 //     (
 //         ":level1.level2A.level3A",
@@ -80,7 +181,7 @@ int main(int argc, char *argv[])
 //     }
 // }
 
-    
+
 
 
 
@@ -130,10 +231,52 @@ int main(int argc, char *argv[])
 //         ),
 //         true
 //     );
-// 
+//
 //     Pout<< "dictA:" << dictA << endl << endl;
 
 
+// {
+//     IOobject io
+//     (
+//         "pointDisplacement_field",
+//         runTime.timeName(),
+//         mesh,
+//         IOobject::MUST_READ,
+//         IOobject::AUTO_WRITE
+//     );
+//     DebugVar(io.objectPath());
+//
+//     IOobject parentIO
+//     (
+//         io.name(),
+//         io.instance(),
+//         io.local(),
+//         io.db().parent(),
+//         io.readOpt(),
+//         io.writeOpt(),
+//         io.registerObject()
+//     );
+//     DebugVar(parentIO.objectPath());
+//
+//
+//     const pointMesh& pMesh = pointMesh::New(mesh);
+//     pointVectorField displacement
+//     (
+//         IOobject
+//         (
+//             "pointDisplacement_field",
+//             runTime.timeName(),
+//             mesh,
+//             IOobject::MUST_READ,
+//             IOobject::AUTO_WRITE
+//         ),
+//         pMesh
+//     );
+//     DebugVar(displacement.objectPath());
+//     DebugVar(displacement);
+//     Pout<< "TOP:" << runTime.lookupObject<IOdictionary2>("pointDisplacement")
+//         << endl;
+// }
 {
     const pointMesh& pMesh = pointMesh::New(mesh);
     pointVectorField displacement
@@ -155,16 +298,63 @@ int main(int argc, char *argv[])
     displacement.internalField() = vector::one;
     displacement.correctBoundaryConditions();
 
-    displacement.write();
+    //displacement.write();
     // After:
-    Pout<< "TOP:" << runTime.lookupObject<IOdictionary2>("pointDisplacement")
+    runTime++;
+    displacement.instance() = displacement.time().timeName();
+    runTime.write();
+    Pout<< "TOP:" << runTime.lookupObject<IOdictionary>("pointDisplacement")
         << endl;
+
+    // Postprocess
+
+    PtrList<IOdictionary2> parentDicts;
+    {
+        // Search for list of runTime objects for this time
+        IOobjectList objects(runTime, runTime.timeName());
+
+        wordList masterNames
+        (
+            objects.sortedNames
+            (
+                IOdictionary::typeName
+            )
+        );
+        Pstream::scatter(masterNames);
+
+        parentDicts.setSize(masterNames.size());
+        forAll(masterNames, i)
+        {
+            Info<< "Loading dictionary " << masterNames[i] << endl;
+            const IOobject& io = *objects[masterNames[i]];
+            parentDicts.set(i, new IOdictionary2(io));
+        }
+    }
+
+
+    // Search for list of objects for this time
+    IOobjectList fileObjects(level3A, runTime.timeName());
+    DebugVar(fileObjects.sortedNames());
+
+    // Add parent objects
+    IOobjectList objects
+    (
+        IOdictionary2::lookupClass
+        (
+            pointVectorField::typeName,
+            fileObjects,
+            parentDicts,
+            level3A.dbDir()
+        )
+    );
+    DebugVar(objects.sortedNames());
+    return 0;
 }
 
-// 
+//
 //     // Path B
 //     // ~~~~~~
-// 
+//
 //     objectRegistry level2B
 //     (
 //         IOobject
@@ -174,7 +364,7 @@ int main(int argc, char *argv[])
 //             level1
 //         )
 //     );
-// 
+//
 //     objectRegistry level3B
 //     (
 //         IOobject
@@ -184,7 +374,7 @@ int main(int argc, char *argv[])
 //             level2B
 //         )
 //     );
-// 
+//
 //     IOdictionary2 dictB
 //     (
 //         IOobject
@@ -197,15 +387,15 @@ int main(int argc, char *argv[])
 //         ),
 //         true
 //     );
-// 
+//
 //     Pout<< "dictB:" << dictB << endl << endl;
-// 
-// 
+//
+//
 //     // Do some writing
 //     // ~~~~~~~~~~~~~~~
 //     dictB.add("newEntry", 123);
-// 
-// 
+//
+//
 //     // Note that this does not actually write the file; it only updates
 //     // the levels; the actual file writing is done by the object registry
 //     dictB.writeObject2
@@ -214,13 +404,16 @@ int main(int argc, char *argv[])
 //         IOstream::currentVersion,
 //         dictB.time().writeCompression()
 //     );
-// 
+//
 //     // After:
 //     Pout<< "TOP:" << runTime.lookupObject<IOdictionary2>("bla") << endl;
 
     // Manually enforce writing:
     //runTime.lookupObject<IOdictionary2>("bla").regIOobject::write();
 
+//     objectRegistry::debug = 1;
+//     runTime.write();
+//     objectRegistry::debug = 0;
 
 
 

@@ -16,6 +16,14 @@ FoamFile
 
 "(topAir|bottomWater)"
 {
+    FoamFile
+    {
+        version     2.0;
+        format      ascii;
+        class       volScalarField;
+        object      T;
+    }
+
     dimensions      [ 0 0 0 1 0 0 0 ];
 
     internalField   uniform 300;
@@ -52,6 +60,14 @@ FoamFile
 
 heater
 {
+    FoamFile
+    {
+        version     2.0;
+        format      ascii;
+        class       volScalarField;
+        object      T;
+    }
+
     dimensions      [ 0 0 0 1 0 0 0 ];
 
     internalField   uniform 300;
@@ -97,6 +113,14 @@ heater
 
 "(leftSolid|rightSolid)"
 {
+    FoamFile
+    {
+        version     2.0;
+        format      ascii;
+        class       volScalarField;
+        object      T;
+    }
+
     dimensions      [ 0 0 0 1 0 0 0 ];
 
     internalField   uniform 300;

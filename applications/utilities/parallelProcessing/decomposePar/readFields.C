@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -32,11 +32,22 @@ void Foam::readFields
 (
     const Mesh& mesh,
     const IOobjectList& objects,
+    const PtrList<IOdictionary>& parentObjects,
     PtrList<GeoField>& fields
 )
 {
     // Search list of objects for fields of type GeomField
-    IOobjectList fieldObjects(objects.lookupClass(GeoField::typeName));
+    //IOobjectList fieldObjects(objects.lookupClass(GeoField::typeName));
+    IOobjectList fieldObjects
+    (
+        IOdictionary::lookupClass
+        (
+            GeoField::typeName,
+            objects,
+            parentObjects,
+            mesh.thisDb().dbDir()
+        )
+    );
 
     // Remove the cellDist field
     IOobjectList::iterator celDistIter = fieldObjects.find("cellDist");

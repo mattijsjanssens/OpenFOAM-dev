@@ -28,6 +28,36 @@ License
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+bool Foam::IOobject::readHeader(const dictionary& dict)
+{
+    if (dict.found("FoamFile"))
+    {
+        // Make sure FoamFile contents is correct
+        const dictionary& headerDict = dict.subDict("FoamFile");
+
+        headerClassName_ = word(headerDict.lookup("class"));
+
+        const word headerObject(headerDict.lookup("object"));
+        if (IOobject::debug && headerObject != name())
+        {
+            IOWarningInFunction(dict)
+                << " object renamed from "
+                << name() << " to " << headerObject
+                << " for dictionary " << dict.name() << endl;
+        }
+
+        // The note entry is optional
+        headerDict.readIfPresent("note", note_);
+
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+
 bool Foam::IOobject::readHeader(Istream& is)
 {
     if (IOobject::debug)

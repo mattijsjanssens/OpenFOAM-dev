@@ -312,7 +312,7 @@ Foam::dynamicRefineFvMesh::refine
 
         HashTable<surfaceScalarField*> fluxes
         (
-            lookupClass<surfaceScalarField>()
+            objectRegistry::lookupClass<surfaceScalarField>()
         );
         forAllIter(HashTable<surfaceScalarField*>, fluxes, iter)
         {
@@ -541,7 +541,7 @@ Foam::dynamicRefineFvMesh::unrefine
 
         HashTable<surfaceScalarField*> fluxes
         (
-            lookupClass<surfaceScalarField>()
+            objectRegistry::lookupClass<surfaceScalarField>()
         );
         forAllIter(HashTable<surfaceScalarField*>, fluxes, iter)
         {

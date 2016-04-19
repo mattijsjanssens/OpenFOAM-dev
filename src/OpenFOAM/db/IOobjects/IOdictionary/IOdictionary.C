@@ -186,17 +186,11 @@ const Foam::word& Foam::IOdictionary::name() const
 
 bool Foam::IOdictionary::objectHeaderOk(const IOobject& io)
 {
-    // 1. Local check
-    if (const_cast<IOobject&>(io).headerOk())
-    {
-        return true;
-    }
+    IOobject parentIO(io, io.db().parent());
 
     if (!io.db().isTime())
     {
-        // 2. Check if there is a registered parent and if so check that
-
-        IOobject parentIO(io, io.db().parent());
+        // 1. Check if there is a registered parent and if so check that
 
         const IOdictionary* parentPtr =
             parentIO.db().lookupObjectPtr<IOdictionary>
@@ -222,6 +216,18 @@ bool Foam::IOdictionary::objectHeaderOk(const IOobject& io)
             );
             if (ePtr && ePtr->isDict())
             {
+                const dictionary& dict = ePtr->dict();
+                // Check that has FoamFile entry. Move into IOobjectReadHeader.
+                // Cannot yet since we don't have an IOdictionary
+                // (headerOk not yet member function)
+                if (dict.found("FoamFile"))
+                {
+                    // Make sure FoamFile contents is correct
+                    const dictionary& headerDict = dict.subDict("FoamFile");
+                    const word className(headerDict.lookup("class"));
+                    const word headerObject(headerDict.lookup("object"));
+                }
+
                 return true;
             }
             else
@@ -229,8 +235,18 @@ bool Foam::IOdictionary::objectHeaderOk(const IOobject& io)
                 return false;
             }
         }
+    }
 
 
+    // 2. Local check
+    if (const_cast<IOobject&>(io).headerOk())
+    {
+        return true;
+    }
+
+
+    if (!io.db().isTime())
+    {
         // 3. Search for parent file
 
         autoPtr<IOobject> fileIO = parentIO.findFile(false);
@@ -241,6 +257,74 @@ bool Foam::IOdictionary::objectHeaderOk(const IOobject& io)
     }
 
     return false;
+}
+
+
+Foam::autoPtr<Foam::IOobject> Foam::IOdictionary::lookupClass
+(
+    const fileName& dbDir,
+    const word& ClassName
+) const
+{
+    word key(scopedName(dbDir, db().dbDir()));
+
+    const entry* ePtr = lookupScopedEntryPtr
+    (
+        key,
+        false,
+        true            // allow pattern match
+    );
+    if (ePtr && ePtr->isDict())
+    {
+        const dictionary& dict = ePtr->dict();
+
+        autoPtr<IOobject> ioPtr(new IOobject(*this));
+        if (ioPtr().readHeader(dict))
+        {
+            if (ioPtr().headerClassName() == ClassName)
+            {
+                return ioPtr;
+            }
+        }
+    }
+
+    return autoPtr<IOobject>(NULL);
+}
+
+
+Foam::IOobjectList Foam::IOdictionary::lookupClass
+(
+    const word& ClassName,
+    const IOobjectList& fileObjects,
+    const PtrList<IOdictionary>& parentObjects,
+    const fileName& dbDir
+)
+{
+    IOobjectList objectsOfClass(fileObjects.size()+parentObjects.size());
+
+    // 1. From file objects
+    forAllConstIter(IOobjectList, fileObjects, iter)
+    {
+        if (iter()->headerClassName() == ClassName)
+        {
+            objectsOfClass.insert(iter.key(), new IOobject(*iter()));
+        }
+    }
+
+    // 2. From parent objects
+    forAll(parentObjects, i)
+    {
+        const IOdictionary& dict = parentObjects[i];
+
+        autoPtr<IOobject> ioPtr(dict.lookupClass(dbDir, ClassName));
+        if (ioPtr.valid())
+        {
+            IOobject* io = ioPtr.ptr();
+
+            objectsOfClass.insert(io->name(), io);
+        }
+    }
+    return objectsOfClass;
 }
 
 
