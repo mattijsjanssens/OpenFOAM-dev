@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -619,7 +619,16 @@ void Foam::argList::parse
                     decompDict.lookup("numberOfSubdomains")
                 );
 
-                if (decompDict.lookupOrDefault("distributed", false))
+                if
+                (
+                    decompDict.lookupOrDefault
+                    (
+                        "distributed",
+                        false,
+                        false,
+                        false
+                    )
+                )
                 {
                     decompDict.lookup("roots") >> roots;
                 }

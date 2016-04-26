@@ -50,6 +50,11 @@ void Foam::GeometricField<Type, PatchField, GeoMesh>::readFields
     const dictionary& dict
 )
 {
+    if (debug)
+    {
+        DebugVar(dict);
+    }
+
     DimensionedField<Type, GeoMesh>::readField(dict, "internalField");
 
     boundaryField_.readField(*this, dict.subDict("boundaryField"));
@@ -88,6 +93,11 @@ void Foam::GeometricField<Type, PatchField, GeoMesh>::readFields()
         {
             const IOdictionary& parent = *parentPtr;
 
+            if (debug)
+            {
+                Pout<< "Found parent:" << parent << endl;
+            }
+
             word key
             (
                 dictionary::scopedName
@@ -96,6 +106,11 @@ void Foam::GeometricField<Type, PatchField, GeoMesh>::readFields()
                     parent.db().dbDir()
                 )
             );
+
+            if (debug)
+            {
+                Pout<< "Looked up key:" << key << endl;
+            }
 
             const entry* ePtr = parent.lookupScopedEntryPtr
             (
@@ -112,6 +127,12 @@ void Foam::GeometricField<Type, PatchField, GeoMesh>::readFields()
             }
 
             const dictionary& dict = ePtr->dict();
+
+            if (debug)
+            {
+                Pout<< "Found subdictionary:" << dict << endl;
+            }
+
             this->readHeader(dict);
             this->readFields(dict);
             return;

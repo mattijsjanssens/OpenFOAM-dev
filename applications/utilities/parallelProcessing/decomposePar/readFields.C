@@ -62,11 +62,10 @@ void Foam::readFields
     label fieldI = 0;
     forAllIter(IOobjectList, fieldObjects, iter)
     {
-        fields.set
-        (
-            fieldI++,
-            new GeoField(*iter(), mesh)
-        );
+        // Make sure IOobject is registered to database
+        IOobject io(*iter(), mesh.thisDb());
+
+        fields.set(fieldI++, new GeoField(io, mesh));
     }
 }
 

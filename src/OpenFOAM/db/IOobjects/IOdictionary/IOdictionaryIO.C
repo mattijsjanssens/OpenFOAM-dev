@@ -144,7 +144,7 @@ bool Foam::IOdictionary::readObjectOrFile(const bool masterOnly)
             parentIO.db().lookupObjectPtr<IOdictionary>
             (
                 parentIO.name(),
-                true
+                true                // Recurse to find at any level
             );
 
         if (parentPtr)
@@ -152,6 +152,13 @@ bool Foam::IOdictionary::readObjectOrFile(const bool masterOnly)
             const IOdictionary& parent = *parentPtr;
 
             word key(dictionary::scopedName(db().dbDir(), parent.db().dbDir()));
+
+            if (key.empty() || key == ":")
+            {
+                readHeader(parent);
+                dictionary::operator=(parent);
+                return true;
+            }
 
             const entry* ePtr = parent.lookupScopedEntryPtr
             (
