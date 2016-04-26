@@ -30,7 +30,7 @@ License
 
 bool Foam::IOobject::readHeader(const dictionary& dict)
 {
-    if (dict.found("FoamFile"))
+    if (dict.found("FoamFile", false, false))
     {
         // Make sure FoamFile contents is correct
         const dictionary& headerDict = dict.subDict("FoamFile");
