@@ -57,6 +57,7 @@ Description
 #include "MeshedSurface.H"
 #include "globalIndex.H"
 #include "IOmanip.H"
+#include "fvMeshTools.H"
 
 using namespace Foam;
 
@@ -571,6 +572,59 @@ scalar getMergeDistance(const polyMesh& mesh, const scalar mergeTol)
 }
 
 
+void removeZeroSizedPatches(fvMesh& mesh)
+{
+    // Check all non-coupled patches and remove any zero-sized ones
+    const polyBoundaryMesh& pbm = mesh.boundaryMesh();
+
+    labelList oldToNew(pbm.size(), -1);
+    label newPatchi = 0;
+    forAll(pbm, patchi)
+    {
+        const polyPatch& pp = pbm[patchi];
+
+        if (!pp.coupled() && returnReduce(pp.size(), sumOp<label>()))
+        {
+            // Uncoupled and used
+            oldToNew[patchi] = newPatchi++;
+        }
+    }
+
+    forAll(pbm, patchi)
+    {
+        const polyPatch& pp = pbm[patchi];
+
+        if (pp.coupled())
+        {
+            // Already only there if needed; perhaps even as indirection
+            // (e.g. processorCyclic using cyclic for transform)
+            oldToNew[patchi] = newPatchi++;
+        }
+    }
+
+
+    const label nPatches = newPatchi;
+
+    // Shuffle unused ones to end
+    if (nPatches != pbm.size())
+    {
+        Info<< "Removing zero-sized patches:" << endl << incrIndent;
+
+        forAll(oldToNew, patchi)
+        {
+            if (oldToNew[patchi] == -1)
+            {
+                Info<< indent << pbm[patchi].name() << endl;
+                oldToNew[patchi] = newPatchi++;
+            }
+        }
+        Info<< decrIndent;
+
+        fvMeshTools::reorderPatches(mesh, oldToNew, nPatches, true);
+    }
+}
+
+
 // Write mesh and additional information
 void writeMesh
 (
@@ -811,6 +865,8 @@ int main(int argc, char *argv[])
         mesh,
         readScalar(meshDict.lookup("mergeTolerance"))
     );
+
+    const Switch keepPatches(meshDict.lookupOrDefault("keepPatches", false));
 
 
 
@@ -1351,6 +1407,12 @@ int main(int argc, char *argv[])
             motionDict
         );
 
+
+        if (!keepPatches && !wantSnap && !wantLayers)
+        {
+            removeZeroSizedPatches(mesh);
+        }
+
         writeMesh
         (
             "Refined mesh",
@@ -1391,6 +1453,11 @@ int main(int argc, char *argv[])
             planarAngle,
             snapParams
         );
+
+        if (!keepPatches && !wantLayers)
+        {
+            removeZeroSizedPatches(mesh);
+        }
 
         writeMesh
         (
@@ -1437,6 +1504,11 @@ int main(int argc, char *argv[])
             decomposer,
             distributor
         );
+
+        if (!keepPatches)
+        {
+            removeZeroSizedPatches(mesh);
+        }
 
         writeMesh
         (
