@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2014 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -24,7 +24,6 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "OutputFilterFunctionObject.H"
-#include "IOOutputFilter.H"
 #include "polyMesh.H"
 #include "mapPolyMesh.H"
 #include "addToRunTimeSelectionTable.H"
@@ -32,12 +31,8 @@ License
 // * * * * * * * * * * * * * * * Private Members * * * * * * * * * * * * * * //
 
 template<class OutputFilter>
-void Foam::OutputFilterFunctionObject<OutputFilter>::readDict()
+void Foam::OutputFilterFunctionObject<OutputFilter>::readControls()
 {
-    dict_.readIfPresent("region", regionName_);
-    dict_.readIfPresent("dictionary", dictName_);
-    dict_.readIfPresent("enabled", enabled_);
-    dict_.readIfPresent("storeFilter", storeFilter_);
     dict_.readIfPresent("timeStart", timeStart_);
     dict_.readIfPresent("timeEnd", timeEnd_);
     dict_.readIfPresent("nStepsToStartTimeChange", nStepsToStartTimeChange_);
@@ -48,46 +43,8 @@ template<class OutputFilter>
 bool Foam::OutputFilterFunctionObject<OutputFilter>::active() const
 {
     return
-        enabled_
-     && time_.value() >= timeStart_
+        time_.value() >= timeStart_
      && time_.value() <= timeEnd_;
-}
-
-
-template<class OutputFilter>
-void Foam::OutputFilterFunctionObject<OutputFilter>::allocateFilter()
-{
-    if (dictName_.size())
-    {
-        ptr_.reset
-        (
-            new IOOutputFilter<OutputFilter>
-            (
-                name(),
-                time_.lookupObject<objectRegistry>(regionName_),
-                dictName_
-            )
-        );
-    }
-    else
-    {
-        ptr_.reset
-        (
-            new OutputFilter
-            (
-                name(),
-                time_.lookupObject<objectRegistry>(regionName_),
-                dict_
-            )
-        );
-    }
-}
-
-
-template<class OutputFilter>
-void Foam::OutputFilterFunctionObject<OutputFilter>::destroyFilter()
-{
-    ptr_.reset();
 }
 
 
@@ -104,52 +61,29 @@ Foam::OutputFilterFunctionObject<OutputFilter>::OutputFilterFunctionObject
     functionObject(name),
     time_(t),
     dict_(dict),
-    regionName_(polyMesh::defaultRegion),
-    dictName_(),
-    enabled_(true),
-    storeFilter_(true),
     timeStart_(-VGREAT),
     timeEnd_(VGREAT),
     nStepsToStartTimeChange_
     (
         dict.lookupOrDefault("nStepsToStartTimeChange", 3)
     ),
-    outputControl_(t, dict, "output"),
-    evaluateControl_(t, dict, "evaluate")
+    writeControl_(t, dict, "write"),
+    evaluateControl_(t, dict, "evaluate"),
+    filter_
+    (
+        name,
+        time_.lookupObject<objectRegistry>
+        (
+            dict.lookupOrDefault("region", polyMesh::defaultRegion)
+        ),
+        dict_
+    )
 {
-    readDict();
+    readControls();
 }
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-
-template<class OutputFilter>
-void Foam::OutputFilterFunctionObject<OutputFilter>::on()
-{
-    enabled_ = true;
-}
-
-
-template<class OutputFilter>
-void Foam::OutputFilterFunctionObject<OutputFilter>::off()
-{
-    enabled_ = false;
-}
-
-
-template<class OutputFilter>
-bool Foam::OutputFilterFunctionObject<OutputFilter>::start()
-{
-    readDict();
-
-    if (enabled_ && storeFilter_)
-    {
-        allocateFilter();
-    }
-
-    return true;
-}
-
 
 template<class OutputFilter>
 bool Foam::OutputFilterFunctionObject<OutputFilter>::execute
@@ -159,24 +93,14 @@ bool Foam::OutputFilterFunctionObject<OutputFilter>::execute
 {
     if (active())
     {
-        if (!storeFilter_)
-        {
-            allocateFilter();
-        }
-
         if (evaluateControl_.output())
         {
-            ptr_->execute();
+            filter_.execute();
         }
 
-        if (forceWrite || outputControl_.output())
+        if (forceWrite || writeControl_.output())
         {
-            ptr_->write();
-        }
-
-        if (!storeFilter_)
-        {
-            destroyFilter();
+            filter_.write();
         }
     }
 
@@ -187,24 +111,11 @@ bool Foam::OutputFilterFunctionObject<OutputFilter>::execute
 template<class OutputFilter>
 bool Foam::OutputFilterFunctionObject<OutputFilter>::end()
 {
-    if (enabled_)
+    filter_.end();
+
+    if (writeControl_.output())
     {
-        if (!storeFilter_)
-        {
-            allocateFilter();
-        }
-
-        ptr_->end();
-
-        if (outputControl_.output())
-        {
-            ptr_->write();
-        }
-
-        if (!storeFilter_)
-        {
-            destroyFilter();
-        }
+        filter_.write();
     }
 
     return true;
@@ -216,7 +127,7 @@ bool Foam::OutputFilterFunctionObject<OutputFilter>::timeSet()
 {
     if (active())
     {
-        ptr_->timeSet();
+        filter_.timeSet();
     }
 
     return true;
@@ -229,12 +140,12 @@ bool Foam::OutputFilterFunctionObject<OutputFilter>::adjustTimeStep()
     if
     (
         active()
-     && outputControl_.outputControl()
-     == outputFilterOutputControl::ocAdjustableTime
+     && writeControl_.writeControl()
+     == outputFilterControl::ocAdjustableRunTime
     )
     {
-        const label  outputTimeIndex = outputControl_.outputTimeLastDump();
-        const scalar writeInterval = outputControl_.writeInterval();
+        const label  outputTimeIndex = writeControl_.outputTimeLastDump();
+        const scalar writeInterval = writeControl_.writeInterval();
 
         scalar timeToNextWrite = max
         (
@@ -247,9 +158,9 @@ bool Foam::OutputFilterFunctionObject<OutputFilter>::adjustTimeStep()
 
         scalar nSteps = timeToNextWrite/deltaT - SMALL;
 
-        // function objects modify deltaT inside nStepsToStartTimeChange range
-        // NOTE: Potential problem if two function objects dump inside the same
-        // interval
+        // functionObjects modify deltaT within nStepsToStartTimeChange
+        // NOTE: Potential problems arise if two function objects dump within
+        // the same interval
         if (nSteps < nStepsToStartTimeChange_)
         {
             label nStepsToNextWrite = label(nSteps) + 1;
@@ -278,9 +189,12 @@ bool Foam::OutputFilterFunctionObject<OutputFilter>::read
     if (dict != dict_)
     {
         dict_ = dict;
-        outputControl_.read(dict);
 
-        return start();
+        writeControl_.read(dict);
+        evaluateControl_.read(dict);
+        readControls();
+
+        return true;
     }
     else
     {
@@ -295,9 +209,9 @@ void Foam::OutputFilterFunctionObject<OutputFilter>::updateMesh
     const mapPolyMesh& mpm
 )
 {
-    if (active() && mpm.mesh().name() == regionName_)
+    if (active())
     {
-        ptr_->updateMesh(mpm);
+        filter_.updateMesh(mpm);
     }
 }
 
@@ -308,9 +222,9 @@ void Foam::OutputFilterFunctionObject<OutputFilter>::movePoints
     const polyMesh& mesh
 )
 {
-    if (active() && mesh.name() == regionName_)
+    if (active())
     {
-        ptr_->movePoints(mesh);
+        filter_.movePoints(mesh);
     }
 }
 

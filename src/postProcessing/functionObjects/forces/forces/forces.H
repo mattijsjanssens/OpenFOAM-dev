@@ -22,7 +22,7 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::forces
+    Foam::functionObjects::forces
 
 Group
     grpForcesFunctionObjects
@@ -106,14 +106,13 @@ SeeAlso
 
 SourceFiles
     forces.C
-    IOforces.H
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef forces_H
-#define forces_H
+#ifndef functionObjects_forces_H
+#define functionObjects_forces_H
 
-#include "functionObjectFile.H"
+#include "functionObjectFiles.H"
 #include "coordinateSystem.H"
 #include "coordinateSystems.H"
 #include "primitiveFieldsFwd.H"
@@ -135,13 +134,16 @@ class dictionary;
 class polyMesh;
 class mapPolyMesh;
 
+namespace functionObjects
+{
+
 /*---------------------------------------------------------------------------*\
                            Class forces Declaration
 \*---------------------------------------------------------------------------*/
 
 class forces
 :
-    public functionObjectFile
+    public functionObjectFiles
 {
 protected:
 
@@ -152,9 +154,6 @@ protected:
         word name_;
 
         const objectRegistry& obr_;
-
-        //- On/off switch
-        bool active_;
 
         //- Switch to send output to Info as well as to file
         Switch log_;
@@ -293,7 +292,6 @@ public:
             const bool readFields = true
         );
 
-
         //- Construct from components
         forces
         (
@@ -357,6 +355,7 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+} // End namespace functionObjects
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

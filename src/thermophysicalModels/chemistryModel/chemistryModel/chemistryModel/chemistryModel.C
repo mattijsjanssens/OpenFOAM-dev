@@ -56,16 +56,16 @@ Foam::chemistryModel<CompType, ThermoType>::chemistryModel
     RR_(nSpecie_)
 {
     // create the fields for the chemistry sources
-    forAll(RR_, fieldI)
+    forAll(RR_, fieldi)
     {
         RR_.set
         (
-            fieldI,
+            fieldi,
             new DimensionedField<scalar, volMesh>
             (
                 IOobject
                 (
-                    "RR." + Y_[fieldI].name(),
+                    "RR." + Y_[fieldi].name(),
                     mesh.time().timeName(),
                     mesh,
                     IOobject::NO_READ,
@@ -341,7 +341,7 @@ void Foam::chemistryModel<CompType, ThermoType>::jacobian
     {
         for (label j=0; j<nEqns(); j++)
         {
-            dfdc[i][j] = 0.0;
+            dfdc(i, j) = 0.0;
         }
     }
 
@@ -574,10 +574,10 @@ Foam::chemistryModel<CompType, ThermoType>::Sh() const
 
         forAll(Y_, i)
         {
-            forAll(Sh, cellI)
+            forAll(Sh, celli)
             {
                 const scalar hi = specieThermo_[i].Hc();
-                Sh[cellI] -= hi*RR_[i][cellI];
+                Sh[celli] -= hi*RR_[i][celli];
             }
         }
     }
@@ -611,7 +611,7 @@ Foam::chemistryModel<CompType, ThermoType>::dQ() const
     if (this->chemistry_)
     {
         volScalarField& dQ = tdQ.ref();
-        dQ.dimensionedInternalField() = this->mesh_.V()*Sh()();
+        dQ.ref() = this->mesh_.V()*Sh()();
     }
 
     return tdQ;

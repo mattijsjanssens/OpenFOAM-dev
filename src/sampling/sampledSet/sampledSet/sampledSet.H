@@ -25,7 +25,7 @@ Class
     Foam::sampledSet
 
 Group
-    grpFunctionObjects
+    grpUtilitiesFunctionObjects
 
 Description
     Holds list of sampling points which is filled at construction time.
@@ -92,47 +92,47 @@ protected:
         //- Returns cell next to boundary face
         label getBoundaryCell(const label) const;
 
-        //- Returns cell using face and containing sample
-        label getCell
-        (
-            const label faceI,
-            const point& sample
-        ) const;
+        //- Returns the neigbour cell or the owner if face in on the boundary
+        label getNeighbourCell(const label) const;
+
+        //- Return the cell in which the point on the sample line
+        //  resides if found otherwise return -1
+        label pointInCell(const point& p, const label samplei) const;
 
         //- Calculates inproduct of face normal and vector sample-face centre
         //  <0 if sample inside.
-        scalar calcSign(const label faceI, const point& sample) const;
+        scalar calcSign(const label facei, const point& sample) const;
 
         //- Returns face label (or -1) of face which is close to sample
         label findNearFace
         (
-            const label cellI,
+            const label celli,
             const point& sample,
             const scalar smallDist
         ) const;
 
-        //- Moves sample in direction of -n to it is 'inside' of faceI
+        //- Moves sample in direction of -n to it is 'inside' of facei
         point pushIn
         (
             const point& sample,
-            const label faceI
+            const label facei
         ) const;
 
         //- Calculates start of tracking given samplePt and first boundary
         //  intersection
-        //  (bPoint, bFaceI) (bFaceI == -1 if no boundary intersection)
+        //  (bPoint, bFacei) (bFacei == -1 if no boundary intersection)
         //  Returns true if trackPt is valid sampling point. Sets trackPt,
-        //  trackFaceI, trackCellI (-1 if no tracking point found)
+        //  trackFacei, trackCelli (-1 if no tracking point found)
         bool getTrackingPoint
         (
             const point& samplePt,
             const point& bPoint,
-            const label bFaceI,
+            const label bFacei,
             const scalar smallDist,
 
             point& trackPt,
-            label& trackCellI,
-            label& trackFaceI
+            label& trackCelli,
+            label& trackFacei
         ) const;
 
         //- Sets sample data

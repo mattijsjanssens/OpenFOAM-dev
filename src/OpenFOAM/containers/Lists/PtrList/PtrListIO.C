@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -179,30 +179,6 @@ Foam::Istream& Foam::operator>>(Istream& is, PtrList<T>& L)
     L.read(is, INew<T>());
 
     return is;
-}
-
-
-// * * * * * * * * * * * * * * * Ostream Operators * * * * * * * * * * * * * //
-
-template<class T>
-Foam::Ostream& Foam::operator<<(Ostream& os, const PtrList<T>& L)
-{
-    // Write size and start delimiter
-    os << nl << L.size() << nl << token::BEGIN_LIST;
-
-    // Write contents
-    forAll(L, i)
-    {
-        os << nl << L[i];
-    }
-
-    // Write end delimiter
-    os << nl << token::END_LIST << nl;
-
-    // Check state of IOstream
-    os.check("Ostream& operator<<(Ostream&, const PtrList&)");
-
-    return os;
 }
 
 

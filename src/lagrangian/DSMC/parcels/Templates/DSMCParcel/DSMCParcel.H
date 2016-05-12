@@ -181,8 +181,8 @@ public:
             const vector& position,
             const vector& U,
             const scalar Ei,
-            const label cellI,
-            const label tetFaceI,
+            const label celli,
+            const label tetFacei,
             const label tetPtI,
             const label typeId
         );

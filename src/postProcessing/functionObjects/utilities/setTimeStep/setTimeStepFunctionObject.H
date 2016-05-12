@@ -22,7 +22,7 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::setTimeStepFunctionObject
+    Foam::functionObjects::setTimeStepFunctionObject
 
 Group
     grpUtilitiesFunctionObjects
@@ -32,23 +32,24 @@ Description
     solvers with adjustTimeStep control (e.g. pimpleFoam). Makes no attempt
     to cooperate with other timeStep 'controllers' (maxCo, other
     functionObjects). Supports 'enabled' flag but none of othe other ones
-    'timeStart', 'timeEnd', 'outputControl' etc.
+    'timeStart', 'timeEnd', 'writeControl' etc.
 
 SourceFiles
     setTimeStepFunctionObject.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef setTimeStepFunctionObject_H
-#define setTimeStepFunctionObject_H
+#ifndef functionObjects_setTimeStepFunctionObject_H
+#define functionObjects_setTimeStepFunctionObject_H
 
 #include "functionObject.H"
-#include "dictionary.H"
 #include "Function1.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
+{
+namespace functionObjects
 {
 
 /*---------------------------------------------------------------------------*\
@@ -64,15 +65,11 @@ class setTimeStepFunctionObject
         //- Reference to the time database
         const Time& time_;
 
+        //- Time step function/table
+        autoPtr<Function1<scalar>> timeStepPtr_;
 
-        // Optional user inputs
 
-            //- Switch for the execution - defaults to 'yes/on'
-            bool enabled_;
-
-            //- Time step
-            autoPtr<Function1<scalar>> timeStepPtr_;
-
+    // Private member functions
 
         //- Disallow default bitwise copy construct
         setTimeStepFunctionObject(const setTimeStepFunctionObject&);
@@ -82,8 +79,10 @@ class setTimeStepFunctionObject
 
 
 public:
+
     //- Runtime type information
     TypeName("setTimeStep");
+
 
     // Constructors
 
@@ -96,34 +95,19 @@ public:
         );
 
 
+    // Destructor
+    virtual ~setTimeStepFunctionObject();
+
+
     // Member Functions
 
         // Access
 
             //- Return time database
-            virtual const Time& time() const
-            {
-                return time_;
-            }
-
-            //- Return the enabled flag
-            virtual bool enabled() const
-            {
-                return enabled_;
-            }
+            const Time& time() const;
 
 
         // Function object control
-
-            //- Switch the function object on
-            virtual void on();
-
-            //- Switch the function object off
-            virtual void off();
-
-
-            //- Called at the start of the time-loop
-            virtual bool start();
 
             //- Called at each ++ or += of the time-loop
             virtual bool execute(const bool forceWrite);
@@ -141,15 +125,16 @@ public:
             virtual bool read(const dictionary&);
 
             //- Update for changes of mesh
-            virtual void updateMesh(const mapPolyMesh& mpm);
+            virtual void updateMesh(const mapPolyMesh&);
 
             //- Update for changes of mesh
-            virtual void movePoints(const polyMesh& mesh);
-
+            virtual void movePoints(const polyMesh&);
 };
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+} // End namespace functionObjects
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

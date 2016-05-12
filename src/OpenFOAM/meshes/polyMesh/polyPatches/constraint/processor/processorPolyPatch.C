@@ -273,10 +273,10 @@ void Foam::processorPolyPatch::calcGeometry(PstreamBuffers& pBufs)
 
                 label vertI = 0;
 
-                forAll(faceCentres(), faceI)
+                forAll(faceCentres(), facej)
                 {
-                    const point& c0 = neighbFaceCentres_[faceI];
-                    const point& c1 = faceCentres()[faceI];
+                    const point& c0 = neighbFaceCentres_[facej];
+                    const point& c1 = faceCentres()[facej];
 
                     writeOBJ(ccStr, c0, c1, vertI);
                 }
@@ -356,11 +356,11 @@ void Foam::processorPolyPatch::initUpdateMesh(PstreamBuffers& pBufs)
 
         for (label patchPointI = 0; patchPointI < nPoints(); patchPointI++)
         {
-            label faceI = pointFaces()[patchPointI][0];
+            label facei = pointFaces()[patchPointI][0];
 
-            pointFace[patchPointI] = faceI;
+            pointFace[patchPointI] = facei;
 
-            const face& f = localFaces()[faceI];
+            const face& f = localFaces()[facei];
 
             pointIndex[patchPointI] = findIndex(f, patchPointI);
         }
@@ -371,11 +371,11 @@ void Foam::processorPolyPatch::initUpdateMesh(PstreamBuffers& pBufs)
 
         for (label patchEdgeI = 0; patchEdgeI < nEdges(); patchEdgeI++)
         {
-            label faceI = edgeFaces()[patchEdgeI][0];
+            label facei = edgeFaces()[patchEdgeI][0];
 
-            edgeFace[patchEdgeI] = faceI;
+            edgeFace[patchEdgeI] = facei;
 
-            const labelList& fEdges = faceEdges()[faceI];
+            const labelList& fEdges = faceEdges()[facei];
 
             edgeIndex[patchEdgeI] = findIndex(fEdges, patchEdgeI);
         }
@@ -565,9 +565,9 @@ void Foam::processorPolyPatch::initOrder
             << "Dumping " << fc.size()
             << " local faceCentres to " << localStr.name() << endl;
 
-        forAll(fc, faceI)
+        forAll(fc, facei)
         {
-            writeOBJ(localStr, fc[faceI]);
+            writeOBJ(localStr, fc[facei]);
         }
     }
 
@@ -589,7 +589,7 @@ void Foam::processorPolyPatch::initOrder
             // Get the average of the points of each face. This is needed in
             // case the face centroid calculation is incorrect due to the face
             // having a very high aspect ratio.
-            pointField facePointAverages(pp.size(), point::zero);
+            pointField facePointAverages(pp.size(), Zero);
             forAll(pp, fI)
             {
                 const labelList& facePoints = pp[fI];
@@ -748,9 +748,9 @@ bool Foam::processorPolyPatch::order
     {
         // Do nothing (i.e. identical mapping, zero rotation).
         // See comment at top.
-        forAll(faceMap, patchFaceI)
+        forAll(faceMap, patchFacei)
         {
-            faceMap[patchFaceI] = patchFaceI;
+            faceMap[patchFacei] = patchFacei;
         }
 
         if (transform() != COINCIDENTFULLMATCH)
@@ -765,19 +765,19 @@ bool Foam::processorPolyPatch::order
                 matchTolerance()*calcFaceTol(pp, pp.points(), pp.faceCentres())
             );
 
-            forAll(faceMap, patchFaceI)
+            forAll(faceMap, patchFacei)
             {
-                const point& wantedAnchor = anchors[patchFaceI];
+                const point& wantedAnchor = anchors[patchFacei];
 
-                rotation[patchFaceI] = getRotation
+                rotation[patchFacei] = getRotation
                 (
                     ppPoints,
-                    pp[patchFaceI],
+                    pp[patchFacei],
                     wantedAnchor,
-                    tols[patchFaceI]
+                    tols[patchFacei]
                 );
 
-                if (rotation[patchFaceI] > 0)
+                if (rotation[patchFacei] > 0)
                 {
                     change = true;
                 }
@@ -803,9 +803,9 @@ bool Foam::processorPolyPatch::order
 
             label nMatches = 0;
 
-            forAll(pp, lFaceI)
+            forAll(pp, lFacei)
             {
-                const face& localFace = localFaces[lFaceI];
+                const face& localFace = localFaces[lFacei];
                 label faceRotation = -1;
 
                 const scalar absTolSqr = sqr(SMALL);
@@ -815,9 +815,9 @@ bool Foam::processorPolyPatch::order
                 label closestFaceMatch = -1;
                 label closestFaceRotation = -1;
 
-                forAll(masterFaces, mFaceI)
+                forAll(masterFaces, mFacei)
                 {
-                    const face& masterFace = masterFaces[mFaceI];
+                    const face& masterFace = masterFaces[mFacei];
 
                     faceRotation = matchFace
                     (
@@ -837,7 +837,7 @@ bool Foam::processorPolyPatch::order
                     )
                     {
                         closestMatchDistSqr = matchDistSqr;
-                        closestFaceMatch = mFaceI;
+                        closestFaceMatch = mFacei;
                         closestFaceRotation = faceRotation;
                     }
 
@@ -849,11 +849,11 @@ bool Foam::processorPolyPatch::order
 
                 if (closestFaceRotation != -1 && closestMatchDistSqr == 0)
                 {
-                    faceMap[lFaceI] = closestFaceMatch;
+                    faceMap[lFacei] = closestFaceMatch;
 
-                    rotation[lFaceI] = closestFaceRotation;
+                    rotation[lFacei] = closestFaceRotation;
 
-                    if (lFaceI != closestFaceMatch || closestFaceRotation > 0)
+                    if (lFacei != closestFaceMatch || closestFaceRotation > 0)
                     {
                         change = true;
                     }
@@ -911,9 +911,9 @@ bool Foam::processorPolyPatch::order
                     Pout<< "processorPolyPatch::order : "
                         << "Dumping neighbour faceCentres to " << nbrStr.name()
                         << endl;
-                    forAll(masterCtrs, faceI)
+                    forAll(masterCtrs, facei)
                     {
-                        writeOBJ(nbrStr, masterCtrs[faceI]);
+                        writeOBJ(nbrStr, masterCtrs[facei]);
                     }
                 }
 
@@ -949,7 +949,7 @@ bool Foam::processorPolyPatch::order
             {
                 const pointField& ppPoints = pp.points();
 
-                pointField facePointAverages(pp.size(), point::zero);
+                pointField facePointAverages(pp.size(), Zero);
                 forAll(pp, fI)
                 {
                     const labelList& facePoints = pp[fI];
@@ -979,19 +979,19 @@ bool Foam::processorPolyPatch::order
                     faceMap2
                 );
 
-                forAll(faceMap, oldFaceI)
+                forAll(faceMap, oldFacei)
                 {
-                    if (faceMap[oldFaceI] == -1)
+                    if (faceMap[oldFacei] == -1)
                     {
-                        faceMap[oldFaceI] = faceMap2[oldFaceI];
+                        faceMap[oldFacei] = faceMap2[oldFacei];
                     }
                 }
 
                 matchedAll = true;
 
-                forAll(faceMap, oldFaceI)
+                forAll(faceMap, oldFacei)
                 {
-                    if (faceMap[oldFaceI] == -1)
+                    if (faceMap[oldFacei] == -1)
                     {
                         matchedAll = false;
                     }
@@ -1024,14 +1024,14 @@ bool Foam::processorPolyPatch::order
 
                 label vertI = 0;
 
-                forAll(pp.faceCentres(), faceI)
+                forAll(pp.faceCentres(), facei)
                 {
-                    label masterFaceI = faceMap[faceI];
+                    label masterFacei = faceMap[facei];
 
-                    if (masterFaceI != -1)
+                    if (masterFacei != -1)
                     {
-                        const point& c0 = masterCtrs[masterFaceI];
-                        const point& c1 = pp.faceCentres()[faceI];
+                        const point& c0 = masterCtrs[masterFacei];
+                        const point& c1 = pp.faceCentres()[facei];
                         writeOBJ(ccStr, c0, c1, vertI);
                     }
                 }
@@ -1055,32 +1055,32 @@ bool Foam::processorPolyPatch::order
             }
 
             // Set rotation.
-            forAll(faceMap, oldFaceI)
+            forAll(faceMap, oldFacei)
             {
-                // The face f will be at newFaceI (after morphing) and we want
+                // The face f will be at newFacei (after morphing) and we want
                 // its anchorPoint (= f[0]) to align with the anchorpoint for
                 // the corresponding face on the other side.
 
-                label newFaceI = faceMap[oldFaceI];
+                label newFacei = faceMap[oldFacei];
 
-                const point& wantedAnchor = masterAnchors[newFaceI];
+                const point& wantedAnchor = masterAnchors[newFacei];
 
-                rotation[newFaceI] = getRotation
+                rotation[newFacei] = getRotation
                 (
                     pp.points(),
-                    pp[oldFaceI],
+                    pp[oldFacei],
                     wantedAnchor,
-                    tols[oldFaceI]
+                    tols[oldFacei]
                 );
 
-                if (rotation[newFaceI] == -1)
+                if (rotation[newFacei] == -1)
                 {
                     SeriousErrorInFunction
                         << "in patch " << name()
                         << " : "
-                        << "Cannot find point on face " << pp[oldFaceI]
+                        << "Cannot find point on face " << pp[oldFacei]
                         << " with vertices "
-                        << UIndirectList<point>(pp.points(), pp[oldFaceI])()
+                        << UIndirectList<point>(pp.points(), pp[oldFacei])()
                         << " that matches point " << wantedAnchor
                         << " when matching the halves of processor patch "
                         << name()
@@ -1091,9 +1091,9 @@ bool Foam::processorPolyPatch::order
                 }
             }
 
-            forAll(faceMap, faceI)
+            forAll(faceMap, facei)
             {
-                if (faceMap[faceI] != faceI || rotation[faceI] != 0)
+                if (faceMap[facei] != facei || rotation[facei] != 0)
                 {
                     return true;
                 }

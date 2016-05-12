@@ -31,12 +31,19 @@ inline Foam::Tensor2D<Cmpt>::Tensor2D()
 
 
 template<class Cmpt>
+inline Foam::Tensor2D<Cmpt>::Tensor2D(const Foam::zero)
+:
+    Tensor2D::msType(Zero)
+{}
+
+
+template<class Cmpt>
 inline Foam::Tensor2D<Cmpt>::Tensor2D
 (
     const VectorSpace<Tensor2D<Cmpt>, Cmpt, 4>& vs
 )
 :
-    VectorSpace<Tensor2D<Cmpt>, Cmpt, 4>(vs)
+    Tensor2D::msType(vs)
 {}
 
 
@@ -83,7 +90,7 @@ inline Foam::Tensor2D<Cmpt>::Tensor2D
 template<class Cmpt>
 inline Foam::Tensor2D<Cmpt>::Tensor2D(Istream& is)
 :
-    VectorSpace<Tensor2D<Cmpt>, Cmpt, 4>(is)
+    Tensor2D::msType(is)
 {}
 
 
@@ -163,7 +170,7 @@ inline Foam::Tensor2D<Cmpt> Foam::Tensor2D<Cmpt>::T() const
 }
 
 
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
 
 template<class Cmpt>
 inline void Foam::Tensor2D<Cmpt>::operator=(const SymmTensor2D<Cmpt>& st)

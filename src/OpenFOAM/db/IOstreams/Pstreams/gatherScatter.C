@@ -122,7 +122,7 @@ void Pstream::gather
 }
 
 
-template <class T, class BinaryOp>
+template<class T, class BinaryOp>
 void Pstream::gather
 (
     T& Value,
@@ -219,7 +219,7 @@ void Pstream::scatter
 }
 
 
-template <class T>
+template<class T>
 void Pstream::scatter(T& Value, const int tag, const label comm)
 {
     if (UPstream::nProcs(comm) < UPstream::nProcsSimpleSum)

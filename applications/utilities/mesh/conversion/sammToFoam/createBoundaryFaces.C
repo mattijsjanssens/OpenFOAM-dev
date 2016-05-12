@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -70,17 +70,17 @@ bool Foam::sammMesh::sammEqualFace
 
 void Foam::sammMesh::createBoundaryFaces()
 {
-    forAll(boundary_, patchI)
+    forAll(boundary_, patchi)
     {
-        faceList& patchFaces = boundary_[patchI];
+        faceList& patchFaces = boundary_[patchi];
 
         const labelListList& PointCells = pointCells();
 
-        forAll(patchFaces, faceI)
+        forAll(patchFaces, facei)
         {
             bool found = false;
 
-            face& curFace = patchFaces[faceI];
+            face& curFace = patchFaces[facei];
             const labelList& facePoints = curFace;
 
             forAll(facePoints, pointI)
@@ -88,21 +88,21 @@ void Foam::sammMesh::createBoundaryFaces()
                 const labelList& facePointCells =
                     PointCells[facePoints[pointI]];
 
-                forAll(facePointCells, cellI)
+                forAll(facePointCells, celli)
                 {
                     const faceList& curCellFaces =
-                        cellFaces_[facePointCells[cellI]];
+                        cellFaces_[facePointCells[celli]];
 
-                    forAll(curCellFaces, cellFaceI)
+                    forAll(curCellFaces, cellFacei)
                     {
-                        if (sammEqualFace(curCellFaces[cellFaceI], curFace))
+                        if (sammEqualFace(curCellFaces[cellFacei], curFace))
                         {
                             // Found the cell face corresponding to this face
                             found = true;
 
                             // Set boundary face to the corresponding cell face
                             // which guarantees it is outward-pointing
-                            curFace = curCellFaces[cellFaceI];
+                            curFace = curCellFaces[cellFacei];
                         }
                         if (found) break;
                     }
@@ -113,7 +113,7 @@ void Foam::sammMesh::createBoundaryFaces()
             if (!found)
             {
                 FatalErrorInFunction
-                    << "Face " << faceI
+                    << "Face " << facei
                     << " does not have neighbour cell." << endl
                     << "    face : " << endl << curFace
                     << abort(FatalError);

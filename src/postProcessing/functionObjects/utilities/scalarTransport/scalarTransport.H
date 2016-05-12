@@ -22,7 +22,7 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::scalarTransport
+    Foam::functionObjects::scalarTransport
 
 Group
     grpUtilitiesFunctionObjects
@@ -41,12 +41,11 @@ Description
 
 SourceFiles
     scalarTransport.C
-    IOscalarTransport.H
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef scalarTransport_H
-#define scalarTransport_H
+#ifndef functionObjects_scalarTransport_H
+#define functionObjects_scalarTransport_H
 
 #include "volFields.H"
 #include "surfaceFieldsFwd.H"
@@ -63,6 +62,9 @@ namespace Foam
 class objectRegistry;
 class dictionary;
 class mapPolyMesh;
+
+namespace functionObjects
+{
 
 /*---------------------------------------------------------------------------*\
                        Class scalarTransport Declaration
@@ -182,6 +184,7 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+} // End namespace functionObjects
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2012 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -55,7 +55,7 @@ void Foam::vtkSurfaceWriter::writeGeometry
         << "DATASET POLYDATA" << nl;
 
     // Write vertex coords
-    os  << "POINTS " << points.size() << " float" << nl;
+    os  << "POINTS " << points.size() << " double" << nl;
     forAll(points, pointI)
     {
         const point& pt = points[pointI];
@@ -68,17 +68,17 @@ void Foam::vtkSurfaceWriter::writeGeometry
 
     // Write faces
     label nNodes = 0;
-    forAll(faces, faceI)
+    forAll(faces, facei)
     {
-        nNodes += faces[faceI].size();
+        nNodes += faces[facei].size();
     }
 
     os  << "POLYGONS " << faces.size() << ' '
         << faces.size() + nNodes << nl;
 
-    forAll(faces, faceI)
+    forAll(faces, facei)
     {
-        const face& f = faces[faceI];
+        const face& f = faces[facei];
 
         os  << f.size();
         forAll(f, fp)

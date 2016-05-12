@@ -83,16 +83,12 @@ void Foam::reduce(scalar&, const sumOp<scalar>&, const int, const label, label&)
 
 void Foam::UPstream::allToAll
 (
-    const char* sendBuf,
-    const std::streamsize sendSize,
-    char* recvBuf,
+    const labelUList& sendData,
+    labelUList& recvData,
     const label communicator
 )
 {
-    for (label i = 0; i < sendSize; i++)
-    {
-        recvBuf[i] = sendBuf[i];
-    }
+    recvData.deepCopy(sendData);
 }
 
 

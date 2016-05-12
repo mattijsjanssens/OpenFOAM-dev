@@ -407,14 +407,14 @@ void Foam::triSurfaceMesh::boundingSpheres
 
     const pointField& pts = triSurface::points();
 
-    forAll(*this, faceI)
+    forAll(*this, facei)
     {
-        const labelledTri& f = triSurface::operator[](faceI);
-        const point& fc = centres[faceI];
+        const labelledTri& f = triSurface::operator[](facei);
+        const point& fc = centres[facei];
         forAll(f, fp)
         {
             const point& pt = pts[f[fp]];
-            radiusSqr[faceI] = max(radiusSqr[faceI], Foam::magSqr(fc-pt));
+            radiusSqr[facei] = max(radiusSqr[facei], Foam::magSqr(fc-pt));
         }
     }
 
@@ -463,7 +463,7 @@ Foam::triSurfaceMesh::edgeTree() const
           + nInternalEdges()
         );
 
-        treeBoundBox bb(vector::zero, vector::zero);
+        treeBoundBox bb(Zero, Zero);
 
         if (bEdges.size())
         {
@@ -651,15 +651,15 @@ void Foam::triSurfaceMesh::getNormal
         {
             if (info[i].hit())
             {
-                label faceI = info[i].index();
-                normal[i] = s[faceI].normal(pts);
+                label facei = info[i].index();
+                normal[i] = s[facei].normal(pts);
 
-                scalar qual = s[faceI].tri(pts).quality();
+                scalar qual = s[facei].tri(pts).quality();
 
                 if (qual < minQuality_)
                 {
                     // Search neighbouring triangles
-                    const labelList& fFaces = faceFaces[faceI];
+                    const labelList& fFaces = faceFaces[facei];
 
                     forAll(fFaces, j)
                     {
@@ -678,7 +678,7 @@ void Foam::triSurfaceMesh::getNormal
             else
             {
                 // Set to what?
-                normal[i] = vector::zero;
+                normal[i] = Zero;
             }
         }
     }
@@ -688,18 +688,18 @@ void Foam::triSurfaceMesh::getNormal
         {
             if (info[i].hit())
             {
-                label faceI = info[i].index();
+                label facei = info[i].index();
                 // Cached:
-                //normal[i] = faceNormals()[faceI];
+                //normal[i] = faceNormals()[facei];
 
                 // Uncached
-                normal[i] = s[faceI].normal(pts);
+                normal[i] = s[facei].normal(pts);
                 normal[i] /= mag(normal[i]) + VSMALL;
             }
             else
             {
                 // Set to what?
-                normal[i] = vector::zero;
+                normal[i] = Zero;
             }
         }
     }

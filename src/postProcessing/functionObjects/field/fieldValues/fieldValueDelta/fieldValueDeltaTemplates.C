@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2012-2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2012-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -30,13 +30,13 @@ License
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class Type>
-Type Foam::fieldValues::fieldValueDelta::applyOperation
+Type Foam::functionObjects::fieldValues::fieldValueDelta::applyOperation
 (
     const Type& value1,
     const Type& value2
 ) const
 {
-    Type result = pTraits<Type>::zero;
+    Type result = Zero;
 
     switch (operation_)
     {
@@ -79,7 +79,10 @@ Type Foam::fieldValues::fieldValueDelta::applyOperation
 
 
 template<class Type>
-void Foam::fieldValues::fieldValueDelta::processFields(bool& found)
+void Foam::functionObjects::fieldValues::fieldValueDelta::processFields
+(
+    bool& found
+)
 {
     typedef GeometricField<Type, fvPatchField, volMesh> vf;
     typedef GeometricField<Type, fvsPatchField, surfaceMesh> sf;
@@ -89,8 +92,8 @@ void Foam::fieldValues::fieldValueDelta::processFields(bool& found)
     const dictionary& results1 = source1Ptr_->resultDict();
     const dictionary& results2 = source2Ptr_->resultDict();
 
-    Type r1(pTraits<Type>::zero);
-    Type r2(pTraits<Type>::zero);
+    Type r1(Zero);
+    Type r2(Zero);
 
     forAll(fields1, i)
     {

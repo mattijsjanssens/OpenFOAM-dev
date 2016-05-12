@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -31,13 +31,16 @@ License
 
 namespace Foam
 {
-defineTypeNameAndDebug(processorField, 0);
+namespace functionObjects
+{
+    defineTypeNameAndDebug(processorField, 0);
+}
 }
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::processorField::processorField
+Foam::functionObjects::processorField::processorField
 (
     const word& name,
     const objectRegistry& obr,
@@ -46,96 +49,77 @@ Foam::processorField::processorField
 )
 :
     name_(name),
-    obr_(obr),
-    active_(true)
+    obr_(obr)
 {
-    // Check if the available mesh is an fvMesh otherise deactivate
-    if (isA<fvMesh>(obr_))
+    if (!isA<fvMesh>(obr))
     {
-        read(dict);
+        FatalErrorInFunction
+            << "objectRegistry is not an fvMesh" << exit(FatalError);
+    }
 
-        const fvMesh& mesh = refCast<const fvMesh>(obr_);
+    read(dict);
 
-        volScalarField* procFieldPtr
+    const fvMesh& mesh = refCast<const fvMesh>(obr_);
+
+    volScalarField* procFieldPtr
+    (
+        new volScalarField
         (
-            new volScalarField
+            IOobject
             (
-                IOobject
-                (
-                    "processorID",
-                    mesh.time().timeName(),
-                    mesh,
-                    IOobject::NO_READ,
-                    IOobject::NO_WRITE
-                ),
+                "processorID",
+                mesh.time().timeName(),
                 mesh,
-                dimensionedScalar("0", dimless, 0.0)
-            )
-        );
+                IOobject::NO_READ,
+                IOobject::NO_WRITE
+            ),
+            mesh,
+            dimensionedScalar("0", dimless, 0.0)
+        )
+    );
 
-        mesh.objectRegistry::store(procFieldPtr);
-    }
-    else
-    {
-        active_ = false;
-        WarningInFunction
-            << "No fvMesh available, deactivating " << name_
-            << endl;
-    }
+    mesh.objectRegistry::store(procFieldPtr);
 }
 
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-Foam::processorField::~processorField()
+Foam::functionObjects::processorField::~processorField()
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-void Foam::processorField::read(const dictionary& dict)
+void Foam::functionObjects::processorField::read(const dictionary& dict)
+{}
+
+
+void Foam::functionObjects::processorField::execute()
 {
-    // do nothing
+    const volScalarField& procField =
+        obr_.lookupObject<volScalarField>("processorID");
+
+    const_cast<volScalarField&>(procField) ==
+        dimensionedScalar("proci", dimless, Pstream::myProcNo());
 }
 
 
-void Foam::processorField::execute()
+void Foam::functionObjects::processorField::end()
 {
-    if (active_)
-    {
-        const volScalarField& procField =
-            obr_.lookupObject<volScalarField>("processorID");
-
-        const_cast<volScalarField&>(procField) ==
-            dimensionedScalar("procI", dimless, Pstream::myProcNo());
-    }
+    execute();
 }
 
 
-void Foam::processorField::end()
+void Foam::functionObjects::processorField::timeSet()
+{}
+
+
+void Foam::functionObjects::processorField::write()
 {
-    if (active_)
-    {
-        execute();
-    }
-}
+    const volScalarField& procField =
+        obr_.lookupObject<volScalarField>("processorID");
 
-
-void Foam::processorField::timeSet()
-{
-    // Do nothing
-}
-
-
-void Foam::processorField::write()
-{
-    if (active_)
-    {
-        const volScalarField& procField =
-            obr_.lookupObject<volScalarField>("processorID");
-
-        procField.write();
-    }
+    procField.write();
 }
 
 

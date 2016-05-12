@@ -171,11 +171,14 @@ public:
                 );
             }
 
-            forAll(sfCorr.boundaryField(), pi)
+            typename GeometricField<Type, fvsPatchField, surfaceMesh>::
+                Boundary& sfCorrbf = sfCorr.boundaryFieldRef();
+
+            forAll(sfCorrbf, pi)
             {
-                if (!sfCorr.boundaryField()[pi].coupled())
+                if (!sfCorrbf[pi].coupled())
                 {
-                    sfCorr.boundaryField()[pi] = pTraits<Type>::zero;
+                    sfCorrbf[pi] = Zero;
                 }
             }
 

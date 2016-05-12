@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -38,53 +38,68 @@ License
 
 namespace Foam
 {
-    template<>
-    const char* NamedEnum<fieldValues::faceSource::sourceType, 3>::names[] =
-    {
-        "faceZone",
-        "patch",
-        "sampledSurface"
-    };
-
-
-    template<>
-    const char* NamedEnum<fieldValues::faceSource::operationType, 15>::names[] =
-    {
-        "none",
-        "sum",
-        "sumMag",
-        "sumDirection",
-        "sumDirectionBalance",
-        "average",
-        "weightedAverage",
-        "areaAverage",
-        "weightedAreaAverage",
-        "areaIntegrate",
-        "min",
-        "max",
-        "CoV",
-        "areaNormalAverage",
-        "areaNormalIntegrate"
-    };
-
-    namespace fieldValues
-    {
-        defineTypeNameAndDebug(faceSource, 0);
-        addToRunTimeSelectionTable(fieldValue, faceSource, dictionary);
-    }
+namespace functionObjects
+{
+namespace fieldValues
+{
+    defineTypeNameAndDebug(faceSource, 0);
+    addToRunTimeSelectionTable(fieldValue, faceSource, dictionary);
+}
+}
 }
 
+template<>
+const char* Foam::NamedEnum
+<
+    Foam::functionObjects::fieldValues::faceSource::sourceType,
+    3
+>::names[] =
+{
+    "faceZone",
+    "patch",
+    "sampledSurface"
+};
 
-const Foam::NamedEnum<Foam::fieldValues::faceSource::sourceType, 3>
-    Foam::fieldValues::faceSource::sourceTypeNames_;
+template<>
+const char* Foam::NamedEnum
+<
+    Foam::functionObjects::fieldValues::faceSource::operationType,
+    15
+>::names[] =
+{
+    "none",
+    "sum",
+    "sumMag",
+    "sumDirection",
+    "sumDirectionBalance",
+    "average",
+    "weightedAverage",
+    "areaAverage",
+    "weightedAreaAverage",
+    "areaIntegrate",
+    "min",
+    "max",
+    "CoV",
+    "areaNormalAverage",
+    "areaNormalIntegrate"
+};
 
-const Foam::NamedEnum<Foam::fieldValues::faceSource::operationType, 15>
-    Foam::fieldValues::faceSource::operationTypeNames_;
+const Foam::NamedEnum
+<
+    Foam::functionObjects::fieldValues::faceSource::sourceType,
+    3
+> Foam::functionObjects::fieldValues::faceSource::sourceTypeNames_;
+
+const Foam::NamedEnum
+<
+    Foam::functionObjects::fieldValues::faceSource::operationType,
+    15
+> Foam::functionObjects::fieldValues::faceSource::operationTypeNames_;
 
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-void Foam::fieldValues::faceSource::setFaceZoneFaces()
+void Foam::functionObjects::fieldValues::faceSource::setFaceZoneFaces()
 {
     label zoneId = mesh().faceZones().findZoneID(sourceName_);
 
@@ -106,24 +121,24 @@ void Foam::fieldValues::faceSource::setFaceZoneFaces()
 
     forAll(fZone, i)
     {
-        label faceI = fZone[i];
+        label facei = fZone[i];
 
         label faceId = -1;
         label facePatchId = -1;
-        if (mesh().isInternalFace(faceI))
+        if (mesh().isInternalFace(facei))
         {
-            faceId = faceI;
+            faceId = facei;
             facePatchId = -1;
         }
         else
         {
-            facePatchId = mesh().boundaryMesh().whichPatch(faceI);
+            facePatchId = mesh().boundaryMesh().whichPatch(facei);
             const polyPatch& pp = mesh().boundaryMesh()[facePatchId];
             if (isA<coupledPolyPatch>(pp))
             {
                 if (refCast<const coupledPolyPatch>(pp).owner())
                 {
-                    faceId = pp.whichFace(faceI);
+                    faceId = pp.whichFace(facei);
                 }
                 else
                 {
@@ -132,7 +147,7 @@ void Foam::fieldValues::faceSource::setFaceZoneFaces()
             }
             else if (!isA<emptyPolyPatch>(pp))
             {
-                faceId = faceI - pp.start();
+                faceId = facei - pp.start();
             }
             else
             {
@@ -169,11 +184,11 @@ void Foam::fieldValues::faceSource::setFaceZoneFaces()
 }
 
 
-void Foam::fieldValues::faceSource::setPatchFaces()
+void Foam::functionObjects::fieldValues::faceSource::setPatchFaces()
 {
-    const label patchId = mesh().boundaryMesh().findPatchID(sourceName_);
+    const label patchid = mesh().boundaryMesh().findPatchID(sourceName_);
 
-    if (patchId < 0)
+    if (patchid < 0)
     {
         FatalErrorInFunction
             << type() << " " << name_ << ": "
@@ -184,7 +199,7 @@ void Foam::fieldValues::faceSource::setPatchFaces()
             << exit(FatalError);
     }
 
-    const polyPatch& pp = mesh().boundaryMesh()[patchId];
+    const polyPatch& pp = mesh().boundaryMesh()[patchid];
 
     label nFaces = pp.size();
     if (isA<emptyPolyPatch>(pp))
@@ -197,16 +212,19 @@ void Foam::fieldValues::faceSource::setPatchFaces()
     faceSign_.setSize(nFaces);
     nFaces_ = returnReduce(faceId_.size(), sumOp<label>());
 
-    forAll(faceId_, faceI)
+    forAll(faceId_, facei)
     {
-        faceId_[faceI] = faceI;
-        facePatchId_[faceI] = patchId;
-        faceSign_[faceI] = 1;
+        faceId_[facei] = facei;
+        facePatchId_[facei] = patchid;
+        faceSign_[facei] = 1;
     }
 }
 
 
-void Foam::fieldValues::faceSource::sampledSurfaceFaces(const dictionary& dict)
+void Foam::functionObjects::fieldValues::faceSource::sampledSurfaceFaces
+(
+    const dictionary& dict
+)
 {
     surfacePtr_ = sampledSurface::New
     (
@@ -219,7 +237,7 @@ void Foam::fieldValues::faceSource::sampledSurfaceFaces(const dictionary& dict)
 }
 
 
-void Foam::fieldValues::faceSource::combineMeshGeometry
+void Foam::functionObjects::fieldValues::faceSource::combineMeshGeometry
 (
     faceList& faces,
     pointField& points
@@ -233,8 +251,8 @@ void Foam::fieldValues::faceSource::combineMeshGeometry
     {
         if (facePatchId_[i] != -1)
         {
-            label patchI = facePatchId_[i];
-            globalFacesIs[i] += mesh().boundaryMesh()[patchI].start();
+            label patchi = facePatchId_[i];
+            globalFacesIs[i] += mesh().boundaryMesh()[patchi].start();
         }
     }
 
@@ -253,10 +271,10 @@ void Foam::fieldValues::faceSource::combineMeshGeometry
     // Renumber and flatten
     label nFaces = 0;
     label nPoints = 0;
-    forAll(allFaces, procI)
+    forAll(allFaces, proci)
     {
-        nFaces += allFaces[procI].size();
-        nPoints += allPoints[procI].size();
+        nFaces += allFaces[proci].size();
+        nPoints += allPoints[proci].size();
     }
 
     faces.setSize(nFaces);
@@ -287,11 +305,11 @@ void Foam::fieldValues::faceSource::combineMeshGeometry
     }
 
     // Other proc data follows
-    forAll(allFaces, procI)
+    forAll(allFaces, proci)
     {
-        if (procI != Pstream::myProcNo())
+        if (proci != Pstream::myProcNo())
         {
-            const faceList& fcs = allFaces[procI];
+            const faceList& fcs = allFaces[proci];
             forAll(fcs, i)
             {
                 const face& f = fcs[i];
@@ -303,7 +321,7 @@ void Foam::fieldValues::faceSource::combineMeshGeometry
                 }
             }
 
-            const pointField& pts = allPoints[procI];
+            const pointField& pts = allPoints[proci];
             forAll(pts, i)
             {
                 points[nPoints++] = pts[i];
@@ -340,7 +358,7 @@ void Foam::fieldValues::faceSource::combineMeshGeometry
 }
 
 
-void Foam::fieldValues::faceSource::combineSurfaceGeometry
+void Foam::functionObjects::fieldValues::faceSource::combineSurfaceGeometry
 (
     faceList& faces,
     pointField& points
@@ -379,7 +397,7 @@ void Foam::fieldValues::faceSource::combineSurfaceGeometry
 }
 
 
-Foam::scalar Foam::fieldValues::faceSource::totalArea() const
+Foam::scalar Foam::functionObjects::fieldValues::faceSource::totalArea() const
 {
     scalar totalArea;
 
@@ -398,7 +416,10 @@ Foam::scalar Foam::fieldValues::faceSource::totalArea() const
 
 // * * * * * * * * * * * * Protected Member Functions  * * * * * * * * * * * //
 
-void Foam::fieldValues::faceSource::initialise(const dictionary& dict)
+void Foam::functionObjects::fieldValues::faceSource::initialise
+(
+    const dictionary& dict
+)
 {
     dict.lookup("sourceName") >> sourceName_;
 
@@ -431,13 +452,10 @@ void Foam::fieldValues::faceSource::initialise(const dictionary& dict)
 
     if (nFaces_ == 0)
     {
-        WarningInFunction
+        FatalErrorInFunction
             << type() << " " << name_ << ": "
             << sourceTypeNames_[source_] << "(" << sourceName_ << "):" << nl
-            << "    Source has no faces - deactivating" << endl;
-
-        active_ = false;
-        return;
+            << "    Source has no faces" << exit(FatalError);
     }
 
     if (surfacePtr_.valid())
@@ -513,7 +531,10 @@ void Foam::fieldValues::faceSource::initialise(const dictionary& dict)
 }
 
 
-void Foam::fieldValues::faceSource::writeFileHeader(const label i)
+void Foam::functionObjects::fieldValues::faceSource::writeFileHeader
+(
+    const label i
+)
 {
     writeCommented(file(), "Source : ");
     file() << sourceTypeNames_[source_] << " " << sourceName_ << endl;
@@ -540,7 +561,7 @@ void Foam::fieldValues::faceSource::writeFileHeader(const label i)
 
 
 template<>
-Foam::scalar Foam::fieldValues::faceSource::processValues
+Foam::scalar Foam::functionObjects::fieldValues::faceSource::processValues
 (
     const Field<scalar>& values,
     const vectorField& Sf,
@@ -571,7 +592,7 @@ Foam::scalar Foam::fieldValues::faceSource::processValues
 
 
 template<>
-Foam::vector Foam::fieldValues::faceSource::processValues
+Foam::vector Foam::functionObjects::fieldValues::faceSource::processValues
 (
     const Field<vector>& values,
     const vectorField& Sf,
@@ -617,7 +638,7 @@ Foam::vector Foam::fieldValues::faceSource::processValues
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::fieldValues::faceSource::faceSource
+Foam::functionObjects::fieldValues::faceSource::faceSource
 (
     const word& name,
     const objectRegistry& obr,
@@ -639,101 +660,103 @@ Foam::fieldValues::faceSource::faceSource
     facePatchId_(),
     faceSign_()
 {
+    if (!isA<fvMesh>(obr))
+    {
+        FatalErrorInFunction
+            << "objectRegistry is not an fvMesh" << exit(FatalError);
+    }
+
     read(dict);
 }
 
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-Foam::fieldValues::faceSource::~faceSource()
+Foam::functionObjects::fieldValues::faceSource::~faceSource()
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-void Foam::fieldValues::faceSource::read(const dictionary& dict)
+void Foam::functionObjects::fieldValues::faceSource::read
+(
+    const dictionary& dict
+)
 {
     fieldValue::read(dict);
-
-    if (active_)
-    {
-        initialise(dict);
-    }
+    initialise(dict);
 }
 
 
-void Foam::fieldValues::faceSource::write()
+void Foam::functionObjects::fieldValues::faceSource::write()
 {
     fieldValue::write();
 
-    if (active_)
+    if (surfacePtr_.valid())
     {
-        if (surfacePtr_.valid())
-        {
-            surfacePtr_().update();
-        }
-
-        if (Pstream::master())
-        {
-            writeTime(file());
-        }
-
-        if (writeArea_)
-        {
-            totalArea_ = totalArea();
-            if (Pstream::master())
-            {
-                file() << tab << totalArea_;
-            }
-            if (log_) Info<< "    total area = " << totalArea_ << endl;
-        }
-
-        // construct weight field. Note: zero size means weight = 1
-        scalarField weightField;
-        if (weightFieldName_ != "none")
-        {
-            weightField =
-                getFieldValues<scalar>
-                (
-                    weightFieldName_,
-                    true,
-                    orientWeightField_
-                );
-        }
-
-        // Combine onto master
-        combineFields(weightField);
-
-        // process the fields
-        forAll(fields_, i)
-        {
-            const word& fieldName = fields_[i];
-            bool ok = false;
-
-            bool orient = i >= orientedFieldsStart_;
-            ok = ok || writeValues<scalar>(fieldName, weightField, orient);
-            ok = ok || writeValues<vector>(fieldName, weightField, orient);
-            ok = ok
-              || writeValues<sphericalTensor>(fieldName, weightField, orient);
-            ok = ok || writeValues<symmTensor>(fieldName, weightField, orient);
-            ok = ok || writeValues<tensor>(fieldName, weightField, orient);
-
-            if (!ok)
-            {
-                WarningInFunction
-                    << "Requested field " << fieldName
-                    << " not found in database and not processed"
-                    << endl;
-            }
-        }
-
-        if (Pstream::master())
-        {
-            file()<< endl;
-        }
-
-        if (log_) Info<< endl;
+        surfacePtr_().update();
     }
+
+    if (Pstream::master())
+    {
+        writeTime(file());
+    }
+
+    if (writeArea_)
+    {
+        totalArea_ = totalArea();
+        if (Pstream::master())
+        {
+            file() << tab << totalArea_;
+        }
+        if (log_) Info<< "    total area = " << totalArea_ << endl;
+    }
+
+    // construct weight field. Note: zero size means weight = 1
+    scalarField weightField;
+    if (weightFieldName_ != "none")
+    {
+        weightField =
+            getFieldValues<scalar>
+            (
+                weightFieldName_,
+                true,
+                orientWeightField_
+            );
+    }
+
+    // Combine onto master
+    combineFields(weightField);
+
+    // process the fields
+    forAll(fields_, i)
+    {
+        const word& fieldName = fields_[i];
+        bool ok = false;
+
+        bool orient = i >= orientedFieldsStart_;
+        ok = ok || writeValues<scalar>(fieldName, weightField, orient);
+        ok = ok || writeValues<vector>(fieldName, weightField, orient);
+        ok = ok
+          || writeValues<sphericalTensor>(fieldName, weightField, orient);
+        ok = ok || writeValues<symmTensor>(fieldName, weightField, orient);
+        ok = ok || writeValues<tensor>(fieldName, weightField, orient);
+
+        if (!ok)
+        {
+            WarningInFunction
+                << "Requested field " << fieldName
+                << " not found in database and not processed"
+                << endl;
+        }
+    }
+
+    if (Pstream::master())
+    {
+        file()<< endl;
+    }
+
+    if (log_) Info<< endl;
 }
 
 

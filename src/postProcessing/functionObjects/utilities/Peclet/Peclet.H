@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2013-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,7 +22,7 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::Peclet
+    Foam::functionObjects::Peclet
 
 Group
     grpUtilitiesFunctionObjects
@@ -33,12 +33,11 @@ Description
 
 SourceFiles
     Peclet.C
-    IOPeclet.H
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef Peclet_H
-#define Peclet_H
+#ifndef functionObjects_Peclet_H
+#define functionObjects_Peclet_H
 
 #include "volFieldsFwd.H"
 #include "surfaceFieldsFwd.H"
@@ -56,6 +55,9 @@ class dictionary;
 class polyMesh;
 class mapPolyMesh;
 
+namespace functionObjects
+{
+
 /*---------------------------------------------------------------------------*\
                           Class Peclet Declaration
 \*---------------------------------------------------------------------------*/
@@ -69,9 +71,6 @@ class Peclet
 
         //- Reference to the database
         const objectRegistry& obr_;
-
-        //- On/off switch
-        bool active_;
 
         //- Name of flux field, default is "phi"
         word phiName_;
@@ -147,6 +146,7 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+} // End namespace functionObjects
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

@@ -30,13 +30,15 @@ License
 #include "ListListOps.H"
 #include "SortableList.H"
 #include "volPointInterpolation.H"
+#include "mapPolyMesh.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 namespace Foam
 {
-defineTypeNameAndDebug(sampledSets, 0);
-bool sampledSets::verbose_ = false;
+    defineTypeNameAndDebug(sampledSets, 0);
+
+    bool sampledSets::verbose_ = false;
 }
 
 
@@ -177,21 +179,15 @@ void Foam::sampledSets::verbose(const bool verbosity)
 
 
 void Foam::sampledSets::execute()
-{
-    // Do nothing - only valid on write
-}
+{}
 
 
 void Foam::sampledSets::end()
-{
-    // Do nothing - only valid on write
-}
+{}
 
 
 void Foam::sampledSets::timeSet()
-{
-    // Do nothing - only valid on write
-}
+{}
 
 
 void Foam::sampledSets::write()
@@ -301,15 +297,21 @@ void Foam::sampledSets::correct()
 }
 
 
-void Foam::sampledSets::updateMesh(const mapPolyMesh&)
+void Foam::sampledSets::updateMesh(const mapPolyMesh& mpm)
 {
-    correct();
+    if (&mpm.mesh() == &mesh_)
+    {
+        correct();
+    }
 }
 
 
-void Foam::sampledSets::movePoints(const polyMesh&)
+void Foam::sampledSets::movePoints(const polyMesh& mesh)
 {
-    correct();
+    if (&mesh == &mesh_)
+    {
+        correct();
+    }
 }
 
 

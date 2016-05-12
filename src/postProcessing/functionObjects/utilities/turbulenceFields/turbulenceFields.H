@@ -22,7 +22,7 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::turbulenceFields
+    Foam::functionObjects::turbulenceFields
 
 Group
     grpFieldFunctionObjects
@@ -84,11 +84,10 @@ SourceFiles
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef turbulenceFields_H
-#define turbulenceFields_H
+#ifndef functionObjects_turbulenceFields_H
+#define functionObjects_turbulenceFields_H
 
 #include "HashSet.H"
-#include "IOobject.H"
 #include "NamedEnum.H"
 #include "volFieldsFwd.H"
 
@@ -102,6 +101,9 @@ class objectRegistry;
 class dictionary;
 class polyMesh;
 class mapPolyMesh;
+
+namespace functionObjects
+{
 
 /*---------------------------------------------------------------------------*\
                       Class turbulenceFields Declaration
@@ -146,9 +148,6 @@ protected:
         word name_;
 
         const objectRegistry& obr_;
-
-        //- on/off switch
-        bool active_;
 
         //- Fields to load
         wordHashSet fieldSet_;
@@ -210,7 +209,7 @@ public:
             return name_;
         }
 
-        //- Read the field min/max data
+        //- Read the controls
         virtual void read(const dictionary&);
 
         //- Execute, currently does nothing
@@ -237,6 +236,7 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+} // End namespace functionObjects
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

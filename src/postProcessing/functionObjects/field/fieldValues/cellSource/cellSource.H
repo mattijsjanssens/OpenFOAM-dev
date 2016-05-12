@@ -22,7 +22,7 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::fieldValues::cellSource
+    Foam::functionObjects::fieldValues::cellSource
 
 Group
     grpFieldFunctionObjects
@@ -102,8 +102,8 @@ SourceFiles
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef cellSource_H
-#define cellSource_H
+#ifndef functionObjects_cellSource_H
+#define functionObjects_cellSource_H
 
 #include "NamedEnum.H"
 #include "fieldValue.H"
@@ -113,6 +113,8 @@ SourceFiles
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
+{
+namespace functionObjects
 {
 namespace fieldValues
 {
@@ -237,14 +239,16 @@ public:
     TypeName("cellSource");
 
 
-    //- Construct from components
-    cellSource
-    (
-        const word& name,
-        const objectRegistry& obr,
-        const dictionary& dict,
-        const bool loadFromFiles = false
-    );
+    // Constructors
+
+        //- Construct from components
+        cellSource
+        (
+            const word& name,
+            const objectRegistry& obr,
+            const dictionary& dict,
+            const bool loadFromFiles = false
+        );
 
 
     //- Destructor
@@ -283,6 +287,7 @@ public:
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace fieldValues
+} // End namespace functionObjects
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

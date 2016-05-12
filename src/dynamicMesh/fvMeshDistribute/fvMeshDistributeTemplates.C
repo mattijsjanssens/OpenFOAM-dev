@@ -43,12 +43,12 @@ void Foam::fvMeshDistribute::printFieldInfo(const fvMesh& mesh)
             //<< " value:" << fld
             << endl;
 
-        forAll(fld.boundaryField(), patchI)
+        forAll(fld.boundaryField(), patchi)
         {
-            Pout<< "    " << patchI
-                << ' ' << fld.boundaryField()[patchI].patch().name()
-                << ' ' << fld.boundaryField()[patchI].type()
-                << ' ' << fld.boundaryField()[patchI].size()
+            Pout<< "    " << patchi
+                << ' ' << fld.boundaryField()[patchi].patch().name()
+                << ' ' << fld.boundaryField()[patchi].type()
+                << ' ' << fld.boundaryField()[patchi].size()
                 << endl;
         }
     }
@@ -108,35 +108,35 @@ void Foam::fvMeshDistribute::mapBoundaryFields
             << abort(FatalError);
     }
 
-    label fieldI = 0;
+    label fieldi = 0;
 
     forAllIter(typename HashTable<fldType*>, flds, iter)
     {
         fldType& fld = *iter();
-        typename fldType::GeometricBoundaryField& bfld =
-            fld.boundaryField();
+        typename fldType::Boundary& bfld =
+            fld.boundaryFieldRef();
 
-        const FieldField<fvsPatchField, T>& oldBfld = oldBflds[fieldI++];
+        const FieldField<fvsPatchField, T>& oldBfld = oldBflds[fieldi++];
 
         // Pull from old boundary field into bfld.
 
-        forAll(bfld, patchI)
+        forAll(bfld, patchi)
         {
-            fvsPatchField<T>& patchFld = bfld[patchI];
-            label faceI = patchFld.patch().start();
+            fvsPatchField<T>& patchFld = bfld[patchi];
+            label facei = patchFld.patch().start();
 
             forAll(patchFld, i)
             {
-                label oldFaceI = faceMap[faceI++];
+                label oldFacei = faceMap[facei++];
 
-                // Find patch and local patch face oldFaceI was in.
-                forAll(oldPatchStarts, oldPatchI)
+                // Find patch and local patch face oldFacei was in.
+                forAll(oldPatchStarts, oldPatchi)
                 {
-                    label oldLocalI = oldFaceI - oldPatchStarts[oldPatchI];
+                    label oldLocalI = oldFacei - oldPatchStarts[oldPatchi];
 
-                    if (oldLocalI >= 0 && oldLocalI < oldBfld[oldPatchI].size())
+                    if (oldLocalI >= 0 && oldLocalI < oldBfld[oldPatchi].size())
                     {
-                        patchFld[i] = oldBfld[oldPatchI][oldLocalI];
+                        patchFld[i] = oldBfld[oldPatchi][oldLocalI];
                     }
                 }
             }
@@ -161,14 +161,14 @@ void Foam::fvMeshDistribute::initPatchFields
     {
         GeoField& fld = *iter();
 
-        typename GeoField::GeometricBoundaryField& bfld =
-            fld.boundaryField();
+        typename GeoField::Boundary& bfld =
+            fld.boundaryFieldRef();
 
-        forAll(bfld, patchI)
+        forAll(bfld, patchi)
         {
-            if (isA<PatchFieldType>(bfld[patchI]))
+            if (isA<PatchFieldType>(bfld[patchi]))
             {
-                bfld[patchI] == initVal;
+                bfld[patchi] == initVal;
             }
         }
     }

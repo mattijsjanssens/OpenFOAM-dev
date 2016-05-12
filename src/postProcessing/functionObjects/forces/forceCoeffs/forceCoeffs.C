@@ -26,6 +26,7 @@ License
 #include "forceCoeffs.H"
 #include "dictionary.H"
 #include "Time.H"
+#include "fvMesh.H"
 #include "Pstream.H"
 #include "IOmanip.H"
 
@@ -33,13 +34,16 @@ License
 
 namespace Foam
 {
+namespace functionObjects
+{
     defineTypeNameAndDebug(forceCoeffs, 0);
+}
 }
 
 
 // * * * * * * * * * * * * Protected Member Functions  * * * * * * * * * * * //
 
-void Foam::forceCoeffs::writeFileHeader(const label i)
+void Foam::functionObjects::forceCoeffs::writeFileHeader(const label i)
 {
     if (i == 0)
     {
@@ -119,7 +123,7 @@ void Foam::forceCoeffs::writeFileHeader(const label i)
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::forceCoeffs::forceCoeffs
+Foam::functionObjects::forceCoeffs::forceCoeffs
 (
     const word& name,
     const objectRegistry& obr,
@@ -128,78 +132,68 @@ Foam::forceCoeffs::forceCoeffs
 )
 :
     forces(name, obr, dict, loadFromFiles, false),
-    liftDir_(vector::zero),
-    dragDir_(vector::zero),
-    pitchAxis_(vector::zero),
+    liftDir_(Zero),
+    dragDir_(Zero),
+    pitchAxis_(Zero),
     magUInf_(0.0),
     lRef_(0.0),
     Aref_(0.0)
 {
-    read(dict);
+    if (!isA<fvMesh>(obr))
+    {
+        FatalErrorInFunction
+            << "objectRegistry is not an fvMesh" << exit(FatalError);
+    }
 
-    Info<< endl;
+    read(dict);
 }
 
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-Foam::forceCoeffs::~forceCoeffs()
+Foam::functionObjects::forceCoeffs::~forceCoeffs()
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-void Foam::forceCoeffs::read(const dictionary& dict)
+void Foam::functionObjects::forceCoeffs::read(const dictionary& dict)
 {
-    if (active_)
-    {
-        forces::read(dict);
+    forces::read(dict);
 
-        // Directions for lift and drag forces, and pitch moment
-        dict.lookup("liftDir") >> liftDir_;
-        dict.lookup("dragDir") >> dragDir_;
-        dict.lookup("pitchAxis") >> pitchAxis_;
+    // Directions for lift and drag forces, and pitch moment
+    dict.lookup("liftDir") >> liftDir_;
+    dict.lookup("dragDir") >> dragDir_;
+    dict.lookup("pitchAxis") >> pitchAxis_;
 
-        // Free stream velocity magnitude
-        dict.lookup("magUInf") >> magUInf_;
+    // Free stream velocity magnitude
+    dict.lookup("magUInf") >> magUInf_;
 
-        // Reference length and area scales
-        dict.lookup("lRef") >> lRef_;
-        dict.lookup("Aref") >> Aref_;
-    }
+    // Reference length and area scales
+    dict.lookup("lRef") >> lRef_;
+    dict.lookup("Aref") >> Aref_;
 }
 
 
-void Foam::forceCoeffs::execute()
-{
-    // Do nothing - only valid on write
-}
+void Foam::functionObjects::forceCoeffs::execute()
+{}
 
 
-void Foam::forceCoeffs::end()
-{
-    // Do nothing - only valid on write
-}
+void Foam::functionObjects::forceCoeffs::end()
+{}
 
 
-void Foam::forceCoeffs::timeSet()
-{
-    // Do nothing - only valid on write
-}
+void Foam::functionObjects::forceCoeffs::timeSet()
+{}
 
 
-void Foam::forceCoeffs::write()
+void Foam::functionObjects::forceCoeffs::write()
 {
     forces::calcForcesMoment();
 
-    if (!active_)
-    {
-        return;
-    }
-
     if (Pstream::master())
     {
-        functionObjectFile::write();
+        functionObjectFiles::write();
 
         scalar pDyn = 0.5*rhoRef_*magUInf_*magUInf_;
 

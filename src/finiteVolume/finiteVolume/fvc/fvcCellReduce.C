@@ -65,7 +65,7 @@ tmp<GeometricField<Type, fvPatchField, volMesh>> cellReduce
                 IOobject::NO_WRITE
             ),
             mesh,
-            dimensioned<Type>("0", ssf.dimensions(), pTraits<Type>::zero),
+            dimensioned<Type>("0", ssf.dimensions(), Zero),
             extrapolatedCalculatedFvPatchField<Type>::typeName
         )
     );
@@ -77,13 +77,13 @@ tmp<GeometricField<Type, fvPatchField, volMesh>> cellReduce
 
     forAll(own, i)
     {
-        label cellI = own[i];
-        cop(result[cellI], ssf[i]);
+        label celli = own[i];
+        cop(result[celli], ssf[i]);
     }
     forAll(nbr, i)
     {
-        label cellI = nbr[i];
-        cop(result[cellI], ssf[i]);
+        label celli = nbr[i];
+        cop(result[celli], ssf[i]);
     }
 
     result.correctBoundaryConditions();

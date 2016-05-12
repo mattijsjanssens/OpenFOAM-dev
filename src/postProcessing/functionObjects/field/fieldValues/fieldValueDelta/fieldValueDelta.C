@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2012-2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2012-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -33,51 +33,42 @@ License
 
 namespace Foam
 {
-    namespace fieldValues
-    {
-        defineTypeNameAndDebug(fieldValueDelta, 0);
-    }
-
-    template<>
-    const char*
-    NamedEnum<fieldValues::fieldValueDelta::operationType, 5>::names[] =
-    {
-        "add",
-        "subtract",
-        "min",
-        "max",
-        "average"
-    };
-
-    const NamedEnum<fieldValues::fieldValueDelta::operationType, 5>
-        fieldValues::fieldValueDelta::operationTypeNames_;
-}
-
-
-// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
-
-Foam::fieldValues::fieldValueDelta::fieldValueDelta
-(
-    const word& name,
-    const objectRegistry& obr,
-    const dictionary& dict,
-    const bool loadFromFiles
-)
-:
-    functionObjectFile(obr, name, typeName),
-    name_(name),
-    obr_(obr),
-    loadFromFiles_(loadFromFiles),
-    log_(true),
-    operation_(opSubtract),
-    source1Ptr_(NULL),
-    source2Ptr_(NULL)
+namespace functionObjects
 {
-    read(dict);
+namespace fieldValues
+{
+    defineTypeNameAndDebug(fieldValueDelta, 0);
+}
+}
 }
 
+template<>
+const char* Foam::NamedEnum
+<
+    Foam::functionObjects::fieldValues::fieldValueDelta::operationType,
+    5
+>::names[] =
+{
+    "add",
+    "subtract",
+    "min",
+    "max",
+    "average"
+};
 
-void Foam::fieldValues::fieldValueDelta::writeFileHeader(const label i)
+const Foam::NamedEnum
+<
+    Foam::functionObjects::fieldValues::fieldValueDelta::operationType,
+    5
+> Foam::functionObjects::fieldValues::fieldValueDelta::operationTypeNames_;
+
+
+// * * * * * * * * * * * * Protected Member Functions  * * * * * * * * * * * //
+
+void Foam::functionObjects::fieldValues::fieldValueDelta::writeFileHeader
+(
+    const label i
+)
 {
     const wordList& fields1 = source1Ptr_->fields();
     const wordList& fields2 = source2Ptr_->fields();
@@ -108,15 +99,47 @@ void Foam::fieldValues::fieldValueDelta::writeFileHeader(const label i)
 }
 
 
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+Foam::functionObjects::fieldValues::fieldValueDelta::fieldValueDelta
+(
+    const word& name,
+    const objectRegistry& obr,
+    const dictionary& dict,
+    const bool loadFromFiles
+)
+:
+    functionObjectFiles(obr, name, typeName),
+    name_(name),
+    obr_(obr),
+    loadFromFiles_(loadFromFiles),
+    log_(true),
+    operation_(opSubtract),
+    source1Ptr_(NULL),
+    source2Ptr_(NULL)
+{
+    if (!isA<fvMesh>(obr))
+    {
+        FatalErrorInFunction
+            << "objectRegistry is not an fvMesh" << exit(FatalError);
+    }
+
+    read(dict);
+}
+
+
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-Foam::fieldValues::fieldValueDelta::~fieldValueDelta()
+Foam::functionObjects::fieldValues::fieldValueDelta::~fieldValueDelta()
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-void Foam::fieldValues::fieldValueDelta::read(const dictionary& dict)
+void Foam::functionObjects::fieldValues::fieldValueDelta::read
+(
+    const dictionary& dict
+)
 {
     log_ = dict.lookupOrDefault<Switch>("log", true);
     source1Ptr_.reset
@@ -146,9 +169,9 @@ void Foam::fieldValues::fieldValueDelta::read(const dictionary& dict)
 }
 
 
-void Foam::fieldValues::fieldValueDelta::write()
+void Foam::functionObjects::fieldValues::fieldValueDelta::write()
 {
-    functionObjectFile::write();
+    functionObjectFiles::write();
 
     source1Ptr_->write();
     source2Ptr_->write();
@@ -186,34 +209,30 @@ void Foam::fieldValues::fieldValueDelta::write()
 }
 
 
-void Foam::fieldValues::fieldValueDelta::execute()
-{
-    // Do nothing
-}
+void Foam::functionObjects::fieldValues::fieldValueDelta::execute()
+{}
 
 
-void Foam::fieldValues::fieldValueDelta::end()
-{
-    // Do nothing
-}
+void Foam::functionObjects::fieldValues::fieldValueDelta::end()
+{}
 
 
-void Foam::fieldValues::fieldValueDelta::timeSet()
-{
-    // Do nothing
-}
+void Foam::functionObjects::fieldValues::fieldValueDelta::timeSet()
+{}
 
 
-void Foam::fieldValues::fieldValueDelta::updateMesh(const mapPolyMesh&)
-{
-    // Do nothing
-}
+void Foam::functionObjects::fieldValues::fieldValueDelta::updateMesh
+(
+    const mapPolyMesh&
+)
+{}
 
 
-void Foam::fieldValues::fieldValueDelta::movePoints(const polyMesh&)
-{
-    // Do nothing
-}
+void Foam::functionObjects::fieldValues::fieldValueDelta::movePoints
+(
+    const polyMesh&
+)
+{}
 
 
 // ************************************************************************* //

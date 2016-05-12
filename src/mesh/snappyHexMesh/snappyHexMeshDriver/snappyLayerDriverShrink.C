@@ -508,15 +508,15 @@ void Foam::snappyLayerDriver::handleFeatureAngleLayerTerminations
 
     boolList extrudedFaces(pp.size(), true);
 
-    forAll(pp.localFaces(), faceI)
+    forAll(pp.localFaces(), facei)
     {
-        const face& f = pp.localFaces()[faceI];
+        const face& f = pp.localFaces()[facei];
 
         forAll(f, fp)
         {
             if (extrudeStatus[f[fp]] == NOEXTRUDE)
             {
-                extrudedFaces[faceI] = false;
+                extrudedFaces[facei] = false;
                 break;
             }
         }
@@ -546,9 +546,9 @@ void Foam::snappyLayerDriver::handleFeatureAngleLayerTerminations
         edgeFaceExtrude[edgeI].setSize(eFaces.size());
         forAll(eFaces, i)
         {
-            label faceI = eFaces[i];
-            edgeFaceNormals[edgeI][i] = faceNormals[faceI];
-            edgeFaceExtrude[edgeI][i] = extrudedFaces[faceI];
+            label facei = eFaces[i];
+            edgeFaceNormals[edgeI][i] = faceNormals[facei];
+            edgeFaceExtrude[edgeI][i] = extrudedFaces[facei];
         }
     }
 
@@ -692,14 +692,14 @@ void Foam::snappyLayerDriver::findIsolatedRegions
         // faces are not grown
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         boolList extrudedFaces(pp.size(), true);
-        forAll(pp.localFaces(), faceI)
+        forAll(pp.localFaces(), facei)
         {
-            const face& f = pp.localFaces()[faceI];
+            const face& f = pp.localFaces()[facei];
             forAll(f, fp)
             {
                 if (extrudeStatus[f[fp]] == NOEXTRUDE)
                 {
-                    extrudedFaces[faceI] = false;
+                    extrudedFaces[facei] = false;
                     break;
                 }
             }
@@ -714,8 +714,8 @@ void Foam::snappyLayerDriver::findIsolatedRegions
 
             forAll(pFaces, i)
             {
-                label faceI = pFaces[i];
-                if (extrudedFaces[faceI])
+                label facei = pFaces[i];
+                if (extrudedFaces[facei])
                 {
                     keptPoints[patchPointI] = true;
                     break;
@@ -801,9 +801,9 @@ void Foam::snappyLayerDriver::findIsolatedRegions
 
     // stop layer growth on isolated faces
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    forAll(pp, faceI)
+    forAll(pp, facei)
     {
-        const face& f = pp.localFaces()[faceI];
+        const face& f = pp.localFaces()[facei];
         bool failed = false;
         forAll(f, fp)
         {
@@ -1097,7 +1097,7 @@ void Foam::snappyLayerDriver::medialAxisSmoothingInfo
                                     medialAxisPt,   //points[pointI],
                                     magSqr(points[pointI]-medialAxisPt),//0.0,
                                     pointI,         // passive data
-                                    vector::zero    // passive data
+                                    Zero    // passive data
                                 )
                             );
                             pointMedialDist[pointI] = maxInfo.last();
@@ -1114,17 +1114,17 @@ void Foam::snappyLayerDriver::medialAxisSmoothingInfo
         labelHashSet adaptPatches(meshMover.adaptPatchIDs());
 
 
-        forAll(patches, patchI)
+        forAll(patches, patchi)
         {
-            const polyPatch& pp = patches[patchI];
+            const polyPatch& pp = patches[patchi];
             const pointPatchVectorField& pvf =
-                meshMover.displacement().boundaryField()[patchI];
+                meshMover.displacement().boundaryField()[patchi];
 
             if
             (
                 !pp.coupled()
              && !isA<emptyPolyPatch>(pp)
-             && !adaptPatches.found(patchI)
+             && !adaptPatches.found(patchi)
             )
             {
                 const labelList& meshPoints = pp.meshPoints();
@@ -1153,7 +1153,7 @@ void Foam::snappyLayerDriver::medialAxisSmoothingInfo
                                     points[pointI],
                                     0.0,
                                     pointI,         // passive data
-                                    vector::zero    // passive data
+                                    Zero    // passive data
                                 )
                             );
                             pointMedialDist[pointI] = maxInfo.last();
@@ -1203,7 +1203,7 @@ void Foam::snappyLayerDriver::medialAxisSmoothingInfo
                                         points[pointI],
                                         0.0,
                                         pointI,         // passive data
-                                        vector::zero    // passive data
+                                        Zero    // passive data
                                     )
                                 );
                                 pointMedialDist[pointI] = maxInfo.last();
@@ -1584,7 +1584,7 @@ void Foam::snappyLayerDriver::shrinkMeshMedialDistance
                 points[pointI],
                 0.0,
                 thickness[patchPointI],       // transport layer thickness
-                vector::zero                  // passive vector
+                Zero                  // passive vector
             );
         }
 
@@ -1608,7 +1608,7 @@ void Foam::snappyLayerDriver::shrinkMeshMedialDistance
     {
         if (!pointWallDist[pointI].valid(dummyTrackData))
         {
-            displacement[pointI] = vector::zero;
+            displacement[pointI] = Zero;
         }
         else
         {

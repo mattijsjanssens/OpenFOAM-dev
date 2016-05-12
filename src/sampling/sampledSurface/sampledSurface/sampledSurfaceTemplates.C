@@ -49,7 +49,7 @@ bool Foam::sampledSurface::checkFieldSize(const Field<Type>& field) const
 template<class Type>
 Type Foam::sampledSurface::integrate(const Field<Type>& field) const
 {
-    Type value = pTraits<Type>::zero;
+    Type value = Zero;
 
     if (checkFieldSize(field))
     {
@@ -73,7 +73,7 @@ Type Foam::sampledSurface::integrate(const tmp<Field<Type>>& field) const
 template<class Type>
 Type Foam::sampledSurface::average(const Field<Type>& field) const
 {
-    Type value = pTraits<Type>::zero;
+    Type value = Zero;
 
     if (checkFieldSize(field))
     {
@@ -89,7 +89,7 @@ Type Foam::sampledSurface::average(const Field<Type>& field) const
     }
     else
     {
-        return pTraits<Type>::zero;
+        return Zero;
     }
 }
 
@@ -114,9 +114,9 @@ void Foam::sampledSurface::project
     {
         const vectorField& norm = Sf();
 
-        forAll(norm, faceI)
+        forAll(norm, facei)
         {
-            res[faceI] = field[faceI] & (norm[faceI]/mag(norm[faceI]));
+            res[facei] = field[facei] & (norm[facei]/mag(norm[facei]));
         }
     }
     else
@@ -174,7 +174,7 @@ Foam::sampledSurface::pointAverage
                 false
             ),
             mesh,
-            dimensioned<Type>("zero", dimless, pTraits<Type>::zero)
+            dimensioned<Type>("zero", dimless, Zero)
         )
     );
     GeometricField<Type, fvPatchField, volMesh>& cellAvg = tcellAvg.ref();
@@ -187,16 +187,16 @@ Foam::sampledSurface::pointAverage
 
             forAll(pCells, i)
             {
-                label cellI = pCells[i];
+                label celli = pCells[i];
 
-                cellAvg[cellI] += pfld[pointI];
-                nPointCells[cellI]++;
+                cellAvg[celli] += pfld[pointI];
+                nPointCells[celli]++;
             }
         }
     }
-    forAll(cellAvg, cellI)
+    forAll(cellAvg, celli)
     {
-        cellAvg[cellI] /= nPointCells[cellI];
+        cellAvg[celli] /= nPointCells[celli];
     }
     // Give value to calculatedFvPatchFields
     cellAvg.correctBoundaryConditions();

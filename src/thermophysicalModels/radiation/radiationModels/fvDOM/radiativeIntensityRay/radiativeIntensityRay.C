@@ -108,8 +108,8 @@ Foam::radiation::radiativeIntensityRay::radiativeIntensityRay
         mesh_,
         dimensionedScalar("Qem", dimMass/pow3(dimTime), 0.0)
     ),
-    d_(vector::zero),
-    dAve_(vector::zero),
+    d_(Zero),
+    dAve_(Zero),
     theta_(theta),
     phi_(phi),
     omega_(0.0),
@@ -206,7 +206,7 @@ Foam::radiation::radiativeIntensityRay::~radiativeIntensityRay()
 Foam::scalar Foam::radiation::radiativeIntensityRay::correct()
 {
     // Reset boundary heat flux to zero
-    Qr_.boundaryField() = 0.0;
+    Qr_.boundaryFieldRef() = 0.0;
 
     scalar maxResidual = -GREAT;
 

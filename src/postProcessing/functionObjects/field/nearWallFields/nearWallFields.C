@@ -33,13 +33,16 @@ License
 
 namespace Foam
 {
+namespace functionObjects
+{
     defineTypeNameAndDebug(nearWallFields, 0);
+}
 }
 
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-void Foam::nearWallFields::calcAddressing()
+void Foam::functionObjects::nearWallFields::calcAddressing()
 {
     const fvMesh& mesh = refCast<const fvMesh>(obr_);
 
@@ -47,8 +50,8 @@ void Foam::nearWallFields::calcAddressing()
     label nPatchFaces = 0;
     forAllConstIter(labelHashSet, patchSet_, iter)
     {
-        label patchI = iter.key();
-        nPatchFaces += mesh.boundary()[patchI].size();
+        label patchi = iter.key();
+        nPatchFaces += mesh.boundary()[patchi].size();
     }
 
     // Global indexing
@@ -67,15 +70,15 @@ void Foam::nearWallFields::calcAddressing()
 
     forAllConstIter(labelHashSet, patchSet_, iter)
     {
-        label patchI = iter.key();
-        const fvPatch& patch = mesh.boundary()[patchI];
+        label patchi = iter.key();
+        const fvPatch& patch = mesh.boundary()[patchi];
 
         vectorField nf(patch.nf());
         vectorField faceCellCentres(patch.patch().faceCellCentres());
 
-        forAll(patch, patchFaceI)
+        forAll(patch, patchFacei)
         {
-            label meshFaceI = patch.start()+patchFaceI;
+            label meshFacei = patch.start()+patchFacei;
 
             // Find starting point on face (since faceCentre might not
             // be on face-diagonal decomposition)
@@ -84,7 +87,7 @@ void Foam::nearWallFields::calcAddressing()
                 mappedPatchBase::facePoint
                 (
                     mesh,
-                    meshFaceI,
+                    meshFacei,
                     polyMesh::FACE_DIAG_TRIS
                 )
             );
@@ -98,16 +101,16 @@ void Foam::nearWallFields::calcAddressing()
             else
             {
                 // Fallback: start tracking from neighbouring cell centre
-                start = faceCellCentres[patchFaceI];
+                start = faceCellCentres[patchFacei];
             }
 
-            const point end = start-distance_*nf[patchFaceI];
+            const point end = start-distance_*nf[patchFacei];
 
             // Find tet for starting location
-            label cellI = -1;
-            label tetFaceI = -1;
+            label celli = -1;
+            label tetFacei = -1;
             label tetPtI = -1;
-            mesh.findCellFacePt(start, cellI, tetFaceI, tetPtI);
+            mesh.findCellFacePt(start, celli, tetFacei, tetPtI);
 
             // Add to cloud. Add originating face as passive data
             cloud.addParticle
@@ -116,8 +119,8 @@ void Foam::nearWallFields::calcAddressing()
                 (
                     mesh,
                     start,
-                    cellI,
-                    tetFaceI,
+                    celli,
+                    tetFacei,
                     tetPtI,
                     end,
                     globalWalls.toGlobal(nPatchFaces)    // passive data
@@ -202,10 +205,10 @@ void Foam::nearWallFields::calcAddressing()
             );
             InfoInFunction << "Dumping obtained to " << str.name() << endl;
 
-            forAll(cellToWalls_, cellI)
+            forAll(cellToWalls_, celli)
             {
-                const List<point>& ends = cellToSamples_[cellI];
-                const labelList& cData = cellToWalls_[cellI];
+                const List<point>& ends = cellToSamples_[celli];
+                const labelList& cData = cellToWalls_[celli];
                 forAll(cData, i)
                 {
                     str.write(linePointRef(ends[i], start[cData[i]]));
@@ -218,7 +221,7 @@ void Foam::nearWallFields::calcAddressing()
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::nearWallFields::nearWallFields
+Foam::functionObjects::nearWallFields::nearWallFields
 (
     const word& name,
     const objectRegistry& obr,
@@ -228,28 +231,21 @@ Foam::nearWallFields::nearWallFields
 :
     name_(name),
     obr_(obr),
-    active_(true),
     fieldSet_()
 {
-    // Check if the available mesh is an fvMesh otherise deactivate
-    if (isA<fvMesh>(obr_))
+    if (!isA<fvMesh>(obr))
     {
-        read(dict);
-    }
-    else
-    {
-        active_ = false;
-        WarningInFunction
-            << "No fvMesh available, deactivating " << name_
-            << endl;
+        FatalErrorInFunction
+            << "objectRegistry is not an fvMesh" << exit(FatalError);
     }
 
+    read(dict);
 }
 
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-Foam::nearWallFields::~nearWallFields()
+Foam::functionObjects::nearWallFields::~nearWallFields()
 {
     if (debug)
     {
@@ -260,157 +256,142 @@ Foam::nearWallFields::~nearWallFields()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-void Foam::nearWallFields::read(const dictionary& dict)
+void Foam::functionObjects::nearWallFields::read(const dictionary& dict)
 {
     if (debug)
     {
         InfoInFunction << endl;
     }
 
-    if (active_)
+    const fvMesh& mesh = refCast<const fvMesh>(obr_);
+
+    dict.lookup("fields") >> fieldSet_;
+    patchSet_ =
+        mesh.boundaryMesh().patchSet(wordReList(dict.lookup("patches")));
+    distance_ = readScalar(dict.lookup("distance"));
+
+
+    // Clear out any previously loaded fields
+    vsf_.clear();
+    vvf_.clear();
+    vSpheretf_.clear();
+    vSymmtf_.clear();
+    vtf_.clear();
+    fieldMap_.clear();
+    reverseFieldMap_.clear();
+
+
+    // Generate fields with mappedField boundary condition
+
+    // Convert field to map
+    fieldMap_.resize(2*fieldSet_.size());
+    reverseFieldMap_.resize(2*fieldSet_.size());
+    forAll(fieldSet_, setI)
     {
-        const fvMesh& mesh = refCast<const fvMesh>(obr_);
+        const word& fldName = fieldSet_[setI].first();
+        const word& sampleFldName = fieldSet_[setI].second();
 
-        dict.lookup("fields") >> fieldSet_;
-        patchSet_ =
-            mesh.boundaryMesh().patchSet(wordReList(dict.lookup("patches")));
-        distance_ = readScalar(dict.lookup("distance"));
+        fieldMap_.insert(fldName, sampleFldName);
+        reverseFieldMap_.insert(sampleFldName, fldName);
+    }
 
+    Info<< type() << " " << name_ << ": Sampling " << fieldMap_.size()
+        << " fields" << endl;
 
-        // Clear out any previously loaded fields
-        vsf_.clear();
-        vvf_.clear();
-        vSpheretf_.clear();
-        vSymmtf_.clear();
-        vtf_.clear();
-        fieldMap_.clear();
-        reverseFieldMap_.clear();
+    // Do analysis
+    calcAddressing();
+}
 
 
-        // Generate fields with mappedField boundary condition
+void Foam::functionObjects::nearWallFields::execute()
+{
+    if (debug)
+    {
+        InfoInFunction << endl;
+    }
 
-        // Convert field to map
-        fieldMap_.resize(2*fieldSet_.size());
-        reverseFieldMap_.resize(2*fieldSet_.size());
-        forAll(fieldSet_, setI)
-        {
-            const word& fldName = fieldSet_[setI].first();
-            const word& sampleFldName = fieldSet_[setI].second();
-
-            fieldMap_.insert(fldName, sampleFldName);
-            reverseFieldMap_.insert(sampleFldName, fldName);
-        }
-
-        Info<< type() << " " << name_ << ": Sampling " << fieldMap_.size()
+    if
+    (
+        fieldMap_.size()
+     && vsf_.empty()
+     && vvf_.empty()
+     && vSpheretf_.empty()
+     && vSymmtf_.empty()
+     && vtf_.empty()
+    )
+    {
+        Info<< type() << " " << name_ << ": Creating " << fieldMap_.size()
             << " fields" << endl;
 
-        // Do analysis
-        calcAddressing();
-    }
-}
-
-
-void Foam::nearWallFields::execute()
-{
-    if (debug)
-    {
-        InfoInFunction << endl;
-    }
-
-
-    if (active_)
-    {
-        if
-        (
-            fieldMap_.size()
-         && vsf_.empty()
-         && vvf_.empty()
-         && vSpheretf_.empty()
-         && vSymmtf_.empty()
-         && vtf_.empty()
-        )
-        {
-            Info<< type() << " " << name_ << ": Creating " << fieldMap_.size()
-                << " fields" << endl;
-
-            createFields(vsf_);
-            createFields(vvf_);
-            createFields(vSpheretf_);
-            createFields(vSymmtf_);
-            createFields(vtf_);
-
-            Info<< endl;
-        }
-
-        Info<< type() << " " << name_ << " output:" << nl;
-
-        Info<< "    Sampling fields to " << obr_.time().timeName()
-            << endl;
-
-        sampleFields(vsf_);
-        sampleFields(vvf_);
-        sampleFields(vSpheretf_);
-        sampleFields(vSymmtf_);
-        sampleFields(vtf_);
-    }
-}
-
-
-void Foam::nearWallFields::end()
-{
-    if (debug)
-    {
-        InfoInFunction << endl;
-    }
-
-    if (active_)
-    {
-        execute();
-    }
-}
-
-
-void Foam::nearWallFields::timeSet()
-{
-    // Do nothing
-}
-
-
-void Foam::nearWallFields::write()
-{
-    if (debug)
-    {
-        InfoInFunction << endl;
-    }
-
-    if (active_)
-    {
-        Info<< "    Writing sampled fields to " << obr_.time().timeName()
-            << endl;
-
-        forAll(vsf_, i)
-        {
-            vsf_[i].write();
-        }
-        forAll(vvf_, i)
-        {
-            vvf_[i].write();
-        }
-        forAll(vSpheretf_, i)
-        {
-            vSpheretf_[i].write();
-        }
-        forAll(vSymmtf_, i)
-        {
-            vSymmtf_[i].write();
-        }
-        forAll(vtf_, i)
-        {
-            vtf_[i].write();
-        }
+        createFields(vsf_);
+        createFields(vvf_);
+        createFields(vSpheretf_);
+        createFields(vSymmtf_);
+        createFields(vtf_);
 
         Info<< endl;
     }
+
+    Info<< type() << " " << name_ << " output:" << nl;
+
+    Info<< "    Sampling fields to " << obr_.time().timeName()
+        << endl;
+
+    sampleFields(vsf_);
+    sampleFields(vvf_);
+    sampleFields(vSpheretf_);
+    sampleFields(vSymmtf_);
+    sampleFields(vtf_);
+}
+
+
+void Foam::functionObjects::nearWallFields::end()
+{
+    if (debug)
+    {
+        InfoInFunction << endl;
+    }
+
+    execute();
+}
+
+
+void Foam::functionObjects::nearWallFields::timeSet()
+{}
+
+
+void Foam::functionObjects::nearWallFields::write()
+{
+    if (debug)
+    {
+        InfoInFunction << endl;
+    }
+
+    Info<< "    Writing sampled fields to " << obr_.time().timeName()
+        << endl;
+
+    forAll(vsf_, i)
+    {
+        vsf_[i].write();
+    }
+    forAll(vvf_, i)
+    {
+        vvf_[i].write();
+    }
+    forAll(vSpheretf_, i)
+    {
+        vSpheretf_[i].write();
+    }
+    forAll(vSymmtf_, i)
+    {
+        vSymmtf_[i].write();
+    }
+    forAll(vtf_, i)
+    {
+        vtf_[i].write();
+    }
+
+    Info<< endl;
 }
 
 

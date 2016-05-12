@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2012 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2012-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -161,7 +161,7 @@ Foam::string Foam::codedFixedValuePointPatchField<Type>::description() const
         "patch "
       + this->patch().name()
       + " on field "
-      + this->dimensionedInternalField().name();
+      + this->internalField().name();
 }
 
 
@@ -276,7 +276,7 @@ Foam::codedFixedValuePointPatchField<Type>::redirectPatchField() const
             pointPatchField<Type>::New
             (
                 this->patch(),
-                this->dimensionedInternalField(),
+                this->internalField(),
                 dict
             ).ptr()
         );

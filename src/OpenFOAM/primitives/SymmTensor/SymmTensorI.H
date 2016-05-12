@@ -34,13 +34,20 @@ inline Foam::SymmTensor<Cmpt>::SymmTensor()
 
 
 template<class Cmpt>
+inline Foam::SymmTensor<Cmpt>::SymmTensor(const Foam::zero)
+:
+    SymmTensor::vsType(Zero)
+{}
+
+
+template<class Cmpt>
 template<class Cmpt2>
 inline Foam::SymmTensor<Cmpt>::SymmTensor
 (
     const VectorSpace<SymmTensor<Cmpt2>, Cmpt2, 6>& vs
 )
 :
-    VectorSpace<SymmTensor<Cmpt>, Cmpt, 6>(vs)
+    SymmTensor::vsType(vs)
 {}
 
 
@@ -70,7 +77,7 @@ inline Foam::SymmTensor<Cmpt>::SymmTensor
 template<class Cmpt>
 inline Foam::SymmTensor<Cmpt>::SymmTensor(Istream& is)
 :
-    VectorSpace<SymmTensor<Cmpt>, Cmpt, 6>(is)
+    SymmTensor::vsType(is)
 {}
 
 
@@ -157,7 +164,7 @@ inline const Foam::SymmTensor<Cmpt>& Foam::SymmTensor<Cmpt>::T() const
 }
 
 
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
 
 template<class Cmpt>
 inline void Foam::SymmTensor<Cmpt>::operator=(const SphericalTensor<Cmpt>& st)
@@ -397,13 +404,8 @@ inline Cmpt invariantII(const SymmTensor<Cmpt>& st)
 {
     return
     (
-        0.5*sqr(tr(st))
-      - 0.5*
-        (
-           st.xx()*st.xx() + st.xy()*st.xy() + st.xz()*st.xz()
-         + st.xy()*st.xy() + st.yy()*st.yy() + st.yz()*st.yz()
-         + st.xz()*st.xz() + st.yz()*st.yz() + st.zz()*st.zz()
-        )
+        st.xx()*st.yy() + st.yy()*st.zz() + st.xx()*st.zz()
+      - sqr(st.xy()) - sqr(st.yz()) - sqr(st.xz())
     );
 }
 

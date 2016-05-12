@@ -82,6 +82,9 @@ public:
         //- Construct null
         inline SymmTensor();
 
+        //- Construct initialized to zero
+        inline SymmTensor(const Foam::zero);
+
         //- Construct given VectorSpace of the same rank
         template<class Cmpt2>
         inline SymmTensor(const VectorSpace<SymmTensor<Cmpt2>, Cmpt2, 6>&);
@@ -125,7 +128,10 @@ public:
 
     // Member Operators
 
-        //- Construct given SphericalTensor
+        //- Inherit VectorSpace assignment operators
+        using SymmTensor::vsType::operator=;
+
+        //- Assign to given SphericalTensor
         inline void operator=(const SphericalTensor<Cmpt>&);
 };
 

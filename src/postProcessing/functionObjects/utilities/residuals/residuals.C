@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2015-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -32,13 +32,16 @@ License
 
 namespace Foam
 {
+namespace functionObjects
+{
     defineTypeNameAndDebug(residuals, 0);
+}
 }
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::residuals::residuals
+Foam::functionObjects::residuals::residuals
 (
     const word& name,
     const objectRegistry& obr,
@@ -46,19 +49,15 @@ Foam::residuals::residuals
     const bool loadFromFiles
 )
 :
-    functionObjectFile(obr, name, typeName),
+    functionObjectFiles(obr, name, typeName),
     name_(name),
     obr_(obr),
-    active_(true),
     fieldSet_()
 {
-    // Check if the available mesh is an fvMesh otherwise deactivate
-    if (!isA<fvMesh>(obr_))
+    if (!isA<fvMesh>(obr))
     {
-        active_ = false;
-        WarningInFunction
-            << "No fvMesh available, deactivating " << name_
-            << endl;
+        FatalErrorInFunction
+            << "objectRegistry is not an fvMesh" << exit(FatalError);
     }
 
     read(dict);
@@ -67,31 +66,28 @@ Foam::residuals::residuals
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-Foam::residuals::~residuals()
+Foam::functionObjects::residuals::~residuals()
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-void Foam::residuals::read(const dictionary& dict)
+void Foam::functionObjects::residuals::read(const dictionary& dict)
 {
-    if (active_)
-    {
-        dict.lookup("fields") >> fieldSet_;
-    }
+    dict.lookup("fields") >> fieldSet_;
 }
 
 
-void Foam::residuals::writeFileHeader(const label i)
+void Foam::functionObjects::residuals::writeFileHeader(const label i)
 {
     if (Pstream::master())
     {
         writeHeader(file(), "Residuals");
         writeCommented(file(), "Time");
 
-        forAll(fieldSet_, fieldI)
+        forAll(fieldSet_, fieldi)
         {
-            const word& fieldName = fieldSet_[fieldI];
+            const word& fieldName = fieldSet_[fieldi];
 
             writeFileHeader<scalar>(fieldName);
             writeFileHeader<vector>(fieldName);
@@ -105,41 +101,38 @@ void Foam::residuals::writeFileHeader(const label i)
 }
 
 
-void Foam::residuals::execute()
+void Foam::functionObjects::residuals::execute()
 {}
 
 
-void Foam::residuals::end()
+void Foam::functionObjects::residuals::end()
 {}
 
 
-void Foam::residuals::timeSet()
+void Foam::functionObjects::residuals::timeSet()
 {}
 
 
-void Foam::residuals::write()
+void Foam::functionObjects::residuals::write()
 {
-    if (active_)
+    functionObjectFiles::write();
+
+    if (Pstream::master())
     {
-        functionObjectFile::write();
+        writeTime(file());
 
-        if (Pstream::master())
+        forAll(fieldSet_, fieldi)
         {
-            writeTime(file());
+            const word& fieldName = fieldSet_[fieldi];
 
-            forAll(fieldSet_, fieldI)
-            {
-                const word& fieldName = fieldSet_[fieldI];
-
-                writeResidual<scalar>(fieldName);
-                writeResidual<vector>(fieldName);
-                writeResidual<sphericalTensor>(fieldName);
-                writeResidual<symmTensor>(fieldName);
-                writeResidual<tensor>(fieldName);
-            }
-
-            file() << endl;
+            writeResidual<scalar>(fieldName);
+            writeResidual<vector>(fieldName);
+            writeResidual<sphericalTensor>(fieldName);
+            writeResidual<symmTensor>(fieldName);
+            writeResidual<tensor>(fieldName);
         }
+
+        file() << endl;
     }
 }
 

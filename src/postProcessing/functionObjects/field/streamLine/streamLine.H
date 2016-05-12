@@ -22,7 +22,7 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::streamLine
+    Foam::functionObjects::streamLine
 
 Group
     grpFieldFunctionObjects
@@ -100,8 +100,8 @@ SourceFiles
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef streamLine_H
-#define streamLine_H
+#ifndef functionObjects_streamLine_H
+#define functionObjects_streamLine_H
 
 #include "volFieldsFwd.H"
 #include "pointFieldFwd.H"
@@ -125,6 +125,9 @@ class mapPolyMesh;
 class meshSearch;
 class sampledSet;
 
+namespace functionObjects
+{
+
 /*---------------------------------------------------------------------------*\
                          Class streamLine Declaration
 \*---------------------------------------------------------------------------*/
@@ -144,9 +147,6 @@ class streamLine
 
         //- Load fields from files (not from objectRegistry)
         bool loadFromFiles_;
-
-        //- On/off switch
-        bool active_;
 
         //- List of fields to sample
         wordList fields_;
@@ -180,7 +180,6 @@ class streamLine
 
         //- Names of vector fields
         wordList vectorNames_;
-
 
 
         // Demand driven
@@ -277,14 +276,12 @@ public:
 
         //- Update for mesh point-motion
         virtual void movePoints(const polyMesh&);
-
-        ////- Update for changes of mesh due to readUpdate
-        //virtual void readUpdate(const polyMesh::readUpdateState state);
 };
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+} // End namespace functionObjects
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

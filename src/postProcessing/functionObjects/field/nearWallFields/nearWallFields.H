@@ -22,7 +22,7 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::nearWallFields
+    Foam::functionObjects::nearWallFields
 
 Group
     grpFieldFunctionObjects
@@ -66,12 +66,11 @@ SeeAlso
 
 SourceFiles
     nearWallFields.C
-    IOnearWallFields.H
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef nearWallFields_H
-#define nearWallFields_H
+#ifndef functionObjects_nearWallFields_H
+#define functionObjects_nearWallFields_H
 
 #include "OFstream.H"
 #include "volFields.H"
@@ -88,6 +87,9 @@ class objectRegistry;
 class dictionary;
 class mapPolyMesh;
 
+namespace functionObjects
+{
+
 /*---------------------------------------------------------------------------*\
                        Class nearWallFields Declaration
 \*---------------------------------------------------------------------------*/
@@ -102,9 +104,6 @@ protected:
         word name_;
 
         const objectRegistry& obr_;
-
-        //- on/off switch
-        bool active_;
 
         // Read from dictionary
 
@@ -210,7 +209,7 @@ public:
             return name_;
         }
 
-        //- Read the field min/max data
+        //- Read the controls
         virtual void read(const dictionary&);
 
         //- Execute, currently does nothing
@@ -237,6 +236,7 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+} // End namespace functionObjects
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

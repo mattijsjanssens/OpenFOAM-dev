@@ -367,7 +367,7 @@ Foam::KinematicCloud<CloudType>::KinematicCloud
                 IOobject::AUTO_WRITE
             ),
             mesh_,
-            dimensionedVector("zero", dimMass*dimVelocity, vector::zero)
+            dimensionedVector("zero", dimMass*dimVelocity, Zero)
         )
     ),
     UCoeff_
@@ -601,7 +601,7 @@ void Foam::KinematicCloud<CloudType>::restoreState()
 template<class CloudType>
 void Foam::KinematicCloud<CloudType>::resetSourceTerms()
 {
-    UTrans().field() = vector::zero;
+    UTrans().field() = Zero;
     UCoeff().field() = 0.0;
 }
 
@@ -707,13 +707,13 @@ void Foam::KinematicCloud<CloudType>::patchData
     vector& Up
 ) const
 {
-    label patchI = pp.index();
-    label patchFaceI = pp.whichFace(p.face());
+    label patchi = pp.index();
+    label patchFacei = pp.whichFace(p.face());
 
     vector n = tetIs.faceTri(mesh_).normal();
     n /= mag(n);
 
-    vector U = U_.boundaryField()[patchI][patchFaceI];
+    vector U = U_.boundaryField()[patchi][patchFacei];
 
     // Unless the face is rotating, the required normal is n;
     nw = n;
@@ -729,17 +729,17 @@ void Foam::KinematicCloud<CloudType>::patchData
         }
         else
         {
-            Up = vector::zero;
+            Up = Zero;
         }
     }
     else
     {
-        vector U00 = U_.oldTime().boundaryField()[patchI][patchFaceI];
+        vector U00 = U_.oldTime().boundaryField()[patchi][patchFacei];
 
         vector n00 = tetIs.oldFaceTri(mesh_).normal();
 
         // Difference in normal over timestep
-        vector dn = vector::zero;
+        vector dn = Zero;
 
         if (mag(n00) > SMALL)
         {

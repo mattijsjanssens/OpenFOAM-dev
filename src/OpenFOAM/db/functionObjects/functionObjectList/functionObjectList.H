@@ -50,6 +50,7 @@ namespace Foam
 {
 
 class mapPolyMesh;
+class argList;
 
 /*---------------------------------------------------------------------------*\
                      Class functionObjectList Declaration
@@ -107,7 +108,6 @@ public:
             const bool execution=true
         );
 
-
         //- Construct from Time, a dictionary with "functions" entry
         //  and the execution setting.
         //  \param[in]  t - the other Time instance to construct from
@@ -123,9 +123,22 @@ public:
             const bool execution=true
         );
 
+        //- Construct and return a functionObjectList for an application.
+        //
+        //  If the "dict" argument is specified the functionObjectList is
+        //  constructed from that dictionary which is returned as
+        //  functionObjectsDict otherwise the functionObjectList is constructed
+        //  from the "functions" sub-dictionary of "system/controlDict"
+        static autoPtr<functionObjectList> New
+        (
+            const argList& args,
+            const Time& runTime,
+            dictionary& functionObjectsDict
+        );
+
 
     //- Destructor
-    virtual ~functionObjectList();
+    ~functionObjectList();
 
 
     // Member Functions
@@ -140,46 +153,45 @@ public:
         using PtrList<functionObject>::operator[];
 
         //- Clear the list of function objects
-        virtual void clear();
+        void clear();
 
         //- Find the ID of a given function object by name
-        virtual label findObjectID(const word& name) const;
+        label findObjectID(const word& name) const;
 
         //- Switch the function objects on
-        virtual void on();
+        void on();
 
         //- Switch the function objects off
-        virtual void off();
+        void off();
 
         //- Return the execution status (on/off) of the function objects
-        virtual bool status() const;
-
+        bool status() const;
 
         //- Called at the start of the time-loop
-        virtual bool start();
+        bool start();
 
         //- Called at each ++ or += of the time-loop. forceWrite overrides
-        //  the usual outputControl behaviour and forces writing always
-        //  (used in postprocessing mode)
-        virtual bool execute(const bool forceWrite = false);
+        //  the usual writeControl behaviour and forces writing always
+        //  (used in post-processing mode)
+        bool execute(const bool forceWrite = false);
 
         //- Called when Time::run() determines that the time-loop exits
-        virtual bool end();
+        bool end();
 
         //- Called when time was set at the end of the Time::operator++
-        virtual bool timeSet();
+        bool timeSet();
 
         //- Called at the end of Time::adjustDeltaT() if adjustTime is true
-        virtual bool adjustTimeStep();
+        bool adjustTimeStep();
 
         //- Read and set the function objects if their data have changed
-        virtual bool read();
+        bool read();
 
         //- Update for changes of mesh
-        virtual void updateMesh(const mapPolyMesh& mpm);
+        void updateMesh(const mapPolyMesh& mpm);
 
         //- Update for changes of mesh
-        virtual void movePoints(const polyMesh& mesh);
+        void movePoints(const polyMesh& mesh);
 };
 
 

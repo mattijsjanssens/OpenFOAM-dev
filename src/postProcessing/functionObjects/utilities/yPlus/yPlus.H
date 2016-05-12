@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013-2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2013-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,7 +22,7 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::yPlus
+    Foam::functionObjects::yPlus
 
 Group
     grpUtilitiesFunctionObjects
@@ -33,14 +33,13 @@ Description
 
 SourceFiles
     yPlus.C
-    IOyPlus.H
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef yPlus_H
-#define yPlus_H
+#ifndef functionObjects_yPlus_H
+#define functionObjects_yPlus_H
 
-#include "functionObjectFile.H"
+#include "functionObjectFiles.H"
 #include "volFieldsFwd.H"
 #include "Switch.H"
 #include "OFstream.H"
@@ -57,13 +56,16 @@ class polyMesh;
 class mapPolyMesh;
 class fvMesh;
 
+namespace functionObjects
+{
+
 /*---------------------------------------------------------------------------*\
                           Class yPlus Declaration
 \*---------------------------------------------------------------------------*/
 
 class yPlus
 :
-    public functionObjectFile
+    public functionObjectFiles
 {
     // Private data
 
@@ -71,9 +73,6 @@ class yPlus
         word name_;
 
         const objectRegistry& obr_;
-
-        //- on/off switch
-        bool active_;
 
         //- Switch to send output to Info as well as to file
         Switch log_;
@@ -161,6 +160,7 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+} // End namespace functionObjects
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

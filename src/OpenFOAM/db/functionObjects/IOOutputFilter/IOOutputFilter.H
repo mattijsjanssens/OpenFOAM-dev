@@ -114,10 +114,7 @@ public:
     // Member Functions
 
         //- Return name
-        virtual const word& name() const
-        {
-            return IOdictionary::name();
-        }
+        virtual const word& name() const;
 
         //- Inherit read from OutputFilter
         using OutputFilter::read;
@@ -132,18 +129,10 @@ public:
         virtual void write();
 
         //- Update for changes of mesh
-        virtual void updateMesh(const mapPolyMesh& mpm)
-        {
-            read();
-            OutputFilter::updateMesh(mpm);
-        }
+        virtual void updateMesh(const mapPolyMesh& mpm);
 
         //- Update for changes of mesh
-        virtual void movePoints(const polyMesh& mesh)
-        {
-            read();
-            OutputFilter::movePoints(mesh);
-        }
+        virtual void movePoints(const polyMesh& mesh);
 };
 
 

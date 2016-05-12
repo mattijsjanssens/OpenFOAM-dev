@@ -186,7 +186,7 @@ void Pstream::gatherList
 }
 
 
-template <class T>
+template<class T>
 void Pstream::gatherList(List<T>& Values, const int tag, const label comm)
 {
     if (UPstream::nProcs(comm) < UPstream::nProcsSimpleSum)
@@ -321,7 +321,7 @@ void Pstream::scatterList
 }
 
 
-template <class T>
+template<class T>
 void Pstream::scatterList(List<T>& Values, const int tag, const label comm)
 {
     if (UPstream::nProcs(comm) < UPstream::nProcsSimpleSum)

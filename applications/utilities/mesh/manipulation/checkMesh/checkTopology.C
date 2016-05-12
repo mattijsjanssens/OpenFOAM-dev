@@ -53,11 +53,11 @@ Foam::label Foam::checkTopology
     // Check that empty patches cover all sides of the mesh
     {
         label nEmpty = 0;
-        forAll(mesh.boundaryMesh(), patchI)
+        forAll(mesh.boundaryMesh(), patchi)
         {
-            if (isA<emptyPolyPatch>(mesh.boundaryMesh()[patchI]))
+            if (isA<emptyPolyPatch>(mesh.boundaryMesh()[patchi]))
             {
-                nEmpty += mesh.boundaryMesh()[patchI].size();
+                nEmpty += mesh.boundaryMesh()[patchi].size();
             }
         }
         reduce(nEmpty, sumOp<label>());
@@ -97,19 +97,19 @@ Foam::label Foam::checkTopology
     {
         cellSet cells(mesh, "illegalCells", mesh.nCells()/100);
 
-        forAll(mesh.cells(), cellI)
+        forAll(mesh.cells(), celli)
         {
-            const cell& cFaces = mesh.cells()[cellI];
+            const cell& cFaces = mesh.cells()[celli];
 
             if (cFaces.size() <= 3)
             {
-                cells.insert(cellI);
+                cells.insert(celli);
             }
             forAll(cFaces, i)
             {
                 if (cFaces[i] < 0 || cFaces[i] >= mesh.nFaces())
                 {
-                    cells.insert(cellI);
+                    cells.insert(celli);
                     break;
                 }
             }
@@ -223,17 +223,17 @@ Foam::label Foam::checkTopology
     {
         labelList nInternalFaces(mesh.nCells(), 0);
 
-        for (label faceI = 0; faceI < mesh.nInternalFaces(); faceI++)
+        for (label facei = 0; facei < mesh.nInternalFaces(); facei++)
         {
-            nInternalFaces[mesh.faceOwner()[faceI]]++;
-            nInternalFaces[mesh.faceNeighbour()[faceI]]++;
+            nInternalFaces[mesh.faceOwner()[facei]]++;
+            nInternalFaces[mesh.faceNeighbour()[facei]]++;
         }
         const polyBoundaryMesh& patches = mesh.boundaryMesh();
-        forAll(patches, patchI)
+        forAll(patches, patchi)
         {
-            if (patches[patchI].coupled())
+            if (patches[patchi].coupled())
             {
-                const labelUList& owners = patches[patchI].faceCells();
+                const labelUList& owners = patches[patchi].faceCells();
 
                 forAll(owners, i)
                 {
@@ -245,15 +245,15 @@ Foam::label Foam::checkTopology
         cellSet oneCells(mesh, "oneInternalFaceCells", mesh.nCells()/100);
         cellSet twoCells(mesh, "twoInternalFacesCells", mesh.nCells()/100);
 
-        forAll(nInternalFaces, cellI)
+        forAll(nInternalFaces, celli)
         {
-            if (nInternalFaces[cellI] <= 1)
+            if (nInternalFaces[celli] <= 1)
             {
-                oneCells.insert(cellI);
+                oneCells.insert(celli);
             }
-            else if (nInternalFaces[cellI] == 2)
+            else if (nInternalFaces[celli] == 2)
             {
-                twoCells.insert(cellI);
+                twoCells.insert(celli);
             }
         }
 
@@ -387,9 +387,9 @@ Foam::label Foam::checkTopology
         }
         Info<< endl;
 
-        forAll(patches, patchI)
+        forAll(patches, patchi)
         {
-            const polyPatch& pp = patches[patchI];
+            const polyPatch& pp = patches[patchi];
 
             if (!isA<processorPolyPatch>(pp))
             {

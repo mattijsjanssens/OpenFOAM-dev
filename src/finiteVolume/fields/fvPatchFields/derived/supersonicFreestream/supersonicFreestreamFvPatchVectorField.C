@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -41,13 +41,13 @@ supersonicFreestreamFvPatchVectorField
     TName_("T"),
     pName_("p"),
     psiName_("thermo:psi"),
-    UInf_(vector::zero),
+    UInf_(Zero),
     pInf_(0),
     TInf_(0),
     gamma_(0)
 {
     refValue() = patchInternalField();
-    refGrad() = vector::zero;
+    refGrad() = Zero;
     valueFraction() = 1;
 }
 
@@ -82,7 +82,7 @@ supersonicFreestreamFvPatchVectorField
     }
 
     refValue() = *this;
-    refGrad() = vector::zero;
+    refGrad() = Zero;
     valueFraction() = 1;
 
     if (pInf_ < SMALL)
@@ -92,8 +92,8 @@ supersonicFreestreamFvPatchVectorField
             dict
         )   << "    unphysical pInf specified (pInf <= 0.0)"
             << "\n    on patch " << this->patch().name()
-            << " of field " << this->dimensionedInternalField().name()
-            << " in file " << this->dimensionedInternalField().objectPath()
+            << " of field " << this->internalField().name()
+            << " in file " << this->internalField().objectPath()
             << exit(FatalIOError);
     }
 }
@@ -182,8 +182,8 @@ void Foam::supersonicFreestreamFvPatchVectorField::updateCoeffs()
     {
         FatalErrorInFunction
             << "\n    on patch " << this->patch().name()
-            << " of field " << this->dimensionedInternalField().name()
-            << " in file " << this->dimensionedInternalField().objectPath()
+            << " of field " << this->internalField().name()
+            << " in file " << this->internalField().objectPath()
             << exit(FatalError);
     }
 
@@ -280,9 +280,9 @@ void Foam::supersonicFreestreamFvPatchVectorField::updateCoeffs()
                 FatalErrorInFunction
                     << "unphysical subsonic inflow has been generated"
                     << "\n    on patch " << this->patch().name()
-                    << " of field " << this->dimensionedInternalField().name()
+                    << " of field " << this->internalField().name()
                     << " in file "
-                    << this->dimensionedInternalField().objectPath()
+                    << this->internalField().objectPath()
                     << exit(FatalError);
             }
         }

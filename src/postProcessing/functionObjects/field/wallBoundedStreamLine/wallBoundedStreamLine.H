@@ -22,7 +22,7 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::wallBoundedStreamLine
+    Foam::functionObjects::wallBoundedStreamLine
 
 Group
     grpFieldFunctionObjects
@@ -100,8 +100,8 @@ SourceFiles
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef wallBoundedStreamLine_H
-#define wallBoundedStreamLine_H
+#ifndef functionObjects_wallBoundedStreamLine_H
+#define functionObjects_wallBoundedStreamLine_H
 
 #include "volFieldsFwd.H"
 #include "pointFieldFwd.H"
@@ -127,6 +127,9 @@ class mapPolyMesh;
 class meshSearch;
 class sampledSet;
 
+namespace functionObjects
+{
+
 /*---------------------------------------------------------------------------*\
                     Class wallBoundedStreamLine Declaration
 \*---------------------------------------------------------------------------*/
@@ -146,10 +149,6 @@ class wallBoundedStreamLine
 
         //- Load fields from files (not from objectRegistry)
         bool loadFromFiles_;
-
-        //- On/off switch
-        bool active_;
-
 
         //- List of fields to sample
         wordList fields_;
@@ -219,7 +218,7 @@ class wallBoundedStreamLine
         (
             const PackedBoolList& isWallPatch,
             const point& seedPt,
-            const label cellI
+            const label celli
         ) const;
 
         //- Do all seeding and tracking
@@ -283,14 +282,12 @@ public:
 
         //- Update for mesh point-motion
         virtual void movePoints(const polyMesh&);
-
-        ////- Update for changes of mesh due to readUpdate
-        //virtual void readUpdate(const polyMesh::readUpdateState state);
 };
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+} // End namespace functionObjects
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

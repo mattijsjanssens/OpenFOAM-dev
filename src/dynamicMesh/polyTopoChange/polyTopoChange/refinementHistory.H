@@ -287,14 +287,14 @@ public:
         }
 
         //- Get parent of cell
-        label parentIndex(const label cellI) const
+        label parentIndex(const label celli) const
         {
-            label index = visibleCells_[cellI];
+            label index = visibleCells_[celli];
 
             if (index < 0)
             {
                 FatalErrorInFunction
-                    << "Cell " << cellI << " is not visible"
+                    << "Cell " << celli << " is not visible"
                     << abort(FatalError);
             }
             return splitCells_[index].parent_;
@@ -303,14 +303,14 @@ public:
         //- Store splitting of cell into 8
         void storeSplit
         (
-            const label cellI,
+            const label celli,
             const labelList& addedCells
         );
 
         //- Store combining 8 cells into master
         void combineCells
         (
-            const label masterCellI,
+            const label masterCelli,
             const labelList& combinedCells
         );
 

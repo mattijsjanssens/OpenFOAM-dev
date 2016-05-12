@@ -70,7 +70,7 @@ T Foam::meshRefinement::gAverage
             << exit(FatalError);
     }
 
-    T sum = pTraits<T>::zero;
+    T sum = Zero;
     label n = 0;
 
     forAll(values, i)
@@ -119,26 +119,26 @@ void Foam::meshRefinement::testSyncBoundaryFaceList
 
     const polyBoundaryMesh& patches = mesh_.boundaryMesh();
 
-    forAll(patches, patchI)
+    forAll(patches, patchi)
     {
-        const polyPatch& pp = patches[patchI];
+        const polyPatch& pp = patches[patchi];
 
-        label bFaceI = pp.start() - mesh_.nInternalFaces();
+        label bFacei = pp.start() - mesh_.nInternalFaces();
 
         forAll(pp, i)
         {
-            const T& data = faceData[bFaceI];
-            const T& syncData = syncedFaceData[bFaceI];
+            const T& data = faceData[bFacei];
+            const T& syncData = syncedFaceData[bFacei];
 
             if (mag(data - syncData) > tol)
             {
-                label faceI = pp.start()+i;
+                label facei = pp.start()+i;
 
                 FatalErrorInFunction
                     << msg
                     << "patchFace:" << i
-                    << " face:" << faceI
-                    << " fc:" << mesh_.faceCentres()[faceI]
+                    << " face:" << facei
+                    << " fc:" << mesh_.faceCentres()[facei]
                     << " patch:" << pp.name()
                     << " faceData:" << data
                     << " syncedFaceData:" << syncData
@@ -146,7 +146,7 @@ void Foam::meshRefinement::testSyncBoundaryFaceList
                     << abort(FatalError);
             }
 
-            bFaceI++;
+            bFacei++;
         }
     }
 }
@@ -199,7 +199,6 @@ void Foam::meshRefinement::collectAndPrint
 }
 
 
-//template<class T, class Mesh>
 template<class GeoField>
 void Foam::meshRefinement::addPatchFields
 (
@@ -215,25 +214,25 @@ void Foam::meshRefinement::addPatchFields
     forAllIter(typename HashTable<GeoField*>, flds, iter)
     {
         GeoField& fld = *iter();
-        typename GeoField::GeometricBoundaryField& bfld = fld.boundaryField();
+        typename GeoField::Boundary& fldBf =
+            fld.boundaryFieldRef();
 
-        label sz = bfld.size();
-        bfld.setSize(sz+1);
-        bfld.set
+        label sz = fldBf.size();
+        fldBf.setSize(sz+1);
+        fldBf.set
         (
             sz,
-            GeoField::PatchFieldType::New
+            GeoField::Patch::New
             (
                 patchFieldType,
                 mesh.boundary()[sz],
-                fld.dimensionedInternalField()
+                fld()
             )
         );
     }
 }
 
 
-// Reorder patch field
 template<class GeoField>
 void Foam::meshRefinement::reorderPatchFields
 (
@@ -248,10 +247,7 @@ void Foam::meshRefinement::reorderPatchFields
 
     forAllIter(typename HashTable<GeoField*>, flds, iter)
     {
-        GeoField& fld = *iter();
-        typename GeoField::GeometricBoundaryField& bfld = fld.boundaryField();
-
-        bfld.reorder(oldToNew);
+        iter()->boundaryFieldRef().reorder(oldToNew);
     }
 }
 
@@ -305,7 +301,7 @@ void Foam::meshRefinement::weightedSum
     }
 
     sum.setSize(meshPoints.size());
-    sum = pTraits<Type>::zero;
+    sum = Zero;
 
     forAll(edges, edgeI)
     {
@@ -329,7 +325,7 @@ void Foam::meshRefinement::weightedSum
         meshPoints,
         sum,
         plusEqOp<Type>(),
-        pTraits<Type>::zero     // null value
+        Type(Zero)     // null value
     );
 }
 

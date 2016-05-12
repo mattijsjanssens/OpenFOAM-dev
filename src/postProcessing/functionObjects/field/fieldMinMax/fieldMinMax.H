@@ -22,7 +22,7 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::fieldMinMax
+    Foam::functionObjects::fieldMinMax
 
 Group
     grpFieldFunctionObjects
@@ -71,14 +71,13 @@ SeeAlso
 
 SourceFiles
     fieldMinMax.C
-    IOfieldMinMax.H
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef fieldMinMax_H
-#define fieldMinMax_H
+#ifndef functionObjects_fieldMinMax_H
+#define functionObjects_fieldMinMax_H
 
-#include "functionObjectFile.H"
+#include "functionObjectFiles.H"
 #include "Switch.H"
 #include "vector.H"
 
@@ -93,13 +92,16 @@ class dictionary;
 class polyMesh;
 class mapPolyMesh;
 
+namespace functionObjects
+{
+
 /*---------------------------------------------------------------------------*\
                        Class fieldMinMax Declaration
 \*---------------------------------------------------------------------------*/
 
 class fieldMinMax
 :
-    public functionObjectFile
+    public functionObjectFiles
 {
 public:
 
@@ -121,9 +123,6 @@ protected:
         word name_;
 
         const objectRegistry& obr_;
-
-        //- on/off switch
-        bool active_;
 
         //- Switch to send output to Info as well
         Switch log_;
@@ -148,8 +147,8 @@ protected:
             const word& outputName,
             const vector& minC,
             const vector& maxC,
-            const label minProcI,
-            const label maxProcI,
+            const label minProci,
+            const label maxProci,
             const Type& minValue,
             const Type& maxValue
         );
@@ -230,6 +229,7 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+} // End namespace functionObjects
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

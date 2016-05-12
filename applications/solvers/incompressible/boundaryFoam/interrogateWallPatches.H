@@ -3,7 +3,7 @@
 label faceId(-1);
 label patchId(-1);
 label nWallFaces(0);
-vector wallNormal(vector::zero);
+vector wallNormal(Zero);
 
 const fvPatchList& patches = mesh.boundary();
 
@@ -70,7 +70,7 @@ label cellId = patches[patchId].faceCells()[faceId];
 scalarField y
 (
     wallNormal
-  & (mesh.C().internalField() - mesh.C().boundaryField()[patchId][faceId])
+  & (mesh.C().primitiveField() - mesh.C().boundaryField()[patchId][faceId])
 );
 
 Info<< "    Height to first cell centre y0 = " << y[cellId] << endl;

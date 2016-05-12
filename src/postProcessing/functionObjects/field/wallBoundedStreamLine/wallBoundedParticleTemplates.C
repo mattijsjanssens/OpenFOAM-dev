@@ -40,12 +40,12 @@ void Foam::wallBoundedParticle::patchInteraction
     particleType& p = static_cast<particleType&>(*this);
     p.hitFace(td);
 
-    if (!internalFace(faceI_))
+    if (!internalFace(facei_))
     {
-        label origFaceI = faceI_;
-        label patchI = patch(faceI_);
+        label origFacei = facei_;
+        label patchi = patch(facei_);
 
-        // No action taken for tetPtI_ for tetFaceI_ here, handled by
+        // No action taken for tetPtI_ for tetFacei_ here, handled by
         // patch interaction call or later during processor transfer.
 
 
@@ -56,9 +56,9 @@ void Foam::wallBoundedParticle::patchInteraction
         (
             !p.hitPatch
             (
-                mesh_.boundaryMesh()[patchI],
+                mesh_.boundaryMesh()[patchi],
                 td,
-                patchI,
+                patchi,
                 trackFraction,
                 faceHitTetIs
             )
@@ -66,12 +66,12 @@ void Foam::wallBoundedParticle::patchInteraction
         {
             // Did patch interaction model switch patches?
             // Note: recalculate meshEdgeStart_, diagEdge_!
-            if (faceI_ != origFaceI)
+            if (facei_ != origFacei)
             {
-                patchI = patch(faceI_);
+                patchi = patch(facei_);
             }
 
-            const polyPatch& patch = mesh_.boundaryMesh()[patchI];
+            const polyPatch& patch = mesh_.boundaryMesh()[patchi];
 
             if (isA<wedgePolyPatch>(patch))
             {
@@ -166,22 +166,22 @@ Foam::scalar Foam::wallBoundedParticle::trackToEdge
         // check to the other internal tet on the edge.
         if (mesh_.isInternalFace(tetFace()))
         {
-            label nbrCellI =
+            label nbrCelli =
             (
-                cellI_ == mesh_.faceOwner()[faceI_]
-              ? mesh_.faceNeighbour()[faceI_]
-              : mesh_.faceOwner()[faceI_]
+                celli_ == mesh_.faceOwner()[facei_]
+              ? mesh_.faceNeighbour()[facei_]
+              : mesh_.faceOwner()[facei_]
             );
             // Check angle to nbrCell tet. Is it in the direction of the
             // endposition? I.e. since volume of nbr tet is positive the
             // tracking direction should be into the tet.
-            tetIndices nbrTi(nbrCellI, tetFaceI_, tetPtI_, mesh_);
+            tetIndices nbrTi(nbrCelli, tetFacei_, tetPtI_, mesh_);
             if ((nbrTi.faceTri(mesh_).normal() & (endPosition-position())) < 0)
             {
                 // Change into nbrCell. No need to change tetFace, tetPt.
-                //Pout<< "    crossed from cell:" << cellI_
-                //    << " into " << nbrCellI << endl;
-                cellI_ = nbrCellI;
+                //Pout<< "    crossed from cell:" << celli_
+                //    << " into " << nbrCelli << endl;
+                celli_ = nbrCelli;
                 patchInteraction(td, trackFraction);
             }
             else
@@ -386,7 +386,7 @@ bool Foam::wallBoundedParticle::hitPatch
 (
     const polyPatch&,
     TrackData& td,
-    const label patchI,
+    const label patchi,
     const scalar trackFraction,
     const tetIndices& tetIs
 )

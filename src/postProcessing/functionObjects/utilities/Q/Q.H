@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2013-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,7 +22,7 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::Q
+    Foam::functionObjects::Q
 
 Group
     grpUtilitiesFunctionObjects
@@ -37,12 +37,11 @@ Description
 
 SourceFiles
     Q.C
-    IOQ.H
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef Q_H
-#define Q_H
+#ifndef functionObjects_Q_H
+#define functionObjects_Q_H
 
 #include "volFieldsFwd.H"
 #include "surfaceFieldsFwd.H"
@@ -60,6 +59,9 @@ class dictionary;
 class polyMesh;
 class mapPolyMesh;
 
+namespace functionObjects
+{
+
 /*---------------------------------------------------------------------------*\
                           Class Q Declaration
 \*---------------------------------------------------------------------------*/
@@ -73,9 +75,6 @@ class Q
 
         //- Reference to the database
         const objectRegistry& obr_;
-
-        //- On/off switch
-        bool active_;
 
         //- Name of velocity field, default is "U"
         word UName_;
@@ -148,6 +147,7 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+} // End namespace functionObjects
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

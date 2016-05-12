@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -52,18 +52,18 @@ Foam::vector Foam::cyclicAMIPolyPatch::findFaceNormalMaxRadius
 
     const scalarField magRadSqr(magSqr(n));
 
-    label faceI = findMax(magRadSqr);
+    label facei = findMax(magRadSqr);
 
     if (debug)
     {
         Info<< "findFaceMaxRadius(const pointField&) : patch: " << name() << nl
-            << "    rotFace  = " << faceI << nl
-            << "    point    = " << faceCentres[faceI] << nl
-            << "    distance = " << Foam::sqrt(magRadSqr[faceI])
+            << "    rotFace  = " << facei << nl
+            << "    point    = " << faceCentres[facei] << nl
+            << "    distance = " << Foam::sqrt(magRadSqr[facei])
             << endl;
     }
 
-    return n[faceI];
+    return n[facei];
 }
 
 
@@ -132,7 +132,7 @@ void Foam::cyclicAMIPolyPatch::calcTransforms
     {
         case ROTATIONAL:
         {
-            tensor revT = tensor::zero;
+            tensor revT = Zero;
 
             if (rotationAngleDefined_)
             {
@@ -217,8 +217,8 @@ void Foam::cyclicAMIPolyPatch::calcTransforms
             }
             else
             {
-                point n0 = vector::zero;
-                point n1 = vector::zero;
+                point n0 = Zero;
+                point n1 = Zero;
                 if (half0Ctrs.size())
                 {
                     n0 = findFaceNormalMaxRadius(half0Ctrs);
@@ -485,11 +485,11 @@ Foam::cyclicAMIPolyPatch::cyclicAMIPolyPatch
     coupledPolyPatch(name, size, start, index, bm, patchType, transform),
     nbrPatchName_(word::null),
     nbrPatchID_(-1),
-    rotationAxis_(vector::zero),
+    rotationAxis_(Zero),
     rotationCentre_(point::zero),
     rotationAngleDefined_(false),
     rotationAngle_(0.0),
-    separationVector_(vector::zero),
+    separationVector_(Zero),
     AMIPtr_(NULL),
     AMIReverse_(false),
     AMIRequireMatch_(true),
@@ -515,11 +515,11 @@ Foam::cyclicAMIPolyPatch::cyclicAMIPolyPatch
     nbrPatchName_(dict.lookupOrDefault<word>("neighbourPatch", "")),
     coupleGroup_(dict),
     nbrPatchID_(-1),
-    rotationAxis_(vector::zero),
+    rotationAxis_(Zero),
     rotationCentre_(point::zero),
     rotationAngleDefined_(false),
     rotationAngle_(0.0),
-    separationVector_(vector::zero),
+    separationVector_(Zero),
     AMIPtr_(NULL),
     AMIReverse_(dict.lookupOrDefault<bool>("flipNormals", false)),
     AMIRequireMatch_(true),
@@ -845,7 +845,7 @@ void Foam::cyclicAMIPolyPatch::transformPosition(pointField& l) const
 void Foam::cyclicAMIPolyPatch::transformPosition
 (
     point& l,
-    const label faceI
+    const label facei
 ) const
 {
     if (!parallel())
@@ -854,7 +854,7 @@ void Foam::cyclicAMIPolyPatch::transformPosition
         (
             forwardT().size() == 1
           ? forwardT()[0]
-          : forwardT()[faceI]
+          : forwardT()[facei]
         );
 
         if (transform() == ROTATIONAL)
@@ -872,7 +872,7 @@ void Foam::cyclicAMIPolyPatch::transformPosition
         (
             separation().size() == 1
           ? separation()[0]
-          : separation()[faceI]
+          : separation()[facei]
         );
 
         l -= s;
@@ -883,7 +883,7 @@ void Foam::cyclicAMIPolyPatch::transformPosition
 void Foam::cyclicAMIPolyPatch::reverseTransformPosition
 (
     point& l,
-    const label faceI
+    const label facei
 ) const
 {
     if (!parallel())
@@ -892,7 +892,7 @@ void Foam::cyclicAMIPolyPatch::reverseTransformPosition
         (
             reverseT().size() == 1
           ? reverseT()[0]
-          : reverseT()[faceI]
+          : reverseT()[facei]
         );
 
         if (transform() == ROTATIONAL)
@@ -910,7 +910,7 @@ void Foam::cyclicAMIPolyPatch::reverseTransformPosition
         (
             separation().size() == 1
           ? separation()[0]
-          : separation()[faceI]
+          : separation()[facei]
         );
 
         l += s;
@@ -921,7 +921,7 @@ void Foam::cyclicAMIPolyPatch::reverseTransformPosition
 void Foam::cyclicAMIPolyPatch::reverseTransformDirection
 (
     vector& d,
-    const label faceI
+    const label facei
 ) const
 {
     if (!parallel())
@@ -930,7 +930,7 @@ void Foam::cyclicAMIPolyPatch::reverseTransformDirection
         (
             reverseT().size() == 1
           ? reverseT()[0]
-          : reverseT()[faceI]
+          : reverseT()[facei]
         );
 
         d = Foam::transform(T, d);
@@ -988,48 +988,48 @@ bool Foam::cyclicAMIPolyPatch::order
 
 Foam::label Foam::cyclicAMIPolyPatch::pointFace
 (
-    const label faceI,
+    const label facei,
     const vector& n,
     point& p
 ) const
 {
     point prt(p);
-    reverseTransformPosition(prt, faceI);
+    reverseTransformPosition(prt, facei);
 
     vector nrt(n);
-    reverseTransformDirection(nrt, faceI);
+    reverseTransformDirection(nrt, facei);
 
-    label nbrFaceI = -1;
+    label nbrFacei = -1;
 
     if (owner())
     {
-        nbrFaceI = AMI().tgtPointFace
+        nbrFacei = AMI().tgtPointFace
         (
             *this,
             neighbPatch(),
             nrt,
-            faceI,
+            facei,
             prt
         );
     }
     else
     {
-        nbrFaceI = neighbPatch().AMI().srcPointFace
+        nbrFacei = neighbPatch().AMI().srcPointFace
         (
             neighbPatch(),
             *this,
             nrt,
-            faceI,
+            facei,
             prt
         );
     }
 
-    if (nbrFaceI >= 0)
+    if (nbrFacei >= 0)
     {
         p = prt;
     }
 
-    return nbrFaceI;
+    return nbrFacei;
 }
 
 

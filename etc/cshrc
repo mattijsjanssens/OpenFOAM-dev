@@ -104,16 +104,8 @@ setenv FOAM_SIGFPE
 
 ################################################################################
 
-# The old dirs to be cleaned from the various environment variables
-# - remove anything under top-level directory.
-# NB: the WM_PROJECT_INST_DIR might not be identical between versions
-set foamOldDirs="$FOAM_INST_DIR $HOME/$WM_PROJECT/$LOGNAME"
-if ( $?WM_PROJECT_INST_DIR ) then
-    if ( "$WM_PROJECT_INST_DIR" != "$FOAM_INST_DIR" ) then
-        set foamOldDirs="$WM_PROJECT_INST_DIR $foamOldDirs"
-    endif
-endif
-
+# The old dirs to be cleaned from the environment variables
+set foamOldDirs="$WM_PROJECT_DIR $WM_THIRD_PARTY_DIR $HOME/$WM_PROJECT/$LOGNAME $FOAM_SITE_APPBIN $FOAM_SITE_LIBBIN"
 
 # Location of installation
 # ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -210,7 +202,10 @@ _foamSource $WM_PROJECT_DIR/etc/config.csh/aliases
 _foamSource `$WM_PROJECT_DIR/bin/foamEtcFile config.csh/mpi`
 _foamSource `$WM_PROJECT_DIR/bin/foamEtcFile config.csh/paraview`
 _foamSource `$WM_PROJECT_DIR/bin/foamEtcFile config.csh/ensight`
-_foamSource `$WM_PROJECT_DIR/bin/foamEtcFile config.csh/CGAL`
+
+if ( ($?FOAMY_HEX_MESH) ) then
+    _foamSource `$WM_PROJECT_DIR/bin/foamEtcFile config.csh/CGAL`
+endif
 
 
 # Clean environment paths again. Only remove duplicates
@@ -232,6 +227,7 @@ if ( $?LD_PRELOAD ) then
     set cleaned=`$foamClean "$LD_PRELOAD"`
     if ( $status == 0 ) setenv LD_PRELOAD $cleaned
 endif
+
 
 # cleanup environment:
 # ~~~~~~~~~~~~~~~~~~~~

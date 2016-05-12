@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -103,14 +103,14 @@ int main(int argc, char *argv[])
     {
         label no, blkNo, patchLabel;
 
-        forAll(cfxPatchTypes, patchI)
+        forAll(cfxPatchTypes, patchi)
         {
             // Grab patch type and name
-            cfxFile >> cfxPatchTypes[patchI] >> cfxPatchNames[patchI] >> no;
+            cfxFile >> cfxPatchTypes[patchi] >> cfxPatchNames[patchi] >> no;
 
             // Grab patch range
-            patchRanges[patchI].setSize(6);
-            labelList& curRange = patchRanges[patchI];
+            patchRanges[patchi].setSize(6);
+            labelList& curRange = patchRanges[patchi];
 
             forAll(curRange, rI)
             {
@@ -122,9 +122,9 @@ int main(int argc, char *argv[])
             // 0 = solid (3-D patch),
             // 1 = high i, 2 = high j, 3 = high k
             // 4 = low i, 5 = low j, 6 = low k
-            cfxFile >> patchDirections[patchI] >> blkNo >> patchLabel;
+            cfxFile >> patchDirections[patchi] >> blkNo >> patchLabel;
 
-            patchMasterBlocks[patchI] = blkNo - 1;
+            patchMasterBlocks[patchi] = blkNo - 1;
         }
     }
 
@@ -178,9 +178,9 @@ int main(int argc, char *argv[])
 
     faceListList rawPatches(npatch);
 
-    forAll(rawPatches, patchI)
+    forAll(rawPatches, patchi)
     {
-        const word& patchType = cfxPatchTypes[patchI];
+        const word& patchType = cfxPatchTypes[patchi];
 
         // reject volume patches
         if
@@ -189,17 +189,17 @@ int main(int argc, char *argv[])
          || patchType == "SOLCON" || patchType == "USER3D"
         )
         {
-            patchMasterBlocks[patchI] = -1;
-            rawPatches[patchI].setSize(0);
+            patchMasterBlocks[patchi] = -1;
+            rawPatches[patchi].setSize(0);
         }
         else
         {
             // read and create a 2-D patch
-            rawPatches[patchI] =
-                blocks[patchMasterBlocks[patchI]].patchFaces
+            rawPatches[patchi] =
+                blocks[patchMasterBlocks[patchi]].patchFaces
                 (
-                    patchDirections[patchI],
-                    patchRanges[patchI]
+                    patchDirections[patchi],
+                    patchRanges[patchi]
                 );
 
         }
@@ -550,16 +550,16 @@ int main(int argc, char *argv[])
     {
         labelListList curBlockCells = blocks[blockI].blockCells();
 
-        forAll(curBlockCells, blockCellI)
+        forAll(curBlockCells, blockCelli)
         {
-            labelList cellPoints(curBlockCells[blockCellI].size());
+            labelList cellPoints(curBlockCells[blockCelli].size());
 
             forAll(cellPoints, pointI)
             {
                 cellPoints[pointI] =
                     pointMergeList
                     [
-                        curBlockCells[blockCellI][pointI]
+                        curBlockCells[blockCelli][pointI]
                       + blockOffsets[blockI]
                     ];
             }
@@ -580,30 +580,30 @@ int main(int argc, char *argv[])
 
     label nCreatedPatches = 0;
 
-    forAll(rawPatches, patchI)
+    forAll(rawPatches, patchi)
     {
-        if (rawPatches[patchI].size() && cfxPatchTypes[patchI] != "BLKBDY")
+        if (rawPatches[patchi].size() && cfxPatchTypes[patchi] != "BLKBDY")
         {
             // Check if this name has been already created
             label existingPatch = -1;
 
-            for (label oldPatchI = 0; oldPatchI < nCreatedPatches; oldPatchI++)
+            for (label oldPatchi = 0; oldPatchi < nCreatedPatches; oldPatchi++)
             {
-                if (patchNames[oldPatchI] == cfxPatchNames[patchI])
+                if (patchNames[oldPatchi] == cfxPatchNames[patchi])
                 {
-                    existingPatch = oldPatchI;
+                    existingPatch = oldPatchi;
                     break;
                 }
             }
 
-            const faceList& curRawPatch = rawPatches[patchI];
-            label curBlock = patchMasterBlocks[patchI];
+            const faceList& curRawPatch = rawPatches[patchi];
+            label curBlock = patchMasterBlocks[patchi];
 
             if (existingPatch >= 0)
             {
-                Info<< "CFX patch " << patchI
-                    << ", of type " << cfxPatchTypes[patchI]
-                    << ", name " << cfxPatchNames[patchI]
+                Info<< "CFX patch " << patchi
+                    << ", of type " << cfxPatchTypes[patchi]
+                    << ", name " << cfxPatchNames[patchi]
                     << " already exists as OpenFOAM patch " << existingPatch
                     << ".  Adding faces." << endl;
 
@@ -611,11 +611,11 @@ int main(int argc, char *argv[])
                 label oldSize = renumberedPatch.size();
                 renumberedPatch.setSize(oldSize + curRawPatch.size());
 
-                forAll(curRawPatch, faceI)
+                forAll(curRawPatch, facei)
                 {
-                    const face& oldFace = curRawPatch[faceI];
+                    const face& oldFace = curRawPatch[facei];
 
-                    face& newFace = renumberedPatch[oldSize + faceI];
+                    face& newFace = renumberedPatch[oldSize + facei];
                     newFace.setSize(oldFace.size());
 
                     forAll(oldFace, pointI)
@@ -635,11 +635,11 @@ int main(int argc, char *argv[])
                 faceList& renumberedPatch = boundary[nCreatedPatches];
                 renumberedPatch.setSize(curRawPatch.size());
 
-                forAll(curRawPatch, faceI)
+                forAll(curRawPatch, facei)
                 {
-                    const face& oldFace = curRawPatch[faceI];
+                    const face& oldFace = curRawPatch[facei];
 
-                    face& newFace = renumberedPatch[faceI];
+                    face& newFace = renumberedPatch[facei];
                     newFace.setSize(oldFace.size());
 
                     forAll(oldFace, pointI)
@@ -653,48 +653,48 @@ int main(int argc, char *argv[])
                     }
                 }
 
-                Info<< "CFX patch " << patchI
-                    << ", of type " << cfxPatchTypes[patchI]
-                    << ", name " << cfxPatchNames[patchI]
+                Info<< "CFX patch " << patchi
+                    << ", of type " << cfxPatchTypes[patchi]
+                    << ", name " << cfxPatchNames[patchi]
                     << " converted into OpenFOAM patch " << nCreatedPatches
                     << " type ";
 
-                if (cfxPatchTypes[patchI] == "WALL")
+                if (cfxPatchTypes[patchi] == "WALL")
                 {
                     Info<< "wall." << endl;
 
                     patchTypes[nCreatedPatches] = wallPolyPatch::typeName;
-                    patchNames[nCreatedPatches] = cfxPatchNames[patchI];
+                    patchNames[nCreatedPatches] = cfxPatchNames[patchi];
                     nCreatedPatches++;
                 }
-                else if (cfxPatchTypes[patchI] == "SYMMET")
+                else if (cfxPatchTypes[patchi] == "SYMMET")
                 {
                     Info<< "symmetryPlane." << endl;
 
                     patchTypes[nCreatedPatches] = symmetryPolyPatch::typeName;
-                    patchNames[nCreatedPatches] = cfxPatchNames[patchI];
+                    patchNames[nCreatedPatches] = cfxPatchNames[patchi];
                     nCreatedPatches++;
                 }
                 else if
                 (
-                    cfxPatchTypes[patchI] == "INLET"
-                 || cfxPatchTypes[patchI] == "OUTLET"
-                 || cfxPatchTypes[patchI] == "PRESS"
-                 || cfxPatchTypes[patchI] == "CNDBDY"
-                 || cfxPatchTypes[patchI] == "USER2D"
+                    cfxPatchTypes[patchi] == "INLET"
+                 || cfxPatchTypes[patchi] == "OUTLET"
+                 || cfxPatchTypes[patchi] == "PRESS"
+                 || cfxPatchTypes[patchi] == "CNDBDY"
+                 || cfxPatchTypes[patchi] == "USER2D"
                 )
                 {
                     Info<< "generic." << endl;
 
                     patchTypes[nCreatedPatches] = polyPatch::typeName;
-                    patchNames[nCreatedPatches] = cfxPatchNames[patchI];
+                    patchNames[nCreatedPatches] = cfxPatchNames[patchi];
                     nCreatedPatches++;
                 }
                 else
                 {
                     FatalErrorInFunction
                         << "Unrecognised CFX patch type "
-                        << cfxPatchTypes[patchI]
+                        << cfxPatchTypes[patchi]
                         << abort(FatalError);
                 }
             }
@@ -719,14 +719,14 @@ int main(int argc, char *argv[])
     );
 
     // Add information to dictionary
-    forAll(patchNames, patchI)
+    forAll(patchNames, patchi)
     {
-        if (!patchDicts.set(patchI))
+        if (!patchDicts.set(patchi))
         {
-            patchDicts.set(patchI, new dictionary());
+            patchDicts.set(patchi, new dictionary());
         }
         // Add but not overwrite
-        patchDicts[patchI].add("type", patchTypes[patchI], false);
+        patchDicts[patchi].add("type", patchTypes[patchi], false);
     }
 
     polyMesh pShapeMesh

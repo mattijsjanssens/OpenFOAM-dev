@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2012 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2012-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -30,7 +30,7 @@ License
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class Type>
-Foam::Map<Type> Foam::regionSizeDistribution::regionSum
+Foam::Map<Type> Foam::functionObjects::regionSizeDistribution::regionSum
 (
     const regionSplit& regions,
     const Field<Type>& fld
@@ -39,18 +39,18 @@ Foam::Map<Type> Foam::regionSizeDistribution::regionSum
     // Per region the sum of fld
     Map<Type> regionToSum(regions.nRegions()/Pstream::nProcs());
 
-    forAll(fld, cellI)
+    forAll(fld, celli)
     {
-        label regionI = regions[cellI];
+        label regionI = regions[celli];
 
         typename Map<Type>::iterator fnd = regionToSum.find(regionI);
         if (fnd == regionToSum.end())
         {
-            regionToSum.insert(regionI, fld[cellI]);
+            regionToSum.insert(regionI, fld[celli]);
         }
         else
         {
-            fnd() += fld[cellI];
+            fnd() += fld[celli];
         }
     }
     Pstream::mapCombineGather(regionToSum, plusEqOp<Type>());
@@ -60,9 +60,8 @@ Foam::Map<Type> Foam::regionSizeDistribution::regionSum
 }
 
 
-// Get data in sortedToc order
 template<class Type>
-Foam::List<Type> Foam::regionSizeDistribution::extractData
+Foam::List<Type> Foam::functionObjects::regionSizeDistribution::extractData
 (
     const UList<label>& keys,
     const Map<Type>& regionData

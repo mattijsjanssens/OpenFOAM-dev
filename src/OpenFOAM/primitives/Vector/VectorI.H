@@ -31,9 +31,9 @@ inline Foam::Vector<Cmpt>::Vector()
 
 
 template<class Cmpt>
-inline Foam::Vector<Cmpt>::Vector(const Foam::zero z)
+inline Foam::Vector<Cmpt>::Vector(const Foam::zero)
 :
-    Vector::vsType(z)
+    Vector::vsType(Zero)
 {}
 
 
@@ -44,7 +44,7 @@ inline Foam::Vector<Cmpt>::Vector
     const VectorSpace<Vector<Cmpt2>, Cmpt2, 3>& vs
 )
 :
-    VectorSpace<Vector<Cmpt>, Cmpt, 3>(vs)
+    Vector::vsType(vs)
 {}
 
 
@@ -65,7 +65,7 @@ inline Foam::Vector<Cmpt>::Vector
 template<class Cmpt>
 inline Foam::Vector<Cmpt>::Vector(Istream& is)
 :
-    VectorSpace<Vector<Cmpt>, Cmpt, 3>(is)
+    Vector::vsType(is)
 {}
 
 
@@ -121,21 +121,24 @@ inline const Foam::Vector<Cmpt>& Foam::Vector<Cmpt>::centre
 }
 
 
-// * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
-
-template<class Cmpt>
-inline void Foam::Vector<Cmpt>::operator=(const Foam::zero z)
-{
-    VectorSpace<Vector<Cmpt>, Cmpt, 3>::operator=(z);
-}
-
-
 // * * * * * * * * * * * * * * * Global Operators  * * * * * * * * * * * * * //
 
 namespace Foam
 {
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+//- Dummy innerProduct for scalar to allow the construction of vtables for
+//  virtual member functions involving the inner-products of fields
+//  for which a "NotImplemented" specialization for scalar is provided.
+template<class Cmpt>
+class innerProduct<Vector<Cmpt>, scalar>
+{
+public:
+
+    typedef scalar type;
+};
+
 
 template<class Cmpt>
 inline typename innerProduct<Vector<Cmpt>, Vector<Cmpt>>::type

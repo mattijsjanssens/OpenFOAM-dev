@@ -57,7 +57,7 @@ Foam::linearUpwindV<Type>::correction
             (
                 vf.name(),
                 vf.dimensions(),
-                pTraits<Type>::zero
+                Zero
             )
         )
     );
@@ -118,7 +118,7 @@ Foam::linearUpwindV<Type>::correction
         {
             if (maxCorrs < 0)
             {
-                sfCorr[facei] = vector::zero;
+                sfCorr[facei] = Zero;
             }
             else if (sfCorrs > maxCorrs)
             {
@@ -129,7 +129,7 @@ Foam::linearUpwindV<Type>::correction
 
 
     typename GeometricField<Type, fvsPatchField, surfaceMesh>::
-        GeometricBoundaryField& bSfCorr = sfCorr.boundaryField();
+        Boundary& bSfCorr = sfCorr.boundaryFieldRef();
 
     forAll(bSfCorr, patchi)
     {
@@ -185,7 +185,7 @@ Foam::linearUpwindV<Type>::correction
                 {
                     if (maxCorrs < 0)
                     {
-                        pSfCorr[facei] = vector::zero;
+                        pSfCorr[facei] = Zero;
                     }
                     else if (pSfCorrs > maxCorrs)
                     {

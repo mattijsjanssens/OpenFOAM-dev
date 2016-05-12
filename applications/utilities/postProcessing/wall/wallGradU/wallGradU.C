@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -84,20 +84,22 @@ int main(int argc, char *argv[])
                 (
                     "wallGradU",
                     U.dimensions()/dimLength,
-                    vector::zero
+                    Zero
                 )
             );
 
+            volVectorField::Boundary& wallGradUBf =
+                wallGradU.boundaryFieldRef();
+
             const fvPatchList& patches = mesh.boundary();
 
-            forAll(wallGradU.boundaryField(), patchi)
+            forAll(wallGradUBf, patchi)
             {
                 const fvPatch& currPatch = patches[patchi];
 
                 if (isA<wallFvPatch>(currPatch))
                 {
-                    wallGradU.boundaryField()[patchi] =
-                        -U.boundaryField()[patchi].snGrad();
+                    wallGradUBf[patchi] = -U.boundaryField()[patchi].snGrad();
                 }
             }
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -104,13 +104,13 @@ void Foam::multiDirRefinement::addCells
     labelList& labels
 )
 {
-    label newCellI = labels.size();
+    label newCelli = labels.size();
 
     labels.setSize(labels.size() + splitMap.size());
 
     forAllConstIter(Map<label>, splitMap, iter)
     {
-        labels[newCellI++] = iter();
+        labels[newCelli++] = iter();
     }
 }
 
@@ -126,9 +126,9 @@ void Foam::multiDirRefinement::addCells
     // Construct inverse addressing: from new to original cell.
     labelList origCell(mesh.nCells(), -1);
 
-    forAll(addedCells_, cellI)
+    forAll(addedCells_, celli)
     {
-        const labelList& added = addedCells_[cellI];
+        const labelList& added = addedCells_[celli];
 
         forAll(added, i)
         {
@@ -136,13 +136,13 @@ void Foam::multiDirRefinement::addCells
 
             if (origCell[slave] == -1)
             {
-                origCell[slave] = cellI;
+                origCell[slave] = celli;
             }
-            else if (origCell[slave] != cellI)
+            else if (origCell[slave] != celli)
             {
                 FatalErrorInFunction
                     << "Added cell " << slave << " has two different masters:"
-                    << origCell[slave] << " , " << cellI
+                    << origCell[slave] << " , " << celli
                     << abort(FatalError);
             }
         }
@@ -152,7 +152,7 @@ void Foam::multiDirRefinement::addCells
     forAllConstIter(Map<label>, splitMap, iter)
     {
         label masterI = iter.key();
-        label newCellI = iter();
+        label newCelli = iter();
 
         while (origCell[masterI] != -1 && origCell[masterI] != masterI)
         {
@@ -166,7 +166,7 @@ void Foam::multiDirRefinement::addCells
                 << " which is not a valid cell number" << endl
                 << "This means that the mesh is not consistent with the"
                 << " done refinement" << endl
-                << "newCell:" << newCellI << abort(FatalError);
+                << "newCell:" << newCelli << abort(FatalError);
         }
 
         labelList& added = addedCells_[masterI];
@@ -175,13 +175,13 @@ void Foam::multiDirRefinement::addCells
         {
             added.setSize(2);
             added[0] = masterI;
-            added[1] = newCellI;
+            added[1] = newCelli;
         }
-        else if (findIndex(added, newCellI) == -1)
+        else if (findIndex(added, newCelli) == -1)
         {
             label sz = added.size();
             added.setSize(sz + 1);
-            added[sz] = newCellI;
+            added[sz] = newCelli;
         }
     }
 }
@@ -203,15 +203,15 @@ Foam::labelList Foam::multiDirRefinement::splitOffHex(const primitiveMesh& mesh)
 
     forAll(cellLabels_, i)
     {
-        label cellI = cellLabels_[i];
+        label celli = cellLabels_[i];
 
-        if (cellShapes[cellI].model() == hex)
+        if (cellShapes[celli].model() == hex)
         {
-            hexLabels[hexI++] = cellI;
+            hexLabels[hexI++] = celli;
         }
         else
         {
-            nonHexLabels[nonHexI++] = cellI;
+            nonHexLabels[nonHexI++] = celli;
         }
     }
 
@@ -283,15 +283,15 @@ void Foam::multiDirRefinement::refineHex8
         // Increment count
         forAll(consistentCells, i)
         {
-            const label cellI = consistentCells[i];
+            const label celli = consistentCells[i];
 
-            Map<label>::iterator iter = hexCellSet.find(cellI);
+            Map<label>::iterator iter = hexCellSet.find(celli);
 
             if (iter == hexCellSet.end())
             {
                 FatalErrorInFunction
                     << "Resulting mesh would not satisfy 2:1 ratio"
-                    << " when refining cell " << cellI << abort(FatalError);
+                    << " when refining cell " << celli << abort(FatalError);
             }
             else
             {
@@ -348,13 +348,13 @@ void Foam::multiDirRefinement::refineHex8
 
     const labelList& cellMap = morphMap.cellMap();
 
-    forAll(cellMap, cellI)
+    forAll(cellMap, celli)
     {
-        const label oldCellI = cellMap[cellI];
+        const label oldCelli = cellMap[celli];
 
-        if (addedCells_[oldCellI].size())
+        if (addedCells_[oldCelli].size())
         {
-            addedCells_[oldCellI][nAddedCells[oldCellI]++] = cellI;
+            addedCells_[oldCelli][nAddedCells[oldCelli]++] = celli;
         }
     }
 }
@@ -399,9 +399,9 @@ void Foam::multiDirRefinement::refineAllDirs
 
             forAll(refCells, refI)
             {
-                label cellI = cellLabels_[refI];
+                label celli = cellLabels_[refI];
 
-                refCells[refI] = refineCell(cellI, dirField[0]);
+                refCells[refI] = refineCell(celli, dirField[0]);
             }
         }
         else
@@ -409,9 +409,9 @@ void Foam::multiDirRefinement::refineAllDirs
             // Non uniform directions.
             forAll(refCells, refI)
             {
-                const label cellI = cellLabels_[refI];
+                const label celli = cellLabels_[refI];
 
-                refCells[refI] = refineCell(cellI, dirField[cellI]);
+                refCells[refI] = refineCell(celli, dirField[celli]);
             }
         }
 

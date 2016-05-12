@@ -266,7 +266,7 @@ Foam::label Foam::InflationInjection<CloudType>::parcelsToInject
                 (
                     vectorPairScalarPair
                     (
-                        Pair<vector>(mesh.cellCentres()[cI], vector::zero),
+                        Pair<vector>(mesh.cellCentres()[cI], Zero),
                         Pair<scalar>(dSeed_, dNew)
                     )
                 );
@@ -445,7 +445,7 @@ void Foam::InflationInjection<CloudType>::setPositionAndCell
     const scalar,
     vector& position,
     label& cellOwner,
-    label& tetFaceI,
+    label& tetFacei,
     label& tetPtI
 )
 {
@@ -454,7 +454,7 @@ void Foam::InflationInjection<CloudType>::setPositionAndCell
     this->findCellAtPosition
     (
         cellOwner,
-        tetFaceI,
+        tetFacei,
         tetPtI,
         position,
         false

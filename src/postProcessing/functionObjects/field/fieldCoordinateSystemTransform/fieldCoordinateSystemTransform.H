@@ -22,7 +22,7 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::fieldCoordinateSystemTransform
+    Foam::functionObjects::fieldCoordinateSystemTransform
 
 Group
     grpFieldFunctionObjects
@@ -70,12 +70,11 @@ SeeAlso
 SourceFiles
     fieldCoordinateSystemTransform.C
     fieldCoordinateSystemTransformTemplates.C
-    IOfieldCoordinateSystemTransform.H
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef fieldCoordinateSystemTransform_H
-#define fieldCoordinateSystemTransform_H
+#ifndef functionObjects_fieldCoordinateSystemTransform_H
+#define functionObjects_fieldCoordinateSystemTransform_H
 
 #include "OFstream.H"
 #include "volFields.H"
@@ -93,6 +92,9 @@ class dictionary;
 class polyMesh;
 class mapPolyMesh;
 
+namespace functionObjects
+{
+
 /*---------------------------------------------------------------------------*\
                Class fieldCoordinateSystemTransform Declaration
 \*---------------------------------------------------------------------------*/
@@ -107,9 +109,6 @@ protected:
         word name_;
 
         const objectRegistry& obr_;
-
-        //- on/off switch
-        bool active_;
 
         //- Fields to transform
         wordList fieldSet_;
@@ -196,6 +195,7 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+} // End namespace functionObjects
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

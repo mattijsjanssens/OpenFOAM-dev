@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -96,7 +96,6 @@ void Foam::fv::rotorDiskSource::checkData()
                 }
                 case ifLocal:
                 {
-                    // Do nothing
                     break;
                 }
                 default:
@@ -135,24 +134,24 @@ void Foam::fv::rotorDiskSource::setFaceArea(vector& axis, const bool correct)
     const vectorField& Sf = mesh_.Sf();
     const scalarField& magSf = mesh_.magSf();
 
-    vector n = vector::zero;
+    vector n = Zero;
 
     // Calculate cell addressing for selected cells
     labelList cellAddr(mesh_.nCells(), -1);
     UIndirectList<label>(cellAddr, cells_) = identity(cells_.size());
     labelList nbrFaceCellAddr(mesh_.nFaces() - nInternalFaces, -1);
-    forAll(pbm, patchI)
+    forAll(pbm, patchi)
     {
-        const polyPatch& pp = pbm[patchI];
+        const polyPatch& pp = pbm[patchi];
 
         if (pp.coupled())
         {
             forAll(pp, i)
             {
-                label faceI = pp.start() + i;
-                label nbrFaceI = faceI - nInternalFaces;
-                label own = mesh_.faceOwner()[faceI];
-                nbrFaceCellAddr[nbrFaceI] = cellAddr[own];
+                label facei = pp.start() + i;
+                label nbrFacei = facei - nInternalFaces;
+                label own = mesh_.faceOwner()[facei];
+                nbrFaceCellAddr[nbrFacei] = cellAddr[own];
             }
         }
     }
@@ -161,48 +160,48 @@ void Foam::fv::rotorDiskSource::setFaceArea(vector& axis, const bool correct)
     syncTools::swapBoundaryFaceList(mesh_, nbrFaceCellAddr);
 
     // Add internal field contributions
-    for (label faceI = 0; faceI < nInternalFaces; faceI++)
+    for (label facei = 0; facei < nInternalFaces; facei++)
     {
-        const label own = cellAddr[mesh_.faceOwner()[faceI]];
-        const label nbr = cellAddr[mesh_.faceNeighbour()[faceI]];
+        const label own = cellAddr[mesh_.faceOwner()[facei]];
+        const label nbr = cellAddr[mesh_.faceNeighbour()[facei]];
 
         if ((own != -1) && (nbr == -1))
         {
-            vector nf = Sf[faceI]/magSf[faceI];
+            vector nf = Sf[facei]/magSf[facei];
 
             if ((nf & axis) > tol)
             {
-                area_[own] += magSf[faceI];
-                n += Sf[faceI];
+                area_[own] += magSf[facei];
+                n += Sf[facei];
             }
         }
         else if ((own == -1) && (nbr != -1))
         {
-            vector nf = Sf[faceI]/magSf[faceI];
+            vector nf = Sf[facei]/magSf[facei];
 
             if ((-nf & axis) > tol)
             {
-                area_[nbr] += magSf[faceI];
-                n -= Sf[faceI];
+                area_[nbr] += magSf[facei];
+                n -= Sf[facei];
             }
         }
     }
 
 
     // Add boundary contributions
-    forAll(pbm, patchI)
+    forAll(pbm, patchi)
     {
-        const polyPatch& pp = pbm[patchI];
-        const vectorField& Sfp = mesh_.Sf().boundaryField()[patchI];
-        const scalarField& magSfp = mesh_.magSf().boundaryField()[patchI];
+        const polyPatch& pp = pbm[patchi];
+        const vectorField& Sfp = mesh_.Sf().boundaryField()[patchi];
+        const scalarField& magSfp = mesh_.magSf().boundaryField()[patchi];
 
         if (pp.coupled())
         {
             forAll(pp, j)
             {
-                const label faceI = pp.start() + j;
-                const label own = cellAddr[mesh_.faceOwner()[faceI]];
-                const label nbr = nbrFaceCellAddr[faceI - nInternalFaces];
+                const label facei = pp.start() + j;
+                const label own = cellAddr[mesh_.faceOwner()[facei]];
+                const label nbr = nbrFaceCellAddr[facei - nInternalFaces];
                 const vector nf = Sfp[j]/magSfp[j];
 
                 if ((own != -1) && (nbr == -1) && ((nf & axis) > tol))
@@ -216,8 +215,8 @@ void Foam::fv::rotorDiskSource::setFaceArea(vector& axis, const bool correct)
         {
             forAll(pp, j)
             {
-                const label faceI = pp.start() + j;
-                const label own = cellAddr[mesh_.faceOwner()[faceI]];
+                const label facei = pp.start() + j;
+                const label own = cellAddr[mesh_.faceOwner()[facei]];
                 const vector nf = Sfp[j]/magSfp[j];
 
                 if ((own != -1) && ((nf & axis) > tol))
@@ -250,7 +249,7 @@ void Foam::fv::rotorDiskSource::setFaceArea(vector& axis, const bool correct)
             mesh_,
             dimensionedScalar("0", dimArea, 0)
         );
-        UIndirectList<scalar>(area.internalField(), cells_) = area_;
+        UIndirectList<scalar>(area.primitiveField(), cells_) = area_;
 
         Info<< type() << ": " << name_ << " writing field " << area.name()
             << endl;
@@ -263,9 +262,9 @@ void Foam::fv::rotorDiskSource::setFaceArea(vector& axis, const bool correct)
 void Foam::fv::rotorDiskSource::createCoordinateSystem()
 {
     // Construct the local rotor co-prdinate system
-    vector origin(vector::zero);
-    vector axis(vector::zero);
-    vector refDir(vector::zero);
+    vector origin(Zero);
+    vector axis(Zero);
+    vector refDir(Zero);
 
     geometryModeType gm =
         geometryModeTypeNames_.read(coeffs_.lookup("geometryMode"));
@@ -280,21 +279,21 @@ void Foam::fv::rotorDiskSource::createCoordinateSystem()
             const vectorField& C = mesh_.C();
             forAll(cells_, i)
             {
-                const label cellI = cells_[i];
-                sumV += V[cellI];
-                origin += V[cellI]*C[cellI];
+                const label celli = cells_[i];
+                sumV += V[celli];
+                origin += V[celli]*C[celli];
             }
             reduce(origin, sumOp<vector>());
             reduce(sumV, sumOp<scalar>());
             origin /= sumV;
 
             // Determine first radial vector
-            vector dx1(vector::zero);
+            vector dx1(Zero);
             scalar magR = -GREAT;
             forAll(cells_, i)
             {
-                const label cellI = cells_[i];
-                vector test = C[cellI] - origin;
+                const label celli = cells_[i];
+                vector test = C[celli] - origin;
                 if (mag(test) > magR)
                 {
                     dx1 = test;
@@ -307,8 +306,8 @@ void Foam::fv::rotorDiskSource::createCoordinateSystem()
             // Determine second radial vector and cross to determine axis
             forAll(cells_, i)
             {
-                const label cellI = cells_[i];
-                vector dx2 = C[cellI] - origin;
+                const label celli = cells_[i];
+                vector dx2 = C[celli] - origin;
                 if (mag(dx2) > 0.5*magR)
                 {
                     axis = dx1 ^ dx2;
@@ -403,10 +402,10 @@ void Foam::fv::rotorDiskSource::constructGeometry()
     {
         if (area_[i] > ROOTVSMALL)
         {
-            const label cellI = cells_[i];
+            const label celli = cells_[i];
 
             // Position in (planar) rotor co-ordinate system
-            x_[i] = coordSys_.localPosition(C[cellI]);
+            x_[i] = coordSys_.localPosition(C[celli]);
 
             // Cache max radius
             rMax_ = max(rMax_, x_[i].x());
@@ -448,7 +447,7 @@ Foam::tmp<Foam::vectorField> Foam::fv::rotorDiskSource::inflowVelocity
         }
         case ifLocal:
         {
-            return U.internalField();
+            return U.primitiveField();
 
             break;
         }
@@ -459,7 +458,7 @@ Foam::tmp<Foam::vectorField> Foam::fv::rotorDiskSource::inflowVelocity
         }
     }
 
-    return tmp<vectorField>(new vectorField(mesh_.nCells(), vector::zero));
+    return tmp<vectorField>(new vectorField(mesh_.nCells(), Zero));
 }
 
 
@@ -479,10 +478,10 @@ Foam::fv::rotorDiskSource::rotorDiskSource
     omega_(0.0),
     nBlades_(0),
     inletFlow_(ifLocal),
-    inletVelocity_(vector::zero),
+    inletVelocity_(Zero),
     tipEffect_(1.0),
     flap_(),
-    x_(cells_.size(), vector::zero),
+    x_(cells_.size(), Zero),
     R_(cells_.size(), I),
     invR_(cells_.size(), I),
     area_(cells_.size(), 0.0),
@@ -508,7 +507,7 @@ Foam::fv::rotorDiskSource::~rotorDiskSource()
 void Foam::fv::rotorDiskSource::addSup
 (
     fvMatrix<vector>& eqn,
-    const label fieldI
+    const label fieldi
 )
 {
     volVectorField force
@@ -524,7 +523,7 @@ void Foam::fv::rotorDiskSource::addSup
         (
             "zero",
             eqn.dimensions()/dimVolume,
-            vector::zero
+            Zero
         )
     );
 
@@ -549,7 +548,7 @@ void Foam::fv::rotorDiskSource::addSup
 (
     const volScalarField& rho,
     fvMatrix<vector>& eqn,
-    const label fieldI
+    const label fieldi
 )
 {
     volVectorField force
@@ -565,7 +564,7 @@ void Foam::fv::rotorDiskSource::addSup
         (
             "zero",
             eqn.dimensions()/dimVolume,
-            vector::zero
+            Zero
         )
     );
 

@@ -49,17 +49,19 @@ void Foam::wallDist::constructn() const
                 mesh()
             ),
             mesh(),
-            dimensionedVector("n" & patchTypeName_, dimless, vector::zero),
+            dimensionedVector("n" & patchTypeName_, dimless, Zero),
             patchDistMethod::patchTypes<vector>(mesh(), patchIDs_)
         )
     );
 
     const fvPatchList& patches = mesh().boundary();
 
+    volVectorField::Boundary& nbf = n_.ref().boundaryFieldRef();
+
     forAllConstIter(labelHashSet, patchIDs_, iter)
     {
         label patchi = iter.key();
-        n_.ref().boundaryField()[patchi] == patches[patchi].nf();
+        nbf[patchi] == patches[patchi].nf();
     }
 }
 

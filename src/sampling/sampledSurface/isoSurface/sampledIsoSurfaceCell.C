@@ -130,23 +130,23 @@ bool Foam::sampledIsoSurfaceCell::updateGeometry() const
 
                 forAll(pCells, i)
                 {
-                    label cellI = pCells[i];
+                    label celli = pCells[i];
 
-                    cellAvg[cellI] += pointFld().internalField()[pointI];
-                    nPointCells[cellI]++;
+                    cellAvg[celli] += pointFld().primitiveField()[pointI];
+                    nPointCells[celli]++;
                 }
             }
         }
-        forAll(cellAvg, cellI)
+        forAll(cellAvg, celli)
         {
-            cellAvg[cellI] /= nPointCells[cellI];
+            cellAvg[celli] /= nPointCells[celli];
         }
 
         const isoSurfaceCell iso
         (
             fvm,
             cellAvg,
-            pointFld().internalField(),
+            pointFld().primitiveField(),
             isoVal_,
             regularise_
         );
@@ -163,8 +163,8 @@ bool Foam::sampledIsoSurfaceCell::updateGeometry() const
         const isoSurfaceCell iso
         (
             fvm,
-            cellFld.internalField(),
-            pointFld().internalField(),
+            cellFld.primitiveField(),
+            pointFld().primitiveField(),
             isoVal_,
             regularise_
         );

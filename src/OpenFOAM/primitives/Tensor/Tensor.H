@@ -91,7 +91,7 @@ public:
         inline Tensor();
 
         //- Construct initialized to zero
-        inline explicit Tensor(const Foam::zero);
+        inline Tensor(const Foam::zero);
 
         //- Construct given MatrixSpace of the same rank
         template<class Cmpt2>
@@ -184,6 +184,9 @@ public:
 
         //- Inner-product with a Tensor
         inline void operator&=(const Tensor<Cmpt>&);
+
+        //- Inherit MatrixSpace assignment operators
+        using Tensor::msType::operator=;
 
         //- Assign to an equivalent vector space
         template<class Cmpt2>

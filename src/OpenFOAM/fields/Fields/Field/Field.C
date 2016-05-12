@@ -58,6 +58,13 @@ Foam::Field<Type>::Field(const label size, const Type& t)
 
 
 template<class Type>
+Foam::Field<Type>::Field(const label size, const zero)
+:
+    List<Type>(size, Zero)
+{}
+
+
+template<class Type>
 Foam::Field<Type>::Field
 (
     const UList<Type>& mapF,
@@ -399,7 +406,7 @@ void Foam::Field<Type>::map
         const labelList&  localAddrs   = mapAddressing[i];
         const scalarList& localWeights = mapWeights[i];
 
-        f[i] = pTraits<Type>::zero;
+        f[i] = Zero;
 
         forAll(localAddrs, j)
         {
@@ -526,7 +533,7 @@ void Foam::Field<Type>::rmap
 {
     Field<Type>& f = *this;
 
-    f = pTraits<Type>::zero;
+    f = Zero;
 
     forAll(mapF, i)
     {
@@ -601,6 +608,19 @@ void Foam::Field<Type>::replace
 {
     TFOR_ALL_F_OP_FUNC_S_S(Type, *this, ., replace, const direction, d,
         cmptType, c)
+}
+
+
+template<class Type>
+template<class VSForm>
+VSForm Foam::Field<Type>::block(const label start) const
+{
+    VSForm vs;
+    for (direction i=0; i<VSForm::nComponents; i++)
+    {
+        vs[i] = this->operator[](start + i);
+    }
+    return vs;
 }
 
 
@@ -697,6 +717,13 @@ template<class Type>
 void Foam::Field<Type>::operator=(const Type& t)
 {
     List<Type>::operator=(t);
+}
+
+
+template<class Type>
+void Foam::Field<Type>::operator=(const zero)
+{
+    List<Type>::operator=(Zero);
 }
 
 

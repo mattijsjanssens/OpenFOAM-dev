@@ -63,12 +63,11 @@ SeeAlso
 
 SourceFiles
     surfaceInterpolateFields.C
-    IOsurfaceInterpolateFields.H
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef surfaceInterpolateFields_H
-#define surfaceInterpolateFields_H
+#ifndef functionObjects_surfaceInterpolateFields_H
+#define functionObjects_surfaceInterpolateFields_H
 
 #include "OFstream.H"
 #include "surfaceFields.H"
@@ -84,6 +83,9 @@ class objectRegistry;
 class dictionary;
 class mapPolyMesh;
 
+namespace functionObjects
+{
+
 /*---------------------------------------------------------------------------*\
                   Class surfaceInterpolateFields Declaration
 \*---------------------------------------------------------------------------*/
@@ -98,9 +100,6 @@ protected:
         word name_;
 
         const objectRegistry& obr_;
-
-        //- on/off switch
-        bool active_;
 
         //- Fields to process
         //wordList fieldSet_;
@@ -165,7 +164,7 @@ public:
             return name_;
         }
 
-        //- Read the field min/max data
+        //- Read the controls
         virtual void read(const dictionary&);
 
         //- Execute, currently does nothing
@@ -192,6 +191,7 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+} // End namespace functionObjects
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

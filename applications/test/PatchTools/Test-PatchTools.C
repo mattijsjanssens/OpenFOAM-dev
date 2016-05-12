@@ -66,16 +66,16 @@ using namespace Foam;
 //    //    (note:without calculating pointNormals
 //    //     to avoid them being stored)
 //
-//    tmp<pointField> textrudeN(new pointField(p.nPoints(), vector::zero));
+//    tmp<pointField> textrudeN(new pointField(p.nPoints(), Zero));
 //    pointField& extrudeN = textrudeN();
 //    {
 //        const faceList& localFaces = p.localFaces();
 //        const vectorField& faceAreas = mesh.faceAreas();
 //
-//        forAll(localFaces, faceI)
+//        forAll(localFaces, facei)
 //        {
-//            const face& f = localFaces[faceI];
-//            const vector& n = faceAreas[meshFaces[faceI]];
+//            const face& f = localFaces[facei];
+//            const vector& n = faceAreas[meshFaces[facei]];
 //            forAll(f, fp)
 //            {
 //                extrudeN[f[fp]] += n;
@@ -123,7 +123,7 @@ using namespace Foam;
 //        globalData.globalPointTransformedSlaves();
 //
 //
-//    pointField coupledPointNormals(map.constructSize(), vector::zero);
+//    pointField coupledPointNormals(map.constructSize(), Zero);
 //
 //    forAll(meshPoints, patchPointI)
 //    {
@@ -208,8 +208,8 @@ int main(int argc, char *argv[])
     #include "createMesh.H"
 
     const word patchName = args[1];
-    label patchI = mesh.boundaryMesh().findPatchID(patchName);
-    const polyPatch& pp = mesh.boundaryMesh()[patchI];
+    label patchi = mesh.boundaryMesh().findPatchID(patchName);
+    const polyPatch& pp = mesh.boundaryMesh()[patchi];
 
     const indirectPrimitivePatch& cpp = mesh.globalData().coupledPatch();
 

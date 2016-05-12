@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -30,6 +30,7 @@ License
 #include "IOmanip.H"
 #include "volPointInterpolation.H"
 #include "PatchTools.H"
+#include "mapPolyMesh.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -130,21 +131,15 @@ void Foam::sampledSurfaces::verbose(const bool verbosity)
 
 
 void Foam::sampledSurfaces::execute()
-{
-    // Do nothing - only valid on write
-}
+{}
 
 
 void Foam::sampledSurfaces::end()
-{
-    // Do nothing - only valid on write
-}
+{}
 
 
 void Foam::sampledSurfaces::timeSet()
-{
-    // Do nothing - only valid on write
-}
+{}
 
 
 void Foam::sampledSurfaces::write()
@@ -251,17 +246,23 @@ void Foam::sampledSurfaces::read(const dictionary& dict)
 }
 
 
-void Foam::sampledSurfaces::updateMesh(const mapPolyMesh&)
+void Foam::sampledSurfaces::updateMesh(const mapPolyMesh& mpm)
 {
-    expire();
+    if (&mpm.mesh() == &mesh_)
+    {
+        expire();
+    }
 
     // pointMesh and interpolation will have been reset in mesh.update
 }
 
 
-void Foam::sampledSurfaces::movePoints(const polyMesh&)
+void Foam::sampledSurfaces::movePoints(const polyMesh& mesh)
 {
-    expire();
+    if (&mesh == &mesh_)
+    {
+        expire();
+    }
 }
 
 

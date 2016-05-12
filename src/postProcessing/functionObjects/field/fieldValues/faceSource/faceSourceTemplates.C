@@ -32,7 +32,10 @@ License
 // * * * * * * * * * * * * Protected Member Functions  * * * * * * * * * * * //
 
 template<class Type>
-bool Foam::fieldValues::faceSource::validField(const word& fieldName) const
+bool Foam::functionObjects::fieldValues::faceSource::validField
+(
+    const word& fieldName
+) const
 {
     typedef GeometricField<Type, fvsPatchField, surfaceMesh> sf;
     typedef GeometricField<Type, fvPatchField, volMesh> vf;
@@ -51,7 +54,8 @@ bool Foam::fieldValues::faceSource::validField(const word& fieldName) const
 
 
 template<class Type>
-Foam::tmp<Foam::Field<Type>> Foam::fieldValues::faceSource::getFieldValues
+Foam::tmp<Foam::Field<Type>>
+Foam::functionObjects::fieldValues::faceSource::getFieldValues
 (
     const word& fieldName,
     const bool mustGet,
@@ -81,18 +85,18 @@ Foam::tmp<Foam::Field<Type>> Foam::fieldValues::faceSource::getFieldValues
                 const faceList& faces = surfacePtr_().faces();
                 tmp<Field<Type>> tavg
                 (
-                    new Field<Type>(faces.size(), pTraits<Type>::zero)
+                    new Field<Type>(faces.size(), Zero)
                 );
                 Field<Type>& avg = tavg.ref();
 
-                forAll(faces, faceI)
+                forAll(faces, facei)
                 {
-                    const face& f = faces[faceI];
+                    const face& f = faces[facei];
                     forAll(f, fp)
                     {
-                        avg[faceI] += intFld[f[fp]];
+                        avg[facei] += intFld[f[fp]];
                     }
-                    avg[faceI] /= f.size();
+                    avg[facei] /= f.size();
                 }
 
                 return tavg;
@@ -120,14 +124,14 @@ Foam::tmp<Foam::Field<Type>> Foam::fieldValues::faceSource::getFieldValues
 
 
 template<class Type>
-Type Foam::fieldValues::faceSource::processSameTypeValues
+Type Foam::functionObjects::fieldValues::faceSource::processSameTypeValues
 (
     const Field<Type>& values,
     const vectorField& Sf,
     const scalarField& weightField
 ) const
 {
-    Type result = pTraits<Type>::zero;
+    Type result = Zero;
     switch (operation_)
     {
         case opSum:
@@ -148,7 +152,7 @@ Type Foam::fieldValues::faceSource::processSameTypeValues
                 << pTraits<Type>::typeName
                 << exit(FatalError);
 
-            result = pTraits<Type>::zero;
+            result = Zero;
             break;
         }
         case opSumDirectionBalance:
@@ -159,7 +163,7 @@ Type Foam::fieldValues::faceSource::processSameTypeValues
                 << pTraits<Type>::typeName
                 << exit(FatalError);
 
-            result = pTraits<Type>::zero;
+            result = Zero;
             break;
         }
         case opAverage:
@@ -236,10 +240,12 @@ Type Foam::fieldValues::faceSource::processSameTypeValues
 
             break;
         }
-        default:
-        {
-            // Do nothing
-        }
+        case opAreaNormalAverage:
+        {}
+        case opAreaNormalIntegrate:
+        {}
+        case opNone:
+        {}
     }
 
     return result;
@@ -247,7 +253,7 @@ Type Foam::fieldValues::faceSource::processSameTypeValues
 
 
 template<class Type>
-Type Foam::fieldValues::faceSource::processValues
+Type Foam::functionObjects::fieldValues::faceSource::processValues
 (
     const Field<Type>& values,
     const vectorField& Sf,
@@ -262,7 +268,7 @@ Type Foam::fieldValues::faceSource::processValues
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class Type>
-bool Foam::fieldValues::faceSource::writeValues
+bool Foam::functionObjects::fieldValues::faceSource::writeValues
 (
     const word& fieldName,
     const scalarField& weightField,
@@ -348,7 +354,8 @@ bool Foam::fieldValues::faceSource::writeValues
 
 
 template<class Type>
-Foam::tmp<Foam::Field<Type>> Foam::fieldValues::faceSource::filterField
+Foam::tmp<Foam::Field<Type>>
+Foam::functionObjects::fieldValues::faceSource::filterField
 (
     const GeometricField<Type, fvPatchField, volMesh>& field,
     const bool applyOrientation
@@ -359,11 +366,11 @@ Foam::tmp<Foam::Field<Type>> Foam::fieldValues::faceSource::filterField
 
     forAll(values, i)
     {
-        label faceI = faceId_[i];
-        label patchI = facePatchId_[i];
-        if (patchI >= 0)
+        label facei = faceId_[i];
+        label patchi = facePatchId_[i];
+        if (patchi >= 0)
         {
-            values[i] = field.boundaryField()[patchI][faceI];
+            values[i] = field.boundaryField()[patchi][facei];
         }
         else
         {
@@ -389,7 +396,8 @@ Foam::tmp<Foam::Field<Type>> Foam::fieldValues::faceSource::filterField
 
 
 template<class Type>
-Foam::tmp<Foam::Field<Type>> Foam::fieldValues::faceSource::filterField
+Foam::tmp<Foam::Field<Type>>
+Foam::functionObjects::fieldValues::faceSource::filterField
 (
     const GeometricField<Type, fvsPatchField, surfaceMesh>& field,
     const bool applyOrientation
@@ -400,15 +408,15 @@ Foam::tmp<Foam::Field<Type>> Foam::fieldValues::faceSource::filterField
 
     forAll(values, i)
     {
-        label faceI = faceId_[i];
-        label patchI = facePatchId_[i];
-        if (patchI >= 0)
+        label facei = faceId_[i];
+        label patchi = facePatchId_[i];
+        if (patchi >= 0)
         {
-            values[i] = field.boundaryField()[patchI][faceI];
+            values[i] = field.boundaryField()[patchi][facei];
         }
         else
         {
-            values[i] = field[faceI];
+            values[i] = field[facei];
         }
     }
 

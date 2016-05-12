@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -56,32 +56,32 @@ Foam::labelList Foam::polyDualMesh::getFaceOrder
     labelList oldToNew(faceOwner.size(), -1);
 
     // First unassigned face
-    label newFaceI = 0;
+    label newFacei = 0;
 
-    forAll(cells, cellI)
+    forAll(cells, celli)
     {
-        const labelList& cFaces = cells[cellI];
+        const labelList& cFaces = cells[celli];
 
         SortableList<label> nbr(cFaces.size());
 
         forAll(cFaces, i)
         {
-            label faceI = cFaces[i];
+            label facei = cFaces[i];
 
-            label nbrCellI = faceNeighbour[faceI];
+            label nbrCelli = faceNeighbour[facei];
 
-            if (nbrCellI != -1)
+            if (nbrCelli != -1)
             {
                 // Internal face. Get cell on other side.
-                if (nbrCellI == cellI)
+                if (nbrCelli == celli)
                 {
-                    nbrCellI = faceOwner[faceI];
+                    nbrCelli = faceOwner[facei];
                 }
 
-                if (cellI < nbrCellI)
+                if (celli < nbrCelli)
                 {
-                    // CellI is master
-                    nbr[i] = nbrCellI;
+                    // Celli is master
+                    nbr[i] = nbrCelli;
                 }
                 else
                 {
@@ -102,32 +102,32 @@ Foam::labelList Foam::polyDualMesh::getFaceOrder
         {
             if (nbr[i] != -1)
             {
-                oldToNew[cFaces[nbr.indices()[i]]] = newFaceI++;
+                oldToNew[cFaces[nbr.indices()[i]]] = newFacei++;
             }
         }
     }
 
-    nInternalFaces = newFaceI;
+    nInternalFaces = newFacei;
 
     Pout<< "nInternalFaces:" << nInternalFaces << endl;
     Pout<< "nFaces:" << faceOwner.size() << endl;
     Pout<< "nCells:" << cells.size() << endl;
 
     // Leave patch faces intact.
-    for (label faceI = newFaceI; faceI < faceOwner.size(); faceI++)
+    for (label facei = newFacei; facei < faceOwner.size(); facei++)
     {
-        oldToNew[faceI] = faceI;
+        oldToNew[facei] = facei;
     }
 
 
     // Check done all faces.
-    forAll(oldToNew, faceI)
+    forAll(oldToNew, facei)
     {
-        if (oldToNew[faceI] == -1)
+        if (oldToNew[facei] == -1)
         {
             FatalErrorInFunction
                 << "Did not determine new position"
-                << " for face " << faceI
+                << " for face " << facei
                 << abort(FatalError);
         }
     }
@@ -136,7 +136,7 @@ Foam::labelList Foam::polyDualMesh::getFaceOrder
 }
 
 
-// Get the two edges on faceI using pointI. Returns them such that the order
+// Get the two edges on facei using pointI. Returns them such that the order
 // - otherVertex of e0
 // - pointI
 // - otherVertex(pointI) of e1
@@ -144,14 +144,14 @@ Foam::labelList Foam::polyDualMesh::getFaceOrder
 void Foam::polyDualMesh::getPointEdges
 (
     const primitivePatch& patch,
-    const label faceI,
+    const label facei,
     const label pointI,
     label& e0,
     label& e1
 )
 {
-    const labelList& fEdges = patch.faceEdges()[faceI];
-    const face& f = patch.localFaces()[faceI];
+    const labelList& fEdges = patch.faceEdges()[facei];
+    const face& f = patch.localFaces()[facei];
 
     e0 = -1;
     e1 = -1;
@@ -203,7 +203,7 @@ void Foam::polyDualMesh::getPointEdges
     }
 
     FatalErrorInFunction
-        << " vertices:" << patch.localFaces()[faceI]
+        << " vertices:" << patch.localFaces()[facei]
         << " that uses point:" << pointI
         << abort(FatalError);
 }
@@ -250,13 +250,13 @@ Foam::labelList Foam::polyDualMesh::collectPatchSideFace
 
     dualFace.append(edgeToDualPoint[patch.meshEdges()[edgeI]]);
 
-    label faceI = patch.edgeFaces()[edgeI][0];
+    label facei = patch.edgeFaces()[edgeI][0];
 
     // Check order of vertices of edgeI in face to see if we need to reverse.
     bool reverseFace;
 
     label e0, e1;
-    getPointEdges(patch, faceI, pointI, e0, e1);
+    getPointEdges(patch, facei, pointI, e0, e1);
 
     if (e0 == edgeI)
     {
@@ -269,12 +269,12 @@ Foam::labelList Foam::polyDualMesh::collectPatchSideFace
 
     while (true)
     {
-        // Store dual vertex for faceI.
-        dualFace.append(faceI + patchToDualOffset);
+        // Store dual vertex for facei.
+        dualFace.append(facei + patchToDualOffset);
 
         // Cross face to other edge on pointI
         label e0, e1;
-        getPointEdges(patch, faceI, pointI, e0, e1);
+        getPointEdges(patch, facei, pointI, e0, e1);
 
         if (e0 == edgeI)
         {
@@ -300,13 +300,13 @@ Foam::labelList Foam::polyDualMesh::collectPatchSideFace
         }
 
         // Cross edge to other face.
-        if (eFaces[0] == faceI)
+        if (eFaces[0] == facei)
         {
-            faceI = eFaces[1];
+            facei = eFaces[1];
         }
         else
         {
-            faceI = eFaces[0];
+            facei = eFaces[0];
         }
     }
 
@@ -348,13 +348,13 @@ void Foam::polyDualMesh::collectPatchInternalFace
 
 
     label edgeI = startEdgeI;
-    label faceI = patch.edgeFaces()[edgeI][0];
+    label facei = patch.edgeFaces()[edgeI][0];
 
     // Check order of vertices of edgeI in face to see if we need to reverse.
     bool reverseFace;
 
     label e0, e1;
-    getPointEdges(patch, faceI, pointI, e0, e1);
+    getPointEdges(patch, facei, pointI, e0, e1);
 
     if (e0 == edgeI)
     {
@@ -368,11 +368,11 @@ void Foam::polyDualMesh::collectPatchInternalFace
     while (true)
     {
         // Insert dual vertex for face
-        dualFace.append(faceI + patchToDualOffset);
+        dualFace.append(facei + patchToDualOffset);
 
         // Cross face to other edge on pointI
         label e0, e1;
-        getPointEdges(patch, faceI, pointI, e0, e1);
+        getPointEdges(patch, facei, pointI, e0, e1);
 
         if (e0 == edgeI)
         {
@@ -398,13 +398,13 @@ void Foam::polyDualMesh::collectPatchInternalFace
         // Cross edge to other face.
         const labelList& eFaces = patch.edgeFaces()[edgeI];
 
-        if (eFaces[0] == faceI)
+        if (eFaces[0] == facei)
         {
-            faceI = eFaces[1];
+            facei = eFaces[1];
         }
         else
         {
-            faceI = eFaces[0];
+            facei = eFaces[0];
         }
     }
 
@@ -774,8 +774,8 @@ void Foam::polyDualMesh::calcDual
 
     // mesh label   dualMesh vertex
     // ----------   ---------------
-    // cellI        cellI
-    // faceI        nCells+faceI-nIntFaces
+    // celli        celli
+    // facei        nCells+facei-nIntFaces
     // featEdgeI    nCells+nFaces-nIntFaces+featEdgeI
     // featPointI   nCells+nFaces-nIntFaces+nFeatEdges+featPointI
 
@@ -795,10 +795,10 @@ void Foam::polyDualMesh::calcDual
 
     cellPoint_.setSize(cellCentres.size());
 
-    forAll(cellCentres, cellI)
+    forAll(cellCentres, celli)
     {
-        cellPoint_[cellI] = dualPointI;
-        dualPoints[dualPointI++] = cellCentres[cellI];
+        cellPoint_[celli] = dualPointI;
+        dualPoints[dualPointI++] = cellCentres[celli];
     }
 
     // Boundary faces centres
@@ -806,10 +806,10 @@ void Foam::polyDualMesh::calcDual
 
     boundaryFacePoint_.setSize(mesh.nFaces() - nIntFaces);
 
-    for (label faceI = nIntFaces; faceI < mesh.nFaces(); faceI++)
+    for (label facei = nIntFaces; facei < mesh.nFaces(); facei++)
     {
-        boundaryFacePoint_[faceI - nIntFaces] = dualPointI;
-        dualPoints[dualPointI++] = faceCentres[faceI];
+        boundaryFacePoint_[facei - nIntFaces] = dualPointI;
+        dualPoints[dualPointI++] = faceCentres[facei];
     }
 
     // Edge status:
@@ -844,16 +844,16 @@ void Foam::polyDualMesh::calcDual
     //  -3 : is internal point.
     labelList pointToDualPoint(mesh.nPoints(), -3);
 
-    forAll(patches, patchI)
+    forAll(patches, patchi)
     {
-        const labelList& meshPoints = patches[patchI].meshPoints();
+        const labelList& meshPoints = patches[patchi].meshPoints();
 
         forAll(meshPoints, i)
         {
             pointToDualPoint[meshPoints[i]] = -2;
         }
 
-        const labelListList& loops = patches[patchI].edgeLoops();
+        const labelListList& loops = patches[patchi].edgeLoops();
 
         forAll(loops, i)
         {
@@ -926,23 +926,23 @@ void Foam::polyDualMesh::calcDual
         // We want to start walking from patchFaces[0] or patchFaces[1],
         // depending on which one uses owner,neighbour in the right order.
 
-        label startFaceI = -1;
-        label endFaceI = -1;
+        label startFacei = -1;
+        label endFacei = -1;
 
         label index = findIndex(f0, neighbour);
 
         if (f0.nextLabel(index) == owner)
         {
-            startFaceI = face0;
-            endFaceI = face1;
+            startFacei = face0;
+            endFacei = face1;
         }
         else
         {
-            startFaceI = face1;
-            endFaceI = face0;
+            startFacei = face1;
+            endFacei = face0;
         }
 
-        // Now walk from startFaceI to cell to face to cell etc. until endFaceI
+        // Now walk from startFacei to cell to face to cell etc. until endFacei
 
         DynamicList<label> dualFace;
 
@@ -959,47 +959,47 @@ void Foam::polyDualMesh::calcDual
         }
 
         // Store dual vertex for starting face.
-        dualFace.append(mesh.nCells() + startFaceI - nIntFaces);
+        dualFace.append(mesh.nCells() + startFacei - nIntFaces);
 
-        label cellI = mesh.faceOwner()[startFaceI];
-        label faceI = startFaceI;
+        label celli = mesh.faceOwner()[startFacei];
+        label facei = startFacei;
 
         while (true)
         {
-            // Store dual vertex from cellI.
-            dualFace.append(cellI);
+            // Store dual vertex from celli.
+            dualFace.append(celli);
 
             // Cross cell to other face on edge.
             label f0, f1;
-            meshTools::getEdgeFaces(mesh, cellI, edgeI, f0, f1);
+            meshTools::getEdgeFaces(mesh, celli, edgeI, f0, f1);
 
-            if (f0 == faceI)
+            if (f0 == facei)
             {
-                faceI = f1;
+                facei = f1;
             }
             else
             {
-                faceI = f0;
+                facei = f0;
             }
 
             // Cross face to other cell.
-            if (faceI == endFaceI)
+            if (facei == endFacei)
             {
                 break;
             }
 
-            if (mesh.faceOwner()[faceI] == cellI)
+            if (mesh.faceOwner()[facei] == celli)
             {
-                cellI = mesh.faceNeighbour()[faceI];
+                celli = mesh.faceNeighbour()[facei];
             }
             else
             {
-                cellI = mesh.faceOwner()[faceI];
+                celli = mesh.faceOwner()[facei];
             }
         }
 
         // Store dual vertex for endFace.
-        dualFace.append(mesh.nCells() + endFaceI - nIntFaces);
+        dualFace.append(mesh.nCells() + endFacei - nIntFaces);
 
         dynDualFaces.append(face(dualFace.shrink()));
         dynDualOwner.append(owner);
@@ -1052,11 +1052,11 @@ void Foam::polyDualMesh::calcDual
             // Get a starting cell
             const labelList& eCells = mesh.edgeCells()[edgeI];
 
-            label cellI = eCells[0];
+            label celli = eCells[0];
 
             // Get the two faces on the cell and edge.
             label face0, face1;
-            meshTools::getEdgeFaces(mesh, cellI, edgeI, face0, face1);
+            meshTools::getEdgeFaces(mesh, celli, edgeI, face0, face1);
 
             // Find the starting face by looking at the order in which
             // the face uses the owner, neighbour
@@ -1066,53 +1066,53 @@ void Foam::polyDualMesh::calcDual
 
             bool f0OrderOk = (f0.nextLabel(index) == owner);
 
-            label startFaceI = -1;
+            label startFacei = -1;
 
-            if (f0OrderOk == (mesh.faceOwner()[face0] == cellI))
+            if (f0OrderOk == (mesh.faceOwner()[face0] == celli))
             {
-                startFaceI = face0;
+                startFacei = face0;
             }
             else
             {
-                startFaceI = face1;
+                startFacei = face1;
             }
 
             // Walk face-cell-face until starting face reached.
             DynamicList<label> dualFace(mesh.edgeCells()[edgeI].size());
 
-            label faceI = startFaceI;
+            label facei = startFacei;
 
             while (true)
             {
-                // Store dual vertex from cellI.
-                dualFace.append(cellI);
+                // Store dual vertex from celli.
+                dualFace.append(celli);
 
                 // Cross cell to other face on edge.
                 label f0, f1;
-                meshTools::getEdgeFaces(mesh, cellI, edgeI, f0, f1);
+                meshTools::getEdgeFaces(mesh, celli, edgeI, f0, f1);
 
-                if (f0 == faceI)
+                if (f0 == facei)
                 {
-                    faceI = f1;
+                    facei = f1;
                 }
                 else
                 {
-                    faceI = f0;
+                    facei = f0;
                 }
 
                 // Cross face to other cell.
-                if (faceI == startFaceI)
+                if (facei == startFacei)
                 {
                     break;
                 }
 
-                if (mesh.faceOwner()[faceI] == cellI)
+                if (mesh.faceOwner()[facei] == celli)
                 {
-                    cellI = mesh.faceNeighbour()[faceI];
+                    celli = mesh.faceNeighbour()[facei];
                 }
                 else
                 {
-                    cellI = mesh.faceOwner()[faceI];
+                    celli = mesh.faceOwner()[facei];
                 }
             }
 
@@ -1153,9 +1153,9 @@ void Foam::polyDualMesh::calcDual
         {
             meshTools::writeOBJ(str, dualPoints[dualPointI]);
         }
-        forAll(dynDualFaces, dualFaceI)
+        forAll(dynDualFaces, dualFacei)
         {
-            const face& f = dynDualFaces[dualFaceI];
+            const face& f = dynDualFaces[dualFacei];
 
             str<< 'f';
             forAll(f, fp)
@@ -1171,9 +1171,9 @@ void Foam::polyDualMesh::calcDual
     // Outside faces
     // ~~~~~~~~~~~~~
 
-    forAll(patches, patchI)
+    forAll(patches, patchi)
     {
-        const polyPatch& pp = patches[patchI];
+        const polyPatch& pp = patches[patchi];
 
         dualPatch
         (
@@ -1219,9 +1219,9 @@ void Foam::polyDualMesh::calcDual
         {
             meshTools::writeOBJ(str, dualPoints[dualPointI]);
         }
-        forAll(dualFaces, dualFaceI)
+        forAll(dualFaces, dualFacei)
         {
-            const face& f = dualFaces[dualFaceI];
+            const face& f = dualFaces[dualFacei];
 
             str<< 'f';
             forAll(f, fp)
@@ -1235,32 +1235,32 @@ void Foam::polyDualMesh::calcDual
     // Create cells.
     cellList dualCells(mesh.nPoints());
 
-    forAll(dualCells, cellI)
+    forAll(dualCells, celli)
     {
-        dualCells[cellI].setSize(0);
+        dualCells[celli].setSize(0);
     }
 
-    forAll(dualOwner, faceI)
+    forAll(dualOwner, facei)
     {
-        label cellI = dualOwner[faceI];
+        label celli = dualOwner[facei];
 
-        labelList& cFaces = dualCells[cellI];
+        labelList& cFaces = dualCells[celli];
 
         label sz = cFaces.size();
         cFaces.setSize(sz+1);
-        cFaces[sz] = faceI;
+        cFaces[sz] = facei;
     }
-    forAll(dualNeighbour, faceI)
+    forAll(dualNeighbour, facei)
     {
-        label cellI = dualNeighbour[faceI];
+        label celli = dualNeighbour[facei];
 
-        if (cellI != -1)
+        if (celli != -1)
         {
-            labelList& cFaces = dualCells[cellI];
+            labelList& cFaces = dualCells[celli];
 
             label sz = cFaces.size();
             cFaces.setSize(sz+1);
-            cFaces[sz] = faceI;
+            cFaces[sz] = facei;
         }
     }
 
@@ -1285,32 +1285,32 @@ void Foam::polyDualMesh::calcDual
     inplaceReorder(oldToNew, dualOwner);
     inplaceReorder(oldToNew, dualNeighbour);
     inplaceReorder(oldToNew, dualRegion);
-    forAll(dualCells, cellI)
+    forAll(dualCells, celli)
     {
-        inplaceRenumber(oldToNew, dualCells[cellI]);
+        inplaceRenumber(oldToNew, dualCells[celli]);
     }
 
 
     // Create patches
     labelList patchSizes(patches.size(), 0);
 
-    forAll(dualRegion, faceI)
+    forAll(dualRegion, facei)
     {
-        if (dualRegion[faceI] >= 0)
+        if (dualRegion[facei] >= 0)
         {
-            patchSizes[dualRegion[faceI]]++;
+            patchSizes[dualRegion[facei]]++;
         }
     }
 
     labelList patchStarts(patches.size(), 0);
 
-    label faceI = nInternalFaces;
+    label facei = nInternalFaces;
 
-    forAll(patches, patchI)
+    forAll(patches, patchi)
     {
-        patchStarts[patchI] = faceI;
+        patchStarts[patchi] = facei;
 
-        faceI += patchSizes[patchI];
+        facei += patchSizes[patchi];
     }
 
 
@@ -1323,16 +1323,16 @@ void Foam::polyDualMesh::calcDual
     // Add patches. First add zero sized (since mesh still 0 size)
     List<polyPatch*> dualPatches(patches.size());
 
-    forAll(patches, patchI)
+    forAll(patches, patchi)
     {
-        const polyPatch& pp = patches[patchI];
+        const polyPatch& pp = patches[patchi];
 
-        dualPatches[patchI] = pp.clone
+        dualPatches[patchi] = pp.clone
         (
             boundaryMesh(),
-            patchI,
-            0, //patchSizes[patchI],
-            0  //patchStarts[patchI]
+            patchi,
+            0, //patchSizes[patchi],
+            0  //patchStarts[patchi]
         ).ptr();
     }
     addPatches(dualPatches);
@@ -1502,13 +1502,13 @@ void Foam::polyDualMesh::calcFeatures
 
     const polyBoundaryMesh& patches = mesh.boundaryMesh();
 
-    forAll(patches, patchI)
+    forAll(patches, patchi)
     {
-        const polyPatch& pp = patches[patchI];
+        const polyPatch& pp = patches[patchi];
 
         forAll(pp, i)
         {
-            allRegion[i + pp.start() - mesh.nInternalFaces()] = patchI;
+            allRegion[i + pp.start() - mesh.nInternalFaces()] = patchi;
         }
     }
 

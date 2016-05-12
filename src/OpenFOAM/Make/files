@@ -15,6 +15,8 @@ chars = primitives/chars
 $(chars)/char/charIO.C
 $(chars)/wchar/wcharIO.C
 
+primitives/direction/directionIO.C
+
 ints = primitives/ints
 $(ints)/uint32/uint32.C
 $(ints)/uint32/uint32IO.C
@@ -106,6 +108,11 @@ $(ranges)/labelRange/labelRange.C
 $(ranges)/labelRange/labelRanges.C
 $(ranges)/scalarRange/scalarRange.C
 $(ranges)/scalarRange/scalarRanges.C
+
+spatialVectorAlgebra = primitives/spatialVectorAlgebra
+$(spatialVectorAlgebra)/SpatialVector/spatialVector/spatialVector.C
+$(spatialVectorAlgebra)/SpatialTensor/spatialTensor/spatialTensor.C
+$(spatialVectorAlgebra)/CompactSpatialTensor/compactSpatialTensor/compactSpatialTensor.C
 
 containers/HashTables/HashTable/HashTableCore.C
 containers/HashTables/StaticHashTable/StaticHashTableCore.C
@@ -210,7 +217,8 @@ $(dll)/codedBase/codedBase.C
 db/functionObjects/functionObject/functionObject.C
 db/functionObjects/functionObjectList/functionObjectList.C
 db/functionObjects/functionObjectFile/functionObjectFile.C
-db/functionObjects/outputFilterOutputControl/outputFilterOutputControl.C
+db/functionObjects/functionObjectFiles/functionObjectFiles.C
+db/functionObjects/outputFilterControl/outputFilterControl.C
 
 
 Time = db/Time

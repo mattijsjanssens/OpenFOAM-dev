@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,7 +22,7 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::dsmcFields
+    Foam::functionObjects::dsmcFields
 
 Group
     grpUtilitiesFunctionObjects
@@ -37,14 +37,14 @@ Description
 
 SourceFiles
     dsmcFields.C
-    IOdsmcFields.H
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef dsmcFields_H
-#define dsmcFields_H
+#ifndef functionObjects_dsmcFields_H
+#define functionObjects_dsmcFields_H
 
 #include "typeInfo.H"
+#include "autoPtr.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -56,6 +56,9 @@ class objectRegistry;
 class dictionary;
 class polyMesh;
 class mapPolyMesh;
+
+namespace functionObjects
+{
 
 /*---------------------------------------------------------------------------*\
                          Class dsmcFields Declaration
@@ -69,9 +72,6 @@ class dsmcFields
         word name_;
 
         const objectRegistry& obr_;
-
-        //- on/off switch
-        bool active_;
 
 
     // Private Member Functions
@@ -141,6 +141,7 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+} // End namespace functionObjects
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

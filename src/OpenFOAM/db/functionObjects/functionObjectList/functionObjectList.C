@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -26,6 +26,7 @@ License
 #include "functionObjectList.H"
 #include "Time.H"
 #include "mapPolyMesh.H"
+#include "argList.H"
 
 // * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * * //
 
@@ -44,7 +45,7 @@ Foam::functionObject* Foam::functionObjectList::remove
     {
         oldIndex = fnd();
 
-        // retrieve the pointer and remove it from the old list
+        // Retrieve the pointer and remove it from the old list
         ptr = this->set(oldIndex, 0).ptr();
         indices_.erase(fnd);
     }
@@ -92,6 +93,42 @@ Foam::functionObjectList::functionObjectList
 {}
 
 
+Foam::autoPtr<Foam::functionObjectList> Foam::functionObjectList::New
+(
+    const argList& args,
+    const Time& runTime,
+    dictionary& functionObjectsDict
+)
+{
+    autoPtr<functionObjectList> functionObjectsPtr;
+
+    if (args.optionFound("dict"))
+    {
+        functionObjectsDict = IOdictionary
+        (
+            IOobject
+            (
+                args["dict"],
+                runTime,
+                IOobject::MUST_READ_IF_MODIFIED
+            )
+        );
+
+        functionObjectsPtr.reset
+        (
+            new functionObjectList(runTime, functionObjectsDict)
+        );
+    }
+    else
+    {
+        functionObjectsPtr.reset(new functionObjectList(runTime));
+    }
+    functionObjectsPtr->start();
+
+    return functionObjectsPtr;
+}
+
+
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
 Foam::functionObjectList::~functionObjectList()
@@ -131,7 +168,7 @@ void Foam::functionObjectList::on()
 
 void Foam::functionObjectList::off()
 {
-    // for safety, also force a read() when execution is turned back on
+    // For safety, also force a read() when execution is turned back on
     updated_ = execution_ = false;
 }
 
@@ -237,10 +274,10 @@ bool Foam::functionObjectList::read()
     bool ok = true;
     updated_ = execution_;
 
-    // avoid reading/initializing if execution is off
+    // Avoid reading/initializing if execution is off
     if (!execution_)
     {
-        return ok;
+        return true;
     }
 
     // Update existing and add new functionObjects
@@ -259,31 +296,42 @@ bool Foam::functionObjectList::read()
 
         label nFunc = 0;
 
-        if (entryPtr->isDict())
+        if (!entryPtr->isDict())
         {
-            // a dictionary of functionObjects
-            const dictionary& functionDicts = entryPtr->dict();
+            FatalIOErrorInFunction(parentDict_)
+                << "'functions' entry is not a dictionary"
+                << exit(FatalIOError);
+        }
 
-            newPtrs.setSize(functionDicts.size());
-            newDigs.setSize(functionDicts.size());
+        const dictionary& functionDicts = entryPtr->dict();
 
-            forAllConstIter(dictionary, functionDicts, iter)
+        newPtrs.setSize(functionDicts.size());
+        newDigs.setSize(functionDicts.size());
+
+        forAllConstIter(dictionary, functionDicts, iter)
+        {
+            const word& key = iter().keyword();
+
+            if (!iter().isDict())
             {
-                // safety:
-                if (!iter().isDict())
-                {
-                    continue;
-                }
-                const word& key = iter().keyword();
-                const dictionary& dict = iter().dict();
+                IOWarningInFunction(parentDict_)
+                    << "Entry " << key << " is not a dictionary" << endl;
+                continue;
+            }
 
-                newDigs[nFunc] = dict.digest();
+            const dictionary& dict = iter().dict();
+            bool enabled = dict.lookupOrDefault("enabled", true);
 
-                label oldIndex;
-                functionObject* objPtr = remove(key, oldIndex);
-                if (objPtr)
+            newDigs[nFunc] = dict.digest();
+
+            label oldIndex;
+            functionObject* objPtr = remove(key, oldIndex);
+
+            if (objPtr)
+            {
+                if (enabled)
                 {
-                    // an existing functionObject, and dictionary changed
+                    // Dictionary changed for an existing functionObject
                     if (newDigs[nFunc] != digests_[oldIndex])
                     {
                         ok = objPtr->read(dict) && ok;
@@ -291,65 +339,59 @@ bool Foam::functionObjectList::read()
                 }
                 else
                 {
-                    // new functionObject
-                    objPtr = functionObject::New(key, time_, dict).ptr();
-                    ok = objPtr->start() && ok;
-                }
-
-                newPtrs.set(nFunc, objPtr);
-                newIndices.insert(key, nFunc);
-                nFunc++;
-            }
-        }
-        else
-        {
-            // a list of functionObjects
-            PtrList<entry> functionDicts(entryPtr->stream());
-
-            newPtrs.setSize(functionDicts.size());
-            newDigs.setSize(functionDicts.size());
-
-            forAllIter(PtrList<entry>, functionDicts, iter)
-            {
-                // safety:
-                if (!iter().isDict())
-                {
+                    // Delete the disabled functionObject
+                    delete objPtr;
+                    objPtr = NULL;
                     continue;
                 }
-                const word& key = iter().keyword();
-                const dictionary& dict = iter().dict();
+            }
+            else if (enabled)
+            {
+                autoPtr<functionObject> foPtr;
 
-                newDigs[nFunc] = dict.digest();
-
-                label oldIndex;
-                functionObject* objPtr = remove(key, oldIndex);
-                if (objPtr)
+                FatalError.throwExceptions();
+                FatalIOError.throwExceptions();
+                try
                 {
-                    // an existing functionObject, and dictionary changed
-                    if (newDigs[nFunc] != digests_[oldIndex])
-                    {
-                        ok = objPtr->read(dict) && ok;
-                    }
+                   foPtr = functionObject::New(key, time_, dict);
+                }
+                catch (Foam::IOerror& ioErr)
+                {
+                    Info<< ioErr << nl << endl;
+                    ::exit(1);
+                }
+                catch (Foam::error& err)
+                {
+                    WarningInFunction
+                        << "Caught FatalError " << err << nl << endl;
+                }
+                FatalError.dontThrowExceptions();
+                FatalIOError.dontThrowExceptions();
+
+                if (foPtr.valid())
+                {
+                    objPtr = foPtr.ptr();
                 }
                 else
                 {
-                    // new functionObject
-                    objPtr = functionObject::New(key, time_, dict).ptr();
-                    ok = objPtr->start() && ok;
+                    ok = false;
                 }
+            }
 
+            // Insert active functionObjects into the list
+            if (objPtr)
+            {
                 newPtrs.set(nFunc, objPtr);
                 newIndices.insert(key, nFunc);
                 nFunc++;
             }
         }
 
-        // safety:
         newPtrs.setSize(nFunc);
         newDigs.setSize(nFunc);
 
-        // updating the PtrList of functionObjects also deletes any existing,
-        // but unused functionObjects
+        // Updating the PtrList of functionObjects deletes any
+        // existing unused functionObjects
         PtrList<functionObject>::transfer(newPtrs);
         digests_.transfer(newDigs);
         indices_.transfer(newIndices);

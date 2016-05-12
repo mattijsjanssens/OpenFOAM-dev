@@ -22,7 +22,7 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::processorField
+    Foam::functionObjects::processorField
 
 Group
     grpFieldFunctionObjects
@@ -53,12 +53,11 @@ SeeAlso
 
 SourceFiles
     processorField.C
-    IOprocessorField.H
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef processorField_H
-#define processorField_H
+#ifndef functionObjects_processorField_H
+#define functionObjects_processorField_H
 
 #include "OFstream.H"
 #include "pointFieldFwd.H"
@@ -76,6 +75,9 @@ class objectRegistry;
 class dictionary;
 class mapPolyMesh;
 
+namespace functionObjects
+{
+
 /*---------------------------------------------------------------------------*\
                        Class processorField Declaration
 \*---------------------------------------------------------------------------*/
@@ -91,9 +93,6 @@ protected:
 
         //- Reference to the database
         const objectRegistry& obr_;
-
-        //- on/off switch
-        bool active_;
 
 
 private:
@@ -165,6 +164,7 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+} // End namespace functionObjects
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

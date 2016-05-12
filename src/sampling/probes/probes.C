@@ -57,24 +57,24 @@ void Foam::probes::findElements(const fvMesh& mesh)
     {
         const vector& location = operator[](probeI);
 
-        const label cellI = mesh.findCell(location);
+        const label celli = mesh.findCell(location);
 
-        elementList_[probeI] = cellI;
+        elementList_[probeI] = celli;
 
-        if (cellI != -1)
+        if (celli != -1)
         {
-            const labelList& cellFaces = mesh.cells()[cellI];
-            const vector& cellCentre = mesh.cellCentres()[cellI];
+            const labelList& cellFaces = mesh.cells()[celli];
+            const vector& cellCentre = mesh.cellCentres()[celli];
             scalar minDistance = GREAT;
             label minFaceID = -1;
             forAll(cellFaces, i)
             {
-                label faceI = cellFaces[i];
-                vector dist = mesh.faceCentres()[faceI] - cellCentre;
+                label facei = cellFaces[i];
+                vector dist = mesh.faceCentres()[facei] - cellCentre;
                 if (mag(dist) < minDistance)
                 {
                     minDistance = mag(dist);
-                    minFaceID = faceI;
+                    minFaceID = facei;
                 }
             }
             faceList_[probeI] = minFaceID;
@@ -97,14 +97,14 @@ void Foam::probes::findElements(const fvMesh& mesh)
     forAll(elementList_, probeI)
     {
         const vector& location = operator[](probeI);
-        label cellI = elementList_[probeI];
-        label faceI = faceList_[probeI];
+        label celli = elementList_[probeI];
+        label facei = faceList_[probeI];
 
         // Check at least one processor with cell.
-        reduce(cellI, maxOp<label>());
-        reduce(faceI, maxOp<label>());
+        reduce(celli, maxOp<label>());
+        reduce(facei, maxOp<label>());
 
-        if (cellI == -1)
+        if (celli == -1)
         {
             if (Pstream::master())
             {
@@ -113,7 +113,7 @@ void Foam::probes::findElements(const fvMesh& mesh)
                     << " in any cell. Skipping location." << endl;
             }
         }
-        else if (faceI == -1)
+        else if (facei == -1)
         {
             if (Pstream::master())
             {
@@ -125,28 +125,28 @@ void Foam::probes::findElements(const fvMesh& mesh)
         else
         {
             // Make sure location not on two domains.
-            if (elementList_[probeI] != -1 && elementList_[probeI] != cellI)
+            if (elementList_[probeI] != -1 && elementList_[probeI] != celli)
             {
                 WarningInFunction
                     << "Location " << location
                     << " seems to be on multiple domains:"
                     << " cell " << elementList_[probeI]
                     << " on my domain " << Pstream::myProcNo()
-                        << " and cell " << cellI << " on some other domain."
+                        << " and cell " << celli << " on some other domain."
                     << endl
                     << "This might happen if the probe location is on"
                     << " a processor patch. Change the location slightly"
                     << " to prevent this." << endl;
             }
 
-            if (faceList_[probeI] != -1 && faceList_[probeI] != faceI)
+            if (faceList_[probeI] != -1 && faceList_[probeI] != facei)
             {
                 WarningInFunction
                     << "Location " << location
                     << " seems to be on multiple domains:"
                     << " cell " << faceList_[probeI]
                     << " on my domain " << Pstream::myProcNo()
-                        << " and face " << faceI << " on some other domain."
+                        << " and face " << facei << " on some other domain."
                     << endl
                     << "This might happen if the probe location is on"
                     << " a processor patch. Change the location slightly"
@@ -296,21 +296,15 @@ Foam::probes::~probes()
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 void Foam::probes::execute()
-{
-    // Do nothing - only valid on write
-}
+{}
 
 
 void Foam::probes::end()
-{
-    // Do nothing - only valid on write
-}
+{}
 
 
 void Foam::probes::timeSet()
-{
-    // Do nothing - only valid on write
-}
+{}
 
 
 void Foam::probes::write()
@@ -358,9 +352,11 @@ void Foam::probes::read(const dictionary& dict)
 
 void Foam::probes::updateMesh(const mapPolyMesh& mpm)
 {
-    if (debug)
+    DebugInfo<< "probes: updateMesh" << endl;
+
+    if (&mpm.mesh() != &mesh_)
     {
-        Info<< "probes: updateMesh" << endl;
+        return;
     }
 
     if (fixedLocations_)
@@ -381,21 +377,21 @@ void Foam::probes::updateMesh(const mapPolyMesh& mpm)
             const labelList& reverseMap = mpm.reverseCellMap();
             forAll(elementList_, i)
             {
-                label cellI = elementList_[i];
-                label newCellI = reverseMap[cellI];
-                if (newCellI == -1)
+                label celli = elementList_[i];
+                label newCelli = reverseMap[celli];
+                if (newCelli == -1)
                 {
                     // cell removed
                 }
-                else if (newCellI < -1)
+                else if (newCelli < -1)
                 {
                     // cell merged
-                    elems.append(-newCellI - 2);
+                    elems.append(-newCelli - 2);
                 }
                 else
                 {
                     // valid new cell
-                    elems.append(newCellI);
+                    elems.append(newCelli);
                 }
             }
 
@@ -409,21 +405,21 @@ void Foam::probes::updateMesh(const mapPolyMesh& mpm)
             const labelList& reverseMap = mpm.reverseFaceMap();
             forAll(faceList_, i)
             {
-                label faceI = faceList_[i];
-                label newFaceI = reverseMap[faceI];
-                if (newFaceI == -1)
+                label facei = faceList_[i];
+                label newFacei = reverseMap[facei];
+                if (newFacei == -1)
                 {
                     // face removed
                 }
-                else if (newFaceI < -1)
+                else if (newFacei < -1)
                 {
                     // face merged
-                    elems.append(-newFaceI - 2);
+                    elems.append(-newFacei - 2);
                 }
                 else
                 {
                     // valid new face
-                    elems.append(newFaceI);
+                    elems.append(newFacei);
                 }
             }
 
@@ -433,14 +429,11 @@ void Foam::probes::updateMesh(const mapPolyMesh& mpm)
 }
 
 
-void Foam::probes::movePoints(const polyMesh&)
+void Foam::probes::movePoints(const polyMesh& mesh)
 {
-    if (debug)
-    {
-        Info<< "probes: movePoints" << endl;
-    }
+    DebugInfo<< "probes: movePoints" << endl;
 
-    if (fixedLocations_)
+    if (fixedLocations_ && &mesh == &mesh_)
     {
         findElements(mesh_);
     }

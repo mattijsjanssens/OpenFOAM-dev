@@ -56,10 +56,16 @@ Foam::moleFractions<ThermoType>::moleFractions
     const bool loadFromFiles
 )
 :
-    functionObjectFile(obr, name),
+    functionObjectFiles(obr, name),
     name_(name),
     mesh_(refCast<const fvMesh>(obr))
 {
+    if (!isA<fvMesh>(obr))
+    {
+        FatalErrorInFunction
+            << "objectRegistry is not an fvMesh" << exit(FatalError);
+    }
+
     if (mesh_.foundObject<ThermoType>(basicThermo::dictName))
     {
         const ThermoType& thermo =

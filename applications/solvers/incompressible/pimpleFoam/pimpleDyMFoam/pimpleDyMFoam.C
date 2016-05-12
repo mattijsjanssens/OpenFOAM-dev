@@ -44,18 +44,16 @@ Description
 
 int main(int argc, char *argv[])
 {
+    #include "postProcess.H"
+
     #include "setRootCase.H"
     #include "createTime.H"
     #include "createDynamicFvMesh.H"
     #include "initContinuityErrs.H"
-
-    pimpleControl pimple(mesh);
-
+    #include "createControls.H"
     #include "createFields.H"
     #include "createUf.H"
-    #include "createMRF.H"
     #include "createFvOptions.H"
-    #include "createControls.H"
     #include "CourantNo.H"
     #include "setInitialDeltaT.H"
 

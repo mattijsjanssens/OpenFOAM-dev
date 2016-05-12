@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013-2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2013-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -28,7 +28,7 @@ License
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-template<typename PointType>
+template<class PointType>
 Foam::autoPtr<Foam::mapDistribute>
 Foam::backgroundMeshDecomposition::distributePoints
 (
@@ -45,7 +45,7 @@ Foam::backgroundMeshDecomposition::distributePoints
 }
 
 
-template<typename PointType>
+template<class PointType>
 Foam::labelList Foam::backgroundMeshDecomposition::processorPosition
 (
     const List<PointType>& pts
@@ -64,11 +64,11 @@ Foam::labelList Foam::backgroundMeshDecomposition::processorPosition
 
         label nCandidates = 0;
 
-        forAll(allBackgroundMeshBounds_, procI)
+        forAll(allBackgroundMeshBounds_, proci)
         {
-            if (allBackgroundMeshBounds_[procI].contains(pt))
+            if (allBackgroundMeshBounds_[proci].contains(pt))
             {
-                toCandidateProc.append(procI);
+                toCandidateProc.append(proci);
                 testPoints.append(pt);
 
                 nCandidates++;

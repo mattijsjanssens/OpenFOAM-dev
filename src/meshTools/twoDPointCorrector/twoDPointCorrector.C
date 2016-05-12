@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -57,14 +57,14 @@ void Foam::twoDPointCorrector::calcAddressing() const
     // Try and find a wedge patch
     const polyBoundaryMesh& patches = mesh_.boundaryMesh();
 
-    forAll(patches, patchI)
+    forAll(patches, patchi)
     {
-        if (isA<wedgePolyPatch>(patches[patchI]))
+        if (isA<wedgePolyPatch>(patches[patchi]))
         {
             isWedge_ = true;
 
             const wedgePolyPatch& wp =
-                refCast<const wedgePolyPatch>(patches[patchI]);
+                refCast<const wedgePolyPatch>(patches[patchi]);
 
             pn = wp.centreNormal();
 
@@ -73,7 +73,7 @@ void Foam::twoDPointCorrector::calcAddressing() const
 
             if (polyMesh::debug)
             {
-                Pout<< "Found normal from wedge patch " << patchI;
+                Pout<< "Found normal from wedge patch " << patchi;
             }
 
             break;
@@ -83,15 +83,15 @@ void Foam::twoDPointCorrector::calcAddressing() const
     // Try to find an empty patch with faces
     if (!isWedge_)
     {
-        forAll(patches, patchI)
+        forAll(patches, patchi)
         {
-            if (isA<emptyPolyPatch>(patches[patchI]) && patches[patchI].size())
+            if (isA<emptyPolyPatch>(patches[patchi]) && patches[patchi].size())
             {
-                pn = patches[patchI].faceAreas()[0];
+                pn = patches[patchi].faceAreas()[0];
 
                 if (polyMesh::debug)
                 {
-                    Pout<< "Found normal from empty patch " << patchI;
+                    Pout<< "Found normal from empty patch " << patchi;
                 }
 
                 break;
@@ -201,7 +201,7 @@ Foam::twoDPointCorrector::twoDPointCorrector(const polyMesh& mesh)
     planeNormalPtr_(NULL),
     normalEdgeIndicesPtr_(NULL),
     isWedge_(false),
-    wedgeAxis_(vector::zero),
+    wedgeAxis_(Zero),
     wedgeAngle_(0.0)
 {}
 

@@ -35,10 +35,10 @@ SourceFiles
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef fieldValue_H
-#define fieldValue_H
+#ifndef functionObjects_fieldValue_H
+#define functionObjects_fieldValue_H
 
-#include "functionObjectFile.H"
+#include "functionObjectFiles.H"
 #include "Switch.H"
 #include "OFstream.H"
 #include "dictionary.H"
@@ -62,7 +62,7 @@ class mapPolyMesh;
 
 class fieldValue
 :
-    public functionObjectFile
+    public functionObjectFiles
 {
 
 protected:
@@ -77,9 +77,6 @@ protected:
 
         //- Construction dictionary
         dictionary dict_;
-
-        //- Active flag
-        bool active_;
 
         //- Switch to send output to Info as well as to file
         Switch log_;
@@ -154,9 +151,6 @@ public:
 
             //- Return the reference to the construction dictionary
             inline const dictionary& dict() const;
-
-            //- Return the active flag
-            inline bool active() const;
 
             //- Return the switch to send output to Info as well as to file
             inline const Switch& log() const;

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -61,7 +61,7 @@ Foam::PatchTools::sortedPointEdges
 
         label edgeI = pEdges[0];
 
-        label prevFaceI = edgeFaces[edgeI][0];
+        label prevFacei = edgeFaces[edgeI][0];
 
         newEdgeList.clear();
         newEdgeList.setCapacity(nPointEdges);
@@ -80,14 +80,14 @@ Foam::PatchTools::sortedPointEdges
                 break;
             }
 
-            label faceI = eFaces[0];
-            if (faceI == prevFaceI)
+            label facei = eFaces[0];
+            if (facei == prevFacei)
             {
-                faceI = eFaces[1];
+                facei = eFaces[1];
             }
 
             // Cross face to next edge
-            const labelList& fEdges = faceEdges[faceI];
+            const labelList& fEdges = faceEdges[facei];
 
             forAll(fEdges, feI)
             {
@@ -105,7 +105,7 @@ Foam::PatchTools::sortedPointEdges
                 }
             }
 
-            prevFaceI = faceI;
+            prevFacei = facei;
 
             nVisitedEdges++;
             if (nVisitedEdges > nPointEdges)

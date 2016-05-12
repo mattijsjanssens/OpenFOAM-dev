@@ -86,15 +86,21 @@ void Foam::volPointInterpolation::addSeparated
         Pout<< "volPointInterpolation::addSeparated" << endl;
     }
 
-    forAll(pf.boundaryField(), patchI)
+    typename GeometricField<Type, pointPatchField, pointMesh>::
+        Internal& pfi = pf.ref();
+
+    typename GeometricField<Type, pointPatchField, pointMesh>::
+        Boundary& pfbf = pf.boundaryFieldRef();
+
+    forAll(pfbf, patchi)
     {
-        if (pf.boundaryField()[patchI].coupled())
+        if (pfbf[patchi].coupled())
         {
             refCast<coupledPointPatchField<Type>>
-                (pf.boundaryField()[patchI]).initSwapAddSeparated
+                (pfbf[patchi]).initSwapAddSeparated
                 (
                     Pstream::nonBlocking,
-                    pf.internalField()
+                    pfi
                 );
         }
     }
@@ -102,15 +108,15 @@ void Foam::volPointInterpolation::addSeparated
     // Block for any outstanding requests
     Pstream::waitRequests();
 
-    forAll(pf.boundaryField(), patchI)
+    forAll(pfbf, patchi)
     {
-        if (pf.boundaryField()[patchI].coupled())
+        if (pfbf[patchi].coupled())
         {
             refCast<coupledPointPatchField<Type>>
-                (pf.boundaryField()[patchI]).swapAddSeparated
+                (pfbf[patchi]).swapAddSeparated
                 (
                     Pstream::nonBlocking,
-                    pf.internalField()
+                    pfi
                 );
         }
     }
@@ -143,7 +149,7 @@ void Foam::volPointInterpolation::interpolateInternalField
             const scalarList& pw = pointWeights_[pointi];
             const labelList& ppc = pointCells[pointi];
 
-            pf[pointi] = pTraits<Type>::zero;
+            pf[pointi] = Zero;
 
             forAll(ppc, pointCelli)
             {
@@ -169,30 +175,30 @@ Foam::tmp<Foam::Field<Type>> Foam::volPointInterpolation::flatBoundaryField
     );
     Field<Type>& boundaryVals = tboundaryVals.ref();
 
-    forAll(vf.boundaryField(), patchI)
+    forAll(vf.boundaryField(), patchi)
     {
-        label bFaceI = bm[patchI].patch().start() - mesh.nInternalFaces();
+        label bFacei = bm[patchi].patch().start() - mesh.nInternalFaces();
 
         if
         (
-           !isA<emptyFvPatch>(bm[patchI])
-        && !vf.boundaryField()[patchI].coupled()
+           !isA<emptyFvPatch>(bm[patchi])
+        && !vf.boundaryField()[patchi].coupled()
         )
         {
             SubList<Type>
             (
                 boundaryVals,
-                vf.boundaryField()[patchI].size(),
-                bFaceI
-            ).assign(vf.boundaryField()[patchI]);
+                vf.boundaryField()[patchi].size(),
+                bFacei
+            ) = vf.boundaryField()[patchi];
         }
         else
         {
-            const polyPatch& pp = bm[patchI].patch();
+            const polyPatch& pp = bm[patchi].patch();
 
             forAll(pp, i)
             {
-                boundaryVals[bFaceI++] = pTraits<Type>::zero;
+                boundaryVals[bFacei++] = Zero;
             }
         }
     }
@@ -210,7 +216,7 @@ void Foam::volPointInterpolation::interpolateBoundaryField
 {
     const primitivePatch& boundary = boundaryPtr_();
 
-    Field<Type>& pfi = pf.internalField();
+    Field<Type>& pfi = pf.primitiveFieldRef();
 
     // Get face data in flat list
     tmp<Field<Type>> tboundaryVals(flatBoundaryField(vf));
@@ -231,7 +237,7 @@ void Foam::volPointInterpolation::interpolateBoundaryField
 
             Type& val = pfi[pointI];
 
-            val = pTraits<Type>::zero;
+            val = Zero;
             forAll(pFaces, j)
             {
                 if (boundaryIsPatchFace_[pFaces[j]])

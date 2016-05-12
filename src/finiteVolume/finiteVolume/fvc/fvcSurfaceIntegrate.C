@@ -102,14 +102,14 @@ surfaceIntegrate
             (
                 "0",
                 ssf.dimensions()/dimVol,
-                pTraits<Type>::zero
+                Zero
             ),
             extrapolatedCalculatedFvPatchField<Type>::typeName
         )
     );
     GeometricField<Type, fvPatchField, volMesh>& vf = tvf.ref();
 
-    surfaceIntegrate(vf.internalField(), ssf);
+    surfaceIntegrate(vf.primitiveFieldRef(), ssf);
     vf.correctBoundaryConditions();
 
     return tvf;
@@ -154,7 +154,7 @@ surfaceSum
                 IOobject::NO_WRITE
             ),
             mesh,
-            dimensioned<Type>("0", ssf.dimensions(), pTraits<Type>::zero),
+            dimensioned<Type>("0", ssf.dimensions(), Zero),
             extrapolatedCalculatedFvPatchField<Type>::typeName
         )
     );

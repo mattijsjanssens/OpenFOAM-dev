@@ -22,7 +22,7 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::timeActivatedFileUpdate
+    Foam::functionObjects::timeActivatedFileUpdate
 
 Group
     grpUtilitiesFunctionObjects
@@ -38,8 +38,8 @@ Description
     {
         type              timeActivatedFileUpdate;
         functionObjectLibs ("libutilityFunctionObjects.so");
-        outputControl     timeStep;
-        outputInterval    1;
+        writeControl     timeStep;
+        writeInterval    1;
         fileToUpdate      "$FOAM_CASE/system/fvSolution";
         timeVsFile
         (
@@ -53,12 +53,11 @@ Description
 
 SourceFiles
     timeActivatedFileUpdate.C
-    IOtimeActivatedFileUpdate.H
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef timeActivatedFileUpdate_H
-#define timeActivatedFileUpdate_H
+#ifndef functionObjects_timeActivatedFileUpdate_H
+#define functionObjects_timeActivatedFileUpdate_H
 
 #include "Tuple2.H"
 
@@ -73,6 +72,9 @@ class dictionary;
 class polyMesh;
 class mapPolyMesh;
 
+namespace functionObjects
+{
+
 /*---------------------------------------------------------------------------*\
                   Class timeActivatedFileUpdate Declaration
 \*---------------------------------------------------------------------------*/
@@ -86,9 +88,6 @@ class timeActivatedFileUpdate
 
         //- Owner database
         const objectRegistry& obr_;
-
-        //- On/off switch
-        bool active_;
 
         //- Name of file to update
         fileName fileToUpdate_;
@@ -170,6 +169,7 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+} // End namespace functionObjects
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

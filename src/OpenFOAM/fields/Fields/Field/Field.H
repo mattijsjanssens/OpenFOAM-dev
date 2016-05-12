@@ -117,6 +117,9 @@ public:
         //- Construct given size and initial value
         Field(const label, const Type&);
 
+        //- Construct given size and initialed to zero
+        Field(const label, const zero);
+
         //- Construct as copy of a UList\<Type\>
         explicit Field(const UList<Type>&);
 
@@ -330,6 +333,9 @@ public:
         //- Replace a component field of the field
         void replace(const direction, const cmptType&);
 
+        template<class VSForm>
+        VSForm block(const label start) const;
+
         //- Return the field transpose (only defined for second rank tensors)
         tmp<Field<Type>> T() const;
 
@@ -344,6 +350,7 @@ public:
         void operator=(const SubField<Type>&);
         void operator=(const tmp<Field<Type>>&);
         void operator=(const Type&);
+        void operator=(const zero);
 
         template<class Form, class Cmpt, direction nCmpt>
         void operator=(const VectorSpace<Form,Cmpt,nCmpt>&);

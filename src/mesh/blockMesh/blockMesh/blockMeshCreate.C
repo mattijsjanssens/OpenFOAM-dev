@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -118,16 +118,16 @@ void Foam::blockMesh::createCells() const
     {
         const labelListList& blockCells = blocks[blockI].cells();
 
-        forAll(blockCells, blockCellI)
+        forAll(blockCells, blockCelli)
         {
-            labelList cellPoints(blockCells[blockCellI].size());
+            labelList cellPoints(blockCells[blockCelli].size());
 
             forAll(cellPoints, cellPointI)
             {
                 cellPoints[cellPointI] =
                     mergeList_
                     [
-                        blockCells[blockCellI][cellPointI]
+                        blockCells[blockCelli][cellPointI]
                       + blockOffsets_[blockI]
                     ];
             }
@@ -272,9 +272,9 @@ void Foam::blockMesh::createPatches() const
     patches_.clear();
     patches_.setSize(topoPatches.size());
 
-    forAll(topoPatches, patchI)
+    forAll(topoPatches, patchi)
     {
-        patches_[patchI] = createPatchFaces(topoPatches[patchI]);
+        patches_[patchi] = createPatchFaces(topoPatches[patchi]);
     }
 
 }

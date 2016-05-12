@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2012-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2012-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,7 +22,7 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::fieldValues::fieldValueDelta
+    Foam::functionObjects::fieldValues::fieldValueDelta
 
 Group
     grpFieldFunctionObjects
@@ -73,10 +73,10 @@ SourceFiles
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef fieldValueDelta_H
-#define fieldValueDelta_H
+#ifndef functionObjects_fieldValueDelta_H
+#define functionObjects_fieldValueDelta_H
 
-#include "functionObjectFile.H"
+#include "functionObjectFiles.H"
 #include "fieldValue.H"
 #include "autoPtr.H"
 
@@ -84,7 +84,8 @@ SourceFiles
 
 namespace Foam
 {
-
+namespace functionObjects
+{
 namespace fieldValues
 {
 
@@ -94,7 +95,7 @@ namespace fieldValues
 
 class fieldValueDelta
 :
-    public functionObjectFile
+    public functionObjectFiles
 {
 public:
         //- Operation type enumeration
@@ -162,14 +163,16 @@ public:
     TypeName("fieldValueDelta");
 
 
-    //- Construct from components
-    fieldValueDelta
-    (
-        const word& name,
-        const objectRegistry& obr,
-        const dictionary& dict,
-        const bool loadFromFiles = false
-    );
+    // Constructors
+
+        //- Construct from components
+        fieldValueDelta
+        (
+            const word& name,
+            const objectRegistry& obr,
+            const dictionary& dict,
+            const bool loadFromFiles = false
+        );
 
 
     //- Destructor
@@ -206,6 +209,7 @@ public:
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace fieldValues
+} // End namespace functionObjects
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

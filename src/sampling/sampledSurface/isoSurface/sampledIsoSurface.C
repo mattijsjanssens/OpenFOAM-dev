@@ -220,8 +220,8 @@ void Foam::sampledIsoSurface::getIsoFields() const
                 << " max:" << max(*volFieldPtr_).value() << endl;
             InfoInFunction
                 << "pointField " << pointFieldPtr_->name()
-                << " min:" << gMin(pointFieldPtr_->internalField())
-                << " max:" << gMax(pointFieldPtr_->internalField()) << endl;
+                << " min:" << gMin(pointFieldPtr_->primitiveField())
+                << " max:" << gMax(pointFieldPtr_->primitiveField()) << endl;
         }
     }
     else
@@ -324,8 +324,8 @@ void Foam::sampledIsoSurface::getIsoFields() const
             InfoInFunction
                 << "pointSubField "
                 << pointSubFieldPtr_->name()
-                << " min:" << gMin(pointSubFieldPtr_->internalField())
-                << " max:" << gMax(pointSubFieldPtr_->internalField()) << endl;
+                << " min:" << gMin(pointSubFieldPtr_->primitiveField())
+                << " max:" << gMax(pointSubFieldPtr_->primitiveField()) << endl;
         }
     }
 }
@@ -347,14 +347,14 @@ bool Foam::sampledIsoSurface::updateGeometry() const
         const polyBoundaryMesh& patches = mesh().boundaryMesh();
 
         // Patch to put exposed internal faces into
-        const label exposedPatchI = patches.findPatchID(exposedPatchName_);
+        const label exposedPatchi = patches.findPatchID(exposedPatchName_);
 
         if (debug)
         {
             Info<< "Allocating subset of size "
                 << mesh().cellZones()[zoneID_.index()].size()
                 << " with exposed faces into patch "
-                << patches[exposedPatchI].name() << endl;
+                << patches[exposedPatchi].name() << endl;
         }
 
         subMeshPtr_.reset
@@ -364,7 +364,7 @@ bool Foam::sampledIsoSurface::updateGeometry() const
         subMeshPtr_().setLargeCellSubset
         (
             labelHashSet(mesh().cellZones()[zoneID_.index()]),
-            exposedPatchI
+            exposedPatchi
         );
     }
 

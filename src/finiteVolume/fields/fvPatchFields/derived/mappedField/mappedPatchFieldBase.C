@@ -69,7 +69,7 @@ mappedPatchFieldBase<Type>::mappedPatchFieldBase
         dict.template lookupOrDefault<word>
         (
             "fieldName",
-            patchField_.dimensionedInternalField().name()
+            patchField_.internalField().name()
         )
     ),
     setAverage_(readBool(dict.lookup("setAverage"))),
@@ -92,9 +92,9 @@ mappedPatchFieldBase<Type>::mappedPatchFieldBase
 :
     mapper_(mapper),
     patchField_(patchField),
-    fieldName_(patchField_.dimensionedInternalField().name()),
+    fieldName_(patchField_.internalField().name()),
     setAverage_(false),
-    average_(pTraits<Type>::zero),
+    average_(Zero),
     interpolationScheme_(interpolationCell<Type>::typeName)
 {}
 
@@ -143,13 +143,13 @@ mappedPatchFieldBase<Type>::sampleField() const
 
     if (mapper_.sameRegion())
     {
-        if (fieldName_ == patchField_.dimensionedInternalField().name())
+        if (fieldName_ == patchField_.internalField().name())
         {
             // Optimisation: bypass field lookup
             return
                 dynamic_cast<const fieldType&>
                 (
-                    patchField_.dimensionedInternalField()
+                    patchField_.internalField()
                 );
         }
         else
@@ -214,14 +214,14 @@ tmp<Field<Type>> mappedPatchFieldBase<Type>::mappedField() const
                 const interpolation<Type>& interp = interpolator();
 
                 newValues.setSize(samples.size(), pTraits<Type>::max);
-                forAll(samples, cellI)
+                forAll(samples, celli)
                 {
-                    if (samples[cellI] != point::max)
+                    if (samples[celli] != point::max)
                     {
-                        newValues[cellI] = interp.interpolate
+                        newValues[celli] = interp.interpolate
                         (
-                            samples[cellI],
-                            cellI
+                            samples[celli],
+                            celli
                         );
                     }
                 }
@@ -259,19 +259,19 @@ tmp<Field<Type>> mappedPatchFieldBase<Type>::mappedField() const
         }
         case mappedPatchBase::NEARESTFACE:
         {
-            Field<Type> allValues(nbrMesh.nFaces(), pTraits<Type>::zero);
+            Field<Type> allValues(nbrMesh.nFaces(), Zero);
 
             const fieldType& nbrField = sampleField();
 
-            forAll(nbrField.boundaryField(), patchI)
+            forAll(nbrField.boundaryField(), patchi)
             {
                 const fvPatchField<Type>& pf =
-                    nbrField.boundaryField()[patchI];
+                    nbrField.boundaryField()[patchi];
                 label faceStart = pf.patch().start();
 
-                forAll(pf, faceI)
+                forAll(pf, facei)
                 {
-                    allValues[faceStart++] = pf[faceI];
+                    allValues[faceStart++] = pf[facei];
                 }
             }
 

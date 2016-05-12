@@ -22,7 +22,7 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::readFields
+    Foam::functionObjects::readFields
 
 Group
     grpFieldFunctionObjects
@@ -59,12 +59,11 @@ SeeAlso
 
 SourceFiles
     readFields.C
-    IOreadFields.H
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef readFields_H
-#define readFields_H
+#ifndef functionObjects_readFields_H
+#define functionObjects_readFields_H
 
 #include "OFstream.H"
 #include "pointFieldFwd.H"
@@ -81,6 +80,9 @@ class objectRegistry;
 class dictionary;
 class mapPolyMesh;
 
+namespace functionObjects
+{
+
 /*---------------------------------------------------------------------------*\
                          Class readFields Declaration
 \*---------------------------------------------------------------------------*/
@@ -95,9 +97,6 @@ protected:
         word name_;
 
         const objectRegistry& obr_;
-
-        //- on/off switch
-        bool active_;
 
         //- Fields to load
         wordList fieldSet_;
@@ -169,7 +168,7 @@ public:
             return name_;
         }
 
-        //- Read the field min/max data
+        //- Read the set of fields from dictionary
         virtual void read(const dictionary&);
 
         //- Execute, currently does nothing
@@ -196,6 +195,7 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+} // End namespace functionObjects
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -71,7 +71,6 @@ void Foam::codedFunctionObject::prepare
     // copy filtered H template
     dynCode.addCopyFile("FilterFunctionObjectTemplate.H");
     dynCode.addCopyFile("functionObjectTemplate.H");
-    dynCode.addCopyFile("IOfunctionObjectTemplate.H");
 
     // debugging: make BC verbose
     //         dynCode.setFilterVariable("verbose", "true");
@@ -137,6 +136,9 @@ Foam::codedFunctionObject::codedFunctionObject
     {
         read(dict_);
     }
+
+    updateLibrary(redirectType_);
+    redirectFunctionObject();
 }
 
 
@@ -148,8 +150,7 @@ Foam::codedFunctionObject::~codedFunctionObject()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-Foam::functionObject&
-Foam::codedFunctionObject::redirectFunctionObject() const
+Foam::functionObject& Foam::codedFunctionObject::redirectFunctionObject() const
 {
     if (!redirectFunctionObjectPtr_.valid())
     {
@@ -164,13 +165,6 @@ Foam::codedFunctionObject::redirectFunctionObject() const
         );
     }
     return redirectFunctionObjectPtr_();
-}
-
-
-bool Foam::codedFunctionObject::start()
-{
-    updateLibrary(redirectType_);
-    return redirectFunctionObject().start();
 }
 
 

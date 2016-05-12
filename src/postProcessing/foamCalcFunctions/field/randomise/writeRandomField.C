@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,6 +23,10 @@ License
 
 \*---------------------------------------------------------------------------*/
 
+#include "volFields.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
 template<class Type>
 void Foam::calcTypes::randomise::writeRandomField
 (
@@ -40,13 +44,13 @@ void Foam::calcTypes::randomise::writeRandomField
         Info<< "    Reading " << header.name() << endl;
         fieldType field(header, mesh);
 
-        forAll(field, cellI)
+        forAll(field, celli)
         {
             Type rndPert;
             rand.randomise(rndPert);
             rndPert = 2.0*rndPert - pTraits<Type>::one;
             rndPert /= mag(rndPert);
-            field[cellI] += pertMag*rndPert;
+            field[celli] += pertMag*rndPert;
         }
 
         fieldType randomisedField
@@ -69,4 +73,4 @@ void Foam::calcTypes::randomise::writeRandomField
 }
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// ************************************************************************* //

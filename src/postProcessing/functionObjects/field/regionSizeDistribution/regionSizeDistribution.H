@@ -22,7 +22,7 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::regionSizeDistribution
+    Foam::functionObjects::regionSizeDistribution
 
 Group
     grpFieldFunctionObjects
@@ -103,10 +103,10 @@ SourceFiles
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef regionSizeDistribution_H
-#define regionSizeDistribution_H
+#ifndef functionObjects_regionSizeDistribution_H
+#define functionObjects_regionSizeDistribution_H
 
-#include "functionObjectFile.H"
+#include "functionObjectFiles.H"
 #include "pointFieldFwd.H"
 #include "writer.H"
 #include "Map.H"
@@ -126,13 +126,16 @@ class mapPolyMesh;
 class regionSplit;
 class polyMesh;
 
+namespace functionObjects
+{
+
 /*---------------------------------------------------------------------------*\
                    Class regionSizeDistribution Declaration
 \*---------------------------------------------------------------------------*/
 
 class regionSizeDistribution
 :
-    public functionObjectFile
+    public functionObjectFiles
 {
     // Private data
 
@@ -140,9 +143,6 @@ class regionSizeDistribution
         word name_;
 
         const objectRegistry& obr_;
-
-        //- on/off switch
-        bool active_;
 
         //- Name of field
         word alphaName_;
@@ -296,6 +296,7 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+} // End namespace functionObjects
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

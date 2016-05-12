@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -60,13 +60,16 @@ void calcIncompressible
 
     const volSymmTensorField Reff(model->devReff());
 
-    forAll(wallShearStress.boundaryField(), patchI)
+    volVectorField::Boundary& wallShearStressBf =
+        wallShearStress.boundaryFieldRef();
+
+    forAll(wallShearStressBf, patchi)
     {
-        wallShearStress.boundaryField()[patchI] =
+        wallShearStressBf[patchi] =
         (
-           -mesh.Sf().boundaryField()[patchI]
-           /mesh.magSf().boundaryField()[patchI]
-        ) & Reff.boundaryField()[patchI];
+           -mesh.Sf().boundaryField()[patchi]
+           /mesh.magSf().boundaryField()[patchi]
+        ) & Reff.boundaryField()[patchi];
     }
 }
 
@@ -109,13 +112,16 @@ void calcCompressible
 
     const volSymmTensorField Reff(model->devRhoReff());
 
-    forAll(wallShearStress.boundaryField(), patchI)
+    volVectorField::Boundary& wallShearStressBf =
+        wallShearStress.boundaryFieldRef();
+
+    forAll(wallShearStressBf, patchi)
     {
-        wallShearStress.boundaryField()[patchI] =
+        wallShearStressBf[patchi] =
         (
-           -mesh.Sf().boundaryField()[patchI]
-           /mesh.magSf().boundaryField()[patchI]
-        ) & Reff.boundaryField()[patchI];
+           -mesh.Sf().boundaryField()[patchi]
+           /mesh.magSf().boundaryField()[patchi]
+        ) & Reff.boundaryField()[patchi];
     }
 }
 
@@ -150,7 +156,7 @@ int main(int argc, char *argv[])
             (
                 "wallShearStress",
                 sqr(dimLength)/sqr(dimTime),
-                vector::zero
+                Zero
             )
         );
 

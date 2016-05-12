@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013-2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2013-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,7 +22,7 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::CourantNo
+    Foam::functionObjects::CourantNo
 
 Group
     grpUtilitiesFunctionObjects
@@ -34,12 +34,11 @@ Description
 
 SourceFiles
     CourantNo.C
-    IOCourantNo.H
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef CourantNo_H
-#define CourantNo_H
+#ifndef functionObjects_CourantNo_H
+#define functionObjects_CourantNo_H
 
 #include "volFields.H"
 
@@ -53,6 +52,9 @@ class objectRegistry;
 class dictionary;
 class polyMesh;
 class mapPolyMesh;
+
+namespace functionObjects
+{
 
 /*---------------------------------------------------------------------------*\
                           Class CourantNo Declaration
@@ -68,9 +70,6 @@ class CourantNo
         //- Reference to the database
         const objectRegistry& obr_;
 
-        //- On/off switch
-        bool active_;
-
         //- Name of flux field, default is "phi"
         word phiName_;
 
@@ -81,9 +80,9 @@ class CourantNo
     // Private Member Functions
 
         //- Divide Co by rho if required
-        tmp<volScalarField::DimensionedInternalField> byRho
+        tmp<volScalarField::Internal> byRho
         (
-            const tmp<volScalarField::DimensionedInternalField>& Co
+            const tmp<volScalarField::Internal>& Co
         ) const;
 
         //- Disallow default bitwise copy construct
@@ -151,6 +150,7 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+} // End namespace functionObjects
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

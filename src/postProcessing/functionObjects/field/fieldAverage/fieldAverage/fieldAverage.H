@@ -22,7 +22,7 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::fieldAverage
+    Foam::functionObjects::fieldAverage
 
 Group
     grpFieldFunctionObjects
@@ -119,8 +119,8 @@ SourceFiles
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef fieldAverage_H
-#define fieldAverage_H
+#ifndef functionObjects_fieldAverage_H
+#define functionObjects_fieldAverage_H
 
 #include "volFieldsFwd.H"
 #include "Switch.H"
@@ -133,11 +133,16 @@ namespace Foam
 // Forward declaration of classes
 class objectRegistry;
 class dictionary;
-class fieldAverageItem;
 template<class Type>
 class List;
 class polyMesh;
 class mapPolyMesh;
+
+namespace functionObjects
+{
+
+// Forward declaration of classes
+class fieldAverageItem;
 
 /*---------------------------------------------------------------------------*\
                         Class fieldAverage Declaration
@@ -154,9 +159,6 @@ protected:
 
         //- Database this class is registered to
         const objectRegistry& obr_;
-
-        //- On/off switch
-        bool active_;
 
         //- Time at last call, prevents repeated averaging
         label prevTimeIndex_;
@@ -209,19 +211,19 @@ protected:
 
             //- Add mean average field to database
             template<class Type>
-            void addMeanFieldType(const label fieldI);
+            void addMeanFieldType(const label fieldi);
 
             //- Add mean average field to database
             template<class Type>
-            void addMeanField(const label fieldI);
+            void addMeanField(const label fieldi);
 
             //- Add prime-squared average field to database
             template<class Type1, class Type2>
-            void addPrime2MeanFieldType(const label fieldI);
+            void addPrime2MeanFieldType(const label fieldi);
 
             //- Add prime-squared average field to database
             template<class Type1, class Type2>
-            void addPrime2MeanField(const label fieldI);
+            void addPrime2MeanField(const label fieldi);
 
 
         // Calculation functions
@@ -231,7 +233,7 @@ protected:
 
             //- Calculate mean average fields
             template<class Type>
-            void calculateMeanFieldType(const label fieldI) const;
+            void calculateMeanFieldType(const label fieldi) const;
 
             //- Calculate mean average fields
             template<class Type>
@@ -239,7 +241,7 @@ protected:
 
             //- Calculate prime-squared average fields
             template<class Type1, class Type2>
-            void calculatePrime2MeanFieldType(const label fieldI) const;
+            void calculatePrime2MeanFieldType(const label fieldi) const;
 
             //- Calculate prime-squared average fields
             template<class Type1, class Type2>
@@ -247,7 +249,7 @@ protected:
 
             //- Add mean-squared field value to prime-squared mean field
             template<class Type1, class Type2>
-            void addMeanSqrToPrime2MeanType(const label fieldI) const;
+            void addMeanSqrToPrime2MeanType(const label fieldi) const;
 
             //- Add mean-squared field value to prime-squared mean field
             template<class Type1, class Type2>
@@ -337,6 +339,7 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+} // End namespace functionObjects
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

@@ -30,6 +30,8 @@ License
 
 namespace Foam
 {
+namespace functionObjects
+{
     defineTypeNameAndDebug(setTimeStepFunctionObject, 0);
 
     addToRunTimeSelectionTable
@@ -39,11 +41,12 @@ namespace Foam
         dictionary
     );
 }
+}
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::setTimeStepFunctionObject::setTimeStepFunctionObject
+Foam::functionObjects::setTimeStepFunctionObject::setTimeStepFunctionObject
 (
     const word& name,
     const Time& runTime,
@@ -51,101 +54,97 @@ Foam::setTimeStepFunctionObject::setTimeStepFunctionObject
 )
 :
     functionObject(name),
-    time_(runTime),
-    enabled_(true)
+    time_(runTime)
 {
     read(dict);
 }
 
 
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-void Foam::setTimeStepFunctionObject::on()
-{
-    enabled_ = true;
-}
-
-
-void Foam::setTimeStepFunctionObject::off()
-{
-    enabled_ = false;
-}
-
-
-bool Foam::setTimeStepFunctionObject::start()
-{
-    return true;
-}
-
-
-bool Foam::setTimeStepFunctionObject::execute(const bool forceWrite)
-{
-    return true;
-}
-
-
-bool Foam::setTimeStepFunctionObject::end()
-{
-    return true;
-}
-
-
-bool Foam::setTimeStepFunctionObject::timeSet()
-{
-    return true;
-}
-
-
-bool Foam::setTimeStepFunctionObject::adjustTimeStep()
-{
-    if (enabled())
-    {
-        // Wanted timestep
-        scalar newDeltaT = timeStepPtr_().value(time_.timeOutputValue());
-
-        const_cast<Time&>(time()).setDeltaT(newDeltaT, false);
-
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
-
-
-bool Foam::setTimeStepFunctionObject::read(const dictionary& dict)
-{
-    enabled_ = dict.lookupOrDefault("enabled", true);
-
-    if (enabled_)
-    {
-        timeStepPtr_ = Function1<scalar>::New("deltaT", dict);
-
-        // Check that time has adjustTimeStep
-        const dictionary& controlDict = time_.controlDict();
-
-        Switch adjust;
-        if
-        (
-            !controlDict.readIfPresent<Switch>("adjustTimeStep", adjust)
-         || !adjust
-        )
-        {
-            FatalIOErrorInFunction(dict)
-                << "Need to have 'adjustTimeStep' true to enable external"
-                << " timestep control" << exit(FatalIOError);
-        }
-    }
-    return true;
-}
-
-
-void Foam::setTimeStepFunctionObject::updateMesh(const mapPolyMesh& mpm)
+Foam::functionObjects::setTimeStepFunctionObject::~setTimeStepFunctionObject()
 {}
 
 
-void Foam::setTimeStepFunctionObject::movePoints(const polyMesh& mesh)
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+const Foam::Time&
+Foam::functionObjects::setTimeStepFunctionObject::time() const
+{
+    return time_;
+}
+
+
+bool Foam::functionObjects::setTimeStepFunctionObject::execute
+(
+    const bool forceWrite
+)
+{
+    return true;
+}
+
+
+bool Foam::functionObjects::setTimeStepFunctionObject::end()
+{
+    return true;
+}
+
+
+bool Foam::functionObjects::setTimeStepFunctionObject::timeSet()
+{
+    return true;
+}
+
+
+bool Foam::functionObjects::setTimeStepFunctionObject::adjustTimeStep()
+{
+    const_cast<Time&>(time()).setDeltaT
+    (
+        timeStepPtr_().value(time_.timeOutputValue()),
+        false
+    );
+
+    return true;
+}
+
+
+bool Foam::functionObjects::setTimeStepFunctionObject::read
+(
+    const dictionary& dict
+)
+{
+    timeStepPtr_ = Function1<scalar>::New("deltaT", dict);
+
+    // Check that adjustTimeStep is active
+    const dictionary& controlDict = time_.controlDict();
+
+    Switch adjust;
+    if
+    (
+       !controlDict.readIfPresent<Switch>("adjustTimeStep", adjust)
+    || !adjust
+    )
+    {
+        FatalIOErrorInFunction(dict)
+            << "Need to set 'adjustTimeStep' true to allow timestep control"
+            << exit(FatalIOError);
+    }
+
+    return true;
+}
+
+
+void Foam::functionObjects::setTimeStepFunctionObject::updateMesh
+(
+    const mapPolyMesh&
+)
+{}
+
+
+void Foam::functionObjects::setTimeStepFunctionObject::movePoints
+(
+    const polyMesh&
+)
 {}
 
 

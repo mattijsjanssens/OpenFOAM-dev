@@ -44,10 +44,10 @@ void Foam::solve
         label iMax = i;
         scalar largestCoeff = mag(tmpMatrix[iMax][i]);
 
-        // Swap entries around to find a good pivot
+        // Swap elements around to find a good pivot
         for (label j=i+1; j<m; j++)
         {
-            if (mag(tmpMatrix[j][i]) > largestCoeff)
+            if (mag(tmpMatrix(j, i)) > largestCoeff)
             {
                 iMax = j;
                 largestCoeff = mag(tmpMatrix[iMax][i]);
@@ -56,17 +56,15 @@ void Foam::solve
 
         if (i != iMax)
         {
-            //Info<< "Pivoted on " << i << " " << iMax << endl;
-
             for (label k=i; k<m; k++)
             {
-                Swap(tmpMatrix[i][k], tmpMatrix[iMax][k]);
+                Swap(tmpMatrix(i, k), tmpMatrix[iMax][k]);
             }
             Swap(sourceSol[i], sourceSol[iMax]);
         }
 
         // Check that the system of equations isn't singular
-        if (mag(tmpMatrix[i][i]) < 1e-20)
+        if (mag(tmpMatrix(i, i)) < 1e-20)
         {
             FatalErrorInFunction
                 << "Singular Matrix"
@@ -76,12 +74,12 @@ void Foam::solve
         // Reduce to upper triangular form
         for (label j=i+1; j<m; j++)
         {
-            sourceSol[j] -= sourceSol[i]*(tmpMatrix[j][i]/tmpMatrix[i][i]);
+            sourceSol[j] -= sourceSol[i]*(tmpMatrix(j, i)/tmpMatrix(i, i));
 
             for (label k=m-1; k>=i; k--)
             {
-                tmpMatrix[j][k] -=
-                    tmpMatrix[i][k]*tmpMatrix[j][i]/tmpMatrix[i][i];
+                tmpMatrix(j, k) -=
+                    tmpMatrix(i, k)*tmpMatrix(j, i)/tmpMatrix(i, i);
             }
         }
     }
@@ -89,14 +87,14 @@ void Foam::solve
     // Back-substitution
     for (label j=m-1; j>=0; j--)
     {
-        Type ntempvec = pTraits<Type>::zero;
+        Type ntempvec = Zero;
 
         for (label k=j+1; k<m; k++)
         {
-            ntempvec += tmpMatrix[j][k]*sourceSol[k];
+            ntempvec += tmpMatrix(j, k)*sourceSol[k];
         }
 
-        sourceSol[j] = (sourceSol[j] - ntempvec)/tmpMatrix[j][j];
+        sourceSol[j] = (sourceSol[j] - ntempvec)/tmpMatrix(j, j);
     }
 }
 
@@ -253,13 +251,13 @@ void Foam::multiply
 
     ans = Matrix<Form, Type>(A.m(), B.n(), scalar(0));
 
-    for (label i = 0; i < A.m(); i++)
+    for (label i=0; i<A.m(); i++)
     {
-        for (label j = 0; j < B.n(); j++)
+        for (label j=0; j<B.n(); j++)
         {
-            for (label l = 0; l < B.m(); l++)
+            for (label l=0; l<B.m(); l++)
             {
-                ans[i][j] += A[i][l]*B[l][j];
+                ans(i, j) += A(i, l)*B(l, j);
             }
         }
     }

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2014 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2014-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,7 +22,7 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::vorticity
+    Foam::functionObjects::vorticity
 
 Group
     grpUtilitiesFunctionObjects
@@ -32,12 +32,11 @@ Description
 
 SourceFiles
     vorticity.C
-    IOvorticity.H
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef vorticity_H
-#define vorticity_H
+#ifndef functionObjects_vorticity_H
+#define functionObjects_vorticity_H
 
 #include "volFieldsFwd.H"
 
@@ -52,6 +51,9 @@ class dictionary;
 class polyMesh;
 class mapPolyMesh;
 
+namespace functionObjects
+{
+
 /*---------------------------------------------------------------------------*\
                           Class vorticity Declaration
 \*---------------------------------------------------------------------------*/
@@ -65,9 +67,6 @@ class vorticity
 
         //- Reference to the database
         const objectRegistry& obr_;
-
-        //- On/off switch
-        bool active_;
 
         //- Name of velocity field, default is "U"
         word UName_;
@@ -143,6 +142,7 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+} // End namespace functionObjects
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

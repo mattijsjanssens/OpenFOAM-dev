@@ -22,7 +22,7 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::residuals
+    Foam::functionObjects::residuals
 
 Group
     grpUtilitiesFunctionObjects
@@ -35,8 +35,8 @@ Description
     residuals
     {
         type            residuals;
-        outputControl   timeStep;
-        outputInterval  1;
+        writeControl   timeStep;
+        writeInterval  1;
         fields
         (
             U
@@ -55,14 +55,13 @@ SeeAlso
 
 SourceFiles
     residuals.C
-    IOresiduals.H
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef residuals_H
-#define residuals_H
+#ifndef functionObjects_residuals_H
+#define functionObjects_residuals_H
 
-#include "functionObjectFile.H"
+#include "functionObjectFiles.H"
 #include "primitiveFieldsFwd.H"
 #include "volFieldsFwd.H"
 #include "HashSet.H"
@@ -82,13 +81,16 @@ class dictionary;
 class polyMesh;
 class mapPolyMesh;
 
+namespace functionObjects
+{
+
 /*---------------------------------------------------------------------------*\
                        Class residuals Declaration
 \*---------------------------------------------------------------------------*/
 
 class residuals
 :
-    public functionObjectFile
+    public functionObjectFiles
 {
 protected:
 
@@ -99,9 +101,6 @@ protected:
         word name_;
 
         const objectRegistry& obr_;
-
-        //- on/off switch
-        bool active_;
 
         //- Fields to write residuals
         wordList fieldSet_;
@@ -153,13 +152,13 @@ public:
 
     // Member Functions
 
-        //- Return name of the set of field min/max
+        //- Return name of the functionObject
         virtual const word& name() const
         {
             return name_;
         }
 
-        //- Read the field min/max data
+        //- Read the controls
         virtual void read(const dictionary&);
 
         //- Execute, currently does nothing
@@ -190,6 +189,7 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+} // End namespace functionObjects
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

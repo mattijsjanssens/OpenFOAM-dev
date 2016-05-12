@@ -87,9 +87,9 @@ void Foam::calc(const argList& args, const Time& runTime, const fvMesh& mesh)
                 mesh
             );
 
-            Co.dimensionedInternalField() =
+            Co.ref() =
                 (0.5*runTime.deltaT())
-               *fvc::surfaceSum(mag(phi))().dimensionedInternalField()
+               *fvc::surfaceSum(mag(phi))()()
                /(rho*mesh.V());
             Co.correctBoundaryConditions();
         }
@@ -97,9 +97,9 @@ void Foam::calc(const argList& args, const Time& runTime, const fvMesh& mesh)
         {
             Info<< "    Calculating incompressible Co" << endl;
 
-            Co.dimensionedInternalField() =
+            Co.ref() =
                 (0.5*runTime.deltaT())
-               *fvc::surfaceSum(mag(phi))().dimensionedInternalField()
+               *fvc::surfaceSum(mag(phi))()()
                /mesh.V();
             Co.correctBoundaryConditions();
         }
