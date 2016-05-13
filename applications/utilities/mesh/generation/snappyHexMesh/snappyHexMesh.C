@@ -574,7 +574,12 @@ scalar getMergeDistance(const polyMesh& mesh, const scalar mergeTol)
 
 void removeZeroSizedPatches(fvMesh& mesh)
 {
-    // Check all non-coupled patches and remove any zero-sized ones
+    // Remove any zero-sized ones. Assumes
+    // - processor patches are already only there if needed
+    // - all other patches are available on all processors
+    // - but coupled ones might still be needed, even if zero-size
+    //   (e.g. processorCyclic)
+    // See also logic in createPatch.
     const polyBoundaryMesh& pbm = mesh.boundaryMesh();
 
     labelList oldToNew(pbm.size(), -1);
@@ -583,10 +588,17 @@ void removeZeroSizedPatches(fvMesh& mesh)
     {
         const polyPatch& pp = pbm[patchi];
 
-        if (!pp.coupled() && returnReduce(pp.size(), sumOp<label>()))
+        if (!isA<processorPolyPatch>(pp))
         {
-            // Uncoupled and used
-            oldToNew[patchi] = newPatchi++;
+            if
+            (
+                isA<coupledPolyPatch>(pp)
+             || returnReduce(pp.size(), sumOp<label>())
+            )
+            {
+                // Coupled (and unknown size) or uncoupled and used
+                oldToNew[patchi] = newPatchi++;
+            }
         }
     }
 
@@ -594,33 +606,35 @@ void removeZeroSizedPatches(fvMesh& mesh)
     {
         const polyPatch& pp = pbm[patchi];
 
-        if (pp.coupled())
+        if (isA<processorPolyPatch>(pp))
         {
-            // Already only there if needed; perhaps even as indirection
-            // (e.g. processorCyclic using cyclic for transform)
             oldToNew[patchi] = newPatchi++;
         }
     }
 
 
-    const label nPatches = newPatchi;
+    const label nKeepPatches = newPatchi;
 
     // Shuffle unused ones to end
-    if (nPatches != pbm.size())
+    if (nKeepPatches != pbm.size())
     {
-        Info<< "Removing zero-sized patches:" << endl << incrIndent;
+        Info<< endl
+            << "Removing zero-sized patches:" << endl << incrIndent;
 
         forAll(oldToNew, patchi)
         {
             if (oldToNew[patchi] == -1)
             {
-                Info<< indent << pbm[patchi].name() << endl;
+                Info<< indent << pbm[patchi].name()
+                    << " type " << pbm[patchi].type()
+                    << " at position " << patchi << endl;
                 oldToNew[patchi] = newPatchi++;
             }
         }
         Info<< decrIndent;
 
-        fvMeshTools::reorderPatches(mesh, oldToNew, nPatches, true);
+        fvMeshTools::reorderPatches(mesh, oldToNew, nKeepPatches, true);
+        Info<< endl;
     }
 }
 
