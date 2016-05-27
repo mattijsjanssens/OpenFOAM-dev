@@ -24,9 +24,7 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "mag.H"
-#include "volFields.H"
-#include "dictionary.H"
-#include "mag.H"
+#include "addToRunTimeSelectionTable.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -35,7 +33,24 @@ namespace Foam
 namespace functionObjects
 {
     defineTypeNameAndDebug(mag, 0);
+    addToRunTimeSelectionTable(functionObject, mag, dictionary);
 }
+}
+
+
+// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
+
+bool Foam::functionObjects::mag::calc()
+{
+    bool processed = false;
+
+    processed = processed || calcMag<scalar>();
+    processed = processed || calcMag<vector>();
+    processed = processed || calcMag<sphericalTensor>();
+    processed = processed || calcMag<symmTensor>();
+    processed = processed || calcMag<tensor>();
+
+    return processed;
 }
 
 
@@ -44,22 +59,12 @@ namespace functionObjects
 Foam::functionObjects::mag::mag
 (
     const word& name,
-    const objectRegistry& obr,
-    const dictionary& dict,
-    const bool loadFromFiles
+    const Time& runTime,
+    const dictionary& dict
 )
 :
-    name_(name),
-    obr_(obr),
-    fieldName_("undefined-fieldName"),
-    resultName_("undefined-resultName")
+    fieldExpression(name, runTime, dict)
 {
-    if (!isA<fvMesh>(obr))
-    {
-        FatalErrorInFunction
-            << "objectRegistry is not an fvMesh" << exit(FatalError);
-    }
-
     read(dict);
 }
 
@@ -68,63 +73,6 @@ Foam::functionObjects::mag::mag
 
 Foam::functionObjects::mag::~mag()
 {}
-
-
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-
-void Foam::functionObjects::mag::read(const dictionary& dict)
-{
-    dict.lookup("fieldName") >> fieldName_;
-    dict.lookup("resultName") >> resultName_;
-
-    if (resultName_ == "none")
-    {
-        resultName_ = "mag(" + fieldName_ + ")";
-    }
-}
-
-
-void Foam::functionObjects::mag::execute()
-{
-    bool processed = false;
-
-    calc<scalar>(fieldName_, resultName_, processed);
-    calc<vector>(fieldName_, resultName_, processed);
-    calc<sphericalTensor>(fieldName_, resultName_, processed);
-    calc<symmTensor>(fieldName_, resultName_, processed);
-    calc<tensor>(fieldName_, resultName_, processed);
-
-    if (!processed)
-    {
-        WarningInFunction
-            << "Unprocessed field " << fieldName_ << endl;
-    }
-}
-
-
-void Foam::functionObjects::mag::end()
-{
-    execute();
-}
-
-
-void Foam::functionObjects::mag::timeSet()
-{}
-
-
-void Foam::functionObjects::mag::write()
-{
-    if (obr_.foundObject<regIOobject>(resultName_))
-    {
-        const regIOobject& field =
-            obr_.lookupObject<regIOobject>(resultName_);
-
-        Info<< type() << " " << name_ << " output:" << nl
-            << "    writing field " << field.name() << nl << endl;
-
-        field.write();
-    }
-}
 
 
 // ************************************************************************* //

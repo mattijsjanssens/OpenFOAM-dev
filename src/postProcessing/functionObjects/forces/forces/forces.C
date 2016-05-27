@@ -24,14 +24,11 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "forces.H"
-#include "volFields.H"
-#include "dictionary.H"
-#include "Time.H"
-#include "wordReList.H"
 #include "fvcGrad.H"
 #include "porosityModel.H"
 #include "turbulentTransportModel.H"
 #include "turbulentFluidThermoModel.H"
+#include "addToRunTimeSelectionTable.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -40,6 +37,8 @@ namespace Foam
 namespace functionObjects
 {
     defineTypeNameAndDebug(forces, 0);
+
+    addToRunTimeSelectionTable(functionObject, forces, dictionary);
 }
 }
 
@@ -105,24 +104,24 @@ void Foam::functionObjects::forces::writeFileHeader(const label i)
 
         vectorField binPoints(nBin_);
         writeCommented(file(i), "x co-ords  :");
-        forAll(binPoints, pointI)
+        forAll(binPoints, pointi)
         {
-            binPoints[pointI] = (binMin_ + (pointI + 1)*binDx_)*binDir_;
-            file(i) << tab << binPoints[pointI].x();
+            binPoints[pointi] = (binMin_ + (pointi + 1)*binDx_)*binDir_;
+            file(i) << tab << binPoints[pointi].x();
         }
         file(i) << nl;
 
         writeCommented(file(i), "y co-ords  :");
-        forAll(binPoints, pointI)
+        forAll(binPoints, pointi)
         {
-            file(i) << tab << binPoints[pointI].y();
+            file(i) << tab << binPoints[pointi].y();
         }
         file(i) << nl;
 
         writeCommented(file(i), "z co-ords  :");
-        forAll(binPoints, pointI)
+        forAll(binPoints, pointi)
         {
-            file(i) << tab << binPoints[pointI].z();
+            file(i) << tab << binPoints[pointi].z();
         }
         file(i) << nl;
 
@@ -225,10 +224,10 @@ Foam::functionObjects::forces::devRhoReff() const
 
         return rho()*turb.devReff();
     }
-    else if (obr_.foundObject<fluidThermo>(fluidThermo::typeName))
+    else if (obr_.foundObject<fluidThermo>(fluidThermo::dictName))
     {
         const fluidThermo& thermo =
-            obr_.lookupObject<fluidThermo>(fluidThermo::typeName);
+            obr_.lookupObject<fluidThermo>(fluidThermo::dictName);
 
         const volVectorField& U = obr_.lookupObject<volVectorField>(UName_);
 
@@ -394,8 +393,7 @@ void Foam::functionObjects::forces::applyBins
 
 void Foam::functionObjects::forces::writeForces()
 {
-    if (log_) Info
-        << type() << " " << name_ << " output:" << nl
+    Log << type() << " " << name() << " output:" << nl
         << "    sum of forces:" << nl
         << "        pressure : " << sum(force_[0]) << nl
         << "        viscous  : " << sum(force_[1]) << nl
@@ -522,16 +520,11 @@ void Foam::functionObjects::forces::writeBins()
 Foam::functionObjects::forces::forces
 (
     const word& name,
-    const objectRegistry& obr,
-    const dictionary& dict,
-    const bool loadFromFiles,
-    const bool readFields
+    const Time& runTime,
+    const dictionary& dict
 )
 :
-    functionObjectFiles(obr, name, createFileNames(dict)),
-    name_(name),
-    obr_(obr),
-    log_(true),
+    writeFiles(name, runTime, dict, name),
     force_(3),
     moment_(3),
     patchSet_(),
@@ -553,16 +546,14 @@ Foam::functionObjects::forces::forces
     binCumulative_(true),
     initialised_(false)
 {
-    if (!isA<fvMesh>(obr))
+    if (!isA<fvMesh>(obr_))
     {
         FatalErrorInFunction
             << "objectRegistry is not an fvMesh" << exit(FatalError);
     }
 
-    if (readFields)
-    {
-        read(dict);
-    }
+    read(dict);
+    resetNames(createFileNames(dict));
 }
 
 
@@ -570,30 +561,21 @@ Foam::functionObjects::forces::forces
 (
     const word& name,
     const objectRegistry& obr,
-    const labelHashSet& patchSet,
-    const word& pName,
-    const word& UName,
-    const word& rhoName,
-    const scalar rhoInf,
-    const scalar pRef,
-    const coordinateSystem& coordSys
+    const dictionary& dict
 )
 :
-    functionObjectFiles(obr, name, typeName),
-    name_(name),
-    obr_(obr),
-    log_(true),
+    writeFiles(name, obr, dict, name),
     force_(3),
     moment_(3),
-    patchSet_(patchSet),
-    pName_(pName),
-    UName_(UName),
-    rhoName_(rhoName),
+    patchSet_(),
+    pName_(word::null),
+    UName_(word::null),
+    rhoName_(word::null),
     directForceDensity_(false),
     fDName_(""),
-    rhoRef_(rhoInf),
-    pRef_(pRef),
-    coordSys_(coordSys),
+    rhoRef_(VGREAT),
+    pRef_(0),
+    coordSys_(),
     localSystem_(false),
     porosity_(false),
     nBin_(1),
@@ -604,11 +586,14 @@ Foam::functionObjects::forces::forces
     binCumulative_(true),
     initialised_(false)
 {
-    forAll(force_, i)
+    if (!isA<fvMesh>(obr_))
     {
-        force_[i].setSize(nBin_);
-        moment_[i].setSize(nBin_);
+        FatalErrorInFunction
+            << "objectRegistry is not an fvMesh" << exit(FatalError);
     }
+
+    read(dict);
+    resetNames(createFileNames(dict));
 }
 
 
@@ -620,13 +605,13 @@ Foam::functionObjects::forces::~forces()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-void Foam::functionObjects::forces::read(const dictionary& dict)
+bool Foam::functionObjects::forces::read(const dictionary& dict)
 {
+    writeFiles::read(dict);
+
     initialised_ = false;
 
-    log_ = dict.lookupOrDefault<Switch>("log", false);
-
-    if (log_) Info<< type() << " " << name_ << ":" << nl;
+    Log << type() << " " << name() << ":" << nl;
 
     directForceDensity_ = dict.lookupOrDefault("directForceDensity", false);
 
@@ -638,14 +623,14 @@ void Foam::functionObjects::forces::read(const dictionary& dict)
     if (directForceDensity_)
     {
         // Optional entry for fDName
-        fDName_ = dict.lookupOrDefault<word>("fDName", "fD");
+        fDName_ = dict.lookupOrDefault<word>("fD", "fD");
     }
     else
     {
         // Optional entries U and p
-        pName_ = dict.lookupOrDefault<word>("pName", "p");
-        UName_ = dict.lookupOrDefault<word>("UName", "U");
-        rhoName_ = dict.lookupOrDefault<word>("rhoName", "rho");
+        pName_ = dict.lookupOrDefault<word>("p", "p");
+        UName_ = dict.lookupOrDefault<word>("U", "U");
+        rhoName_ = dict.lookupOrDefault<word>("rho", "rho");
 
         // Reference density needed for incompressible calculations
         rhoRef_ = readScalar(dict.lookup("rhoInf"));
@@ -667,11 +652,11 @@ void Foam::functionObjects::forces::read(const dictionary& dict)
     dict.readIfPresent("porosity", porosity_);
     if (porosity_)
     {
-        if (log_) Info<< "    Including porosity effects" << endl;
+        Log << "    Including porosity effects" << endl;
     }
     else
     {
-        if (log_) Info<< "    Not including porosity effects" << endl;
+        Log << "    Not including porosity effects" << endl;
     }
 
     if (dict.found("binData"))
@@ -747,35 +732,8 @@ void Foam::functionObjects::forces::read(const dictionary& dict)
         moment_[1].setSize(1);
         moment_[2].setSize(1);
     }
-}
 
-
-void Foam::functionObjects::forces::execute()
-{}
-
-
-void Foam::functionObjects::forces::end()
-{}
-
-
-void Foam::functionObjects::forces::timeSet()
-{}
-
-
-void Foam::functionObjects::forces::write()
-{
-    calcForcesMoment();
-
-    if (Pstream::master())
-    {
-        functionObjectFiles::write();
-
-        writeForces();
-
-        writeBins();
-
-        if (log_) Info<< endl;
-    }
+    return true;
 }
 
 
@@ -928,6 +886,31 @@ Foam::vector Foam::functionObjects::forces::forceEff() const
 Foam::vector Foam::functionObjects::forces::momentEff() const
 {
     return sum(moment_[0]) + sum(moment_[1]) + sum(moment_[2]);
+}
+
+
+bool Foam::functionObjects::forces::execute(const bool postProcess)
+{
+    return true;
+}
+
+
+bool Foam::functionObjects::forces::write(const bool postProcess)
+{
+    calcForcesMoment();
+
+    if (Pstream::master())
+    {
+        writeFiles::write();
+
+        writeForces();
+
+        writeBins();
+
+        Log << endl;
+    }
+
+    return true;
 }
 
 

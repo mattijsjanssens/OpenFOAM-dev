@@ -27,6 +27,7 @@ License
 #include "Time.H"
 #include "mapPolyMesh.H"
 #include "argList.H"
+#include "timeControlFunctionObject.H"
 
 // * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * * //
 
@@ -185,7 +186,7 @@ bool Foam::functionObjectList::start()
 }
 
 
-bool Foam::functionObjectList::execute(const bool forceWrite)
+bool Foam::functionObjectList::execute(const bool postProcess)
 {
     bool ok = true;
 
@@ -198,7 +199,8 @@ bool Foam::functionObjectList::execute(const bool forceWrite)
 
         forAll(*this, objectI)
         {
-            ok = operator[](objectI).execute(forceWrite) && ok;
+            ok = operator[](objectI).execute(postProcess) && ok;
+            ok = operator[](objectI).write(postProcess) && ok;
         }
     }
 
@@ -220,27 +222,6 @@ bool Foam::functionObjectList::end()
         forAll(*this, objectI)
         {
             ok = operator[](objectI).end() && ok;
-        }
-    }
-
-    return ok;
-}
-
-
-bool Foam::functionObjectList::timeSet()
-{
-    bool ok = true;
-
-    if (execution_)
-    {
-        if (!updated_)
-        {
-            read();
-        }
-
-        forAll(*this, objectI)
-        {
-            ok = operator[](objectI).timeSet() && ok;
         }
     }
 
@@ -303,19 +284,30 @@ bool Foam::functionObjectList::read()
                 << exit(FatalIOError);
         }
 
-        const dictionary& functionDicts = entryPtr->dict();
+        const dictionary& functionsDict = entryPtr->dict();
 
-        newPtrs.setSize(functionDicts.size());
-        newDigs.setSize(functionDicts.size());
+        const_cast<Time&>(time_).libs().open
+        (
+            functionsDict,
+            "libs",
+            functionObject::dictionaryConstructorTablePtr_
+        );
 
-        forAllConstIter(dictionary, functionDicts, iter)
+        newPtrs.setSize(functionsDict.size());
+        newDigs.setSize(functionsDict.size());
+
+        forAllConstIter(dictionary, functionsDict, iter)
         {
             const word& key = iter().keyword();
 
             if (!iter().isDict())
             {
-                IOWarningInFunction(parentDict_)
-                    << "Entry " << key << " is not a dictionary" << endl;
+                if (key != "libs")
+                {
+                    IOWarningInFunction(parentDict_)
+                        << "Entry " << key << " is not a dictionary" << endl;
+                }
+
                 continue;
             }
 
@@ -353,7 +345,21 @@ bool Foam::functionObjectList::read()
                 FatalIOError.throwExceptions();
                 try
                 {
-                   foPtr = functionObject::New(key, time_, dict);
+                    if
+                    (
+                        dict.found("writeControl")
+                     || dict.found("outputControl")
+                    )
+                    {
+                        foPtr.set
+                        (
+                            new functionObjects::timeControl(key, time_, dict)
+                        );
+                    }
+                    else
+                    {
+                        foPtr = functionObject::New(key, time_, dict);
+                    }
                 }
                 catch (Foam::IOerror& ioErr)
                 {

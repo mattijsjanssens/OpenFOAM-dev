@@ -29,8 +29,12 @@ Group
 
 Description
     This function object calculates the divergence of a field.  The operation is
-    limited to surfaceScalarFields and volumeVector fields, and the output is a
-    volume scalar field.
+    limited to surfaceScalarFields and volVectorFields, and the output is a
+    volScalarField.
+
+SeeAlso
+    Foam::functionObjects::fieldExpression
+    Foam::functionObjects::fvMeshFunctionObject
 
 SourceFiles
     div.C
@@ -40,24 +44,12 @@ SourceFiles
 #ifndef functionObjects_div_H
 #define functionObjects_div_H
 
-#include "volFieldsFwd.H"
-#include "surfaceFieldsFwd.H"
-#include "pointFieldFwd.H"
-#include "OFstream.H"
-#include "Switch.H"
+#include "fieldExpression.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
-
-// Forward declaration of classes
-class objectRegistry;
-class dictionary;
-class polyMesh;
-class mapPolyMesh;
-class dimensionSet;
-
 namespace functionObjects
 {
 
@@ -66,45 +58,18 @@ namespace functionObjects
 \*---------------------------------------------------------------------------*/
 
 class div
+:
+    public fieldExpression
 {
-    // Private data
-
-        //- Name of this div object
-        word name_;
-
-        //- Reference to the database
-        const objectRegistry& obr_;
-
-        //- Name of field to process
-        word fieldName_;
-
-        //- Name of result field
-        word resultName_;
-
-
     // Private Member Functions
 
-        //- Helper function to create/store/return the divergence field
-        volScalarField& divField
-        (
-            const word& gradName,
-            const dimensionSet& dims
-        );
-
-        //- Helper function to calculate the divergence of different field types
+        //- Calculate the divergence of either a
+        //  volScalarField or a surfaceScalarField and register the result
         template<class FieldType>
-        void calcDiv
-        (
-            const word& fieldName,
-            const word& resultName,
-            bool& processed
-        );
+        bool calcDiv();
 
-        //- Disallow default bitwise copy construct
-        div(const div&);
-
-        //- Disallow default bitwise assignment
-        void operator=(const div&);
+        //- Calculate the divergence field and return true if successful
+        virtual bool calc();
 
 
 public:
@@ -115,51 +80,17 @@ public:
 
     // Constructors
 
-        //- Construct for given objectRegistry and dictionary.
-        //  Allow the possibility to load fields from files
+        //- Construct from Time and dictionary
         div
         (
             const word& name,
-            const objectRegistry&,
-            const dictionary&,
-            const bool loadFromFiles = false
+            const Time& runTime,
+            const dictionary& dict
         );
 
 
     //- Destructor
     virtual ~div();
-
-
-    // Member Functions
-
-        //- Return name of the set of div
-        virtual const word& name() const
-        {
-            return name_;
-        }
-
-        //- Read the div data
-        virtual void read(const dictionary&);
-
-        //- Execute, currently does nothing
-        virtual void execute();
-
-        //- Execute at the final time-loop, currently does nothing
-        virtual void end();
-
-        //- Called when time was set at the end of the Time::operator++
-        virtual void timeSet();
-
-        //- Calculate the div and write
-        virtual void write();
-
-        //- Update for changes of mesh
-        virtual void updateMesh(const mapPolyMesh&)
-        {}
-
-        //- Update for changes of mesh
-        virtual void movePoints(const polyMesh&)
-        {}
 };
 
 

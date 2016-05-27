@@ -23,30 +23,24 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "fvMesh.H"
 #include "fvcDiv.H"
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class FieldType>
-void Foam::functionObjects::div::calcDiv
-(
-    const word& fieldName,
-    const word& resultName,
-    bool& processed
-)
+bool Foam::functionObjects::div::calcDiv()
 {
-    const fvMesh& mesh = refCast<const fvMesh>(obr_);
-
-    if (mesh.foundObject<FieldType>(fieldName))
+    if (foundObject<FieldType>(fieldName_))
     {
-        const FieldType& vf = mesh.lookupObject<FieldType>(fieldName);
-
-        volScalarField& field = divField(resultName, vf.dimensions());
-
-        field = fvc::div(vf);
-
-        processed = true;
+        return store
+        (
+            resultName_,
+            fvc::div(lookupObject<FieldType>(fieldName_))
+        );
+    }
+    else
+    {
+        return false;
     }
 }
 

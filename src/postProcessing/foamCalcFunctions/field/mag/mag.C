@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -57,7 +57,7 @@ Foam::calcTypes::mag::~mag()
 void Foam::calcTypes::mag::init()
 {
     argList::validArgs.append("mag");
-    argList::validArgs.append("fieldName");
+    argList::validArgs.append("field");
 }
 
 
@@ -115,4 +115,3 @@ void Foam::calcTypes::mag::calc
 
 
 // ************************************************************************* //
-

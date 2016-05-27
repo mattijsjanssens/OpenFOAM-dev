@@ -32,28 +32,26 @@ Description
     compilation.
 
     The entries are
-        code        : c++; upon functionObject::write()
         codeInclude : include files
         codeOptions : include paths; inserted into EXE_INC in Make/options
         codeLibs    : link line; inserted into LIB_LIBS in Make/options
-
-        codeExecute : c++;upon functionObject::execute();
-        codeRead    : c++; upon functionObject::read();
-        codeEnd     : c++; upon functionObject::end();
         codeData    : c++; local member data (null constructed);
-        codeTimeSet : c++; upon functionObject::timeSet();
         localCode   : c++; local static functions
+        codeRead    : c++; upon functionObject::read();
+        codeExecute : c++;upon functionObject::execute();
+        codeWrite   : c++; upon functionObject::write()
+        codeEnd     : c++; upon functionObject::end();
 
     Example of function object specification:
     \verbatim
     difference
     {
-        functionObjectLibs ("libutilityFunctionObjects.so");
+        libs ("libutilityFunctionObjects.so");
 
         type coded;
         // Name of on-the-fly generated functionObject
-        redirectType writeMagU;
-        code
+        name writeMagU;
+        codeWrite
         #{
             // Lookup U
             const volVectorField& U = mesh().lookupObject<volVectorField>("U");
@@ -66,7 +64,6 @@ Description
 
 SeeAlso
     Foam::functionObject
-    Foam::OutputFilterFunctionObject
     Foam::codedBase
 
 SourceFiles
@@ -104,13 +101,13 @@ protected:
         //- Input dictionary
         dictionary dict_;
 
-        word redirectType_;
+        word name_;
 
         string codeData_;
         string codeRead_;
         string codeExecute_;
+        string codeWrite_;
         string codeEnd_;
-        string codeTimeSet_;
 
         //- Underlying functionObject
         mutable autoPtr<functionObject> redirectFunctionObjectPtr_;
@@ -122,7 +119,7 @@ protected:
         virtual dlLibraryTable& libs() const;
 
         //- Adapt the context for the current object
-        virtual void prepare(dynamicCode &,const dynamicCodeContext&) const;
+        virtual void prepare(dynamicCode&, const dynamicCodeContext&) const;
 
         // Return a description (type + name) for the output
         virtual string description() const;
@@ -151,14 +148,12 @@ public:
 
     // Constructors
 
-        //- Construct for given objectRegistry and dictionary.
-        //  Allow the possibility to load fields from files
+        //- Construct from Time and dictionary
         codedFunctionObject
         (
             const word& name,
             const Time& time,
-            const dictionary& dict,
-            bool readNow=true   // allow child-classes to avoid compilation
+            const dictionary& dict
         );
 
 
@@ -171,25 +166,22 @@ public:
         //- Dynamically compiled functionObject
         functionObject& redirectFunctionObject() const;
 
-        //- Called at each ++ or += of the time-loop. forceWrite overrides the
-        //  writeControl behaviour.
-        virtual bool execute(const bool forceWrite);
+        //- Called at each ++ or += of the time-loop.
+        //  postProcess overrides the usual executeControl behaviour and
+        //  forces execution (used in post-processing mode)
+        virtual bool execute(const bool postProcess = false);
+
+        //- Called at each ++ or += of the time-loop.
+        //  postProcess overrides the usual writeControl behaviour and
+        //  forces writing always (used in post-processing mode)
+        virtual bool write(const bool postProcess = false);
 
         //- Called when Time::run() determines that the time-loop exits.
         //  By default it simply calls execute().
         virtual bool end();
 
-        //- Called when time was set at the end of the Time::operator++
-        virtual bool timeSet();
-
         //- Read and set the function object if its data have changed
         virtual bool read(const dictionary&);
-
-        //- Update mesh
-        virtual void updateMesh(const mapPolyMesh&);
-
-        //- Move points
-        virtual void movePoints(const polyMesh&);
 };
 
 

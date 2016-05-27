@@ -25,8 +25,8 @@ License
 
 #include "div.H"
 #include "volFields.H"
-#include "dictionary.H"
-#include "div.H"
+#include "surfaceFields.H"
+#include "addToRunTimeSelectionTable.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -35,45 +35,21 @@ namespace Foam
 namespace functionObjects
 {
     defineTypeNameAndDebug(div, 0);
+    addToRunTimeSelectionTable(functionObject, div, dictionary);
 }
 }
 
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-Foam::volScalarField& Foam::functionObjects::div::divField
-(
-    const word& divName,
-    const dimensionSet& dims
-)
+bool Foam::functionObjects::div::calc()
 {
-    const fvMesh& mesh = refCast<const fvMesh>(obr_);
+    bool processed = false;
 
-    if (!mesh.foundObject<volScalarField>(divName))
-    {
-        volScalarField* divFieldPtr
-        (
-            new volScalarField
-            (
-                IOobject
-                (
-                    divName,
-                    mesh.time().timeName(),
-                    mesh,
-                    IOobject::NO_READ,
-                    IOobject::NO_WRITE
-                ),
-                mesh,
-                dimensionedScalar("zero", dims/dimLength, 0.0)
-            )
-        );
+    processed = processed || calcDiv<surfaceScalarField>();
+    processed = processed || calcDiv<volVectorField>();
 
-        mesh.objectRegistry::store(divFieldPtr);
-    }
-
-    const volScalarField& field = mesh.lookupObject<volScalarField>(divName);
-
-    return const_cast<volScalarField&>(field);
+    return processed;
 }
 
 
@@ -82,84 +58,18 @@ Foam::volScalarField& Foam::functionObjects::div::divField
 Foam::functionObjects::div::div
 (
     const word& name,
-    const objectRegistry& obr,
-    const dictionary& dict,
-    const bool loadFromFiles
+    const Time& runTime,
+    const dictionary& dict
 )
 :
-    name_(name),
-    obr_(obr),
-    fieldName_("undefined-fieldName"),
-    resultName_("undefined-resultName")
-{
-    if (!isA<fvMesh>(obr))
-    {
-        FatalErrorInFunction
-            << "objectRegistry is not an fvMesh" << exit(FatalError);
-    }
-
-    read(dict);
-}
+    fieldExpression(name, runTime, dict)
+{}
 
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
 Foam::functionObjects::div::~div()
 {}
-
-
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-
-void Foam::functionObjects::div::read(const dictionary& dict)
-{
-    dict.lookup("fieldName") >> fieldName_;
-    dict.lookup("resultName") >> resultName_;
-
-    if (resultName_ == "none")
-    {
-        resultName_ = "fvc::div(" + fieldName_ + ")";
-    }
-}
-
-
-void Foam::functionObjects::div::execute()
-{
-    bool processed = false;
-
-    calcDiv<surfaceScalarField>(fieldName_, resultName_, processed);
-    calcDiv<volVectorField>(fieldName_, resultName_, processed);
-
-    if (!processed)
-    {
-        WarningInFunction
-            << "Unprocessed field " << fieldName_ << endl;
-    }
-}
-
-
-void Foam::functionObjects::div::end()
-{
-    execute();
-}
-
-
-void Foam::functionObjects::div::timeSet()
-{}
-
-
-void Foam::functionObjects::div::write()
-{
-    if (obr_.foundObject<regIOobject>(resultName_))
-    {
-        const regIOobject& field =
-            obr_.lookupObject<regIOobject>(resultName_);
-
-        Info<< type() << " " << name_ << " output:" << nl
-            << "    writing field " << field.name() << nl << endl;
-
-        field.write();
-    }
-}
 
 
 // ************************************************************************* //

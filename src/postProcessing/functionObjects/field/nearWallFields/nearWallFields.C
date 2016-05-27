@@ -28,6 +28,7 @@ License
 #include "findCellParticle.H"
 #include "mappedPatchBase.H"
 #include "OBJstream.H"
+#include "addToRunTimeSelectionTable.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -36,6 +37,7 @@ namespace Foam
 namespace functionObjects
 {
     defineTypeNameAndDebug(nearWallFields, 0);
+    addToRunTimeSelectionTable(functionObject, nearWallFields, dictionary);
 }
 }
 
@@ -44,26 +46,21 @@ namespace functionObjects
 
 void Foam::functionObjects::nearWallFields::calcAddressing()
 {
-    const fvMesh& mesh = refCast<const fvMesh>(obr_);
-
     // Count number of faces
     label nPatchFaces = 0;
     forAllConstIter(labelHashSet, patchSet_, iter)
     {
         label patchi = iter.key();
-        nPatchFaces += mesh.boundary()[patchi].size();
+        nPatchFaces += mesh_.boundary()[patchi].size();
     }
 
     // Global indexing
     globalIndex globalWalls(nPatchFaces);
 
-    if (debug)
-    {
-        InfoInFunction << "nPatchFaces: " << globalWalls.size() << endl;
-    }
+    DebugInFunction << "nPatchFaces: " << globalWalls.size() << endl;
 
     // Construct cloud
-    Cloud<findCellParticle> cloud(mesh, IDLList<findCellParticle>());
+    Cloud<findCellParticle> cloud(mesh_, IDLList<findCellParticle>());
 
     // Add particles to track to sample locations
     nPatchFaces = 0;
@@ -71,7 +68,7 @@ void Foam::functionObjects::nearWallFields::calcAddressing()
     forAllConstIter(labelHashSet, patchSet_, iter)
     {
         label patchi = iter.key();
-        const fvPatch& patch = mesh.boundary()[patchi];
+        const fvPatch& patch = mesh_.boundary()[patchi];
 
         vectorField nf(patch.nf());
         vectorField faceCellCentres(patch.patch().faceCellCentres());
@@ -86,7 +83,7 @@ void Foam::functionObjects::nearWallFields::calcAddressing()
             (
                 mappedPatchBase::facePoint
                 (
-                    mesh,
+                    mesh_,
                     meshFacei,
                     polyMesh::FACE_DIAG_TRIS
                 )
@@ -110,14 +107,14 @@ void Foam::functionObjects::nearWallFields::calcAddressing()
             label celli = -1;
             label tetFacei = -1;
             label tetPtI = -1;
-            mesh.findCellFacePt(start, celli, tetFacei, tetPtI);
+            mesh_.findCellFacePt(start, celli, tetFacei, tetPtI);
 
             // Add to cloud. Add originating face as passive data
             cloud.addParticle
             (
                 new findCellParticle
                 (
-                    mesh,
+                    mesh_,
                     start,
                     celli,
                     tetFacei,
@@ -138,8 +135,8 @@ void Foam::functionObjects::nearWallFields::calcAddressing()
         // Dump particles
         OBJstream str
         (
-            mesh.time().path()
-           /"wantedTracks_" + mesh.time().timeName() + ".obj"
+            mesh_.time().path()
+           /"wantedTracks_" + mesh_.time().timeName() + ".obj"
         );
         InfoInFunction << "Dumping tracks to " << str.name() << endl;
 
@@ -153,14 +150,14 @@ void Foam::functionObjects::nearWallFields::calcAddressing()
 
 
     // Per cell: empty or global wall index and end location
-    cellToWalls_.setSize(mesh.nCells());
-    cellToSamples_.setSize(mesh.nCells());
+    cellToWalls_.setSize(mesh_.nCells());
+    cellToSamples_.setSize(mesh_.nCells());
 
     // Database to pass into findCellParticle::move
     findCellParticle::trackingData td(cloud, cellToWalls_, cellToSamples_);
 
     // Track all particles to their end position.
-    scalar maxTrackLen = 2.0*mesh.bounds().mag();
+    scalar maxTrackLen = 2.0*mesh_.bounds().mag();
 
 
     //Debug: collect start points
@@ -200,8 +197,8 @@ void Foam::functionObjects::nearWallFields::calcAddressing()
         {
             OBJstream str
             (
-                mesh.time().path()
-               /"obtainedTracks_" + mesh.time().timeName() + ".obj"
+                mesh_.time().path()
+               /"obtainedTracks_" + mesh_.time().timeName() + ".obj"
             );
             InfoInFunction << "Dumping obtained to " << str.name() << endl;
 
@@ -224,21 +221,13 @@ void Foam::functionObjects::nearWallFields::calcAddressing()
 Foam::functionObjects::nearWallFields::nearWallFields
 (
     const word& name,
-    const objectRegistry& obr,
-    const dictionary& dict,
-    const bool loadFromFiles
+    const Time& runTime,
+    const dictionary& dict
 )
 :
-    name_(name),
-    obr_(obr),
+    fvMeshFunctionObject(name, runTime, dict),
     fieldSet_()
 {
-    if (!isA<fvMesh>(obr))
-    {
-        FatalErrorInFunction
-            << "objectRegistry is not an fvMesh" << exit(FatalError);
-    }
-
     read(dict);
 }
 
@@ -247,27 +236,19 @@ Foam::functionObjects::nearWallFields::nearWallFields
 
 Foam::functionObjects::nearWallFields::~nearWallFields()
 {
-    if (debug)
-    {
-        InfoInFunction << endl;
-    }
+    DebugInFunction << endl;
 }
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-void Foam::functionObjects::nearWallFields::read(const dictionary& dict)
+bool Foam::functionObjects::nearWallFields::read(const dictionary& dict)
 {
-    if (debug)
-    {
-        InfoInFunction << endl;
-    }
-
-    const fvMesh& mesh = refCast<const fvMesh>(obr_);
+    fvMeshFunctionObject::read(dict);
 
     dict.lookup("fields") >> fieldSet_;
     patchSet_ =
-        mesh.boundaryMesh().patchSet(wordReList(dict.lookup("patches")));
+        mesh_.boundaryMesh().patchSet(wordReList(dict.lookup("patches")));
     distance_ = readScalar(dict.lookup("distance"));
 
 
@@ -295,20 +276,19 @@ void Foam::functionObjects::nearWallFields::read(const dictionary& dict)
         reverseFieldMap_.insert(sampleFldName, fldName);
     }
 
-    Info<< type() << " " << name_ << ": Sampling " << fieldMap_.size()
-        << " fields" << endl;
+    Log  << type() << " " << name()
+        << ": Sampling " << fieldMap_.size() << " fields" << endl;
 
     // Do analysis
     calcAddressing();
+
+    return true;
 }
 
 
-void Foam::functionObjects::nearWallFields::execute()
+bool Foam::functionObjects::nearWallFields::execute(const bool postProcess)
 {
-    if (debug)
-    {
-        InfoInFunction << endl;
-    }
+    DebugInFunction << endl;
 
     if
     (
@@ -320,8 +300,8 @@ void Foam::functionObjects::nearWallFields::execute()
      && vtf_.empty()
     )
     {
-        Info<< type() << " " << name_ << ": Creating " << fieldMap_.size()
-            << " fields" << endl;
+        Log << type() << " " << name()
+            << ": Creating " << fieldMap_.size() << " fields" << endl;
 
         createFields(vsf_);
         createFields(vvf_);
@@ -329,12 +309,12 @@ void Foam::functionObjects::nearWallFields::execute()
         createFields(vSymmtf_);
         createFields(vtf_);
 
-        Info<< endl;
+        Log << endl;
     }
 
-    Info<< type() << " " << name_ << " output:" << nl;
-
-    Info<< "    Sampling fields to " << obr_.time().timeName()
+    Log << type() << " " << name()
+        << " output:" << nl
+        << "    Sampling fields to " << time_.timeName()
         << endl;
 
     sampleFields(vsf_);
@@ -342,32 +322,16 @@ void Foam::functionObjects::nearWallFields::execute()
     sampleFields(vSpheretf_);
     sampleFields(vSymmtf_);
     sampleFields(vtf_);
+
+    return true;
 }
 
 
-void Foam::functionObjects::nearWallFields::end()
+bool Foam::functionObjects::nearWallFields::write(const bool postProcess)
 {
-    if (debug)
-    {
-        InfoInFunction << endl;
-    }
+    DebugInFunction << endl;
 
-    execute();
-}
-
-
-void Foam::functionObjects::nearWallFields::timeSet()
-{}
-
-
-void Foam::functionObjects::nearWallFields::write()
-{
-    if (debug)
-    {
-        InfoInFunction << endl;
-    }
-
-    Info<< "    Writing sampled fields to " << obr_.time().timeName()
+    Log << "    Writing sampled fields to " << time_.timeName()
         << endl;
 
     forAll(vsf_, i)
@@ -391,7 +355,9 @@ void Foam::functionObjects::nearWallFields::write()
         vtf_[i].write();
     }
 
-    Info<< endl;
+    Log << endl;
+
+    return true;
 }
 
 

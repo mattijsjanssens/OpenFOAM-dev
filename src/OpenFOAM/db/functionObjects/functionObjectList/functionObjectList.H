@@ -29,7 +29,8 @@ Description
     that is called for each object.
 
 See Also
-    Foam::functionObject and Foam::OutputFilterFunctionObject
+    Foam::functionObject
+    Foam::functionObjects::timeControl
 
 SourceFiles
     functionObjectList.C
@@ -158,6 +159,9 @@ public:
         //- Find the ID of a given function object by name
         label findObjectID(const word& name) const;
 
+        //- Read and set the function objects if their data have changed
+        bool read();
+
         //- Switch the function objects on
         void on();
 
@@ -170,22 +174,16 @@ public:
         //- Called at the start of the time-loop
         bool start();
 
-        //- Called at each ++ or += of the time-loop. forceWrite overrides
-        //  the usual writeControl behaviour and forces writing always
-        //  (used in post-processing mode)
-        bool execute(const bool forceWrite = false);
+        //- Called at each ++ or += of the time-loop.
+        //  postProcess overrides the usual executeControl behaviour and
+        //  forces execution (used in post-processing mode)
+        bool execute(const bool postProcess = false);
 
         //- Called when Time::run() determines that the time-loop exits
         bool end();
 
-        //- Called when time was set at the end of the Time::operator++
-        bool timeSet();
-
         //- Called at the end of Time::adjustDeltaT() if adjustTime is true
         bool adjustTimeStep();
-
-        //- Read and set the function objects if their data have changed
-        bool read();
 
         //- Update for changes of mesh
         void updateMesh(const mapPolyMesh& mpm);

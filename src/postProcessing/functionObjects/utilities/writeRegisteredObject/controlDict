@@ -58,7 +58,7 @@ functions
         type            partialWrite;
 
         // Where to load it from
-        functionObjectLibs ("libIOFunctionObjects.so");
+        libs ("libutilityFunctionObjects.so");
 
         // Optional mesh region to operate on. Only one partialWrite per
         // region allowed.
@@ -66,22 +66,22 @@ functions
 
         // Execute upon options:
         //  timeStep
-        //  outputTime
+        //  writeTime
         //  adjustableRunTime
         //  runTime
         //  clockTime
         //  cpuTime
-        writeControl   outputTime;
+        writeControl   writeTime;
 
         // Objects (fields or lagrangian fields in any of the clouds)
-        // to write every outputTime
+        // to write every writeTime
         objectNames    (p positions nParticle);
 
-        // Write as normal every writeInterval'th outputTime.
-        writeInterval  1; // (timeStep, outputTime)
+        // Write as normal every writeInterval'th writeTime.
+        writeInterval  1; // (timeStep, writeTime)
 
         // Interval of time (sec) to write down(
-        writeInterval   10.5 //(adjustableRunTime, runTime, clockTime, cpuTime)
+        writeInterval   10.5; //(adjustableRunTime, runTime, clockTime, cpuTime)
     }
 
     dumpObjects
@@ -91,18 +91,18 @@ functions
         type            writeRegisteredObject;
 
         // Where to load it from
-        functionObjectLibs ("libIOFunctionObjects.so");
+        libs ("libutilityFunctionObjects.so");
 
         // When to write:
         //  timeStep            (with optional writeInterval)
-        //  outputTime          (with optional writeInterval)
+        //  writeTime          (with optional writeInterval)
         //  adjustableRunTime
         //  runTime
         //  clockTime
         //  cpuTime
-        writeControl   outputTime;
+        writeControl   writeTime;
 
-         // Write every writeInterval (only valid for timeStemp, outputTime)
+         // Write every writeInterval (only valid for timeStemp, writeTime)
         writeInterval  1;
 
          // Interval of time (valid for adjustableRunTime, runTime, clockTime,

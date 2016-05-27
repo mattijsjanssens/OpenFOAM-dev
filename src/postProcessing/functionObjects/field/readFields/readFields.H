@@ -36,7 +36,7 @@ Description
     readFields1
     {
         type        readFields;
-        functionObjectLibs ("libfieldFunctionObjects.so");
+        libs ("libfieldFunctionObjects.so");
         ...
         fields
         (
@@ -54,8 +54,7 @@ Description
     \endtable
 
 SeeAlso
-    Foam::functionObject
-    Foam::OutputFilterFunctionObject
+    Foam::functionObjects::fvMeshFunctionObject
 
 SourceFiles
     readFields.C
@@ -65,21 +64,14 @@ SourceFiles
 #ifndef functionObjects_readFields_H
 #define functionObjects_readFields_H
 
-#include "OFstream.H"
-#include "pointFieldFwd.H"
-#include "volFields.H"
-#include "surfaceFields.H"
+#include "fvMeshFunctionObject.H"
+#include "volFieldsFwd.H"
+#include "surfaceFieldsFwd.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
-
-// Forward declaration of classes
-class objectRegistry;
-class dictionary;
-class mapPolyMesh;
-
 namespace functionObjects
 {
 
@@ -88,15 +80,12 @@ namespace functionObjects
 \*---------------------------------------------------------------------------*/
 
 class readFields
+:
+    public fvMeshFunctionObject
 {
 protected:
 
     // Protected data
-
-        //- Name of this set of readFields object
-        word name_;
-
-        const objectRegistry& obr_;
 
         //- Fields to load
         wordList fieldSet_;
@@ -150,9 +139,8 @@ public:
         readFields
         (
             const word& name,
-            const objectRegistry&,
-            const dictionary&,
-            const bool loadFromFiles = false
+            const Time& runTime,
+            const dictionary& dict
         );
 
 
@@ -162,34 +150,14 @@ public:
 
     // Member Functions
 
-        //- Return name of the readFields object
-        virtual const word& name() const
-        {
-            return name_;
-        }
-
         //- Read the set of fields from dictionary
-        virtual void read(const dictionary&);
+        virtual bool read(const dictionary&);
 
-        //- Execute, currently does nothing
-        virtual void execute();
+        //- Read the fields
+        virtual bool execute(const bool postProcess = false);
 
-        //- Execute at the final time-loop, currently does nothing
-        virtual void end();
-
-        //- Called when time was set at the end of the Time::operator++
-        virtual void timeSet();
-
-        //- Write
-        virtual void write();
-
-        //- Update for changes of mesh
-        virtual void updateMesh(const mapPolyMesh&)
-        {}
-
-        //- Update for changes of mesh
-        virtual void movePoints(const polyMesh&)
-        {}
+        //- Do nothing
+        virtual bool write(const bool postProcess = false);
 };
 
 

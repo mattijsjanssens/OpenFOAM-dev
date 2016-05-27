@@ -32,6 +32,9 @@ Description
     limited to scalar and vector volume or surface fields, and the output is a
     volume vector or tensor field.
 
+SeeAlso
+    Foam::functionObjects::fvMeshFunctionObject
+
 SourceFiles
     grad.C
 
@@ -40,24 +43,12 @@ SourceFiles
 #ifndef functionObjects_grad_H
 #define functionObjects_grad_H
 
-#include "volFieldsFwd.H"
-#include "surfaceFieldsFwd.H"
-#include "pointFieldFwd.H"
-#include "OFstream.H"
-#include "Switch.H"
+#include "fieldExpression.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
-
-// Forward declaration of classes
-class objectRegistry;
-class dictionary;
-class polyMesh;
-class mapPolyMesh;
-class dimensionSet;
-
 namespace functionObjects
 {
 
@@ -66,48 +57,17 @@ namespace functionObjects
 \*---------------------------------------------------------------------------*/
 
 class grad
+:
+    public fieldExpression
 {
-    // Private data
-
-        //- Name of this grad object
-        word name_;
-
-        //- Reference to the database
-        const objectRegistry& obr_;
-
-        //- Name of field to process
-        word fieldName_;
-
-        //- Name of result field
-        word resultName_;
-
-
     // Private Member Functions
 
-        //- Helper function to create/store/return the gradient field
+        //- Calculate the magnitude of the field and register the result
         template<class Type>
-        GeometricField
-        <
-            typename outerProduct<vector, Type>::type,
-            fvPatchField,
-            volMesh
-        >&
-        gradField(const word& gradName, const dimensionSet& dims);
+        bool calcGrad();
 
-        //- Helper function to calculate the gradient of different field types
-        template<class Type>
-        void calcGrad
-        (
-            const word& fieldName,
-            const word& resultName,
-            bool& processed
-        );
-
-        //- Disallow default bitwise copy construct
-        grad(const grad&);
-
-        //- Disallow default bitwise assignment
-        void operator=(const grad&);
+        //- Calculate the gradient field and return true if successful
+        virtual bool calc();
 
 
 public:
@@ -118,51 +78,17 @@ public:
 
     // Constructors
 
-        //- Construct for given objectRegistry and dictionary.
-        //  Allow the possibility to load fields from files
+        //- Construct from Time and dictionary
         grad
         (
             const word& name,
-            const objectRegistry&,
-            const dictionary&,
-            const bool loadFromFiles = false
+            const Time& runTime,
+            const dictionary& dict
         );
 
 
     //- Destructor
     virtual ~grad();
-
-
-    // Member Functions
-
-        //- Return name of the set of grad
-        virtual const word& name() const
-        {
-            return name_;
-        }
-
-        //- Read the grad data
-        virtual void read(const dictionary&);
-
-        //- Execute, currently does nothing
-        virtual void execute();
-
-        //- Execute at the final time-loop, currently does nothing
-        virtual void end();
-
-        //- Called when time was set at the end of the Time::operator++
-        virtual void timeSet();
-
-        //- Calculate the grad and write
-        virtual void write();
-
-        //- Update for changes of mesh
-        virtual void updateMesh(const mapPolyMesh&)
-        {}
-
-        //- Update for changes of mesh
-        virtual void movePoints(const polyMesh&)
-        {}
 };
 
 

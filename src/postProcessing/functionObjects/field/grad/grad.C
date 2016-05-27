@@ -24,9 +24,7 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "grad.H"
-#include "volFields.H"
-#include "dictionary.H"
-#include "grad.H"
+#include "addToRunTimeSelectionTable.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -35,7 +33,21 @@ namespace Foam
 namespace functionObjects
 {
     defineTypeNameAndDebug(grad, 0);
+    addToRunTimeSelectionTable(functionObject, grad, dictionary);
 }
+}
+
+
+// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
+
+bool Foam::functionObjects::grad::calc()
+{
+    bool processed = false;
+
+    processed = processed || calcGrad<scalar>();
+    processed = processed || calcGrad<vector>();
+
+    return processed;
 }
 
 
@@ -44,22 +56,12 @@ namespace functionObjects
 Foam::functionObjects::grad::grad
 (
     const word& name,
-    const objectRegistry& obr,
-    const dictionary& dict,
-    const bool loadFromFiles
+    const Time& runTime,
+    const dictionary& dict
 )
 :
-    name_(name),
-    obr_(obr),
-    fieldName_("undefined-fieldName"),
-    resultName_("undefined-resultName")
+    fieldExpression(name, runTime, dict)
 {
-    if (!isA<fvMesh>(obr))
-    {
-        FatalErrorInFunction
-            << "objectRegistry is not an fvMesh" << exit(FatalError);
-    }
-
     read(dict);
 }
 
@@ -68,60 +70,6 @@ Foam::functionObjects::grad::grad
 
 Foam::functionObjects::grad::~grad()
 {}
-
-
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-
-void Foam::functionObjects::grad::read(const dictionary& dict)
-{
-    dict.lookup("fieldName") >> fieldName_;
-    dict.lookup("resultName") >> resultName_;
-
-    if (resultName_ == "none")
-    {
-        resultName_ = "fvc::grad(" + fieldName_ + ")";
-    }
-}
-
-
-void Foam::functionObjects::grad::execute()
-{
-    bool processed = false;
-
-    calcGrad<scalar>(fieldName_, resultName_, processed);
-    calcGrad<vector>(fieldName_, resultName_, processed);
-
-    if (!processed)
-    {
-        WarningInFunction
-            << "Unprocessed field " << fieldName_ << endl;
-    }
-}
-
-
-void Foam::functionObjects::grad::end()
-{
-    execute();
-}
-
-
-void Foam::functionObjects::grad::timeSet()
-{}
-
-
-void Foam::functionObjects::grad::write()
-{
-    if (obr_.foundObject<regIOobject>(resultName_))
-    {
-        const regIOobject& field =
-            obr_.lookupObject<regIOobject>(resultName_);
-
-        Info<< type() << " " << name_ << " output:" << nl
-            << "    writing field " << field.name() << nl << endl;
-
-        field.write();
-    }
-}
 
 
 // ************************************************************************* //

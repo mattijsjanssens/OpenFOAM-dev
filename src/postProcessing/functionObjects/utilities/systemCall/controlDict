@@ -49,9 +49,9 @@ functions
     systemCall1
     {
         type            systemCall;
-        functionObjectLibs ("libsystemCall.so");
+        libs ("libsystemCall.so");
         enabled         true;
-        writeControl   outputTime;
+        writeControl   writeTime;
 
         // called every time step
         executeCalls

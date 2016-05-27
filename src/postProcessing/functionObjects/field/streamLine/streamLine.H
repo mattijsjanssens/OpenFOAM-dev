@@ -37,10 +37,9 @@ Description
     streamLine1
     {
         type            streamLine;
-        functionObjectLibs ("libfieldFunctionObjects.so");
+        libs ("libfieldFunctionObjects.so");
         ...
         setFormat       vtk;
-        UName           U;
         trackForward    yes;
         fields
         (
@@ -66,15 +65,15 @@ Description
     \heading Function object usage
     \table
         Property     | Description             | Required    | Default value
-        type         | type name: streamLine   | yes         |
-        setFormat    | output data type        | yes         |
-        UName        | tracking velocity field name | yes    |
-        fields       | fields to sample        | yes         |
-        lifetime     | maximum number of particle tracking steps | yes |
-        trackLength  | tracking segment length | no          |
-        nSubCycle    | number of tracking steps per cell | no|
-        cloudName    | cloud name to use       | yes         |
-        seedSampleSet| seeding method (see below)| yes       |
+        type         | Type name: streamLine   | yes         |
+        setFormat    | Output data type        | yes         |
+        U            | Tracking velocity field name | yes    |
+        fields       | Fields to sample        | yes         |
+        lifetime     | Maximum number of particle tracking steps | yes |
+        trackLength  | Tracking segment length | no          |
+        nSubCycle    | Number of tracking steps per cell | no|
+        cloudName    | Cloud name to use       | yes         |
+        seedSampleSet| Seeding method (see below)| yes       |
     \endtable
 
     \linebreak
@@ -91,7 +90,7 @@ Note
 
 SeeAlso
     Foam::functionObject
-    Foam::OutputFilterFunctionObject
+    Foam::functionObjects::timeControl
     Foam::sampledSet
     Foam::wallBoundedStreamLine
 
@@ -103,13 +102,11 @@ SourceFiles
 #ifndef functionObjects_streamLine_H
 #define functionObjects_streamLine_H
 
+#include "functionObject.H"
 #include "volFieldsFwd.H"
-#include "pointFieldFwd.H"
-#include "Switch.H"
 #include "DynamicList.H"
 #include "scalarList.H"
 #include "vectorList.H"
-#include "polyMesh.H"
 #include "writer.H"
 #include "indirectPrimitivePatch.H"
 
@@ -120,8 +117,6 @@ namespace Foam
 
 // Forward declaration of classes
 class objectRegistry;
-class dictionary;
-class mapPolyMesh;
 class meshSearch;
 class sampledSet;
 
@@ -133,20 +128,16 @@ namespace functionObjects
 \*---------------------------------------------------------------------------*/
 
 class streamLine
+:
+    public functionObject
 {
     // Private data
-
-        //- Input dictionary
-        dictionary dict_;
-
-        //- Name of this set of field averages.
-        word name_;
 
         //- Database this class is registered to
         const objectRegistry& obr_;
 
-        //- Load fields from files (not from objectRegistry)
-        bool loadFromFiles_;
+        //- Input dictionary
+        dictionary dict_;
 
         //- List of fields to sample
         wordList fields_;
@@ -233,14 +224,12 @@ public:
 
     // Constructors
 
-        //- Construct for given objectRegistry and dictionary.
-        //  Allow the possibility to load fields from files
+        //- Construct from Time and dictionary
         streamLine
         (
             const word& name,
-            const objectRegistry&,
-            const dictionary&,
-            const bool loadFromFiles = false
+            const Time& runTime,
+            const dictionary& dict
         );
 
 
@@ -250,26 +239,14 @@ public:
 
     // Member Functions
 
-        //- Return name of the set of field averages
-        virtual const word& name() const
-        {
-            return name_;
-        }
-
         //- Read the field average data
-        virtual void read(const dictionary&);
+        virtual bool read(const dictionary&);
 
-        //- Execute the averaging
-        virtual void execute();
+        //- Do nothing
+        virtual bool execute(const bool postProcess = false);
 
-        //- Execute the averaging at the final time-loop, currently does nothing
-        virtual void end();
-
-        //- Called when time was set at the end of the Time::operator++
-        virtual void timeSet();
-
-        //- Calculate the field average data and write
-        virtual void write();
+        //- Calculate and write the steamlines
+        virtual bool write(const bool postProcess = false);
 
         //- Update for changes of mesh
         virtual void updateMesh(const mapPolyMesh&);

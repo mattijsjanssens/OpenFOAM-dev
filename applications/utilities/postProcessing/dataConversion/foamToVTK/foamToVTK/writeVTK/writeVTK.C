@@ -28,6 +28,7 @@ License
 #include "Time.H"
 #include "vtkMesh.H"
 #include "internalWriter.H"
+#include "addToRunTimeSelectionTable.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -36,6 +37,7 @@ namespace Foam
 namespace functionObjects
 {
     defineTypeNameAndDebug(writeVTK, 0);
+    addToRunTimeSelectionTable(functionObject, writeVTK, dictionary);
 }
 }
 
@@ -45,21 +47,13 @@ namespace functionObjects
 Foam::functionObjects::writeVTK::writeVTK
 (
     const word& name,
-    const objectRegistry& obr,
-    const dictionary& dict,
-    const bool loadFromFiles
+    const Time& runTime,
+    const dictionary& dict
 )
 :
-    name_(name),
-    obr_(obr),
+    fvMeshFunctionObject(name, runTime, dict),
     objectNames_()
 {
-    if (!isA<fvMesh>(obr))
-    {
-        FatalErrorInFunction
-            << "objectRegistry is not an fvMesh" << exit(FatalError);
-    }
-
     read(dict);
 }
 
@@ -72,42 +66,34 @@ Foam::functionObjects::writeVTK::~writeVTK()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-void Foam::functionObjects::writeVTK::read(const dictionary& dict)
+bool Foam::functionObjects::writeVTK::read(const dictionary& dict)
 {
-    dict.lookup("objectNames") >> objectNames_;
+    dict.lookup("objects") >> objectNames_;
+
+    return true;
 }
 
 
-void Foam::functionObjects::writeVTK::execute()
-{}
-
-
-void Foam::functionObjects::writeVTK::end()
-{}
-
-
-void Foam::functionObjects::writeVTK::timeSet()
-{}
-
-
-void Foam::functionObjects::writeVTK::write()
+bool Foam::functionObjects::writeVTK::execute(const bool postProcess)
 {
-    Info<< type() << " " << name_ << " output:" << nl;
+    return true;
+}
 
-    fvMesh& mesh = const_cast<fvMesh&>(refCast<const fvMesh>(obr_));
 
-    const Time& runTime = mesh.time();
+bool Foam::functionObjects::writeVTK::write(const bool postProcess)
+{
+    Info<< type() << " " << name() << " output:" << nl;
 
-    Info<< "Time: " << runTime.timeName() << endl;
+    Info<< "Time: " << time_.timeName() << endl;
 
-    word timeDesc = runTime.timeName();
+    word timeDesc = time_.timeName();
 
     // VTK/ directory in the case
-    fileName fvPath(runTime.path()/"VTK");
+    fileName fvPath(time_.path()/"VTK");
 
     mkDir(fvPath);
 
-    string vtkName = runTime.caseName();
+    string vtkName = time_.caseName();
 
     if (Pstream::parRun())
     {
@@ -131,7 +117,7 @@ void Foam::functionObjects::writeVTK::write()
 
     Info<< "    Internal  : " << vtkFileName << endl;
 
-    vtkMesh vMesh(mesh);
+    vtkMesh vMesh(const_cast<fvMesh&>(mesh_));
 
     // Write mesh
     internalWriter writer(vMesh, false, vtkFileName);
@@ -162,6 +148,8 @@ void Foam::functionObjects::writeVTK::write()
     writer.write(vsptf);
     writer.write(vstf);
     writer.write(vtf);
+
+    return true;
 }
 
 

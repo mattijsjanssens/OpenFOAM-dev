@@ -10,12 +10,12 @@
 Q
 {
     // Where to load it from
-    functionObjectLibs ("libutilityFunctionObjects.so");
+    libs ("libfieldFunctionObjects.so");
 
     type Q;
 
     // Output every
-    writeControl outputTime;
+    writeControl writeTime;
 }
 
 

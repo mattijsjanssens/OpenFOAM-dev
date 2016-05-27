@@ -43,7 +43,7 @@ Description
     nearWallFields1
     {
         type        nearWallFields;
-        functionObjectLibs ("libfieldFunctionObjects.so");
+        libs ("libfieldFunctionObjects.so");
         ...
         fields      ((p pNear)(U UNear));
         patches     (movingWall);
@@ -61,8 +61,7 @@ Description
     \endtable
 
 SeeAlso
-    Foam::functionObject
-    Foam::OutputFilterFunctionObject
+    Foam::functionObjects::fvMeshFunctionObject
 
 SourceFiles
     nearWallFields.C
@@ -72,7 +71,7 @@ SourceFiles
 #ifndef functionObjects_nearWallFields_H
 #define functionObjects_nearWallFields_H
 
-#include "OFstream.H"
+#include "fvMeshFunctionObject.H"
 #include "volFields.H"
 #include "Tuple2.H"
 #include "interpolationCellPoint.H"
@@ -81,12 +80,6 @@ SourceFiles
 
 namespace Foam
 {
-
-// Forward declaration of classes
-class objectRegistry;
-class dictionary;
-class mapPolyMesh;
-
 namespace functionObjects
 {
 
@@ -95,15 +88,12 @@ namespace functionObjects
 \*---------------------------------------------------------------------------*/
 
 class nearWallFields
+:
+    public fvMeshFunctionObject
 {
 protected:
 
-    // Protected data
-
-        //- Name of this set of nearWallFields object
-        word name_;
-
-        const objectRegistry& obr_;
+    // Protected member data
 
         // Read from dictionary
 
@@ -191,9 +181,8 @@ public:
         nearWallFields
         (
             const word& name,
-            const objectRegistry&,
-            const dictionary&,
-            const bool loadFromFiles = false
+            const Time& runTime,
+            const dictionary& dict
         );
 
 
@@ -203,34 +192,14 @@ public:
 
     // Member Functions
 
-        //- Return name of the nearWallFields object
-        virtual const word& name() const
-        {
-            return name_;
-        }
-
         //- Read the controls
-        virtual void read(const dictionary&);
+        virtual bool read(const dictionary&);
 
-        //- Execute, currently does nothing
-        virtual void execute();
+        //- Calculate the near-wall fields
+        virtual bool execute(const bool postProcess = false);
 
-        //- Execute at the final time-loop, currently does nothing
-        virtual void end();
-
-        //- Called when time was set at the end of the Time::operator++
-        virtual void timeSet();
-
-        //- Write
-        virtual void write();
-
-        //- Update for changes of mesh
-        virtual void updateMesh(const mapPolyMesh&)
-        {}
-
-        //- Update for changes of mesh
-        virtual void movePoints(const polyMesh&)
-        {}
+        //- Write the near-wall fields
+        virtual bool write(const bool postProcess = false);
 };
 
 

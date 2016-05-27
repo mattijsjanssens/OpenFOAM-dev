@@ -29,12 +29,20 @@ License
 #include "Time.H"
 #include "IOmanip.H"
 #include "mapPolyMesh.H"
+#include "addToRunTimeSelectionTable.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 namespace Foam
 {
     defineTypeNameAndDebug(probes, 0);
+
+    addToRunTimeSelectionTable
+    (
+        functionObject,
+        probes,
+        dictionary
+    );
 }
 
 
@@ -53,13 +61,13 @@ void Foam::probes::findElements(const fvMesh& mesh)
     faceList_.clear();
     faceList_.setSize(size());
 
-    forAll(*this, probeI)
+    forAll(*this, probei)
     {
-        const vector& location = operator[](probeI);
+        const vector& location = operator[](probei);
 
         const label celli = mesh.findCell(location);
 
-        elementList_[probeI] = celli;
+        elementList_[probei] = celli;
 
         if (celli != -1)
         {
@@ -77,28 +85,28 @@ void Foam::probes::findElements(const fvMesh& mesh)
                     minFaceID = facei;
                 }
             }
-            faceList_[probeI] = minFaceID;
+            faceList_[probei] = minFaceID;
         }
         else
         {
-            faceList_[probeI] = -1;
+            faceList_[probei] = -1;
         }
 
-        if (debug && (elementList_[probeI] != -1 || faceList_[probeI] != -1))
+        if (debug && (elementList_[probei] != -1 || faceList_[probei] != -1))
         {
             Pout<< "probes : found point " << location
-                << " in cell " << elementList_[probeI]
-                << " and face " << faceList_[probeI] << endl;
+                << " in cell " << elementList_[probei]
+                << " and face " << faceList_[probei] << endl;
         }
     }
 
 
     // Check if all probes have been found.
-    forAll(elementList_, probeI)
+    forAll(elementList_, probei)
     {
-        const vector& location = operator[](probeI);
-        label celli = elementList_[probeI];
-        label facei = faceList_[probeI];
+        const vector& location = operator[](probei);
+        label celli = elementList_[probei];
+        label facei = faceList_[probei];
 
         // Check at least one processor with cell.
         reduce(celli, maxOp<label>());
@@ -125,12 +133,12 @@ void Foam::probes::findElements(const fvMesh& mesh)
         else
         {
             // Make sure location not on two domains.
-            if (elementList_[probeI] != -1 && elementList_[probeI] != celli)
+            if (elementList_[probei] != -1 && elementList_[probei] != celli)
             {
                 WarningInFunction
                     << "Location " << location
                     << " seems to be on multiple domains:"
-                    << " cell " << elementList_[probeI]
+                    << " cell " << elementList_[probei]
                     << " on my domain " << Pstream::myProcNo()
                         << " and cell " << celli << " on some other domain."
                     << endl
@@ -139,12 +147,12 @@ void Foam::probes::findElements(const fvMesh& mesh)
                     << " to prevent this." << endl;
             }
 
-            if (faceList_[probeI] != -1 && faceList_[probeI] != facei)
+            if (faceList_[probei] != -1 && faceList_[probei] != facei)
             {
                 WarningInFunction
                     << "Location " << location
                     << " seems to be on multiple domains:"
-                    << " cell " << faceList_[probeI]
+                    << " cell " << faceList_[probei]
                     << " on my domain " << Pstream::myProcNo()
                         << " and face " << facei << " on some other domain."
                     << endl
@@ -187,7 +195,7 @@ Foam::label Foam::probes::prepare()
 
 
         fileName probeDir;
-        fileName probeSubDir = name_;
+        fileName probeSubDir = name();
 
         if (mesh_.name() != polyMesh::defaultRegion)
         {
@@ -241,18 +249,18 @@ Foam::label Foam::probes::prepare()
 
             unsigned int w = IOstream::defaultPrecision() + 7;
 
-            forAll(*this, probeI)
+            forAll(*this, probei)
             {
-                fout<< "# Probe " << probeI << ' ' << operator[](probeI)
+                fout<< "# Probe " << probei << ' ' << operator[](probei)
                     << endl;
             }
 
             fout<< '#' << setw(IOstream::defaultPrecision() + 6)
                 << "Probe";
 
-            forAll(*this, probeI)
+            forAll(*this, probei)
             {
-                fout<< ' ' << setw(w) << probeI;
+                fout<< ' ' << setw(w) << probei;
             }
             fout<< endl;
 
@@ -270,13 +278,41 @@ Foam::label Foam::probes::prepare()
 Foam::probes::probes
 (
     const word& name,
+    const Time& t,
+    const dictionary& dict
+)
+:
+    functionObject(name),
+    pointField(0),
+    mesh_
+    (
+        refCast<const fvMesh>
+        (
+            t.lookupObject<objectRegistry>
+            (
+                dict.lookupOrDefault("region", polyMesh::defaultRegion)
+            )
+        )
+    ),
+    loadFromFiles_(false),
+    fieldSelection_(),
+    fixedLocations_(true),
+    interpolationScheme_("cell")
+{
+    read(dict);
+}
+
+
+Foam::probes::probes
+(
+    const word& name,
     const objectRegistry& obr,
     const dictionary& dict,
     const bool loadFromFiles
 )
 :
+    functionObject(name),
     pointField(0),
-    name_(name),
     mesh_(refCast<const fvMesh>(obr)),
     loadFromFiles_(loadFromFiles),
     fieldSelection_(),
@@ -295,38 +331,7 @@ Foam::probes::~probes()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-void Foam::probes::execute()
-{}
-
-
-void Foam::probes::end()
-{}
-
-
-void Foam::probes::timeSet()
-{}
-
-
-void Foam::probes::write()
-{
-    if (size() && prepare())
-    {
-        sampleAndWrite(scalarFields_);
-        sampleAndWrite(vectorFields_);
-        sampleAndWrite(sphericalTensorFields_);
-        sampleAndWrite(symmTensorFields_);
-        sampleAndWrite(tensorFields_);
-
-        sampleAndWriteSurfaceFields(surfaceScalarFields_);
-        sampleAndWriteSurfaceFields(surfaceVectorFields_);
-        sampleAndWriteSurfaceFields(surfaceSphericalTensorFields_);
-        sampleAndWriteSurfaceFields(surfaceSymmTensorFields_);
-        sampleAndWriteSurfaceFields(surfaceTensorFields_);
-    }
-}
-
-
-void Foam::probes::read(const dictionary& dict)
+bool Foam::probes::read(const dictionary& dict)
 {
     dict.lookup("probeLocations") >> *this;
     dict.lookup("fields") >> fieldSelection_;
@@ -347,6 +352,35 @@ void Foam::probes::read(const dictionary& dict)
     findElements(mesh_);
 
     prepare();
+
+    return true;
+}
+
+
+bool Foam::probes::execute(const bool postProcess)
+{
+    return true;
+}
+
+
+bool Foam::probes::write(const bool postProcess)
+{
+    if (size() && prepare())
+    {
+        sampleAndWrite(scalarFields_);
+        sampleAndWrite(vectorFields_);
+        sampleAndWrite(sphericalTensorFields_);
+        sampleAndWrite(symmTensorFields_);
+        sampleAndWrite(tensorFields_);
+
+        sampleAndWriteSurfaceFields(surfaceScalarFields_);
+        sampleAndWriteSurfaceFields(surfaceVectorFields_);
+        sampleAndWriteSurfaceFields(surfaceSphericalTensorFields_);
+        sampleAndWriteSurfaceFields(surfaceSymmTensorFields_);
+        sampleAndWriteSurfaceFields(surfaceTensorFields_);
+    }
+
+    return true;
 }
 
 

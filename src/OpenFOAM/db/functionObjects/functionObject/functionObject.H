@@ -46,12 +46,12 @@ Description
             myFunctionObject    // Name of functionObject entry
             {
                 type                functionObjectType;
-                functionObjectLibs  ("libMyFunctionObjectlib.so");
+                libs  ("libMyFunctionObjectlib.so");
                 region              defaultRegion;
                 enabled             yes;
                 timeStart           0;
                 timeEnd             10;
-                writeControl        outputTime;
+                writeControl        writeTime;
                 writeInterval       1;
                 ...
             }
@@ -62,7 +62,7 @@ Description
     \table
         Property | Description                       | Required | Default value
         type     | Type of function object               | yes      |
-        functionObjectLibs | Libraries containing implementation | yes |
+        libs | Libraries containing implementation | yes |
         region   | Name of region for multi-region cases | no       |
         enabled  | On/off switch                         | no       | yes
         timeStart| Start time                            | no       |
@@ -77,7 +77,7 @@ Description
     \table
         Option            | Description
         timeStep          | Execute/write every 'writeInterval' time-steps
-        outputTime        | Execute/write every 'writeInterval' output times
+        writeTime        | Execute/write every 'writeInterval' output times
         adjustableRunTime | Execute/write every 'writeInterval' run time period
         runTime           | Execute/write every 'writeInterval' run time period
         clockTime       | Execute/write every 'writeInterval' clock time period
@@ -99,7 +99,8 @@ Description
     Abstract base-class for Time/database function objects.
 
 See Also
-    Foam::OutputFilterFunctionObject
+    Foam::functionObjectList
+    Foam::functionObjects::timeControl
 
 SourceFiles
     functionObject.C
@@ -159,8 +160,8 @@ public:
             autoPtr,
             functionObject,
             dictionary,
-            (const word& name, const Time& t, const dictionary& dict),
-            (name, t, dict)
+            (const word& name, const Time& runTime, const dictionary& dict),
+            (name, runTime, dict)
         );
 
 
@@ -194,32 +195,34 @@ public:
 
     // Member Functions
 
-        //- Name
-        virtual const word& name() const;
+        //- Return the name of this functionObject
+        const word& name() const;
 
-        //- Called at each ++ or += of the time-loop. forceWrite overrides
-        //  the usual writeControl behaviour and forces writing always
-        //  (used in post-processing mode)
-        virtual bool execute(const bool forceWrite) = 0;
+        //- Read and set the function object if its data have changed
+        virtual bool read(const dictionary&) = 0;
+
+        //- Called at each ++ or += of the time-loop.
+        //  postProcess overrides the usual executeControl behaviour and
+        //  forces execution (used in post-processing mode)
+        virtual bool execute(const bool postProcess = false) = 0;
+
+        //- Called at each ++ or += of the time-loop.
+        //  postProcess overrides the usual writeControl behaviour and
+        //  forces writing always (used in post-processing mode)
+        virtual bool write(const bool postProcess = false) = 0;
 
         //- Called when Time::run() determines that the time-loop exits.
         //  By default it simply calls execute().
         virtual bool end();
 
-        //- Called when time was set at the end of the Time::operator++
-        virtual bool timeSet();
-
         //- Called at the end of Time::adjustDeltaT() if adjustTime is true
         virtual bool adjustTimeStep();
 
-        //- Read and set the function object if its data have changed
-        virtual bool read(const dictionary&) = 0;
+        //- Update for changes of mesh
+        virtual void updateMesh(const mapPolyMesh& mpm);
 
         //- Update for changes of mesh
-        virtual void updateMesh(const mapPolyMesh& mpm) = 0;
-
-        //- Update for changes of mesh
-        virtual void movePoints(const polyMesh& mesh) = 0;
+        virtual void movePoints(const polyMesh& mesh);
 };
 
 

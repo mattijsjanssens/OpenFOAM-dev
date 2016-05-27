@@ -49,7 +49,7 @@ functions
     readFields
     {
         // Where to load it from (if not already in solver)
-        functionObjectLibs ("libfieldFunctionObjects.so");
+        libs ("libfieldFunctionObjects.so");
 
         type            readFields;
         fields          (p U k);
@@ -58,12 +58,12 @@ functions
     near
     {
         // Where to load it from
-        functionObjectLibs ("libfieldFunctionObjects.so");
+        libs ("libfieldFunctionObjects.so");
 
         type nearWallFields;
 
         // Output every
-        writeControl   outputTime;
+        writeControl   writeTime;
         //writeInterval  1;
 
         // Fields to be sampled. Per field original name and mapped field to
@@ -82,17 +82,17 @@ functions
     streamLines
     {
         // Where to load it from (if not already in solver)
-        functionObjectLibs ("libfieldFunctionObjects.so");
+        libs ("libfieldFunctionObjects.so");
         type            wallBoundedStreamLine;
 
         // Output every
-        writeControl   timeStep;   //outputTime;
+        writeControl   timeStep;   //writeTime;
         // writeInterval 10;
 
         setFormat       vtk; //gnuplot; //xmgr; //raw; //jplot;
 
         // Velocity field to use for tracking.
-        UName UNear;
+        U UNear;
 
         // Interpolation method. Default is cellPoint. See sampleDict.
         //interpolationScheme pointMVC;

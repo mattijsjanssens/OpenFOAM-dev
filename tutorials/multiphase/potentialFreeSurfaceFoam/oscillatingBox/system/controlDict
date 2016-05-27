@@ -56,12 +56,10 @@ functions
     forces
     {
         type            forces;
-        functionObjectLibs ("libforces.so");
-        writeControl   outputTime;
+        libs ("libforces.so");
+        writeControl    writeTime;
         patches         (floatingObject);
-        pName           p;
-        UName           U;
-        rhoName         rhoInf;
+        rho             rhoInf;
         log             yes;
         rhoInf          1000;
         CofR            (0 0 0);
@@ -70,7 +68,7 @@ functions
     poolHeight
     {
         type            faceSource;
-        functionObjectLibs ("libfieldFunctionObjects.so");
+        libs ("libfieldFunctionObjects.so");
         enabled         yes;
         writeControl   timeStep;
         writeInterval  1;

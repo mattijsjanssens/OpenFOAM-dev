@@ -50,23 +50,35 @@ Foam::functionObject::functionObject(const word& name)
 Foam::autoPtr<Foam::functionObject> Foam::functionObject::New
 (
     const word& name,
-    const Time& t,
-    const dictionary& functionDict
+    const Time& runTime,
+    const dictionary& dict
 )
 {
-    const word functionType(functionDict.lookup("type"));
+    const word functionType(dict.lookup("type"));
 
     if (debug)
     {
         Info<< "Selecting function " << functionType << endl;
     }
 
-    const_cast<Time&>(t).libs().open
-    (
-        functionDict,
-        "functionObjectLibs",
-        dictionaryConstructorTablePtr_
-    );
+    if (dict.found("functionObjectLibs"))
+    {
+        const_cast<Time&>(runTime).libs().open
+        (
+            dict,
+            "functionObjectLibs",
+            dictionaryConstructorTablePtr_
+        );
+    }
+    else
+    {
+        const_cast<Time&>(runTime).libs().open
+        (
+            dict,
+            "libs",
+            dictionaryConstructorTablePtr_
+        );
+    }
 
     if (!dictionaryConstructorTablePtr_)
     {
@@ -90,7 +102,7 @@ Foam::autoPtr<Foam::functionObject> Foam::functionObject::New
             << exit(FatalError);
     }
 
-    return autoPtr<functionObject>(cstrIter()(name, t, functionDict));
+    return autoPtr<functionObject>(cstrIter()(name, runTime, dict));
 }
 
 
@@ -110,13 +122,7 @@ const Foam::word& Foam::functionObject::name() const
 
 bool Foam::functionObject::end()
 {
-    return execute(false);
-}
-
-
-bool Foam::functionObject::timeSet()
-{
-    return false;
+    return execute() && write();
 }
 
 
@@ -124,6 +130,14 @@ bool Foam::functionObject::adjustTimeStep()
 {
     return false;
 }
+
+
+void Foam::functionObject::updateMesh(const mapPolyMesh&)
+{}
+
+
+void Foam::functionObject::movePoints(const polyMesh&)
+{}
 
 
 // ************************************************************************* //

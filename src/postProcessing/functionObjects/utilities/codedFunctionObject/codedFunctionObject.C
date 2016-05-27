@@ -56,40 +56,37 @@ void Foam::codedFunctionObject::prepare
 ) const
 {
     // Set additional rewrite rules
-    dynCode.setFilterVariable("typeName", redirectType_);
+    dynCode.setFilterVariable("typeName", name_);
+    dynCode.setFilterVariable("codeData", codeData_);
     dynCode.setFilterVariable("codeRead", codeRead_);
     dynCode.setFilterVariable("codeExecute", codeExecute_);
+    dynCode.setFilterVariable("codeWrite", codeWrite_);
     dynCode.setFilterVariable("codeEnd", codeEnd_);
-    dynCode.setFilterVariable("codeData", codeData_);
-    dynCode.setFilterVariable("codeTimeSet", codeTimeSet_);
-    //dynCode.setFilterVariable("codeWrite", codeWrite_);
 
-    // compile filtered C template
+    // Compile filtered C template
     dynCode.addCompileFile("functionObjectTemplate.C");
-    dynCode.addCompileFile("FilterFunctionObjectTemplate.C");
 
-    // copy filtered H template
-    dynCode.addCopyFile("FilterFunctionObjectTemplate.H");
+    // Copy filtered H template
     dynCode.addCopyFile("functionObjectTemplate.H");
 
-    // debugging: make BC verbose
-    //         dynCode.setFilterVariable("verbose", "true");
-    //         Info<<"compile " << redirectType_ << " sha1: "
-    //             << context.sha1() << endl;
+    // Debugging: make BC verbose
+    // dynCode.setFilterVariable("verbose", "true");
+    // Info<<"compile " << name_ << " sha1: "
+    //     << context.sha1() << endl;
 
-    // define Make/options
+    // Define Make/options
     dynCode.setMakeOptions
-        (
-            "EXE_INC = -g \\\n"
-            "-I$(LIB_SRC)/finiteVolume/lnInclude \\\n"
-            "-I$(LIB_SRC)/meshTools/lnInclude \\\n"
-            + context.options()
-            + "\n\nLIB_LIBS = \\\n"
-            + "    -lOpenFOAM \\\n"
-            + "    -lfiniteVolume \\\n"
-            + "    -lmeshTools \\\n"
-            + context.libs()
-        );
+    (
+        "EXE_INC = -g \\\n"
+        "-I$(LIB_SRC)/finiteVolume/lnInclude \\\n"
+        "-I$(LIB_SRC)/meshTools/lnInclude \\\n"
+      + context.options()
+      + "\n\nLIB_LIBS = \\\n"
+      + "    -lOpenFOAM \\\n"
+      + "    -lfiniteVolume \\\n"
+      + "    -lmeshTools \\\n"
+      + context.libs()
+    );
 }
 
 
@@ -123,8 +120,7 @@ Foam::codedFunctionObject::codedFunctionObject
 (
     const word& name,
     const Time& time,
-    const dictionary& dict,
-    bool readNow
+    const dictionary& dict
 )
 :
     functionObject(name),
@@ -132,12 +128,9 @@ Foam::codedFunctionObject::codedFunctionObject
     time_(time),
     dict_(dict)
 {
-    if (readNow)
-    {
-        read(dict_);
-    }
+    read(dict_);
 
-    updateLibrary(redirectType_);
+    updateLibrary(name_);
     redirectFunctionObject();
 }
 
@@ -155,11 +148,11 @@ Foam::functionObject& Foam::codedFunctionObject::redirectFunctionObject() const
     if (!redirectFunctionObjectPtr_.valid())
     {
         dictionary constructDict(dict_);
-        constructDict.set("type", redirectType_);
+        constructDict.set("type", name_);
 
         redirectFunctionObjectPtr_ = functionObject::New
         (
-            redirectType_,
+            name_,
             time_,
             constructDict
         );
@@ -168,30 +161,38 @@ Foam::functionObject& Foam::codedFunctionObject::redirectFunctionObject() const
 }
 
 
-bool Foam::codedFunctionObject::execute(const bool forceWrite)
+bool Foam::codedFunctionObject::execute(const bool postProcess)
 {
-    updateLibrary(redirectType_);
-    return redirectFunctionObject().execute(forceWrite);
+    updateLibrary(name_);
+    return redirectFunctionObject().execute(postProcess);
+}
+
+
+bool Foam::codedFunctionObject::write(const bool postProcess)
+{
+    updateLibrary(name_);
+    return redirectFunctionObject().write(postProcess);
 }
 
 
 bool Foam::codedFunctionObject::end()
 {
-    updateLibrary(redirectType_);
+    updateLibrary(name_);
     return redirectFunctionObject().end();
-}
-
-
-bool Foam::codedFunctionObject::timeSet()
-{
-    updateLibrary(redirectType_);
-    return redirectFunctionObject().timeSet();
 }
 
 
 bool Foam::codedFunctionObject::read(const dictionary& dict)
 {
-    dict.lookup("redirectType") >> redirectType_;
+    // Backward compatibility
+    if (dict.found("redirectType"))
+    {
+        dict.lookup("redirectType") >> name_;
+    }
+    else
+    {
+        dict.lookup("name") >> name_;
+    }
 
     const entry* dataPtr = dict.lookupEntryPtr
     (
@@ -247,6 +248,24 @@ bool Foam::codedFunctionObject::read(const dictionary& dict)
         );
     }
 
+    const entry* writePtr = dict.lookupEntryPtr
+    (
+        "codeWrite",
+        false,
+        false
+    );
+    if (writePtr)
+    {
+        codeWrite_ = stringOps::trim(writePtr->stream());
+        stringOps::inplaceExpand(codeWrite_, dict);
+        dynamicCodeContext::addLineDirective
+        (
+            codeWrite_,
+            writePtr->startLineNumber(),
+            dict.name()
+        );
+    }
+
     const entry* endPtr = dict.lookupEntryPtr
     (
         "codeEnd",
@@ -265,35 +284,9 @@ bool Foam::codedFunctionObject::read(const dictionary& dict)
         );
     }
 
-    const entry* timeSetPtr = dict.lookupEntryPtr
-    (
-        "codeTimeSet",
-        false,
-        false
-    );
-    if (timeSetPtr)
-    {
-        codeTimeSet_ = stringOps::trim(timeSetPtr->stream());
-        stringOps::inplaceExpand(codeTimeSet_, dict);
-        dynamicCodeContext::addLineDirective
-        (
-            codeTimeSet_,
-            timeSetPtr->startLineNumber(),
-            dict.name()
-        );
-    }
-
-    updateLibrary(redirectType_);
+    updateLibrary(name_);
     return redirectFunctionObject().read(dict);
 }
-
-
-void Foam::codedFunctionObject::updateMesh(const mapPolyMesh&)
-{}
-
-
-void Foam::codedFunctionObject::movePoints(const polyMesh&)
-{}
 
 
 // ************************************************************************* //

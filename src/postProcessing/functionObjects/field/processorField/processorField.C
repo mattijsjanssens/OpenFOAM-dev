@@ -24,8 +24,8 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "processorField.H"
-#include "dictionary.H"
-#include "Pstream.H"
+#include "volFields.H"
+#include "addToRunTimeSelectionTable.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -34,6 +34,7 @@ namespace Foam
 namespace functionObjects
 {
     defineTypeNameAndDebug(processorField, 0);
+    addToRunTimeSelectionTable(functionObject, processorField, dictionary);
 }
 }
 
@@ -43,23 +44,13 @@ namespace functionObjects
 Foam::functionObjects::processorField::processorField
 (
     const word& name,
-    const objectRegistry& obr,
-    const dictionary& dict,
-    const bool loadFromFiles
+    const Time& runTime,
+    const dictionary& dict
 )
 :
-    name_(name),
-    obr_(obr)
+    fvMeshFunctionObject(name, runTime, dict)
 {
-    if (!isA<fvMesh>(obr))
-    {
-        FatalErrorInFunction
-            << "objectRegistry is not an fvMesh" << exit(FatalError);
-    }
-
     read(dict);
-
-    const fvMesh& mesh = refCast<const fvMesh>(obr_);
 
     volScalarField* procFieldPtr
     (
@@ -68,17 +59,17 @@ Foam::functionObjects::processorField::processorField
             IOobject
             (
                 "processorID",
-                mesh.time().timeName(),
-                mesh,
+                mesh_.time().timeName(),
+                mesh_,
                 IOobject::NO_READ,
                 IOobject::NO_WRITE
             ),
-            mesh,
+            mesh_,
             dimensionedScalar("0", dimless, 0.0)
         )
     );
 
-    mesh.objectRegistry::store(procFieldPtr);
+    mesh_.objectRegistry::store(procFieldPtr);
 }
 
 
@@ -90,36 +81,34 @@ Foam::functionObjects::processorField::~processorField()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-void Foam::functionObjects::processorField::read(const dictionary& dict)
-{}
+bool Foam::functionObjects::processorField::read(const dictionary& dict)
+{
+    fvMeshFunctionObject::read(dict);
+
+    return true;
+}
 
 
-void Foam::functionObjects::processorField::execute()
+bool Foam::functionObjects::processorField::execute(const bool postProcess)
 {
     const volScalarField& procField =
-        obr_.lookupObject<volScalarField>("processorID");
+        mesh_.lookupObject<volScalarField>("processorID");
 
     const_cast<volScalarField&>(procField) ==
         dimensionedScalar("proci", dimless, Pstream::myProcNo());
+
+    return true;
 }
 
 
-void Foam::functionObjects::processorField::end()
-{
-    execute();
-}
-
-
-void Foam::functionObjects::processorField::timeSet()
-{}
-
-
-void Foam::functionObjects::processorField::write()
+bool Foam::functionObjects::processorField::write(const bool postProcess)
 {
     const volScalarField& procField =
-        obr_.lookupObject<volScalarField>("processorID");
+        mesh_.lookupObject<volScalarField>("processorID");
 
     procField.write();
+
+    return true;
 }
 
 

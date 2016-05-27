@@ -24,9 +24,9 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "turbulenceFields.H"
-#include "dictionary.H"
 #include "turbulentTransportModel.H"
 #include "turbulentFluidThermoModel.H"
+#include "addToRunTimeSelectionTable.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -35,6 +35,13 @@ namespace Foam
 namespace functionObjects
 {
     defineTypeNameAndDebug(turbulenceFields, 0);
+
+    addToRunTimeSelectionTable
+    (
+        functionObject,
+        turbulenceFields,
+        dictionary
+    );
 }
 }
 
@@ -116,25 +123,17 @@ bool Foam::functionObjects::turbulenceFields::compressible()
 Foam::functionObjects::turbulenceFields::turbulenceFields
 (
     const word& name,
-    const objectRegistry& obr,
-    const dictionary& dict,
-    const bool loadFromFiles
+    const Time& runTime,
+    const dictionary& dict
 )
 :
-    name_(name),
-    obr_(obr),
+    fvMeshFunctionObject(name, runTime, dict),
     fieldSet_()
 {
-    if (!isA<fvMesh>(obr))
-    {
-        FatalErrorInFunction
-            << "objectRegistry is not an fvMesh" << exit(FatalError);
-    }
-
     if
     (
-       !obr.foundObject<compressible::turbulenceModel>(modelName)
-    && !obr.foundObject<incompressible::turbulenceModel>(modelName)
+       !obr_.foundObject<compressible::turbulenceModel>(modelName)
+    && !obr_.foundObject<incompressible::turbulenceModel>(modelName)
     )
     {
         FatalErrorInFunction
@@ -154,11 +153,11 @@ Foam::functionObjects::turbulenceFields::~turbulenceFields()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-void Foam::functionObjects::turbulenceFields::read(const dictionary& dict)
+bool Foam::functionObjects::turbulenceFields::read(const dictionary& dict)
 {
     fieldSet_.insert(wordList(dict.lookup("fields")));
 
-    Info<< type() << " " << name_ << ": ";
+    Info<< type() << " " << name() << ": ";
     if (fieldSet_.size())
     {
         Info<< "storing fields:" << nl;
@@ -172,10 +171,12 @@ void Foam::functionObjects::turbulenceFields::read(const dictionary& dict)
     {
         Info<< "no fields requested to be stored" << nl << endl;
     }
+
+    return true;
 }
 
 
-void Foam::functionObjects::turbulenceFields::execute()
+bool Foam::functionObjects::turbulenceFields::execute(const bool postProcess)
 {
     bool comp = compressible();
 
@@ -285,21 +286,15 @@ void Foam::functionObjects::turbulenceFields::execute()
             }
         }
     }
+
+    return true;
 }
 
 
-void Foam::functionObjects::turbulenceFields::end()
+bool Foam::functionObjects::turbulenceFields::write(const bool postProcess)
 {
-    execute();
+    return true;
 }
-
-
-void Foam::functionObjects::turbulenceFields::timeSet()
-{}
-
-
-void Foam::functionObjects::turbulenceFields::write()
-{}
 
 
 // ************************************************************************* //

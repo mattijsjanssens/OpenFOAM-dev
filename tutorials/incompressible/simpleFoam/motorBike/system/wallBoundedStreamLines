@@ -10,12 +10,15 @@
 near
 {
     // Where to load it from
-    functionObjectLibs ("libfieldFunctionObjects.so");
+    libs ("libfieldFunctionObjects.so");
 
     type nearWallFields;
 
     // Output every
-    writeControl   outputTime;
+    writeControl   writeTime;
+
+    // Calculate every
+    executeControl   writeTime;
 
     // Fields to be sampled. Per field original name and mapped field to
     // create.
@@ -36,16 +39,16 @@ near
 wallBoundedStreamLines
 {
     // Where to load it from (if not already in solver)
-    functionObjectLibs ("libfieldFunctionObjects.so");
+    libs ("libfieldFunctionObjects.so");
     type            wallBoundedStreamLine;
 
     // Output every
-    writeControl   outputTime;
+    writeControl   writeTime;
 
     setFormat       vtk; //gnuplot; //xmgr; //raw; //jplot;
 
     // Velocity field to use for tracking.
-    UName UNear;
+    U     UNear;
 
     // Interpolation method. Default is cellPoint. See sampleDict.
     //interpolationScheme pointMVC;

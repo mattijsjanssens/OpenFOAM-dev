@@ -23,102 +23,37 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "fvMesh.H"
 #include "fvcGrad.H"
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
 template<class Type>
-Foam::GeometricField
-<
-    typename Foam::outerProduct<Foam::vector, Type>::type,
-    Foam::fvPatchField,
-    Foam::volMesh
->&
-Foam::functionObjects::grad::gradField
-(
-    const word& gradName,
-    const dimensionSet& dims
-)
+bool Foam::functionObjects::grad::calcGrad()
 {
-    Info<< "gradField" << endl;
+    typedef GeometricField<Type, fvPatchField, volMesh> VolFieldType;
+    typedef GeometricField<Type, fvsPatchField, surfaceMesh> SurfaceFieldType;
 
-    typedef typename outerProduct<vector, Type>::type gradType;
-    typedef GeometricField<gradType, fvPatchField, volMesh> vfGradType;
-
-    const fvMesh& mesh = refCast<const fvMesh>(obr_);
-
-    if (!mesh.foundObject<vfGradType>(gradName))
+    if (foundObject<VolFieldType>(fieldName_))
     {
-        vfGradType* gradFieldPtr
+        return store
         (
-            new vfGradType
-            (
-                IOobject
-                (
-                    gradName,
-                    mesh.time().timeName(),
-                    mesh,
-                    IOobject::NO_READ,
-                    IOobject::NO_WRITE
-                ),
-                mesh,
-                dimensioned<gradType>
-                (
-                    "zero",
-                    dims/dimLength,
-                    Zero
-                )
-            )
+            resultName_,
+            fvc::grad(lookupObject<VolFieldType>(fieldName_)),
+            true
         );
-
-        mesh.objectRegistry::store(gradFieldPtr);
     }
-
-    const vfGradType& field = mesh.lookupObject<vfGradType>(gradName);
-
-    return const_cast<vfGradType&>(field);
-}
-
-
-template<class Type>
-void Foam::functionObjects::grad::calcGrad
-(
-    const word& fieldName,
-    const word& resultName,
-    bool& processed
-)
-{
-    typedef GeometricField<Type, fvPatchField, volMesh> vfType;
-    typedef GeometricField<Type, fvsPatchField, surfaceMesh> sfType;
-
-    typedef typename outerProduct<vector, Type>::type gradType;
-    typedef GeometricField<gradType, fvPatchField, volMesh> vfGradType;
-
-    const fvMesh& mesh = refCast<const fvMesh>(obr_);
-
-
-    if (mesh.foundObject<vfType>(fieldName))
+    else if (foundObject<SurfaceFieldType>(fieldName_))
     {
-        const vfType& vf = mesh.lookupObject<vfType>(fieldName);
-
-        vfGradType& field = gradField<Type>(resultName, vf.dimensions());
-
-        // De-reference the tmp to avoid a clash with the cached grad field
-        field = fvc::grad(vf)();
-
-        processed = true;
+        return store
+        (
+            resultName_,
+            fvc::grad(lookupObject<SurfaceFieldType>(fieldName_)),
+            true
+        );
     }
-    else if (mesh.foundObject<sfType>(fieldName))
+    else
     {
-        const sfType& sf = mesh.lookupObject<sfType>(fieldName);
-
-        vfGradType& field = gradField<Type>(resultName, sf.dimensions());
-
-        // De-reference the tmp to avoid a clash with the cached grad field
-        field = fvc::grad(sf)();
-
-        processed = true;
+        return false;
     }
 }
 

@@ -24,6 +24,8 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "surfaceInterpolateFields.H"
+#include "surfaceFields.H"
+#include "addToRunTimeSelectionTable.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -32,6 +34,13 @@ namespace Foam
 namespace functionObjects
 {
     defineTypeNameAndDebug(surfaceInterpolateFields, 0);
+
+    addToRunTimeSelectionTable
+    (
+        functionObject,
+        surfaceInterpolateFields,
+        dictionary
+    );
 }
 }
 
@@ -41,21 +50,13 @@ namespace functionObjects
 Foam::functionObjects::surfaceInterpolateFields::surfaceInterpolateFields
 (
     const word& name,
-    const objectRegistry& obr,
-    const dictionary& dict,
-    const bool loadFromFiles
+    const Time& runTime,
+    const dictionary& dict
 )
 :
-    name_(name),
-    obr_(obr),
+    fvMeshFunctionObject(name, runTime, dict),
     fieldSet_()
 {
-    if (!isA<fvMesh>(obr))
-    {
-        FatalErrorInFunction
-            << "objectRegistry is not an fvMesh" << exit(FatalError);
-    }
-
     read(dict);
 }
 
@@ -68,18 +69,23 @@ Foam::functionObjects::surfaceInterpolateFields::~surfaceInterpolateFields()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-void Foam::functionObjects::surfaceInterpolateFields::read
+bool Foam::functionObjects::surfaceInterpolateFields::read
 (
     const dictionary& dict
 )
 {
     dict.lookup("fields") >> fieldSet_;
+
+    return true;
 }
 
 
-void Foam::functionObjects::surfaceInterpolateFields::execute()
+bool Foam::functionObjects::surfaceInterpolateFields::execute
+(
+    const bool postProcess
+)
 {
-    Info<< type() << " " << name_ << " output:" << nl;
+    Info<< type() << " " << name() << " output:" << nl;
 
     // Clear out any previously loaded fields
     ssf_.clear();
@@ -95,22 +101,17 @@ void Foam::functionObjects::surfaceInterpolateFields::execute()
     interpolateFields<tensor>(stf_);
 
     Info<< endl;
+
+    return true;
 }
 
 
-void Foam::functionObjects::surfaceInterpolateFields::end()
+bool Foam::functionObjects::surfaceInterpolateFields::write
+(
+    const bool postProcess
+)
 {
-    execute();
-}
-
-
-void Foam::functionObjects::surfaceInterpolateFields::timeSet()
-{}
-
-
-void Foam::functionObjects::surfaceInterpolateFields::write()
-{
-    Info<< type() << " " << name_ << " output:" << nl;
+    Info<< type() << " " << name() << " output:" << nl;
 
     Info<< "    Writing interpolated surface fields to "
         << obr_.time().timeName() << endl;
@@ -135,6 +136,8 @@ void Foam::functionObjects::surfaceInterpolateFields::write()
     {
         stf_[i].write();
     }
+
+    return true;
 }
 
 

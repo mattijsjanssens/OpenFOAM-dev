@@ -37,7 +37,7 @@ Description
     fieldCoordinateSystemTransform1
     {
         type        fieldCoordinateSystemTransform;
-        functionObjectLibs ("libfieldFunctionObjects.so");
+        libs ("libfieldFunctionObjects.so");
         ...
         fields
         (
@@ -63,8 +63,7 @@ Description
     \endtable
 
 SeeAlso
-    Foam::functionObject
-    Foam::OutputFilterFunctionObject
+    Foam::functionObjects::fvMeshFunctionObject
     Foam::coordinateSystem
 
 SourceFiles
@@ -76,22 +75,13 @@ SourceFiles
 #ifndef functionObjects_fieldCoordinateSystemTransform_H
 #define functionObjects_fieldCoordinateSystemTransform_H
 
-#include "OFstream.H"
-#include "volFields.H"
-#include "surfaceFields.H"
+#include "fvMeshFunctionObject.H"
 #include "coordinateSystem.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
-
-// Forward declaration of classes
-class objectRegistry;
-class dictionary;
-class polyMesh;
-class mapPolyMesh;
-
 namespace functionObjects
 {
 
@@ -100,15 +90,12 @@ namespace functionObjects
 \*---------------------------------------------------------------------------*/
 
 class fieldCoordinateSystemTransform
+:
+    public fvMeshFunctionObject
 {
 protected:
 
     // Protected data
-
-        //- Name
-        word name_;
-
-        const objectRegistry& obr_;
 
         //- Fields to transform
         wordList fieldSet_;
@@ -119,22 +106,16 @@ protected:
 
     // Protected Member Functions
 
+        //- Return the name of the transformed field
+        word transformFieldName(const word& fieldName) const;
+
+        //- Transform the given field
+        template<class FieldType>
+        void transformField(const FieldType& field);
+
+        //- Transform the given field if has the specified element type
         template<class Type>
-        void transform(const word& fieldName) const;
-
-        template<class Type>
-        void transformField(const Type& field) const;
-
-
-private:
-
-    // Private member functions
-
-        //- Disallow default bitwise copy construct
-        fieldCoordinateSystemTransform(const fieldCoordinateSystemTransform&);
-
-        //- Disallow default bitwise assignment
-        void operator=(const fieldCoordinateSystemTransform&);
+        void transform(const word& fieldName);
 
 
 public:
@@ -145,14 +126,12 @@ public:
 
     // Constructors
 
-        //- Construct for given objectRegistry and dictionary.
-        //  Allow the possibility to load fields from files
+        //- Construct from Time and dictionary
         fieldCoordinateSystemTransform
         (
             const word& name,
-            const objectRegistry&,
-            const dictionary&,
-            const bool loadFromFiles = false
+            const Time& runTime,
+            const dictionary& dict
         );
 
 
@@ -162,34 +141,14 @@ public:
 
     // Member Functions
 
-        //- Return name of the fieldCoordinateSystemTransform object
-        virtual const word& name() const
-        {
-            return name_;
-        }
-
         //- Read the input data
-        virtual void read(const dictionary&);
+        virtual bool read(const dictionary&);
 
-        //- Execute, currently does nothing
-        virtual void execute();
+        //- Calculate the transformed fields
+        virtual bool execute(const bool postProcess = false);
 
-        //- Execute at the final time-loop, currently does nothing
-        virtual void end();
-
-        //- Called when time was set at the end of the Time::operator++
-        virtual void timeSet();
-
-        //- Write
-        virtual void write();
-
-        //- Update for changes of mesh
-        virtual void updateMesh(const mapPolyMesh&)
-        {}
-
-        //- Update for changes of mesh
-        virtual void movePoints(const polyMesh&)
-        {}
+        //- Write the transformed fields
+        virtual bool write(const bool postProcess = false);
 };
 
 

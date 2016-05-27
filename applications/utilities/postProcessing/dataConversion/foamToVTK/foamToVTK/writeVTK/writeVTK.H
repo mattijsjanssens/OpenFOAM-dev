@@ -40,7 +40,7 @@ Description
         writeVTK1
         {
             type        writeVTK;
-            functionObjectLibs ("libIOFunctionObjects.so");
+            libs ("libutilityFunctionObjects.so");
             ...
             objectNames (obj1 obj2);
         }
@@ -54,8 +54,8 @@ Description
     \endtable
 
 SeeAlso
-    Foam::functionObject
-    Foam::OutputFilterFunctionObject
+    Foam::functionObjects::fvMeshFunctionObject
+    Foam::functionObjects::timeControl
 
 SourceFiles
     writeVTK.C
@@ -66,20 +66,13 @@ SourceFiles
 #ifndef functionObjects_writeVTK_H
 #define functionObjects_writeVTK_H
 
+#include "fvMeshFunctionObject.H"
 #include "wordReList.H"
-#include "runTimeSelectionTables.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
-
-// Forward declaration of classes
-class objectRegistry;
-class dictionary;
-class polyMesh;
-class mapPolyMesh;
-
 namespace functionObjects
 {
 
@@ -88,14 +81,10 @@ namespace functionObjects
 \*---------------------------------------------------------------------------*/
 
 class writeVTK
+:
+    public fvMeshFunctionObject
 {
     // Private data
-
-        //- Name of this set of writeVTK
-        word name_;
-
-        //- Refererence to Db
-        const objectRegistry& obr_;
 
         //- Names of objects
         wordReList objectNames_;
@@ -121,14 +110,12 @@ public:
 
     // Constructors
 
-        //- Construct for given objectRegistry and dictionary.
-        //  Allow the possibility to load fields from files
+        //- Construct from Time and dictionary
         writeVTK
         (
             const word& name,
-            const objectRegistry&,
-            const dictionary&,
-            const bool loadFromFiles = false
+            const Time& t,
+            const dictionary&
         );
 
 
@@ -138,34 +125,14 @@ public:
 
     // Member Functions
 
-        //- Return name of the writeVTK
-        virtual const word& name() const
-        {
-            return name_;
-        }
-
         //- Read the writeVTK data
-        virtual void read(const dictionary&);
+        virtual bool read(const dictionary&);
 
         //- Execute, currently does nothing
-        virtual void execute();
-
-        //- Execute at the final time-loop, currently does nothing
-        virtual void end();
-
-        //- Called when time was set at the end of the Time::operator++
-        virtual void timeSet();
+        virtual bool execute(const bool postProcess = false);
 
         //- Write the writeVTK
-        virtual void write();
-
-        //- Update for changes of mesh
-        virtual void updateMesh(const mapPolyMesh&)
-        {}
-
-        //- Update for changes of mesh
-        virtual void movePoints(const polyMesh&)
-        {}
+        virtual bool write(const bool postProcess = false);
 };
 
 

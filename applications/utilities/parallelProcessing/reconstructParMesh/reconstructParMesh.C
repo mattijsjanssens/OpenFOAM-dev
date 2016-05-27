@@ -49,7 +49,7 @@ Description
 #include "faceCoupleInfo.H"
 #include "fvMeshAdder.H"
 #include "polyTopoChange.H"
-#include "zeroGradientFvPatchFields.H"
+#include "extrapolatedCalculatedFvPatchFields.H"
 
 using namespace Foam;
 
@@ -250,24 +250,24 @@ autoPtr<mapPolyMesh> mergeSharedPoints
 
         forAll(constructMap, i)
         {
-            label oldPointI = constructMap[i];
+            label oldPointi = constructMap[i];
 
             // New label of point after changeMesh.
-            label newPointI = map().reversePointMap()[oldPointI];
+            label newPointi = map().reversePointMap()[oldPointi];
 
-            if (newPointI < -1)
+            if (newPointi < -1)
             {
-                constructMap[i] = -newPointI-2;
+                constructMap[i] = -newPointi-2;
             }
-            else if (newPointI >= 0)
+            else if (newPointi >= 0)
             {
-                constructMap[i] = newPointI;
+                constructMap[i] = newPointi;
             }
             else
             {
                 FatalErrorInFunction
-                    << "Problem. oldPointI:" << oldPointI
-                    << " newPointI:" << newPointI << abort(FatalError);
+                    << "Problem. oldPointi:" << oldPointi
+                    << " newPointi:" << newPointi << abort(FatalError);
             }
         }
     }
@@ -401,13 +401,14 @@ void writeCellDistance
             ),
             masterMesh,
             dimensionedScalar("cellDist", dimless, 0),
-            zeroGradientFvPatchScalarField::typeName
+            extrapolatedCalculatedFvPatchScalarField::typeName
         );
 
         forAll(cellDecomposition, celli)
         {
             cellDist[celli] = cellDecomposition[celli];
         }
+        cellDist.correctBoundaryConditions();
 
         cellDist.write();
 

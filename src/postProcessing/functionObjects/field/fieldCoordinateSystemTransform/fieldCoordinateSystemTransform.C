@@ -24,7 +24,7 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "fieldCoordinateSystemTransform.H"
-#include "dictionary.H"
+#include "addToRunTimeSelectionTable.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -33,6 +33,13 @@ namespace Foam
 namespace functionObjects
 {
     defineTypeNameAndDebug(fieldCoordinateSystemTransform, 0);
+
+    addToRunTimeSelectionTable
+    (
+        functionObject,
+        fieldCoordinateSystemTransform,
+        dictionary
+    );
 }
 }
 
@@ -43,25 +50,17 @@ Foam::functionObjects::fieldCoordinateSystemTransform::
 fieldCoordinateSystemTransform
 (
     const word& name,
-    const objectRegistry& obr,
-    const dictionary& dict,
-    const bool loadFromFiles
+    const Time& runTime,
+    const dictionary& dict
 )
 :
-    name_(name),
-    obr_(obr),
+    fvMeshFunctionObject(name, runTime, dict),
     fieldSet_(),
-    coordSys_(obr, dict)
+    coordSys_(mesh_, dict)
 {
-    if (!isA<fvMesh>(obr))
-    {
-        FatalErrorInFunction
-            << "objectRegistry is not an fvMesh" << exit(FatalError);
-    }
-
     read(dict);
 
-    Info<< type() << " " << name_ << ":" << nl
+    Log << type() << " " << name << ":" << nl
         << "   Applying transformation from global Cartesian to local "
         << coordSys_ << nl << endl;
 }
@@ -76,58 +75,58 @@ Foam::functionObjects::fieldCoordinateSystemTransform::
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-void Foam::functionObjects::fieldCoordinateSystemTransform::read
+Foam::word
+Foam::functionObjects::fieldCoordinateSystemTransform::transformFieldName
+(
+    const word& fieldName
+) const
+{
+    return fieldName + ":Transformed";
+}
+
+
+bool Foam::functionObjects::fieldCoordinateSystemTransform::read
 (
     const dictionary& dict
 )
 {
+    fvMeshFunctionObject::read(dict);
+
     dict.lookup("fields") >> fieldSet_;
+
+    return true;
 }
 
 
-void Foam::functionObjects::fieldCoordinateSystemTransform::execute()
+bool Foam::functionObjects::fieldCoordinateSystemTransform::execute
+(
+    const bool postProcess
+)
 {
-    Info<< type() << " " << name_ << " output:" << nl;
-
     forAll(fieldSet_, fieldi)
     {
-        // If necessary load field
         transform<scalar>(fieldSet_[fieldi]);
         transform<vector>(fieldSet_[fieldi]);
         transform<sphericalTensor>(fieldSet_[fieldi]);
         transform<symmTensor>(fieldSet_[fieldi]);
         transform<tensor>(fieldSet_[fieldi]);
     }
+
+    return true;
 }
 
 
-void Foam::functionObjects::fieldCoordinateSystemTransform::end()
+bool Foam::functionObjects::fieldCoordinateSystemTransform::write
+(
+    const bool postProcess
+)
 {
-    execute();
-}
-
-
-void Foam::functionObjects::fieldCoordinateSystemTransform::timeSet()
-{}
-
-
-void Foam::functionObjects::fieldCoordinateSystemTransform::write()
-{
-    Info<< type() << " " << name_ << " output:" << nl;
-
     forAll(fieldSet_, fieldi)
     {
-        const word fieldName = fieldSet_[fieldi] + ":Transformed";
-
-        const regIOobject& field =
-            obr_.lookupObject<regIOobject>(fieldName);
-
-        Info<< "    writing field " << field.name() << nl;
-
-        field.write();
+        writeObject(transformFieldName(fieldSet_[fieldi]));
     }
 
-    Info<< endl;
+    return true;
 }
 
 

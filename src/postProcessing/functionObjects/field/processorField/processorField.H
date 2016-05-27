@@ -36,7 +36,7 @@ Description
     processorField1
     {
         type        processorField;
-        functionObjectLibs ("libfieldFunctionObjects.so");
+        libs ("libfieldFunctionObjects.so");
         ...
     }
     \endverbatim
@@ -48,8 +48,7 @@ Description
     \endtable
 
 SeeAlso
-    Foam::functionObject
-    Foam::OutputFilterFunctionObject
+    Foam::functionObjects::fvMeshFunctionObject
 
 SourceFiles
     processorField.C
@@ -59,22 +58,12 @@ SourceFiles
 #ifndef functionObjects_processorField_H
 #define functionObjects_processorField_H
 
-#include "OFstream.H"
-#include "pointFieldFwd.H"
-#include "volFields.H"
-#include "surfaceFields.H"
-#include "coordinateSystem.H"
+#include "fvMeshFunctionObject.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
-
-// Forward declaration of classes
-class objectRegistry;
-class dictionary;
-class mapPolyMesh;
-
 namespace functionObjects
 {
 
@@ -83,20 +72,9 @@ namespace functionObjects
 \*---------------------------------------------------------------------------*/
 
 class processorField
+:
+    public fvMeshFunctionObject
 {
-protected:
-
-    // Protected data
-
-        //- Name of this set of nearWallFields object
-        word name_;
-
-        //- Reference to the database
-        const objectRegistry& obr_;
-
-
-private:
-
     // Private member functions
 
         //- Disallow default bitwise copy construct
@@ -114,14 +92,12 @@ public:
 
     // Constructors
 
-        //- Construct for given objectRegistry and dictionary.
-        //  Allow the possibility to load fields from files
+        //- Construct from Time and dictionary
         processorField
         (
             const word& name,
-            const objectRegistry&,
-            const dictionary&,
-            const bool loadFromFiles = false
+            const Time& runTime,
+            const dictionary& dict
         );
 
 
@@ -131,34 +107,14 @@ public:
 
     // Member Functions
 
-        //- Return name of the processorField object
-        virtual const word& name() const
-        {
-            return name_;
-        }
-
         //- Read the input data
-        virtual void read(const dictionary&);
+        virtual bool read(const dictionary&);
 
-        //- Execute, currently does nothing
-        virtual void execute();
+        //- Calculate the processorID field
+        virtual bool execute(const bool postProcess = false);
 
-        //- Execute at the final time-loop, currently does nothing
-        virtual void end();
-
-        //- Called when time was set at the end of the Time::operator++
-        virtual void timeSet();
-
-        //- Write
-        virtual void write();
-
-        //- Update for changes of mesh
-        virtual void updateMesh(const mapPolyMesh&)
-        {}
-
-        //- Update for changes of mesh
-        virtual void movePoints(const polyMesh&)
-        {}
+        //- Write the processorID field
+        virtual bool write(const bool postProcess = false);
 };
 
 

@@ -49,10 +49,10 @@ functions
     faceObj1
     {
         type            faceSource;
-        functionObjectLibs ("libfieldFunctionObjects.so");
+        libs ("libfieldFunctionObjects.so");
 
         enabled         true;
-        writeControl   outputTime;
+        writeControl   writeTime;
 
         // Output to log&file (true) or to file only
         log             true;
@@ -91,9 +91,9 @@ functions
     faceObj2
     {
         type            faceSource;
-        functionObjectLibs ("libfieldFunctionObjects.so");
+        libs ("libfieldFunctionObjects.so");
         enabled         true;
-        writeControl   outputTime;
+        writeControl   writeTime;
         log             true;
         valueOutput     true;
         source          faceZone;
@@ -109,9 +109,9 @@ functions
     cellObj1
     {
         type            cellSource;
-        functionObjectLibs ("libfieldFunctionObjects.so");
+        libs ("libfieldFunctionObjects.so");
         enabled         true;
-        writeControl   outputTime;
+        writeControl   writeTime;
         log             true;
         valueOutput     true;
         source          cellZone;

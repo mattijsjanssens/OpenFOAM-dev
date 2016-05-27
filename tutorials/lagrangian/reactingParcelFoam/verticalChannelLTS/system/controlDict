@@ -51,9 +51,9 @@ functions
     faceSource1
     {
         type            faceSource;
-        functionObjectLibs ("libfieldFunctionObjects.so");
+        libs ("libfieldFunctionObjects.so");
         enabled         yes;
-        writeControl   outputTime;
+        writeControl   writeTime;
         log             yes;
         valueOutput     no;
         source          patch;

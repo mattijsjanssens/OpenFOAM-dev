@@ -9,18 +9,15 @@
 streamLines
 {
     // Where to load it from
-    functionObjectLibs ("libfieldFunctionObjects.so");
+    libs ("libfieldFunctionObjects.so");
 
     type            streamLine;
 
     // Output every
-    writeControl   outputTime;
+    writeControl   writeTime;
     // writeInterval 10;
 
     setFormat       vtk; //gnuplot; //xmgr; //raw; //jplot; //csv; //ensight;
-
-    // Velocity field to use for tracking.
-    UName U;
 
     // Tracked forwards (+U) or backwards (-U)
     trackForward    true;

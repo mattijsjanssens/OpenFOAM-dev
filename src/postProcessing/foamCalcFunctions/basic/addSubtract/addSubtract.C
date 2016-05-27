@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -199,9 +199,9 @@ void Foam::calcTypes::addSubtract::init()
     argList::validArgs.append("add");
     argList::validArgs.append("baseField");
     argList::validArgs.append("calcMode");
-    argList::validOptions.insert("field", "fieldName");
+    argList::validOptions.insert("field", "field");
     argList::validOptions.insert("value", "valueString");
-    argList::validOptions.insert("resultName", "fieldName");
+    argList::validOptions.insert("result", "field");
 }
 
 

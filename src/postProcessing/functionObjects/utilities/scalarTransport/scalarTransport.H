@@ -39,6 +39,9 @@ Description
     - the diffusivity can be set manually using the DT entry, or retrieved
       from the turbulence model (if applicable)
 
+SeeAlso
+    Foam::functionObjects::fvMeshFunctionObject
+
 SourceFiles
     scalarTransport.C
 
@@ -47,22 +50,15 @@ SourceFiles
 #ifndef functionObjects_scalarTransport_H
 #define functionObjects_scalarTransport_H
 
+#include "fvMeshFunctionObject.H"
 #include "volFields.H"
 #include "surfaceFieldsFwd.H"
-#include "pointFieldFwd.H"
-#include "fvMatricesFwd.H"
 #include "fvOptionList.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
-
-// Forward declaration of classes
-class objectRegistry;
-class dictionary;
-class mapPolyMesh;
-
 namespace functionObjects
 {
 
@@ -71,14 +67,10 @@ namespace functionObjects
 \*---------------------------------------------------------------------------*/
 
 class scalarTransport
+:
+    public fvMeshFunctionObject
 {
     // Private data
-
-        //- Name of this set of scalarTransport objects
-        word name_;
-
-        //- Reference to the mesh database
-        const fvMesh& mesh_;
 
         //- Name of flux field (optional)
         word phiName_;
@@ -134,14 +126,12 @@ public:
 
     // Constructors
 
-        //- Construct for given objectRegistry and dictionary.
-        //  Allow the possibility to load fields from files
+        //- Construct from Time and dictionary
         scalarTransport
         (
             const word& name,
-            const objectRegistry&,
-            const dictionary&,
-            const bool loadFromFiles = false
+            const Time& runTime,
+            const dictionary& dict
         );
 
 
@@ -151,34 +141,15 @@ public:
 
     // Member Functions
 
-        //- Return name of the set of scalarTransport
-        virtual const word& name() const
-        {
-            return name_;
-        }
-
         //- Read the scalarTransport data
-        virtual void read(const dictionary&);
+        virtual bool read(const dictionary&);
 
-        //- Execute, currently does nothing
-        virtual void execute();
+        //- Calculate the scalarTransport
+        virtual bool execute(const bool postProcess = false);
 
-        //- Execute at the final time-loop, currently does nothing
-        virtual void end();
-
-        //- Called when time was set at the end of the Time::operator++
-        virtual void timeSet();
-
-        //- Calculate the scalarTransport and write
-        virtual void write();
-
-        //- Update for changes of mesh
-        virtual void updateMesh(const mapPolyMesh&)
-        {}
-
-        //- Update for changes of mesh
-        virtual void movePoints(const polyMesh&)
-        {}
+        //- Do nothing.
+        //  The volScalarField is registered and written automatically
+        virtual bool write(const bool postProcess = false);
 };
 
 

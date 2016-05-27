@@ -108,10 +108,10 @@ void Foam::syncTools::syncPointMap
         // Fill my entries in the shared points
         forAll(sharedPtLabels, i)
         {
-            label meshPointI = sharedPtLabels[i];
+            label meshPointi = sharedPtLabels[i];
 
             typename Map<T>::const_iterator fnd =
-                pointValues.find(meshPointI);
+                pointValues.find(meshPointi);
 
             if (fnd != pointValues.end())
             {
@@ -791,9 +791,9 @@ void Foam::syncTools::syncEdgeMap
 //
 //        forAll(pd.sharedPointLabels(), i)
 //        {
-//            label meshPointI = pd.sharedPointLabels()[i];
+//            label meshPointi = pd.sharedPointLabels()[i];
 //            // Fill my entries in the shared points
-//            sharedPts[pd.sharedPointAddr()[i]] = pointValues[meshPointI];
+//            sharedPts[pd.sharedPointAddr()[i]] = pointValues[meshPointi];
 //        }
 //    }
 //
@@ -820,10 +820,10 @@ void Foam::syncTools::syncEdgeMap
 //                const labelList& meshPts = procPatch.meshPoints();
 //                const labelList& nbrPts = procPatch.neighbPoints();
 //
-//                forAll(nbrPts, pointI)
+//                forAll(nbrPts, pointi)
 //                {
-//                    label nbrPointI = nbrPts[pointI];
-//                    patchInfo[nbrPointI] = pointValues[meshPts[pointI]];
+//                    label nbrPointi = nbrPts[pointi];
+//                    patchInfo[nbrPointi] = pointValues[meshPts[pointi]];
 //                }
 //
 //                UOPstream toNbr(procPatch.neighbProcNo(), pBufs);
@@ -857,10 +857,10 @@ void Foam::syncTools::syncEdgeMap
 //
 //                const labelList& meshPts = procPatch.meshPoints();
 //
-//                forAll(meshPts, pointI)
+//                forAll(meshPts, pointi)
 //                {
-//                    label meshPointI = meshPts[pointI];
-//                    cop(pointValues[meshPointI], nbrPatchInfo[pointI]);
+//                    label meshPointi = meshPts[pointi];
+//                    cop(pointValues[meshPointi], nbrPatchInfo[pointi]);
 //                }
 //            }
 //        }
@@ -924,8 +924,8 @@ void Foam::syncTools::syncEdgeMap
 //        // my local information.
 //        forAll(pd.sharedPointLabels(), i)
 //        {
-//            label meshPointI = pd.sharedPointLabels()[i];
-//            pointValues[meshPointI] = sharedPts[pd.sharedPointAddr()[i]];
+//            label meshPointi = pd.sharedPointLabels()[i];
+//            pointValues[meshPointi] = sharedPts[pd.sharedPointAddr()[i]];
 //        }
 //    }
 //}
@@ -1046,8 +1046,8 @@ void Foam::syncTools::syncPointList
 
     forAll(meshPoints, i)
     {
-        label pointI = meshPoints[i];
-        Map<label>::const_iterator iter = mpm.find(pointI);
+        label pointi = meshPoints[i];
+        Map<label>::const_iterator iter = mpm.find(pointi);
         if (iter != mpm.end())
         {
             cppFld[iter()] = pointValues[i];
@@ -1067,8 +1067,8 @@ void Foam::syncTools::syncPointList
 
     forAll(meshPoints, i)
     {
-        label pointI = meshPoints[i];
-        Map<label>::const_iterator iter = mpm.find(pointI);
+        label pointi = meshPoints[i];
+        Map<label>::const_iterator iter = mpm.find(pointi);
         if (iter != mpm.end())
         {
             pointValues[i] = cppFld[iter()];
@@ -1102,8 +1102,8 @@ void Foam::syncTools::syncPointList
 //
 //    forAll(meshPoints, i)
 //    {
-//        label pointI = meshPoints[i];
-//        Map<label>::const_iterator iter = mpm.find(pointI);
+//        label pointi = meshPoints[i];
+//        Map<label>::const_iterator iter = mpm.find(pointi);
 //        if (iter != mpm.end())
 //        {
 //            cppFld[iter()] = pointValues[i];
@@ -1124,8 +1124,8 @@ void Foam::syncTools::syncPointList
 //
 //    forAll(meshPoints, i)
 //    {
-//        label pointI = meshPoints[i];
-//        Map<label>::const_iterator iter = mpm.find(pointI);
+//        label pointi = meshPoints[i];
+//        Map<label>::const_iterator iter = mpm.find(pointi);
 //        if (iter != mpm.end())
 //        {
 //            pointValues[i] = cppFld[iter()];
@@ -1284,7 +1284,8 @@ void Foam::syncTools::syncBoundaryFaceList
     const polyMesh& mesh,
     UList<T>& faceValues,
     const CombineOp& cop,
-    const TransformOp& top
+    const TransformOp& top,
+    const bool parRun
 )
 {
     const label nBFaces = mesh.nFaces() - mesh.nInternalFaces();
@@ -1299,7 +1300,7 @@ void Foam::syncTools::syncBoundaryFaceList
 
     const polyBoundaryMesh& patches = mesh.boundaryMesh();
 
-    if (Pstream::parRun())
+    if (parRun)
     {
         PstreamBuffers pBufs(Pstream::nonBlocking);
 
@@ -1405,7 +1406,8 @@ void Foam::syncTools::syncFaceList
 (
     const polyMesh& mesh,
     PackedList<nBits>& faceValues,
-    const CombineOp& cop
+    const CombineOp& cop,
+    const bool parRun
 )
 {
     if (faceValues.size() != mesh.nFaces())
@@ -1418,7 +1420,7 @@ void Foam::syncTools::syncFaceList
 
     const polyBoundaryMesh& patches = mesh.boundaryMesh();
 
-    if (Pstream::parRun())
+    if (parRun)
     {
         PstreamBuffers pBufs(Pstream::nonBlocking);
 

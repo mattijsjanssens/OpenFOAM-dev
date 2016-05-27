@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -57,7 +57,7 @@ Foam::calcTypes::components::~components()
 void Foam::calcTypes::components::init()
 {
     argList::validArgs.append("components");
-    argList::validArgs.append("fieldName");
+    argList::validArgs.append("field");
 }
 
 

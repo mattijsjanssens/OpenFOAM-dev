@@ -24,7 +24,9 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "readFields.H"
-#include "dictionary.H"
+#include "volFields.H"
+#include "surfaceFields.H"
+#include "addToRunTimeSelectionTable.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -33,6 +35,7 @@ namespace Foam
 namespace functionObjects
 {
     defineTypeNameAndDebug(readFields, 0);
+    addToRunTimeSelectionTable(functionObject, readFields, dictionary);
 }
 }
 
@@ -42,21 +45,13 @@ namespace functionObjects
 Foam::functionObjects::readFields::readFields
 (
     const word& name,
-    const objectRegistry& obr,
-    const dictionary& dict,
-    const bool loadFromFiles
+    const Time& runTime,
+    const dictionary& dict
 )
 :
-    name_(name),
-    obr_(obr),
+    fvMeshFunctionObject(name, runTime, dict),
     fieldSet_()
 {
-    if (!isA<fvMesh>(obr))
-    {
-        FatalErrorInFunction
-            << "objectRegistry is not an fvMesh" << exit(FatalError);
-    }
-
     read(dict);
 }
 
@@ -69,13 +64,17 @@ Foam::functionObjects::readFields::~readFields()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-void Foam::functionObjects::readFields::read(const dictionary& dict)
+bool Foam::functionObjects::readFields::read(const dictionary& dict)
 {
+    fvMeshFunctionObject::read(dict);
+
     dict.lookup("fields") >> fieldSet_;
+
+    return true;
 }
 
 
-void Foam::functionObjects::readFields::execute()
+bool Foam::functionObjects::readFields::execute(const bool postProcess)
 {
     // Clear out any previously loaded fields
     vsf_.clear();
@@ -101,21 +100,15 @@ void Foam::functionObjects::readFields::execute()
         loadField<symmTensor>(fieldName, vSymmtf_, sSymmtf_);
         loadField<tensor>(fieldName, vtf_, stf_);
     }
+
+    return true;
 }
 
 
-void Foam::functionObjects::readFields::end()
+bool Foam::functionObjects::readFields::write(const bool postProcess)
 {
-    execute();
+    return true;
 }
-
-
-void Foam::functionObjects::readFields::timeSet()
-{}
-
-
-void Foam::functionObjects::readFields::write()
-{}
 
 
 // ************************************************************************* //

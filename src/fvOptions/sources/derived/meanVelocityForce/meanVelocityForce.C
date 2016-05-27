@@ -55,7 +55,7 @@ void Foam::fv::meanVelocityForce::writeProps
 ) const
 {
     // Only write on output time
-    if (mesh_.time().outputTime())
+    if (mesh_.time().writeTime())
     {
         IOdictionary propsDict
         (
@@ -93,7 +93,7 @@ Foam::fv::meanVelocityForce::meanVelocityForce
     relaxation_(coeffs_.lookupOrDefault<scalar>("relaxation", 1.0)),
     rAPtr_(NULL)
 {
-    coeffs_.lookup("fieldNames") >> fieldNames_;
+    coeffs_.lookup("fields") >> fieldNames_;
 
     if (fieldNames_.size() != 1)
     {

@@ -22,7 +22,7 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::FUNCTIONOBJECT
+    Foam::functionObjects::FUNCTIONOBJECT
 
 Group
 
@@ -34,7 +34,7 @@ Description
     FUNCTIONOBJECT1
     {
         type           FUNCTIONOBJECT;
-        functionObjectLibs ("libFUNCTIONOBJECTFunctionObject.so");
+        libs ("libFUNCTIONOBJECTFunctionObject.so");
         ...
         wordData       someWord;
         scalarData     1.0;
@@ -59,43 +59,33 @@ SourceFiles
 #ifndef FUNCTIONOBJECT_H
 #define FUNCTIONOBJECT_H
 
-#include "runTimeSelectionTables.H"
+#include "fvMeshFunctionObject.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
-
-// Forward declaration of classes
-class objectRegistry;
-class dictionary;
-class polyMesh;
-class mapPolyMesh;
+namespace functionObjects
+{
 
 /*---------------------------------------------------------------------------*\
                    Class FUNCTIONOBJECT Declaration
 \*---------------------------------------------------------------------------*/
 
 class FUNCTIONOBJECT
+:
+    public fvMeshFunctionObject
 {
     // Private data
 
-        //- Name of this set of FUNCTIONOBJECT
-        word name_;
+        //- word
+        word wordData_;
 
-        //- Refererence to Db
-        const objectRegistry& obr_;
+        //- scalar
+        scalar scalarData_;
 
-        // Read from dictionary
-
-            //- word
-            word wordData_;
-
-            //- scalar
-            scalar scalarData_;
-
-            //- label
-            label labelData_;
+        //- label
+        label labelData_;
 
 
     // Private Member Functions
@@ -116,14 +106,12 @@ public:
 
     // Constructors
 
-        //- Construct for given objectRegistry and dictionary.
-        //  Allow the possibility to load fields from files
+        //- Construct from Time and dictionary
         FUNCTIONOBJECT
         (
             const word& name,
-            const objectRegistry&,
-            const dictionary&,
-            const bool loadFromFiles = false
+            const Time& runTime,
+            const dictionary& dict
         );
 
 
@@ -133,39 +121,23 @@ public:
 
     // Member Functions
 
-        //- Return name of the FUNCTIONOBJECT
-        const word& name() const
-        {
-            return name_;
-        }
-
         //- Read the FUNCTIONOBJECT data
-        virtual void read(const dictionary&);
+        virtual bool read(const dictionary&);
 
         //- Execute, currently does nothing
-        virtual void execute();
+        virtual bool execute(const bool postProcess = false);
 
         //- Execute at the final time-loop, currently does nothing
-        virtual void end();
-
-        //- Called when time was set at the end of the Time::operator++
-        virtual void timeSet();
+        virtual bool end();
 
         //- Write the FUNCTIONOBJECT
-        virtual void write();
-
-        //- Update for changes of mesh
-        virtual void updateMesh(const mapPolyMesh&)
-        {}
-
-        //- Update for changes of mesh
-        virtual void movePoints(const polyMesh&)
-        {}
+        virtual bool write(const bool postProcess = false);
 };
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+} // End namespace functionObjects
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

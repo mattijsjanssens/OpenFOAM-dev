@@ -50,7 +50,7 @@ functions
     forces
     {
         type            forceCoeffs;
-        functionObjectLibs ( "libforces.so" );
+        libs ( "libforces.so" );
         writeControl   timeStep;
         writeInterval  1;
 
@@ -59,8 +59,6 @@ functions
             WALL10
         );
 
-        pName       p;
-        UName       U;
         log         true;
         rhoInf      1;
         CofR        (0 0 0);
