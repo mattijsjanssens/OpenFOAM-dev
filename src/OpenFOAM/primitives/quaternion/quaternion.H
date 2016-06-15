@@ -140,11 +140,16 @@ public:
             const bool normalized
         );
 
-        //- Construct given scalar part, the vector part = vector::zero
+        //- Construct a real from the given scalar part, the vector part = zero
         inline explicit quaternion(const scalar w);
 
-        //- Construct a pure quaternion given the vector part, scalar part = 0
+        //- Construct a pure imaginary quaternion given the vector part,
+        //  the scalar part = 0
         inline explicit quaternion(const vector& v);
+
+        //- Return the unit quaternion (versor) from the given vector
+        //  (w = sqrt(1 - |sqr(v)|))
+        static inline quaternion unit(const vector& v);
 
         //- Construct a quaternion given the three Euler angles
         inline quaternion
@@ -252,6 +257,13 @@ quaternion slerp
     const quaternion& qa,
     const quaternion& qb,
     const scalar t
+);
+
+//- Simple weighted average with sign change
+quaternion average
+(
+    const UList<quaternion>& qs,
+    const UList<scalar> w
 );
 
 //- Exponent of a quaternion

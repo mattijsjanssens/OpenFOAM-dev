@@ -51,7 +51,7 @@ Foam::leastSquaresVectors::leastSquaresVectors(const fvMesh& mesh)
             false
         ),
         mesh_,
-        dimensionedVector("zero", dimless/dimLength, vector::zero)
+        dimensionedVector("zero", dimless/dimLength, Zero)
     ),
     nVectors_
     (
@@ -65,7 +65,7 @@ Foam::leastSquaresVectors::leastSquaresVectors(const fvMesh& mesh)
             false
         ),
         mesh_,
-        dimensionedVector("zero", dimless/dimLength, vector::zero)
+        dimensionedVector("zero", dimless/dimLength, Zero)
     )
 {
     calcLeastSquaresVectors();
@@ -99,7 +99,7 @@ void Foam::leastSquaresVectors::calcLeastSquaresVectors()
 
 
     // Set up temporary storage for the dd tensor (before inversion)
-    symmTensorField dd(mesh_.nCells(), symmTensor::zero);
+    symmTensorField dd(mesh_.nCells(), Zero);
 
     forAll(owner, facei)
     {
@@ -114,10 +114,10 @@ void Foam::leastSquaresVectors::calcLeastSquaresVectors()
     }
 
 
-    surfaceVectorField::GeometricBoundaryField& blsP =
-        pVectors_.boundaryField();
+    surfaceVectorField::Boundary& pVectorsBf =
+        pVectors_.boundaryFieldRef();
 
-    forAll(blsP, patchi)
+    forAll(pVectorsBf, patchi)
     {
         const fvsPatchScalarField& pw = w.boundaryField()[patchi];
         const fvsPatchScalarField& pMagSf = magSf.boundaryField()[patchi];
@@ -168,9 +168,9 @@ void Foam::leastSquaresVectors::calcLeastSquaresVectors()
         nVectors_[facei] = -w[facei]*magSfByMagSqrd*(invDd[nei] & d);
     }
 
-    forAll(blsP, patchi)
+    forAll(pVectorsBf, patchi)
     {
-        fvsPatchVectorField& patchLsP = blsP[patchi];
+        fvsPatchVectorField& patchLsP = pVectorsBf[patchi];
 
         const fvsPatchScalarField& pw = w.boundaryField()[patchi];
         const fvsPatchScalarField& pMagSf = magSf.boundaryField()[patchi];

@@ -61,9 +61,6 @@ class domainDecomposition
         //- Optional: points at the facesInstance
         autoPtr<pointIOField> facesInstancePointsPtr_;
 
-        //- Mesh decomposition control dictionary
-        IOdictionary decompositionDict_;
-
         //- Number of processors in decomposition
         label nProcs_;
 
@@ -142,7 +139,7 @@ class domainDecomposition
         ) const;
 
         //- Generate sub patch info for processor cyclics
-        template <class BinaryOp>
+        template<class BinaryOp>
         void processInterCyclics
         (
             const polyBoundaryMesh& patches,

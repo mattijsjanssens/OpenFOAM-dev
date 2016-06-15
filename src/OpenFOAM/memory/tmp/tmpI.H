@@ -92,6 +92,19 @@ inline Foam::tmp<T>::tmp(const tmp<T>& t)
 
 
 template<class T>
+inline Foam::tmp<T>::tmp(const tmp<T>&& t)
+:
+    type_(t.type_),
+    ptr_(t.ptr_)
+{
+    if (isTmp())
+    {
+        t.ptr_ = 0;
+    }
+}
+
+
+template<class T>
 inline Foam::tmp<T>::tmp(const tmp<T>& t, bool allowTransfer)
 :
     type_(t.type_),
@@ -158,7 +171,7 @@ inline Foam::word Foam::tmp<T>::typeName() const
 
 
 template<class T>
-inline T& Foam::tmp<T>::ref()
+inline T& Foam::tmp<T>::ref() const
 {
     if (isTmp())
     {
@@ -372,7 +385,7 @@ inline void Foam::tmp<T>::operator=(const tmp<T>& t)
 
 
 //- Return the const reference of the non-const reference argument
-template<typename T>
+template<class T>
 inline const T& Const(T& t)
 {
     return t;
@@ -380,7 +393,7 @@ inline const T& Const(T& t)
 
 
 //- Return the const reference of the non-const rvalue reference argument
-template<typename T>
+template<class T>
 inline const T& Const(T&& t)
 {
     return t;

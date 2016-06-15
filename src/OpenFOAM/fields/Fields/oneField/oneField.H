@@ -55,6 +55,11 @@ class oneField
 
 public:
 
+    // Public typedefs
+
+        typedef oneField FieldType;
+
+
     // Constructors
 
         //- Construct null
@@ -64,10 +69,15 @@ public:
 
     // Member Operators
 
-        inline scalar operator[](const label) const;
+        inline one operator[](const label) const;
 
         inline oneField field() const;
 };
+
+
+inline const oneField& operator*(const oneField&, const oneField&);
+
+inline const oneField& operator/(const oneField&, const oneField&);
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -76,7 +86,7 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-    #include "oneFieldI.H"
+#include "oneFieldI.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

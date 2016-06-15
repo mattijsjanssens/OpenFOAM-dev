@@ -52,7 +52,7 @@ void Pstream::gather
     const label comm
 )
 {
-    if (UPstream::nProcs(comm) > 1)
+    if (UPstream::parRun() && UPstream::nProcs(comm) > 1)
     {
         // Get my communication order
         const commsStruct& myComm = comms[UPstream::myProcNo(comm)];
@@ -122,7 +122,7 @@ void Pstream::gather
 }
 
 
-template <class T, class BinaryOp>
+template<class T, class BinaryOp>
 void Pstream::gather
 (
     T& Value,
@@ -151,7 +151,7 @@ void Pstream::scatter
     const label comm
 )
 {
-    if (UPstream::nProcs(comm) > 1)
+    if (UPstream::parRun() && UPstream::nProcs(comm) > 1)
     {
         // Get my communication order
         const commsStruct& myComm = comms[UPstream::myProcNo(comm)];
@@ -219,7 +219,7 @@ void Pstream::scatter
 }
 
 
-template <class T>
+template<class T>
 void Pstream::scatter(T& Value, const int tag, const label comm)
 {
     if (UPstream::nProcs(comm) < UPstream::nProcsSimpleSum)

@@ -79,7 +79,7 @@ reconstruct
             (
                 "0",
                 ssf.dimensions()/dimArea,
-                pTraits<GradType>::zero
+                Zero
             ),
             extrapolatedCalculatedFvPatchField<GradType>::typeName
         )
@@ -97,7 +97,7 @@ reconstruct
     }
 
     const typename GeometricField<Type, fvsPatchField, surfaceMesh>::
-    GeometricBoundaryField& bsf = ssf.boundaryField();
+    Boundary& bsf = ssf.boundaryField();
 
     forAll(bsf, patchi)
     {

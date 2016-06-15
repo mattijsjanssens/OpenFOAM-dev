@@ -57,6 +57,7 @@ Description
 #include "MeshedSurface.H"
 #include "globalIndex.H"
 #include "IOmanip.H"
+#include "fvMeshTools.H"
 
 using namespace Foam;
 
@@ -411,10 +412,10 @@ void extractSurface
     labelList patchToCompactZone(bMesh.size(), -1);
     forAllConstIter(HashTable<label>, compactZoneID, iter)
     {
-        label patchI = bMesh.findPatchID(iter.key());
-        if (patchI != -1)
+        label patchi = bMesh.findPatchID(iter.key());
+        if (patchi != -1)
         {
-            patchToCompactZone[patchI] = iter();
+            patchToCompactZone[patchi] = iter();
         }
     }
 
@@ -568,6 +569,73 @@ scalar getMergeDistance(const polyMesh& mesh, const scalar mergeTol)
     }
 
     return mergeDist;
+}
+
+
+void removeZeroSizedPatches(fvMesh& mesh)
+{
+    // Remove any zero-sized ones. Assumes
+    // - processor patches are already only there if needed
+    // - all other patches are available on all processors
+    // - but coupled ones might still be needed, even if zero-size
+    //   (e.g. processorCyclic)
+    // See also logic in createPatch.
+    const polyBoundaryMesh& pbm = mesh.boundaryMesh();
+
+    labelList oldToNew(pbm.size(), -1);
+    label newPatchi = 0;
+    forAll(pbm, patchi)
+    {
+        const polyPatch& pp = pbm[patchi];
+
+        if (!isA<processorPolyPatch>(pp))
+        {
+            if
+            (
+                isA<coupledPolyPatch>(pp)
+             || returnReduce(pp.size(), sumOp<label>())
+            )
+            {
+                // Coupled (and unknown size) or uncoupled and used
+                oldToNew[patchi] = newPatchi++;
+            }
+        }
+    }
+
+    forAll(pbm, patchi)
+    {
+        const polyPatch& pp = pbm[patchi];
+
+        if (isA<processorPolyPatch>(pp))
+        {
+            oldToNew[patchi] = newPatchi++;
+        }
+    }
+
+
+    const label nKeepPatches = newPatchi;
+
+    // Shuffle unused ones to end
+    if (nKeepPatches != pbm.size())
+    {
+        Info<< endl
+            << "Removing zero-sized patches:" << endl << incrIndent;
+
+        forAll(oldToNew, patchi)
+        {
+            if (oldToNew[patchi] == -1)
+            {
+                Info<< indent << pbm[patchi].name()
+                    << " type " << pbm[patchi].type()
+                    << " at position " << patchi << endl;
+                oldToNew[patchi] = newPatchi++;
+            }
+        }
+        Info<< decrIndent;
+
+        fvMeshTools::reorderPatches(mesh, oldToNew, nKeepPatches, true);
+        Info<< endl;
+    }
 }
 
 
@@ -811,6 +879,8 @@ int main(int argc, char *argv[])
         mesh,
         readScalar(meshDict.lookup("mergeTolerance"))
     );
+
+    const Switch keepPatches(meshDict.lookupOrDefault("keepPatches", false));
 
 
 
@@ -1164,11 +1234,11 @@ int main(int argc, char *argv[])
                 {
                     label globalRegionI = surfaces.globalRegion(surfI, i);
 
-                    label patchI;
+                    label patchi;
 
                     if (surfacePatchInfo.set(globalRegionI))
                     {
-                        patchI = meshRefiner.addMeshedPatch
+                        patchi = meshRefiner.addMeshedPatch
                         (
                             regNames[i],
                             surfacePatchInfo[globalRegionI]
@@ -1179,7 +1249,7 @@ int main(int argc, char *argv[])
                         dictionary patchInfo;
                         patchInfo.set("type", wallPolyPatch::typeName);
 
-                        patchI = meshRefiner.addMeshedPatch
+                        patchi = meshRefiner.addMeshedPatch
                         (
                             regNames[i],
                             patchInfo
@@ -1187,12 +1257,12 @@ int main(int argc, char *argv[])
                     }
 
                     Info<< setf(ios_base::left)
-                        << setw(6) << patchI
-                        << setw(20) << mesh.boundaryMesh()[patchI].type()
+                        << setw(6) << patchi
+                        << setw(20) << mesh.boundaryMesh()[patchi].type()
                         << setw(30) << regNames[i] << nl;
 
-                    globalToMasterPatch[globalRegionI] = patchI;
-                    globalToSlavePatch[globalRegionI] = patchI;
+                    globalToMasterPatch[globalRegionI] = patchi;
+                    globalToSlavePatch[globalRegionI] = patchi;
                 }
             }
             else
@@ -1204,11 +1274,11 @@ int main(int argc, char *argv[])
 
                     // Add master side patch
                     {
-                        label patchI;
+                        label patchi;
 
                         if (surfacePatchInfo.set(globalRegionI))
                         {
-                            patchI = meshRefiner.addMeshedPatch
+                            patchi = meshRefiner.addMeshedPatch
                             (
                                 regNames[i],
                                 surfacePatchInfo[globalRegionI]
@@ -1219,7 +1289,7 @@ int main(int argc, char *argv[])
                             dictionary patchInfo;
                             patchInfo.set("type", wallPolyPatch::typeName);
 
-                            patchI = meshRefiner.addMeshedPatch
+                            patchi = meshRefiner.addMeshedPatch
                             (
                                 regNames[i],
                                 patchInfo
@@ -1227,20 +1297,20 @@ int main(int argc, char *argv[])
                         }
 
                         Info<< setf(ios_base::left)
-                            << setw(6) << patchI
-                            << setw(20) << mesh.boundaryMesh()[patchI].type()
+                            << setw(6) << patchi
+                            << setw(20) << mesh.boundaryMesh()[patchi].type()
                             << setw(30) << regNames[i] << nl;
 
-                        globalToMasterPatch[globalRegionI] = patchI;
+                        globalToMasterPatch[globalRegionI] = patchi;
                     }
                     // Add slave side patch
                     {
                         const word slaveName = regNames[i] + "_slave";
-                        label patchI;
+                        label patchi;
 
                         if (surfacePatchInfo.set(globalRegionI))
                         {
-                            patchI = meshRefiner.addMeshedPatch
+                            patchi = meshRefiner.addMeshedPatch
                             (
                                 slaveName,
                                 surfacePatchInfo[globalRegionI]
@@ -1251,7 +1321,7 @@ int main(int argc, char *argv[])
                             dictionary patchInfo;
                             patchInfo.set("type", wallPolyPatch::typeName);
 
-                            patchI = meshRefiner.addMeshedPatch
+                            patchi = meshRefiner.addMeshedPatch
                             (
                                 slaveName,
                                 patchInfo
@@ -1259,11 +1329,11 @@ int main(int argc, char *argv[])
                         }
 
                         Info<< setf(ios_base::left)
-                            << setw(6) << patchI
-                            << setw(20) << mesh.boundaryMesh()[patchI].type()
+                            << setw(6) << patchi
+                            << setw(20) << mesh.boundaryMesh()[patchi].type()
                             << setw(30) << slaveName << nl;
 
-                        globalToSlavePatch[globalRegionI] = patchI;
+                        globalToSlavePatch[globalRegionI] = patchi;
                     }
                 }
             }
@@ -1351,6 +1421,12 @@ int main(int argc, char *argv[])
             motionDict
         );
 
+
+        if (!keepPatches && !wantSnap && !wantLayers)
+        {
+            removeZeroSizedPatches(mesh);
+        }
+
         writeMesh
         (
             "Refined mesh",
@@ -1391,6 +1467,11 @@ int main(int argc, char *argv[])
             planarAngle,
             snapParams
         );
+
+        if (!keepPatches && !wantLayers)
+        {
+            removeZeroSizedPatches(mesh);
+        }
 
         writeMesh
         (
@@ -1437,6 +1518,11 @@ int main(int argc, char *argv[])
             decomposer,
             distributor
         );
+
+        if (!keepPatches)
+        {
+            removeZeroSizedPatches(mesh);
+        }
 
         writeMesh
         (
@@ -1491,13 +1577,13 @@ int main(int argc, char *argv[])
         }
         else
         {
-            forAll(bMesh, patchI)
+            forAll(bMesh, patchi)
             {
-                const polyPatch& patch = bMesh[patchI];
+                const polyPatch& patch = bMesh[patchi];
 
                 if (!isA<processorPolyPatch>(patch))
                 {
-                    includePatches.insert(patchI);
+                    includePatches.insert(patchi);
                 }
             }
         }

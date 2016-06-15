@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -145,8 +145,7 @@ void Foam::sigStopAtWriteNow::set(const bool verbose)
             FatalErrorInFunction
                 << "stopAtWriteNowSignal : " << signal_
                 << " cannot be the same as the writeNowSignal."
-                << " Please change this in the controlDict ("
-                << findEtcFile("controlDict", false) << ")."
+                << " Please change this in the etc/controlDict."
                 << exit(FatalError);
         }
 

@@ -51,7 +51,7 @@ PtrList<surfaceScalarField> phiFs(phases.size());
                 new surfaceScalarField
                 (
                     IOobject::groupName("phiF", phase.name()),
-                    (fvc::interpolate(rAUs[phasei]*Fs()[phasei]) & mesh.Sf())
+                    fvc::flux(rAUs[phasei]*Fs()[phasei])
                 )
             );
         }
@@ -92,6 +92,11 @@ while (pimple.correct())
     // Update continuity errors due to temperature changes
     fluid.correct();
 
+    volScalarField rho("rho", fluid.rho());
+
+    // Correct p_rgh for consistency with p and the updated densities
+    p_rgh = p - rho*gh;
+
     PtrList<volVectorField> HbyAs(phases.size());
 
     forAll(phases, phasei)
@@ -120,9 +125,6 @@ while (pimple.correct())
                *phase.rho()*phase.U().oldTime()/runTime.deltaT()
             );
     }
-
-    // Mean density for buoyancy force and p_rgh -> p
-    volScalarField rho("rho", fluid.rho());
 
     surfaceScalarField ghSnGradRho
     (
@@ -182,6 +184,9 @@ while (pimple.correct())
         );
         surfaceScalarField phiCorrCoeff(pos(alphafBar - 0.99));
 
+        surfaceScalarField::Boundary& phiCorrCoeffBf =
+            phiCorrCoeff.boundaryFieldRef();
+
         forAll(mesh.boundary(), patchi)
         {
             // Set ddtPhiCorr to 0 on non-coupled boundaries
@@ -191,7 +196,7 @@ while (pimple.correct())
              || isA<cyclicAMIFvPatch>(mesh.boundary()[patchi])
             )
             {
-                phiCorrCoeff.boundaryField()[patchi] = 0;
+                phiCorrCoeffBf[patchi] = 0;
             }
         }
 
@@ -201,7 +206,7 @@ while (pimple.correct())
             new surfaceScalarField
             (
                 IOobject::groupName("phiHbyA", phase.name()),
-                (fvc::interpolate(HbyAs[phasei]) & mesh.Sf())
+                fvc::flux(HbyAs[phasei])
               + phiCorrCoeff
                *fvc::interpolate
                 (
@@ -209,7 +214,7 @@ while (pimple.correct())
                 )
                *(
                    MRF.absolute(phase.phi().oldTime())
-                 - (fvc::interpolate(phase.U().oldTime()) & mesh.Sf())
+                 - fvc::flux(phase.U().oldTime())
                 )/runTime.deltaT()
               - phigFs[phasei]
             )
@@ -271,7 +276,7 @@ while (pimple.correct())
 
     // Update the fixedFluxPressure BCs to ensure flux consistency
     {
-        surfaceScalarField::GeometricBoundaryField phib(phi.boundaryField());
+        surfaceScalarField::Boundary phib(phi.boundaryField());
         phib = 0;
         forAll(phases, phasei)
         {
@@ -281,7 +286,7 @@ while (pimple.correct())
 
         setSnGrad<fixedFluxPressureFvPatchScalarField>
         (
-            p_rgh.boundaryField(),
+            p_rgh.boundaryFieldRef(),
             (
                 phiHbyA.boundaryField() - phib
             )/(mesh.magSf().boundaryField()*rAUf.boundaryField())

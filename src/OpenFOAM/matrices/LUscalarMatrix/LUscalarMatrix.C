@@ -39,6 +39,12 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
+Foam::LUscalarMatrix::LUscalarMatrix()
+:
+    comm_(Pstream::worldComm)
+{}
+
+
 Foam::LUscalarMatrix::LUscalarMatrix(const scalarSquareMatrix& matrix)
 :
     scalarSquareMatrix(matrix),
@@ -129,7 +135,7 @@ Foam::LUscalarMatrix::LUscalarMatrix
                 nCells += lduMatrices[i].size();
             }
 
-            scalarSquareMatrix m(nCells, nCells, 0.0);
+            scalarSquareMatrix m(nCells, 0.0);
             transfer(m);
             convert(lduMatrices);
         }
@@ -137,20 +143,20 @@ Foam::LUscalarMatrix::LUscalarMatrix
     else
     {
         label nCells = ldum.lduAddr().size();
-        scalarSquareMatrix m(nCells, nCells, 0.0);
+        scalarSquareMatrix m(nCells, 0.0);
         transfer(m);
         convert(ldum, interfaceCoeffs, interfaces);
     }
 
     if (Pstream::master(comm_))
     {
-        label nRows = m();
+        label mRows = m();
         label nColumns = n();
 
         if (debug)
         {
-            Pout<< "LUscalarMatrix : size:" << nRows << endl;
-            for (label rowI = 0; rowI < nRows; rowI++)
+            Pout<< "LUscalarMatrix : size:" << mRows << endl;
+            for (label rowI = 0; rowI < mRows; rowI++)
             {
                 const scalar* row = operator[](rowI);
 
@@ -249,8 +255,6 @@ void Foam::LUscalarMatrix::convert
             }
         }
     }
-
-    //printDiagonalDominance();
 }
 
 
@@ -380,8 +384,6 @@ void Foam::LUscalarMatrix::convert
             }
         }
     }
-
-    //printDiagonalDominance();
 }
 
 
@@ -399,6 +401,14 @@ void Foam::LUscalarMatrix::printDiagonalDominance() const
         }
         Info<< mag(sum)/mag(operator[](i)[i]) << endl;
     }
+}
+
+
+void Foam::LUscalarMatrix::decompose(const scalarSquareMatrix& M)
+{
+    scalarSquareMatrix::operator=(M);
+    pivotIndices_.setSize(m());
+    LUDecompose(*this, pivotIndices_);
 }
 
 

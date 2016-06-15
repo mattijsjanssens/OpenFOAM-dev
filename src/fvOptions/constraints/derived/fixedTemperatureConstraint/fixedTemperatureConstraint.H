@@ -33,11 +33,11 @@ Description
         {
             mode            uniform;    // uniform or lookup
 
-            // uniform option
+            // For uniform option
             temperature     constant 500; // fixed temperature with time [K]
 
-            // lookup option
-            // TName        T;          // optional temperature field name
+            // For lookup option
+            // T            <Tname>;     // optional temperature field name
         }
 
 Note:
@@ -137,7 +137,7 @@ public:
     // Member Functions
 
         //- Constrain energy equation to fix the temperature
-        virtual void constrain(fvMatrix<scalar>& eqn, const label fieldI);
+        virtual void constrain(fvMatrix<scalar>& eqn, const label fieldi);
 
 
         // IO

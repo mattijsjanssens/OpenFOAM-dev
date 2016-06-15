@@ -33,9 +33,9 @@ inline Foam::Tensor<Cmpt>::Tensor()
 
 
 template<class Cmpt>
-inline Foam::Tensor<Cmpt>::Tensor(const Foam::zero z)
+inline Foam::Tensor<Cmpt>::Tensor(const Foam::zero)
 :
-    Tensor::msType(z)
+    Tensor::msType(Zero)
 {}
 
 
@@ -329,7 +329,7 @@ inline Foam::Tensor<Cmpt> Foam::Tensor<Cmpt>::T() const
 }
 
 
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
 
 template<class Cmpt>
 inline void Foam::Tensor<Cmpt>::operator&=(const Tensor<Cmpt>& t)
@@ -659,13 +659,8 @@ inline Cmpt invariantII(const Tensor<Cmpt>& t)
 {
     return
     (
-        0.5*sqr(tr(t))
-      - 0.5*
-        (
-           t.xx()*t.xx() + t.xy()*t.xy() + t.xz()*t.xz()
-         + t.yx()*t.yx() + t.yy()*t.yy() + t.yz()*t.yz()
-         + t.zx()*t.zx() + t.zy()*t.zy() + t.zz()*t.zz()
-        )
+        t.xx()*t.yy() + t.yy()*t.zz() + t.xx()*t.zz()
+      - t.xy()*t.yx() - t.yz()*t.zy() - t.xz()*t.zx()
     );
 }
 

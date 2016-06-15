@@ -57,6 +57,13 @@ class geometricOneField
 
 public:
 
+    // Public typedefs
+
+        typedef oneField Internal;
+        typedef oneField Patch;
+        typedef oneFieldField Boundary;
+        typedef one cmptType;
+
     // Constructors
 
         //- Construct null
@@ -68,13 +75,19 @@ public:
 
         inline const dimensionSet& dimensions() const;
 
-        inline scalar operator[](const label) const;
+        inline one operator[](const label) const;
 
         inline oneField field() const;
 
         inline oneField oldTime() const;
 
-        inline oneFieldField boundaryField() const;
+        inline Internal operator()() const;
+
+        inline Internal v() const;
+
+        inline typename Internal::FieldType primitiveField() const;
+
+        inline Boundary boundaryField() const;
 };
 
 
@@ -84,10 +97,34 @@ inline const geometricOneField& operator*
     const geometricOneField&
 );
 
+inline const geometricOneField::Internal& operator*
+(
+    const geometricOneField::Internal&,
+    const geometricOneField&
+);
+
+inline const geometricOneField::Internal& operator*
+(
+    const geometricOneField&,
+    const geometricOneField::Internal&
+);
+
 inline const geometricOneField& operator/
 (
     const geometricOneField&,
     const geometricOneField&
+);
+
+inline const geometricOneField::Internal& operator/
+(
+    const geometricOneField::Internal&,
+    const geometricOneField&
+);
+
+inline const geometricOneField::Internal& operator/
+(
+    const geometricOneField&,
+    const geometricOneField::Internal&
 );
 
 
@@ -97,7 +134,7 @@ inline const geometricOneField& operator/
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-    #include "geometricOneFieldI.H"
+#include "geometricOneFieldI.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

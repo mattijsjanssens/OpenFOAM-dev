@@ -123,7 +123,7 @@ public:
             );
 
             //- Like above but switches between linear/tree communication
-            template <class T>
+            template<class T>
             static void scatter
             (
                 T& Value,
@@ -322,7 +322,7 @@ public:
             template<class Container>
             static void exchangeSizes
             (
-                const UList<Container>& sendData,
+                const Container& sendData,
                 labelList& sizes,
                 const label comm = UPstream::worldComm
             );

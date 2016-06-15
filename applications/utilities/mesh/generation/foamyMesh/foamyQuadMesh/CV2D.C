@@ -862,7 +862,7 @@ void Foam::CV2D::newPoints()
             edgei = 0;
 
             // Initialise the displacement for the centre and sum-weights
-            vector2D disp = vector2D::zero;
+            vector2D disp = Zero;
             scalar sumw = 0;
 
             do
@@ -938,7 +938,7 @@ void Foam::CV2D::newPoints()
 /*
 void Foam::CV2D::moveInternalPoints(const point2DField& newPoints)
 {
-    label pointI = 0;
+    label pointi = 0;
 
     for
     (
@@ -949,7 +949,7 @@ void Foam::CV2D::moveInternalPoints(const point2DField& newPoints)
     {
         if (vit->internalPoint())
         {
-            movePoint(vit, newPoints[pointI++]);
+            movePoint(vit, newPoints[pointi++]);
         }
     }
 }

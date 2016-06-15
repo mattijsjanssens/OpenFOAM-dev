@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2012-2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2012-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -1080,7 +1080,7 @@ void Foam::conformalVoronoiMesh::move()
     vectorField displacementAccumulator
     (
         number_of_vertices(),
-        vector::zero
+        Zero
     );
 
     PackedBoolList pointToBeRetained
@@ -1525,7 +1525,7 @@ void Foam::conformalVoronoiMesh::move()
         << "They will not be inserted." << endl;
 
     // Save displacements to file.
-    if (foamyHexMeshControls().objOutput() && time().outputTime())
+    if (foamyHexMeshControls().objOutput() && time().writeTime())
     {
         Info<< "Writing point displacement vectors to file." << endl;
         OFstream str
@@ -1706,7 +1706,7 @@ void Foam::conformalVoronoiMesh::move()
         printVertexInfo(Info);
     }
 
-    if (time().outputTime())
+    if (time().writeTime())
     {
         writeMesh(time().timeName());
     }

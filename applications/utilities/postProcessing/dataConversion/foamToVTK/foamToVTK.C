@@ -27,13 +27,13 @@ Application
 Description
     Legacy VTK file format writer.
 
-    - handles volScalar, volVector, pointScalar, pointVector, surfaceScalar
+    - Handles volFields, pointFields, surfaceScalarField, surfaceVectorField
       fields.
-    - mesh topo changes.
-    - both ascii and binary.
-    - single time step writing.
-    - write subset only.
-    - automatic decomposition of cells; polygons on boundary undecomposed since
+    - Mesh topo changes.
+    - Both ascii and binary.
+    - Single time step writing.
+    - Write subset only.
+    - Automatic decomposition of cells; polygons on boundary undecomposed since
       handled by vtk.
 
 Usage
@@ -164,7 +164,7 @@ Note
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 template<class GeoField>
-void print(const char* msg, Ostream& os, const PtrList<GeoField>& flds)
+void print(const char* msg, Ostream& os, const PtrList<const GeoField>& flds)
 {
     if (flds.size())
     {
@@ -191,35 +191,35 @@ void print(Ostream& os, const wordList& flds)
 labelList getSelectedPatches
 (
     const polyBoundaryMesh& patches,
-    const List<wordRe>& excludePatches  //HashSet<word>& excludePatches
+    const List<wordRe>& excludePatches
 )
 {
     DynamicList<label> patchIDs(patches.size());
 
     Info<< "Combining patches:" << endl;
 
-    forAll(patches, patchI)
+    forAll(patches, patchi)
     {
-        const polyPatch& pp = patches[patchI];
+        const polyPatch& pp = patches[patchi];
 
         if
         (
             isType<emptyPolyPatch>(pp)
-            || (Pstream::parRun() && isType<processorPolyPatch>(pp))
+         || (Pstream::parRun() && isType<processorPolyPatch>(pp))
         )
         {
-            Info<< "    discarding empty/processor patch " << patchI
+            Info<< "    discarding empty/processor patch " << patchi
                 << " " << pp.name() << endl;
         }
         else if (findStrings(excludePatches, pp.name()))
         {
-            Info<< "    excluding patch " << patchI
+            Info<< "    excluding patch " << patchi
                 << " " << pp.name() << endl;
         }
         else
         {
-            patchIDs.append(patchI);
-            Info<< "    patch " << patchI << " " << pp.name() << endl;
+            patchIDs.append(patchi);
+            Info<< "    patch " << patchi << " " << pp.name() << endl;
         }
     }
     return patchIDs.shrink();
@@ -396,6 +396,7 @@ int main(int argc, char *argv[])
 
     // VTK/ directory in the case
     fileName fvPath(runTime.path()/"VTK");
+
     // Directory of mesh (region0 gets filtered out)
     fileName regionPrefix = "";
 
@@ -556,11 +557,11 @@ int main(int argc, char *argv[])
 
         // Construct the vol fields (on the original mesh if subsetted)
 
-        PtrList<volScalarField> vsf;
-        PtrList<volVectorField> vvf;
-        PtrList<volSphericalTensorField> vSpheretf;
-        PtrList<volSymmTensorField> vSymmtf;
-        PtrList<volTensorField> vtf;
+        PtrList<const volScalarField> vsf;
+        PtrList<const volVectorField> vvf;
+        PtrList<const volSphericalTensorField> vSpheretf;
+        PtrList<const volSymmTensorField> vSymmtf;
+        PtrList<const volTensorField> vtf;
 
         if (!specifiedFields || selectedFields.size())
         {
@@ -612,11 +613,11 @@ int main(int argc, char *argv[])
                 << " (\"-noPointValues\" (at your option)\n";
         }
 
-        PtrList<pointScalarField> psf;
-        PtrList<pointVectorField> pvf;
-        PtrList<pointSphericalTensorField> pSpheretf;
-        PtrList<pointSymmTensorField> pSymmtf;
-        PtrList<pointTensorField> ptf;
+        PtrList<const pointScalarField> psf;
+        PtrList<const pointVectorField> pvf;
+        PtrList<const pointSphericalTensorField> pSpheretf;
+        PtrList<const pointSymmTensorField> pSymmtf;
+        PtrList<const pointTensorField> ptf;
 
         if (!noPointValues && !(specifiedFields && selectedFields.empty()))
         {
@@ -747,7 +748,7 @@ int main(int argc, char *argv[])
 
         if (args.optionFound("surfaceFields"))
         {
-            PtrList<surfaceScalarField> ssf;
+            PtrList<const surfaceScalarField> ssf;
             readFields
             (
                 vMesh,
@@ -758,7 +759,7 @@ int main(int argc, char *argv[])
             );
             print("    surfScalarFields  :", Info, ssf);
 
-            PtrList<surfaceVectorField> svf;
+            PtrList<const surfaceVectorField> svf;
             readFields
             (
                 vMesh,
@@ -780,8 +781,9 @@ int main(int argc, char *argv[])
 
                 forAll(ssf, i)
                 {
-                    svf.set(sz+i, ssf[i]*n);
-                    svf[sz+i].rename(ssf[i].name());
+                    surfaceVectorField* ssfiPtr = (ssf[i]*n).ptr();
+                    ssfiPtr->rename(ssf[i].name());
+                    svf.set(sz+i, ssfiPtr);
                 }
                 ssf.clear();
 
@@ -890,9 +892,9 @@ int main(int argc, char *argv[])
         }
         else
         {
-            forAll(patches, patchI)
+            forAll(patches, patchi)
             {
-                const polyPatch& pp = patches[patchI];
+                const polyPatch& pp = patches[patchi];
 
                 if (!findStrings(excludePatches, pp.name()))
                 {
@@ -925,7 +927,7 @@ int main(int argc, char *argv[])
                         binary,
                         nearCellValue,
                         patchFileName,
-                        labelList(1, patchI)
+                        labelList(1, patchi)
                     );
 
                     if (!isA<emptyPolyPatch>(pp))
@@ -990,7 +992,7 @@ int main(int argc, char *argv[])
 
         if (doFaceZones)
         {
-            PtrList<surfaceScalarField> ssf;
+            PtrList<const surfaceScalarField> ssf;
             readFields
             (
                 vMesh,
@@ -1001,7 +1003,7 @@ int main(int argc, char *argv[])
             );
             print("    surfScalarFields  :", Info, ssf);
 
-            PtrList<surfaceVectorField> svf;
+            PtrList<const surfaceVectorField> svf;
             readFields
             (
                 vMesh,

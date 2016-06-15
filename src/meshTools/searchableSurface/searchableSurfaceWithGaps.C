@@ -47,7 +47,7 @@ Foam::Pair<Foam::vector> Foam::searchableSurfaceWithGaps::offsetVecs
     const point& end
 ) const
 {
-    Pair<vector> offsets(vector::zero, vector::zero);
+    Pair<vector> offsets(Zero, Zero);
 
     vector n(end-start);
 
@@ -349,16 +349,16 @@ void Foam::searchableSurfaceWithGaps::findLineAll
     findLine(start, end, nearestInfo);
 
     info.setSize(start.size());
-    forAll(info, pointI)
+    forAll(info, pointi)
     {
-        if (nearestInfo[pointI].hit())
+        if (nearestInfo[pointi].hit())
         {
-            info[pointI].setSize(1);
-            info[pointI][0] = nearestInfo[pointI];
+            info[pointi].setSize(1);
+            info[pointi][0] = nearestInfo[pointi];
         }
         else
         {
-            info[pointI].clear();
+            info[pointi].clear();
         }
     }
 }

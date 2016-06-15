@@ -198,11 +198,11 @@ void Foam::moleculeCloud::calculatePairForce()
             {
                 forAll(realCells, rC)
                 {
-                    List<molecule*> cellI = cellOccupancy_[realCells[rC]];
+                    List<molecule*> celli = cellOccupancy_[realCells[rC]];
 
-                    forAll(cellI, cellIMols)
+                    forAll(celli, cellIMols)
                     {
-                        molI = cellI[cellIMols];
+                        molI = celli[cellIMols];
 
                         evaluatePair(*molI, refMol());
                     }
@@ -395,9 +395,9 @@ void Foam::moleculeCloud::removeHighEnergyOverlaps()
 
                 forAll(realCells, rC)
                 {
-                    label cellI = realCells[rC];
+                    label celli = realCells[rC];
 
-                    List<molecule*> cellIMols = cellOccupancy_[cellI];
+                    List<molecule*> cellIMols = cellOccupancy_[celli];
 
                     forAll(cellIMols, cIM)
                     {
@@ -1016,7 +1016,7 @@ void Foam::moleculeCloud::createMolecule
             << abort(FatalError);
     }
 
-    point specialPosition(vector::zero);
+    point specialPosition(Zero);
 
     label special = 0;
 
@@ -1033,7 +1033,7 @@ void Foam::moleculeCloud::createMolecule
 
     v += bulkVelocity;
 
-    vector pi = vector::zero;
+    vector pi = Zero;
 
     tensor Q = I;
 
@@ -1072,9 +1072,9 @@ void Foam::moleculeCloud::createMolecule
             tetPt,
             Q,
             v,
-            vector::zero,
+            Zero,
             pi,
-            vector::zero,
+            Zero,
             specialPosition,
             constProps(id),
             special,
@@ -1184,11 +1184,11 @@ void Foam::moleculeCloud::calculateForce()
     // Set accumulated quantities to zero
     forAllIter(moleculeCloud, *this, mol)
     {
-        mol().siteForces() = vector::zero;
+        mol().siteForces() = Zero;
 
         mol().potentialEnergy() = 0.0;
 
-        mol().rf() = tensor::zero;
+        mol().rf() = Zero;
     }
 
     calculatePairForce();

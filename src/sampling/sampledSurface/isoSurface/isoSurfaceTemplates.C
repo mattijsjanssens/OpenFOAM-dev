@@ -76,26 +76,29 @@ Foam::isoSurface::adaptPatchFields
 
     const polyBoundaryMesh& patches = mesh.boundaryMesh();
 
-    forAll(patches, patchI)
+    typename FieldType::Boundary& sliceFldBf =
+        sliceFld.boundaryFieldRef();
+
+    forAll(patches, patchi)
     {
-        const polyPatch& pp = patches[patchI];
+        const polyPatch& pp = patches[patchi];
 
         if
         (
             isA<emptyPolyPatch>(pp)
-         && pp.size() != sliceFld.boundaryField()[patchI].size()
+         && pp.size() != sliceFldBf[patchi].size()
         )
         {
             // Clear old value. Cannot resize it since is a slice.
-            sliceFld.boundaryField().set(patchI, NULL);
+            sliceFldBf.set(patchi, NULL);
 
             // Set new value we can change
-            sliceFld.boundaryField().set
+            sliceFldBf.set
             (
-                patchI,
+                patchi,
                 new calculatedFvPatchField<Type>
                 (
-                    mesh.boundary()[patchI],
+                    mesh.boundary()[patchi],
                     sliceFld
                 )
             );
@@ -103,9 +106,9 @@ Foam::isoSurface::adaptPatchFields
             // Note: cannot use patchInternalField since uses emptyFvPatch::size
             // Do our own internalField instead.
             const labelUList& faceCells =
-                mesh.boundary()[patchI].patch().faceCells();
+                mesh.boundary()[patchi].patch().faceCells();
 
-            Field<Type>& pfld = sliceFld.boundaryField()[patchI];
+            Field<Type>& pfld = sliceFldBf[patchi];
             pfld.setSize(faceCells.size());
             forAll(faceCells, i)
             {
@@ -120,10 +123,10 @@ Foam::isoSurface::adaptPatchFields
         {
             fvPatchField<Type>& pfld = const_cast<fvPatchField<Type>&>
             (
-                sliceFld.boundaryField()[patchI]
+                sliceFldBf[patchi]
             );
 
-            const scalarField& w = mesh.weights().boundaryField()[patchI];
+            const scalarField& w = mesh.weights().boundaryField()[patchi];
 
             tmp<Field<Type>> f =
                 w*pfld.patchInternalField()
@@ -438,7 +441,7 @@ Foam::label Foam::isoSurface::generateFaceTriPoints
     const DynamicList<Type>& snappedPoints,
     const labelList& snappedCc,
     const labelList& snappedPoint,
-    const label faceI,
+    const label facei,
 
     const scalar neiVal,
     const Type& neiPt,
@@ -449,35 +452,35 @@ Foam::label Foam::isoSurface::generateFaceTriPoints
     DynamicList<label>& triMeshCells
 ) const
 {
-    label own = mesh_.faceOwner()[faceI];
+    label own = mesh_.faceOwner()[facei];
 
     label oldNPoints = triPoints.size();
 
-    const face& f = mesh_.faces()[faceI];
+    const face& f = mesh_.faces()[facei];
 
     forAll(f, fp)
     {
-        label pointI = f[fp];
-        label nextPointI = f[f.fcIndex(fp)];
+        label pointi = f[fp];
+        label nextPointi = f[f.fcIndex(fp)];
 
         generateTriPoints
         (
-            pVals[pointI],
-            pCoords[pointI],
-            snappedPoint[pointI] != -1,
+            pVals[pointi],
+            pCoords[pointi],
+            snappedPoint[pointi] != -1,
             (
-                snappedPoint[pointI] != -1
-              ? snappedPoints[snappedPoint[pointI]]
-              : pTraits<Type>::zero
+                snappedPoint[pointi] != -1
+              ? snappedPoints[snappedPoint[pointi]]
+              : Type(Zero)
             ),
 
-            pVals[nextPointI],
-            pCoords[nextPointI],
-            snappedPoint[nextPointI] != -1,
+            pVals[nextPointi],
+            pCoords[nextPointi],
+            snappedPoint[nextPointi] != -1,
             (
-                snappedPoint[nextPointI] != -1
-              ? snappedPoints[snappedPoint[nextPointI]]
-              : pTraits<Type>::zero
+                snappedPoint[nextPointi] != -1
+              ? snappedPoints[snappedPoint[nextPointi]]
+              : Type(Zero)
             ),
 
             cVals[own],
@@ -486,7 +489,7 @@ Foam::label Foam::isoSurface::generateFaceTriPoints
             (
                 snappedCc[own] != -1
               ? snappedPoints[snappedCc[own]]
-              : pTraits<Type>::zero
+              : Type(Zero)
             ),
 
             neiVal,
@@ -559,9 +562,9 @@ void Foam::isoSurface::generateTriPoints
     triPoints.clear();
     triMeshCells.clear();
 
-    for (label faceI = 0; faceI < mesh_.nInternalFaces(); faceI++)
+    for (label facei = 0; facei < mesh_.nInternalFaces(); facei++)
     {
-        if (faceCutType_[faceI] != NOTCUT)
+        if (faceCutType_[facei] != NOTCUT)
         {
             generateFaceTriPoints
             (
@@ -574,15 +577,15 @@ void Foam::isoSurface::generateTriPoints
                 snappedPoints,
                 snappedCc,
                 snappedPoint,
-                faceI,
+                facei,
 
-                cVals[nei[faceI]],
-                cCoords[nei[faceI]],
-                snappedCc[nei[faceI]] != -1,
+                cVals[nei[facei]],
+                cCoords[nei[facei]],
+                snappedCc[nei[facei]] != -1,
                 (
-                    snappedCc[nei[faceI]] != -1
-                  ? snappedPoints[snappedCc[nei[faceI]]]
-                  : pTraits<Type>::zero
+                    snappedCc[nei[facei]] != -1
+                  ? snappedPoints[snappedCc[nei[facei]]]
+                  : Type(Zero)
                 ),
 
                 triPoints,
@@ -594,25 +597,25 @@ void Foam::isoSurface::generateTriPoints
 
     // Determine neighbouring snap status
     boolList neiSnapped(mesh_.nFaces()-mesh_.nInternalFaces(), false);
-    List<Type> neiSnappedPoint(neiSnapped.size(), pTraits<Type>::zero);
-    forAll(patches, patchI)
+    List<Type> neiSnappedPoint(neiSnapped.size(), Type(Zero));
+    forAll(patches, patchi)
     {
-        const polyPatch& pp = patches[patchI];
+        const polyPatch& pp = patches[patchi];
 
         if (pp.coupled())
         {
-            label faceI = pp.start();
+            label facei = pp.start();
             forAll(pp, i)
             {
-                label bFaceI = faceI-mesh_.nInternalFaces();
-                label snappedIndex = snappedCc[own[faceI]];
+                label bFacei = facei-mesh_.nInternalFaces();
+                label snappedIndex = snappedCc[own[facei]];
 
                 if (snappedIndex != -1)
                 {
-                    neiSnapped[bFaceI] = true;
-                    neiSnappedPoint[bFaceI] = snappedPoints[snappedIndex];
+                    neiSnapped[bFacei] = true;
+                    neiSnappedPoint[bFacei] = snappedPoints[snappedIndex];
                 }
-                faceI++;
+                facei++;
             }
         }
     }
@@ -621,9 +624,9 @@ void Foam::isoSurface::generateTriPoints
 
 
 
-    forAll(patches, patchI)
+    forAll(patches, patchi)
     {
-        const polyPatch& pp = patches[patchI];
+        const polyPatch& pp = patches[patchi];
 
         if (isA<processorPolyPatch>(pp))
         {
@@ -634,9 +637,9 @@ void Foam::isoSurface::generateTriPoints
 
             forAll(isCollocated, i)
             {
-                label faceI = pp.start()+i;
+                label facei = pp.start()+i;
 
-                if (faceCutType_[faceI] != NOTCUT)
+                if (faceCutType_[facei] != NOTCUT)
                 {
                     if (isCollocated[i])
                     {
@@ -651,12 +654,12 @@ void Foam::isoSurface::generateTriPoints
                             snappedPoints,
                             snappedCc,
                             snappedPoint,
-                            faceI,
+                            facei,
 
-                            cVals.boundaryField()[patchI][i],
-                            cCoords.boundaryField()[patchI][i],
-                            neiSnapped[faceI-mesh_.nInternalFaces()],
-                            neiSnappedPoint[faceI-mesh_.nInternalFaces()],
+                            cVals.boundaryField()[patchi][i],
+                            cCoords.boundaryField()[patchi][i],
+                            neiSnapped[facei-mesh_.nInternalFaces()],
+                            neiSnappedPoint[facei-mesh_.nInternalFaces()],
 
                             triPoints,
                             triMeshCells
@@ -675,12 +678,12 @@ void Foam::isoSurface::generateTriPoints
                             snappedPoints,
                             snappedCc,
                             snappedPoint,
-                            faceI,
+                            facei,
 
-                            cVals.boundaryField()[patchI][i],
-                            cCoords.boundaryField()[patchI][i],
+                            cVals.boundaryField()[patchi][i],
+                            cCoords.boundaryField()[patchi][i],
                             false,
-                            pTraits<Type>::zero,
+                            Type(Zero),
 
                             triPoints,
                             triMeshCells
@@ -691,11 +694,11 @@ void Foam::isoSurface::generateTriPoints
         }
         else
         {
-            label faceI = pp.start();
+            label facei = pp.start();
 
             forAll(pp, i)
             {
-                if (faceCutType_[faceI] != NOTCUT)
+                if (faceCutType_[facei] != NOTCUT)
                 {
                     generateFaceTriPoints
                     (
@@ -708,18 +711,18 @@ void Foam::isoSurface::generateTriPoints
                         snappedPoints,
                         snappedCc,
                         snappedPoint,
-                        faceI,
+                        facei,
 
-                        cVals.boundaryField()[patchI][i],
-                        cCoords.boundaryField()[patchI][i],
+                        cVals.boundaryField()[patchi][i],
+                        cCoords.boundaryField()[patchi][i],
                         false,  // fc not snapped
-                        pTraits<Type>::zero,
+                        Type(Zero),
 
                         triPoints,
                         triMeshCells
                     );
                 }
-                faceI++;
+                facei++;
             }
         }
     }
@@ -739,18 +742,18 @@ Foam::isoSurface::interpolate
 )
 {
     // One value per point
-    tmp<Field<Type> > tvalues(new Field<Type>(nPoints, pTraits<Type>::zero));
+    tmp<Field<Type> > tvalues(new Field<Type>(nPoints, Type(Zero)));
     Field<Type>& values = tvalues.ref();
     labelList nValues(values.size(), 0);
 
     forAll(unmergedValues, i)
     {
-        label mergedPointI = triPointMergeMap[i];
+        label mergedPointi = triPointMergeMap[i];
 
-        if (mergedPointI >= 0)
+        if (mergedPointi >= 0)
         {
-            values[mergedPointI] += unmergedValues[i];
-            nValues[mergedPointI]++;
+            values[mergedPointi] += unmergedValues[i];
+            nValues[mergedPointi]++;
         }
     }
 

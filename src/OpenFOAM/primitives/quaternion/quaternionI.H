@@ -67,7 +67,7 @@ inline Foam::quaternion::quaternion
 inline Foam::quaternion::quaternion(const scalar w)
 :
     w_(w),
-    v_(vector::zero)
+    v_(Zero)
 {}
 
 
@@ -76,6 +76,12 @@ inline Foam::quaternion::quaternion(const vector& v)
     w_(0),
     v_(v)
 {}
+
+
+inline Foam::quaternion Foam::quaternion::unit(const vector& v)
+{
+    return quaternion(sqrt(1 - magSqr(v)), v);
+}
 
 
 inline Foam::quaternion::quaternion
@@ -509,7 +515,7 @@ inline Foam::vector Foam::quaternion::eulerAngles
         default:
             FatalErrorInFunction
                 << "Unknown rotation sequence " << rs << abort(FatalError);
-            return vector::zero;
+            return Zero;
             break;
     }
 }

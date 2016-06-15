@@ -25,8 +25,8 @@ Application
     pimpleFoam
 
 Description
-    Large time-step transient solver for incompressible, flow using the PIMPLE
-    (merged PISO-SIMPLE) algorithm.
+    Large time-step transient solver for incompressible, turbulent flow, using
+    the PIMPLE (merged PISO-SIMPLE) algorithm.
 
     Sub-models include:
     - turbulence modelling, i.e. laminar, RAS or LES
@@ -44,15 +44,14 @@ Description
 
 int main(int argc, char *argv[])
 {
+    #include "postProcess.H"
+
     #include "setRootCase.H"
     #include "createTime.H"
     #include "createMesh.H"
-
-    pimpleControl pimple(mesh);
-
+    #include "createControl.H"
     #include "createTimeControls.H"
     #include "createFields.H"
-    #include "createMRF.H"
     #include "createFvOptions.H"
     #include "initContinuityErrs.H"
 

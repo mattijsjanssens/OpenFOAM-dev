@@ -81,13 +81,13 @@ void writeVTK
 
         faceList setFaces(currentSet.size());
         labelList faceValues(currentSet.size());
-        label setFaceI = 0;
+        label setFacei = 0;
 
         forAllConstIter(topoSet, currentSet, iter)
         {
-            setFaces[setFaceI] = mesh.faces()[iter.key()];
-            faceValues[setFaceI] = iter.key();
-            setFaceI++;
+            setFaces[setFacei] = mesh.faces()[iter.key()];
+            faceValues[setFacei] = iter.key();
+            setFacei++;
         }
 
         primitiveFacePatch fp(setFaces, mesh.points());
@@ -110,44 +110,44 @@ void writeVTK
 
         forAllConstIter(cellSet, currentSet, iter)
         {
-            label cellI = iter.key();
+            label celli = iter.key();
 
-            const cell& cFaces = mesh.cells()[cellI];
+            const cell& cFaces = mesh.cells()[celli];
 
             forAll(cFaces, i)
             {
-                label faceI = cFaces[i];
+                label facei = cFaces[i];
 
-                if (mesh.isInternalFace(faceI))
+                if (mesh.isInternalFace(facei))
                 {
-                    label otherCellI = mesh.faceOwner()[faceI];
+                    label otherCelli = mesh.faceOwner()[facei];
 
-                    if (otherCellI == cellI)
+                    if (otherCelli == celli)
                     {
-                        otherCellI = mesh.faceNeighbour()[faceI];
+                        otherCelli = mesh.faceNeighbour()[facei];
                     }
 
-                    if (!currentSet.found(otherCellI))
+                    if (!currentSet.found(otherCelli))
                     {
-                        cellFaces.insert(faceI, cellI);
+                        cellFaces.insert(facei, celli);
                     }
                 }
                 else
                 {
-                    cellFaces.insert(faceI, cellI);
+                    cellFaces.insert(facei, celli);
                 }
             }
         }
 
         faceList setFaces(cellFaces.size());
         labelList faceValues(cellFaces.size());
-        label setFaceI = 0;
+        label setFacei = 0;
 
         forAllConstIter(Map<label>, cellFaces, iter)
         {
-            setFaces[setFaceI] = mesh.faces()[iter.key()];
-            faceValues[setFaceI] = iter();              // Cell ID
-            setFaceI++;
+            setFaces[setFacei] = mesh.faces()[iter.key()];
+            faceValues[setFacei] = iter();              // Cell ID
+            setFacei++;
         }
 
         primitiveFacePatch fp(setFaces, mesh.points());
@@ -1029,7 +1029,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    Info<< "\nEnd\n" << endl;
+    Info<< "End\n" << endl;
 
     return status;
 }

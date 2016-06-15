@@ -82,11 +82,11 @@ void Foam::polyMesh::updateMesh(const mapPolyMesh& mpm)
 
         // Any points created out-of-nothing get set to the current coordinate
         // for lack of anything better.
-        forAll(mpm.pointMap(), newPointI)
+        forAll(mpm.pointMap(), newPointi)
         {
-            if (mpm.pointMap()[newPointI] == -1)
+            if (mpm.pointMap()[newPointi] == -1)
             {
-                newMotionPoints[newPointI] = points_[newPointI];
+                newMotionPoints[newPointi] = points_[newPointi];
             }
         }
     }
@@ -95,8 +95,8 @@ void Foam::polyMesh::updateMesh(const mapPolyMesh& mpm)
     meshObject::updateMesh<pointMesh>(*this, mpm);
 
     // Reset valid directions (could change by faces put into empty patches)
-    geometricD_ = Vector<label>::zero;
-    solutionD_ = Vector<label>::zero;
+    geometricD_ = Zero;
+    solutionD_ = Zero;
 
     const_cast<Time&>(time()).functionObjects().updateMesh(mpm);
 }

@@ -151,7 +151,7 @@ void Foam::WallLocalSpringSliderDashpot<CloudType>::evaluateWall
 
             fT_PW = -mu*mag(fN_PW)*USlip_PW/mag(USlip_PW);
 
-            tangentialOverlap_PW = vector::zero;
+            tangentialOverlap_PW = Zero;
         }
         else
         {
@@ -214,11 +214,11 @@ Foam::WallLocalSpringSliderDashpot<CloudType>::WallLocalSpringSliderDashpot
 
     DynamicList<label> wallPatchIndices;
 
-    forAll(bMesh, patchI)
+    forAll(bMesh, patchi)
     {
-        if (isA<wallPolyPatch>(bMesh[patchI]))
+        if (isA<wallPolyPatch>(bMesh[patchi]))
         {
-            wallPatchIndices.append(bMesh[patchI].index());
+            wallPatchIndices.append(bMesh[patchi].index());
         }
     }
 

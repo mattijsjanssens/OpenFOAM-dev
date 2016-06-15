@@ -87,7 +87,7 @@ void Foam::nastranSurfaceWriter::formatOS(OFstream& os) const
 void Foam::nastranSurfaceWriter::writeCoord
 (
     const point& p,
-    const label pointI,
+    const label pointi,
     OFstream& os
 ) const
 {
@@ -110,7 +110,7 @@ void Foam::nastranSurfaceWriter::writeCoord
             os  << setw(8) << "GRID";
             os.unsetf(ios_base::left);
             os.setf(ios_base::right);
-            os  << setw(8) << pointI + 1
+            os  << setw(8) << pointi + 1
                 << "        " 
                 << setw(8) << p.x()
                 << setw(8) << p.y()
@@ -126,7 +126,7 @@ void Foam::nastranSurfaceWriter::writeCoord
             os  << setw(8) << "GRID*";
             os.unsetf(ios_base::left);
             os.setf(ios_base::right);
-            os  << setw(16) << pointI + 1
+            os  << setw(16) << pointi + 1
                 << "                "
                 << setw(16) << p.x()
                 << setw(16) << p.y()
@@ -145,7 +145,7 @@ void Foam::nastranSurfaceWriter::writeCoord
         case wfFree:
         {
             os  << "GRID"
-                << ',' << pointI + 1
+                << ',' << pointi + 1
                 << ','
                 << ',' << p.x()
                 << ',' << p.y()
@@ -271,9 +271,9 @@ void Foam::nastranSurfaceWriter::writeGeometry
         << "$ Points" << nl
         << "$" << nl;
 
-    forAll(points, pointI)
+    forAll(points, pointi)
     {
-        writeCoord(points[pointI], pointI, os);
+        writeCoord(points[pointi], pointi, os);
     }
 
 
@@ -285,19 +285,19 @@ void Foam::nastranSurfaceWriter::writeGeometry
 
     label nFace = 1;
 
-    forAll(faces, faceI)
+    forAll(faces, facei)
     {
-        const face& f = faces[faceI];
+        const face& f = faces[facei];
 
         if (f.size() == 3)
         {
-            writeFace("CTRIA3", faces[faceI], nFace, os);
-            decomposedFaces[faceI].append(faces[faceI]);
+            writeFace("CTRIA3", faces[facei], nFace, os);
+            decomposedFaces[facei].append(faces[facei]);
         }
         else if (f.size() == 4)
         {
-            writeFace("CQUAD4", faces[faceI], nFace, os);
-            decomposedFaces[faceI].append(faces[faceI]);
+            writeFace("CQUAD4", faces[facei], nFace, os);
+            decomposedFaces[facei].append(faces[facei]);
         }
         else
         {
@@ -309,7 +309,7 @@ void Foam::nastranSurfaceWriter::writeGeometry
             forAll(triFaces, triI)
             {
                 writeFace("CTRIA3", triFaces[triI], nFace, os);
-                decomposedFaces[faceI].append(triFaces[triI]);
+                decomposedFaces[facei].append(triFaces[triI]);
             }
         }
     }

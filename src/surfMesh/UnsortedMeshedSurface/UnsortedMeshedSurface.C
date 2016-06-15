@@ -410,9 +410,9 @@ void Foam::UnsortedMeshedSurface<Face>::remapFaces
         {
             List<label> newZones(faceMap.size());
 
-            forAll(faceMap, faceI)
+            forAll(faceMap, facei)
             {
-                newZones[faceI] = zoneIds_[faceMap[faceI]];
+                newZones[facei] = zoneIds_[faceMap[facei]];
             }
             zoneIds_.transfer(newZones);
         }
@@ -461,9 +461,9 @@ Foam::surfZoneList Foam::UnsortedMeshedSurface<Face>::sortedZones
 
     // step 1: get zone sizes and store (origId => zoneI)
     Map<label> lookup;
-    forAll(zoneIds_, faceI)
+    forAll(zoneIds_, facei)
     {
-        const label origId = zoneIds_[faceI];
+        const label origId = zoneIds_[facei];
 
         Map<label>::iterator fnd = lookup.find(origId);
         if (fnd != lookup.end())
@@ -514,10 +514,10 @@ Foam::surfZoneList Foam::UnsortedMeshedSurface<Face>::sortedZones
     // step 3: build the re-ordering
     faceMap.setSize(zoneIds_.size());
 
-    forAll(zoneIds_, faceI)
+    forAll(zoneIds_, facei)
     {
-        label zoneI = lookup[zoneIds_[faceI]];
-        faceMap[faceI] = zoneLst[zoneI].start() + zoneLst[zoneI].size()++;
+        label zoneI = lookup[zoneIds_[facei]];
+        faceMap[facei] = zoneLst[zoneI].start() + zoneLst[zoneI].size()++;
     }
 
     // with reordered faces registered in faceMap
@@ -543,29 +543,29 @@ Foam::UnsortedMeshedSurface<Face>::subsetMesh
     // Create compact coordinate list and forward mapping array
     pointField newPoints(pointMap.size());
     labelList  oldToNew(locPoints.size());
-    forAll(pointMap, pointI)
+    forAll(pointMap, pointi)
     {
-        newPoints[pointI] = locPoints[pointMap[pointI]];
-        oldToNew[pointMap[pointI]] = pointI;
+        newPoints[pointi] = locPoints[pointMap[pointi]];
+        oldToNew[pointMap[pointi]] = pointi;
     }
 
     // Renumber face node labels and compact
     List<Face>  newFaces(faceMap.size());
     List<label> newZones(faceMap.size());
 
-    forAll(faceMap, faceI)
+    forAll(faceMap, facei)
     {
-        const label origFaceI = faceMap[faceI];
-        newFaces[faceI] = Face(locFaces[origFaceI]);
+        const label origFacei = faceMap[facei];
+        newFaces[facei] = Face(locFaces[origFacei]);
 
         // Renumber labels for face
-        Face& f = newFaces[faceI];
+        Face& f = newFaces[facei];
         forAll(f, fp)
         {
             f[fp] = oldToNew[f[fp]];
         }
 
-        newZones[faceI] = zoneIds_[origFaceI];
+        newZones[facei] = zoneIds_[origFacei];
     }
     oldToNew.clear();
 

@@ -105,13 +105,13 @@ int main(int argc, char *argv[])
 
     pointField points(nNodes);
 
-    forAll(points, pointI)
+    forAll(points, pointi)
     {
         scalar x,y,z;
 
         str >> x >> y >> z;
 
-        points[pointI] = point(x, y, z);
+        points[pointi] = point(x, y, z);
     }
 
 
@@ -127,7 +127,7 @@ int main(int argc, char *argv[])
 
     labelList tetPoints(4);
 
-    forAll(cells, cellI)
+    forAll(cells, celli)
     {
         label domain(readLabel(str));
 
@@ -144,7 +144,7 @@ int main(int argc, char *argv[])
         tetPoints[2] = readLabel(str) - 1;
         tetPoints[3] = readLabel(str) - 1;
 
-        cells[cellI] = cellShape(tet, tetPoints);
+        cells[celli] = cellShape(tet, tetPoints);
     }
 
 
@@ -165,31 +165,31 @@ int main(int argc, char *argv[])
     // Boundary faces as three vertices
     HashTable<label, triFace, Hash<triFace>> vertsToBoundary(nFaces);
 
-    forAll(boundaryFaces, faceI)
+    forAll(boundaryFaces, facei)
     {
-        label patchI(readLabel(str));
+        label patchi(readLabel(str));
 
-        if (patchI < 0)
+        if (patchi < 0)
         {
             FatalErrorInFunction
-                << "Invalid boundary region number " << patchI
+                << "Invalid boundary region number " << patchi
                 << " on line " << str.lineNumber()
                 << exit(FatalError);
         }
 
 
-        maxPatch = max(maxPatch, patchI);
+        maxPatch = max(maxPatch, patchi);
 
         triFace tri(readLabel(str)-1, readLabel(str)-1, readLabel(str)-1);
 
         // Store boundary face as is for now. Later on reverse it.
-        boundaryFaces[faceI].setSize(3);
-        boundaryFaces[faceI][0] = tri[0];
-        boundaryFaces[faceI][1] = tri[1];
-        boundaryFaces[faceI][2] = tri[2];
-        boundaryPatch[faceI] = patchI;
+        boundaryFaces[facei].setSize(3);
+        boundaryFaces[facei][0] = tri[0];
+        boundaryFaces[facei][1] = tri[1];
+        boundaryFaces[facei][2] = tri[2];
+        boundaryPatch[facei] = patchi;
 
-        vertsToBoundary.insert(tri, faceI);
+        vertsToBoundary.insert(tri, facei);
     }
 
     label nPatches = maxPatch + 1;
@@ -199,9 +199,9 @@ int main(int argc, char *argv[])
     // For storage reasons I store the triangles and loop over the cells instead
     // of the other way around (store cells and loop over triangles) though
     // that would be faster.
-    forAll(cells, cellI)
+    forAll(cells, celli)
     {
-        const cellShape& cll = cells[cellI];
+        const cellShape& cll = cells[celli];
 
         // Get the four (outwards pointing) faces of the cell
         faceList tris(cll.faces());
@@ -217,7 +217,7 @@ int main(int argc, char *argv[])
 
             if (iter != vertsToBoundary.end())
             {
-                label faceI = iter();
+                label facei = iter();
                 const triFace& tri = iter.key();
 
                 // Determine orientation of tri v.s. cell centre.
@@ -228,7 +228,7 @@ int main(int argc, char *argv[])
                 if (((fc - cc) & fn) < 0)
                 {
                     // Boundary face points inwards. Flip.
-                    boundaryFaces[faceI].flip();
+                    boundaryFaces[facei].flip();
                 }
 
                 // Done this face so erase from hash
@@ -254,9 +254,9 @@ int main(int argc, char *argv[])
 
     wordList patchNames(nPatches);
 
-    forAll(patchNames, patchI)
+    forAll(patchNames, patchi)
     {
-        patchNames[patchI] = word("patch") + name(patchI);
+        patchNames[patchi] = word("patch") + name(patchi);
     }
 
     wordList patchTypes(nPatches, polyPatch::typeName);
@@ -268,24 +268,24 @@ int main(int argc, char *argv[])
         // Sort boundaryFaces by patch.
         List<DynamicList<face>> allPatchFaces(nPatches);
 
-        forAll(boundaryPatch, faceI)
+        forAll(boundaryPatch, facei)
         {
-            label patchI = boundaryPatch[faceI];
+            label patchi = boundaryPatch[facei];
 
-            allPatchFaces[patchI].append(boundaryFaces[faceI]);
+            allPatchFaces[patchi].append(boundaryFaces[facei]);
         }
 
         Info<< "Patches:" << nl
             << "\tNeutral Boundary\tPatch name\tSize" << nl
             << "\t----------------\t----------\t----" << endl;
 
-        forAll(allPatchFaces, patchI)
+        forAll(allPatchFaces, patchi)
         {
-            Info<< '\t' << patchI << "\t\t\t"
-                << patchNames[patchI] << "\t\t"
-                << allPatchFaces[patchI].size() << endl;
+            Info<< '\t' << patchi << "\t\t\t"
+                << patchNames[patchi] << "\t\t"
+                << allPatchFaces[patchi].size() << endl;
 
-            patchFaces[patchI].transfer(allPatchFaces[patchI]);
+            patchFaces[patchi].transfer(allPatchFaces[patchi]);
         }
 
         Info<< endl;

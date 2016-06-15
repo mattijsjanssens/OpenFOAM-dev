@@ -107,7 +107,7 @@ Foam::ConeInjection<CloudType>::ConeInjection
 
         axis /= mag(axis);
 
-        vector tangent = vector::zero;
+        vector tangent = Zero;
         scalar magTangent = 0.0;
 
         cachedRandom& rnd = this->owner().rndGen();
@@ -240,7 +240,7 @@ void Foam::ConeInjection<CloudType>::setPositionAndCell
     const scalar,
     vector& position,
     label& cellOwner,
-    label& tetFaceI,
+    label& tetFacei,
     label& tetPtI
 )
 {
@@ -248,7 +248,7 @@ void Foam::ConeInjection<CloudType>::setPositionAndCell
 
     position = positionAxis_[i].first();
     cellOwner = injectorCells_[i];
-    tetFaceI = injectorTetFaces_[i];
+    tetFacei = injectorTetFaces_[i];
     tetPtI = injectorTetPts_[i];
 }
 

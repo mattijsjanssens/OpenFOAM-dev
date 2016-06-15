@@ -153,7 +153,7 @@ class isoSurfaceCell
         //  Returns point.  Destroys arguments.
         pointIndexHit collapseSurface
         (
-            const label cellI,
+            const label celli,
             pointField& localPoints,
             DynamicList<labelledTri, 64>& localTris
         ) const;
@@ -169,24 +169,24 @@ class isoSurfaceCell
             labelList& snappedCc
         ) const;
 
-        //- Generate triangles for face connected to pointI
+        //- Generate triangles for face connected to pointi
         void genPointTris
         (
             const scalarField& cellValues,
             const scalarField& pointValues,
-            const label pointI,
-            const label faceI,
-            const label cellI,
+            const label pointi,
+            const label facei,
+            const label celli,
             DynamicList<point, 64>& localTriPoints
         ) const;
 
-        //- Generate triangles for tet connected to pointI
+        //- Generate triangles for tet connected to pointi
         void genPointTris
         (
             const scalarField& pointValues,
-            const label pointI,
-            const label faceI,
-            const label cellI,
+            const label pointi,
+            const label facei,
+            const label celli,
             DynamicList<point, 64>& localTriPoints
         ) const;
 

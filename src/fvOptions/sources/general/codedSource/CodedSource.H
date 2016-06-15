@@ -37,13 +37,13 @@ Description
     codeAddSup
     (
         fvMatrix<Type}>& eqn,
-        const label fieldI
+        const label fieldi
     )
 
     constrain
     (
         fvMatrix<Type}>& eqn,
-        const label fieldI
+        const label fieldi
     )
 
     where :
@@ -65,7 +65,7 @@ Description
             selectionMode   all;
 
             fieldNames      (h);
-            redirectType    sourceTime;
+            name    sourceTime;
 
             codeInclude
             #{
@@ -141,7 +141,7 @@ protected:
 
     // Protected data
 
-        word redirectType_;
+        word name_;
 
         string codeCorrect_;
         string codeAddSup_;
@@ -204,7 +204,7 @@ public:
             virtual void addSup
             (
                 fvMatrix<Type>& eqn,
-                const label fieldI
+                const label fieldi
             );
 
             //- Explicit and implicit matrix contributions
@@ -213,14 +213,14 @@ public:
             (
                 const volScalarField& rho,
                 fvMatrix<Type>& eqn,
-                const label fieldI
+                const label fieldi
             );
 
             //- Set value
             virtual void constrain
             (
                 fvMatrix<Type>& eqn,
-                const label fieldI
+                const label fieldi
             );
 
 

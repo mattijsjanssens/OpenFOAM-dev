@@ -62,7 +62,7 @@ Foam::SRF::SRFModel::SRFModel
     origin_("origin", dimLength, lookup("origin")),
     axis_(lookup("axis")),
     SRFModelCoeffs_(subDict(type + "Coeffs")),
-    omega_(dimensionedVector("omega", dimless/dimTime, vector::zero))
+    omega_(dimensionedVector("omega", dimless/dimTime, Zero))
 {
     // Normalise the axis
     axis_ /= mag(axis_);
@@ -225,11 +225,14 @@ Foam::tmp<Foam::volVectorField> Foam::SRF::SRFModel::Uabs() const
         )
     );
 
+    volVectorField& Uabs = tUabs.ref();
+
     // Add SRF contribution to internal field
-    tUabs.ref().internalField() += Urel_.internalField();
+    Uabs.primitiveFieldRef() += Urel_.primitiveField();
 
     // Add Urel boundary contributions
-    const volVectorField::GeometricBoundaryField& bvf = Urel_.boundaryField();
+    volVectorField::Boundary& Uabsbf = Uabs.boundaryFieldRef();
+    const volVectorField::Boundary& bvf = Urel_.boundaryField();
 
     forAll(bvf, i)
     {
@@ -241,12 +244,12 @@ Foam::tmp<Foam::volVectorField> Foam::SRF::SRFModel::Uabs() const
                 refCast<const SRFVelocityFvPatchVectorField>(bvf[i]);
             if (UrelPatch.relative())
             {
-                tUabs.ref().boundaryField()[i] += Urel_.boundaryField()[i];
+                Uabsbf[i] += Urel_.boundaryField()[i];
             }
         }
         else
         {
-            tUabs.ref().boundaryField()[i] += Urel_.boundaryField()[i];
+            Uabsbf[i] += Urel_.boundaryField()[i];
         }
     }
 

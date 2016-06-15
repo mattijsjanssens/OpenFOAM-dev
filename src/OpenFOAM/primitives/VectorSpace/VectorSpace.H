@@ -100,7 +100,7 @@ public:
         // VectorSpace currently defaults to a column-vector
         // This will be removed when column-vector is introduced
         // as a specialization
-        static const direction nRows = Ncmpts;
+        static const direction mRows = Ncmpts;
         static const direction nCols = 1;
 
 
@@ -154,7 +154,7 @@ public:
         inline VectorSpace();
 
         //- Construct initialized to zero
-        inline explicit VectorSpace(const Foam::zero);
+        inline VectorSpace(const Foam::zero);
 
         //- Construct from Istream
         VectorSpace(Istream&);

@@ -505,7 +505,7 @@ Foam::point Foam::face::centre(const pointField& points) const
     }
 
 
-    point centrePoint = point::zero;
+    point centrePoint = Zero;
     for (label pI=0; pI<nPoints; ++pI)
     {
         centrePoint += points[operator[](pI)];
@@ -513,7 +513,7 @@ Foam::point Foam::face::centre(const pointField& points) const
     centrePoint /= nPoints;
 
     scalar sumA = 0;
-    vector sumAc = vector::zero;
+    vector sumAc = Zero;
 
     for (label pI=0; pI<nPoints; ++pI)
     {
@@ -572,14 +572,14 @@ Foam::vector Foam::face::normal(const pointField& p) const
 
     label pI;
 
-    point centrePoint = vector::zero;
+    point centrePoint = Zero;
     for (pI = 0; pI < nPoints; ++pI)
     {
         centrePoint += p[operator[](pI)];
     }
     centrePoint /= nPoints;
 
-    vector n = vector::zero;
+    vector n = Zero;
 
     point nextPoint = centrePoint;
 
@@ -618,9 +618,9 @@ Foam::face Foam::face::reverseFace() const
 
     newList[0] = f[0];
 
-    for (label pointI = 1; pointI < newList.size(); pointI++)
+    for (label pointi = 1; pointi < newList.size(); pointi++)
     {
-        newList[pointI] = f[size() - pointI];
+        newList[pointi] = f[size() - pointi];
     }
 
     return face(xferMove(newList));
@@ -742,7 +742,7 @@ Foam::tensor Foam::face::inertia
 
     const point ctr = centre(p);
 
-    tensor J = tensor::zero;
+    tensor J = Zero;
 
     forAll(*this, i)
     {
@@ -764,9 +764,9 @@ Foam::edgeList Foam::face::edges() const
 
     edgeList e(points.size());
 
-    for (label pointI = 0; pointI < points.size() - 1; ++pointI)
+    for (label pointi = 0; pointi < points.size() - 1; ++pointi)
     {
-        e[pointI] = edge(points[pointI], points[pointI + 1]);
+        e[pointi] = edge(points[pointi], points[pointi + 1]);
     }
 
     // Add last edge

@@ -61,25 +61,27 @@ void Foam::Pstream::exchange
 
     recvBufs.setSize(sendBufs.size());
 
-    if (UPstream::nProcs(comm) > 1)
+    recvBufs.setSize(sendBufs.size());
+
+    if (UPstream::parRun() && UPstream::nProcs(comm) > 1)
     {
         label startOfRequests = Pstream::nRequests();
 
         // Set up receives
         // ~~~~~~~~~~~~~~~
 
-        forAll(recvSizes, procI)
+        forAll(recvSizes, proci)
         {
-            label nRecv = recvSizes[procI];
+            label nRecv = recvSizes[proci];
 
-            if (procI != Pstream::myProcNo(comm) && nRecv > 0)
+            if (proci != Pstream::myProcNo(comm) && nRecv > 0)
             {
-                recvBufs[procI].setSize(nRecv);
+                recvBufs[proci].setSize(nRecv);
                 UIPstream::read
                 (
                     UPstream::nonBlocking,
-                    procI,
-                    reinterpret_cast<char*>(recvBufs[procI].begin()),
+                    proci,
+                    reinterpret_cast<char*>(recvBufs[proci].begin()),
                     nRecv*sizeof(T),
                     tag,
                     comm
@@ -91,18 +93,18 @@ void Foam::Pstream::exchange
         // Set up sends
         // ~~~~~~~~~~~~
 
-        forAll(sendBufs, procI)
+        forAll(sendBufs, proci)
         {
-            if (procI != Pstream::myProcNo(comm) && sendBufs[procI].size() > 0)
+            if (proci != Pstream::myProcNo(comm) && sendBufs[proci].size() > 0)
             {
                 if
                 (
                    !UOPstream::write
                     (
                         UPstream::nonBlocking,
-                        procI,
-                        reinterpret_cast<const char*>(sendBufs[procI].begin()),
-                        sendBufs[procI].size()*sizeof(T),
+                        proci,
+                        reinterpret_cast<const char*>(sendBufs[proci].begin()),
+                        sendBufs[proci].size()*sizeof(T),
                         tag,
                         comm
                     )
@@ -110,8 +112,8 @@ void Foam::Pstream::exchange
                 {
                     FatalErrorInFunction
                         << "Cannot send outgoing message. "
-                        << "to:" << procI << " nBytes:"
-                        << label(sendBufs[procI].size()*sizeof(T))
+                        << "to:" << proci << " nBytes:"
+                        << label(sendBufs[proci].size()*sizeof(T))
                         << Foam::abort(FatalError);
                 }
             }
@@ -135,41 +137,27 @@ void Foam::Pstream::exchange
 template<class Container>
 void Foam::Pstream::exchangeSizes
 (
-    const UList<Container>& sendBufs,
+    const Container& sendBufs,
     labelList& recvSizes,
     const label comm
 )
 {
-    if (!contiguous<Container>())
-    {
-        FatalErrorInFunction
-            << "Continuous data only." << sizeof(Container)
-            << Foam::abort(FatalError);
-    }
-
     if (sendBufs.size() != UPstream::nProcs(comm))
     {
         FatalErrorInFunction
-            << "Size of list " << sendBufs.size()
+            << "Size of container " << sendBufs.size()
             << " does not equal the number of processors "
             << UPstream::nProcs(comm)
             << Foam::abort(FatalError);
     }
 
     labelList sendSizes(sendBufs.size());
-    forAll(sendBufs, procI)
+    forAll(sendBufs, proci)
     {
-        sendSizes[procI] = sendBufs[procI].size();
+        sendSizes[proci] = sendBufs[proci].size();
     }
-
     recvSizes.setSize(sendSizes.size());
-    allToAll
-    (
-        reinterpret_cast<char*>(sendSizes.begin()),
-        sizeof(label),
-        reinterpret_cast<char*>(recvSizes.begin()),
-        comm
-    );
+    allToAll(sendSizes, recvSizes, comm);
 }
 
 

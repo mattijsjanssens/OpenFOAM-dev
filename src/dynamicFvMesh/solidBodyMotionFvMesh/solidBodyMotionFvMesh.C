@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -77,7 +77,7 @@ Foam::solidBodyMotionFvMesh::solidBodyMotionFvMesh(const IOobject& io)
     ),
     pointIDs_(),
     moveAllCells_(false),
-    UName_(dynamicMeshCoeffs_.lookupOrDefault<word>("UName", "U"))
+    UName_(dynamicMeshCoeffs_.lookupOrDefault<word>("U", "U"))
 {
     if (undisplacedPoints_.size() != nPoints())
     {
@@ -148,15 +148,15 @@ Foam::solidBodyMotionFvMesh::solidBodyMotionFvMesh(const IOobject& io)
 
         forAll(cellIDs, i)
         {
-            label cellI = cellIDs[i];
-            const cell& c = cells()[cellI];
+            label celli = cellIDs[i];
+            const cell& c = cells()[celli];
             forAll(c, j)
             {
                 const face& f = faces()[c[j]];
                 forAll(f, k)
                 {
-                    label pointI = f[k];
-                    movePts[pointI] = true;
+                    label pointi = f[k];
+                    movePts[pointi] = true;
                 }
             }
         }
@@ -193,7 +193,7 @@ bool Foam::solidBodyMotionFvMesh::update()
     {
         fvMesh::movePoints
         (
-            transform
+            transformPoints
             (
                 SBMFPtr_().transformation(),
                 undisplacedPoints_
@@ -205,7 +205,7 @@ bool Foam::solidBodyMotionFvMesh::update()
         pointField transformedPts(undisplacedPoints_);
 
         UIndirectList<point>(transformedPts, pointIDs_) =
-            transform
+            transformPoints
             (
                 SBMFPtr_().transformation(),
                 pointField(transformedPts, pointIDs_)

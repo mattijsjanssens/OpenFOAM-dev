@@ -25,7 +25,6 @@ License
 
 #include "List.H"
 #include "ListLoopM.H"
-
 #include "FixedList.H"
 #include "PtrList.H"
 #include "SLList.H"
@@ -74,6 +73,30 @@ Foam::List<T>::List(const label s, const T& a)
         List_ACCESS(T, (*this), vp);
         List_FOR_ALL((*this), i)
             List_ELEM((*this), vp, i) = a;
+        List_END_FOR_ALL
+    }
+}
+
+
+template<class T>
+Foam::List<T>::List(const label s, const zero)
+:
+    UList<T>(NULL, s)
+{
+    if (this->size_ < 0)
+    {
+        FatalErrorInFunction
+            << "bad size " << this->size_
+            << abort(FatalError);
+    }
+
+    if (this->size_)
+    {
+        this->v_ = new T[this->size_];
+
+        List_ACCESS(T, (*this), vp);
+        List_FOR_ALL((*this), i)
+            List_ELEM((*this), vp, i) = Zero;
         List_END_FOR_ALL
     }
 }
@@ -161,37 +184,6 @@ Foam::List<T>::List(const UList<T>& a, const labelUList& map)
         {
             this->v_[i] = a[map[i]];
         }
-    }
-}
-
-
-template<class T>
-template<class InputIterator>
-Foam::List<T>::List(InputIterator first, InputIterator last)
-{
-    label s = 0;
-    for
-    (
-        InputIterator iter = first;
-        iter != last;
-        ++iter
-    )
-    {
-        s++;
-    }
-
-    setSize(s);
-
-    s = 0;
-
-    for
-    (
-        InputIterator iter = first;
-        iter != last;
-        ++iter
-    )
-    {
-        this->operator[](s++) = *iter;
     }
 }
 
@@ -509,6 +501,7 @@ void Foam::List<T>::operator=(const BiIndirectList<T>& lst)
         this->operator[](i) = lst[i];
     }
 }
+
 
 // * * * * * * * * * * * * * * * *  IOStream operators * * * * * * * * * * * //
 

@@ -224,9 +224,9 @@ private:
         //  Used to determine if surface multiply connected through point.
         void visitPointRegion
         (
-            const label pointI,
+            const label pointi,
             const labelList& pFaces,
-            const label startFaceI,
+            const label startFacei,
             const label startEdgeI,
             boolList& pFacesHad
         ) const;

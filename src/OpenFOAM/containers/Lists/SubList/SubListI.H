@@ -88,6 +88,20 @@ inline Foam::SubList<T>::operator const Foam::List<T>&() const
 
 
 template<class T>
+inline void Foam::SubList<T>::operator=(const SubList<T>& sl)
+{
+    UList<T>::deepCopy(sl);
+}
+
+
+template<class T>
+inline void Foam::SubList<T>::operator=(const UList<T>& l)
+{
+    UList<T>::deepCopy(l);
+}
+
+
+template<class T>
 inline void Foam::SubList<T>::operator=(const T& t)
 {
     UList<T>::operator=(t);

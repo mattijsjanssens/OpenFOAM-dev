@@ -148,7 +148,7 @@ public:
             virtual void postMove
             (
                 typename CloudType::parcelType& p,
-                const label cellI,
+                const label celli,
                 const scalar dt,
                 const point& position0,
                 bool& keepParticle
@@ -168,7 +168,7 @@ public:
             virtual void postFace
             (
                 const typename CloudType::parcelType& p,
-                const label faceI,
+                const label facei,
                 bool& keepParticle
             );
 
@@ -179,7 +179,7 @@ public:
             const fileName& outputDir() const;
 
             //- Return the output time path
-            fileName outputTimeDir() const;
+            fileName writeTimeDir() const;
 };
 
 

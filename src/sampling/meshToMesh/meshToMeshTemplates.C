@@ -104,40 +104,40 @@ void Foam::meshToMesh::mapSrcToTgt
         List<Type> work(srcField);
         map.distribute(work);
 
-        forAll(result, cellI)
+        forAll(result, celli)
         {
-            const labelList& srcAddress = tgtToSrcCellAddr_[cellI];
-            const scalarList& srcWeight = tgtToSrcCellWght_[cellI];
+            const labelList& srcAddress = tgtToSrcCellAddr_[celli];
+            const scalarList& srcWeight = tgtToSrcCellWght_[celli];
 
             if (srcAddress.size())
             {
-//                result[cellI] = pTraits<Type>::zero;
-                result[cellI] *= (1.0 - sum(srcWeight));
+//                result[celli] = Zero;
+                result[celli] *= (1.0 - sum(srcWeight));
                 forAll(srcAddress, i)
                 {
                     label srcI = srcAddress[i];
                     scalar w = srcWeight[i];
-                    cbop(result[cellI], cellI, work[srcI], w);
+                    cbop(result[celli], celli, work[srcI], w);
                 }
             }
         }
     }
     else
     {
-        forAll(result, cellI)
+        forAll(result, celli)
         {
-            const labelList& srcAddress = tgtToSrcCellAddr_[cellI];
-            const scalarList& srcWeight = tgtToSrcCellWght_[cellI];
+            const labelList& srcAddress = tgtToSrcCellAddr_[celli];
+            const scalarList& srcWeight = tgtToSrcCellWght_[celli];
 
             if (srcAddress.size())
             {
-//                result[cellI] = pTraits<Type>::zero;
-                result[cellI] *= (1.0 - sum(srcWeight));
+//                result[celli] = Zero;
+                result[celli] *= (1.0 - sum(srcWeight));
                 forAll(srcAddress, i)
                 {
                     label srcI = srcAddress[i];
                     scalar w = srcWeight[i];
-                    cbop(result[cellI], cellI, srcField[srcI], w);
+                    cbop(result[celli], celli, srcField[srcI], w);
                 }
             }
         }
@@ -157,7 +157,7 @@ Foam::tmp<Foam::Field<Type>> Foam::meshToMesh::mapSrcToTgt
         new Field<Type>
         (
             tgtToSrcCellAddr_.size(),
-            pTraits<Type>::zero
+            Zero
         )
     );
 
@@ -225,38 +225,38 @@ void Foam::meshToMesh::mapTgtToSrc
         List<Type> work(tgtField);
         map.distribute(work);
 
-        forAll(result, cellI)
+        forAll(result, celli)
         {
-            const labelList& tgtAddress = srcToTgtCellAddr_[cellI];
-            const scalarList& tgtWeight = srcToTgtCellWght_[cellI];
+            const labelList& tgtAddress = srcToTgtCellAddr_[celli];
+            const scalarList& tgtWeight = srcToTgtCellWght_[celli];
 
             if (tgtAddress.size())
             {
-                result[cellI] *= (1.0 - sum(tgtWeight));
+                result[celli] *= (1.0 - sum(tgtWeight));
                 forAll(tgtAddress, i)
                 {
                     label tgtI = tgtAddress[i];
                     scalar w = tgtWeight[i];
-                    cbop(result[cellI], cellI, work[tgtI], w);
+                    cbop(result[celli], celli, work[tgtI], w);
                 }
             }
         }
     }
     else
     {
-        forAll(result, cellI)
+        forAll(result, celli)
         {
-            const labelList& tgtAddress = srcToTgtCellAddr_[cellI];
-            const scalarList& tgtWeight = srcToTgtCellWght_[cellI];
+            const labelList& tgtAddress = srcToTgtCellAddr_[celli];
+            const scalarList& tgtWeight = srcToTgtCellWght_[celli];
 
             if (tgtAddress.size())
             {
-                result[cellI] *= (1.0 - sum(tgtWeight));
+                result[celli] *= (1.0 - sum(tgtWeight));
                 forAll(tgtAddress, i)
                 {
                     label tgtI = tgtAddress[i];
                     scalar w = tgtWeight[i];
-                    cbop(result[cellI], cellI, tgtField[tgtI], w);
+                    cbop(result[celli], celli, tgtField[tgtI], w);
                 }
             }
         }
@@ -276,7 +276,7 @@ Foam::tmp<Foam::Field<Type>> Foam::meshToMesh::mapTgtToSrc
         new Field<Type>
         (
             srcToTgtCellAddr_.size(),
-            pTraits<Type>::zero
+            Zero
         )
     );
 
@@ -325,17 +325,20 @@ void Foam::meshToMesh::mapSrcToTgt
     GeometricField<Type, fvPatchField, volMesh>& result
 ) const
 {
-    mapSrcToTgt(field, cop, result.internalField());
+    mapSrcToTgt(field, cop, result.primitiveFieldRef());
 
     const PtrList<AMIPatchToPatchInterpolation>& AMIList = patchAMIs();
 
+    typename GeometricField<Type, fvPatchField, volMesh>::
+        Boundary& resultBf = result.boundaryFieldRef();
+
     forAll(AMIList, i)
     {
-        label srcPatchI = srcPatchID_[i];
-        label tgtPatchI = tgtPatchID_[i];
+        label srcPatchi = srcPatchID_[i];
+        label tgtPatchi = tgtPatchID_[i];
 
-        const fvPatchField<Type>& srcField = field.boundaryField()[srcPatchI];
-        fvPatchField<Type>& tgtField = result.boundaryField()[tgtPatchI];
+        const fvPatchField<Type>& srcField = field.boundaryField()[srcPatchi];
+        fvPatchField<Type>& tgtField = resultBf[tgtPatchi];
 
         // 2.3 does not do distributed mapping yet so only do if
         // running on single processor
@@ -348,7 +351,7 @@ void Foam::meshToMesh::mapSrcToTgt
                 (
                     srcField,
                     tgtField.patch(),
-                    result.dimensionedInternalField(),
+                    result(),
                     weightedFvPatchFieldMapper
                     (
                         AMIList[i].tgtAddress(),
@@ -362,7 +365,7 @@ void Foam::meshToMesh::mapSrcToTgt
             tgtField.rmap(tnewTgt(), identity(tgtField.size()));
         }
 
-        tgtField == pTraits<Type>::zero;
+        tgtField == Type(Zero);
 
         AMIList[i].interpolateToTarget
         (
@@ -375,8 +378,8 @@ void Foam::meshToMesh::mapSrcToTgt
 
     forAll(cuttingPatches_, i)
     {
-        label patchI = cuttingPatches_[i];
-        fvPatchField<Type>& pf = result.boundaryField()[patchI];
+        label patchi = cuttingPatches_[i];
+        fvPatchField<Type>& pf = resultBf[patchi];
         pf == pf.patchInternalField();
     }
 }
@@ -395,7 +398,7 @@ Foam::meshToMesh::mapSrcToTgt
     const fvMesh& tgtMesh = static_cast<const fvMesh&>(tgtRegion_);
 
     const fvBoundaryMesh& tgtBm = tgtMesh.boundary();
-    const typename fieldType::GeometricBoundaryField& srcBfld =
+    const typename fieldType::Boundary& srcBfld =
         field.boundaryField();
 
     PtrList<fvPatchField<Type>> tgtPatchFields(tgtBm.size());
@@ -405,22 +408,22 @@ Foam::meshToMesh::mapSrcToTgt
     // entries, but these values will need to be reset
     forAll(tgtPatchID_, i)
     {
-        label srcPatchI = srcPatchID_[i];
-        label tgtPatchI = tgtPatchID_[i];
+        label srcPatchi = srcPatchID_[i];
+        label tgtPatchi = tgtPatchID_[i];
 
-        if (!tgtPatchFields.set(tgtPatchI))
+        if (!tgtPatchFields.set(tgtPatchi))
         {
             tgtPatchFields.set
             (
-                tgtPatchI,
+                tgtPatchi,
                 fvPatchField<Type>::New
                 (
-                    srcBfld[srcPatchI],
-                    tgtMesh.boundary()[tgtPatchI],
+                    srcBfld[srcPatchi],
+                    tgtMesh.boundary()[tgtPatchi],
                     DimensionedField<Type, volMesh>::null(),
                     directFvPatchFieldMapper
                     (
-                        labelList(tgtMesh.boundary()[tgtPatchI].size(), -1)
+                        labelList(tgtMesh.boundary()[tgtPatchi].size(), -1)
                     )
                 )
             );
@@ -428,19 +431,19 @@ Foam::meshToMesh::mapSrcToTgt
     }
 
     // Any unset tgtPatchFields become calculated
-    forAll(tgtPatchFields, tgtPatchI)
+    forAll(tgtPatchFields, tgtPatchi)
     {
-        if (!tgtPatchFields.set(tgtPatchI))
+        if (!tgtPatchFields.set(tgtPatchi))
         {
             // Note: use factory New method instead of direct generation of
             //       calculated so we keep constraints
             tgtPatchFields.set
             (
-                tgtPatchI,
+                tgtPatchi,
                 fvPatchField<Type>::New
                 (
                     calculatedFvPatchField<Type>::typeName,
-                    tgtMesh.boundary()[tgtPatchI],
+                    tgtMesh.boundary()[tgtPatchi],
                     DimensionedField<Type, volMesh>::null()
                 )
             );
@@ -461,7 +464,7 @@ Foam::meshToMesh::mapSrcToTgt
             ),
             tgtMesh,
             field.dimensions(),
-            Field<Type>(tgtMesh.nCells(), pTraits<Type>::zero),
+            Field<Type>(tgtMesh.nCells(), Zero),
             tgtPatchFields
         )
     );
@@ -514,17 +517,17 @@ void Foam::meshToMesh::mapTgtToSrc
     GeometricField<Type, fvPatchField, volMesh>& result
 ) const
 {
-    mapTgtToSrc(field, cop, result.internalField());
+    mapTgtToSrc(field, cop, result.primitiveField());
 
     const PtrList<AMIPatchToPatchInterpolation>& AMIList = patchAMIs();
 
     forAll(AMIList, i)
     {
-        label srcPatchI = srcPatchID_[i];
-        label tgtPatchI = tgtPatchID_[i];
+        label srcPatchi = srcPatchID_[i];
+        label tgtPatchi = tgtPatchID_[i];
 
-        fvPatchField<Type>& srcField = result.boundaryField()[srcPatchI];
-        const fvPatchField<Type>& tgtField = field.boundaryField()[tgtPatchI];
+        fvPatchField<Type>& srcField = result.boundaryField()[srcPatchi];
+        const fvPatchField<Type>& tgtField = field.boundaryField()[tgtPatchi];
 
         // 2.3 does not do distributed mapping yet so only do if
         // running on single processor
@@ -537,7 +540,7 @@ void Foam::meshToMesh::mapTgtToSrc
                 (
                     tgtField,
                     srcField.patch(),
-                    result.dimensionedInternalField(),
+                    result(),
                     weightedFvPatchFieldMapper
                     (
                         AMIList[i].srcAddress(),
@@ -551,7 +554,7 @@ void Foam::meshToMesh::mapTgtToSrc
             srcField.rmap(tnewSrc(), identity(srcField.size()));
         }
 
-        srcField == pTraits<Type>::zero;
+        srcField == Type(Zero);
 
         AMIList[i].interpolateToSource
         (
@@ -564,8 +567,8 @@ void Foam::meshToMesh::mapTgtToSrc
 
     forAll(cuttingPatches_, i)
     {
-        label patchI = cuttingPatches_[i];
-        fvPatchField<Type>& pf = result.boundaryField()[patchI];
+        label patchi = cuttingPatches_[i];
+        fvPatchField<Type>& pf = result.boundaryField()[patchi];
         pf == pf.patchInternalField();
     }
 }
@@ -584,7 +587,7 @@ Foam::meshToMesh::mapTgtToSrc
     const fvMesh& srcMesh = static_cast<const fvMesh&>(srcRegion_);
 
     const fvBoundaryMesh& srcBm = srcMesh.boundary();
-    const typename fieldType::GeometricBoundaryField& tgtBfld =
+    const typename fieldType::Boundary& tgtBfld =
         field.boundaryField();
 
     PtrList<fvPatchField<Type>> srcPatchFields(srcBm.size());
@@ -594,22 +597,22 @@ Foam::meshToMesh::mapTgtToSrc
     // entries, but these values will need to be reset
     forAll(srcPatchID_, i)
     {
-        label srcPatchI = srcPatchID_[i];
-        label tgtPatchI = tgtPatchID_[i];
+        label srcPatchi = srcPatchID_[i];
+        label tgtPatchi = tgtPatchID_[i];
 
-        if (!srcPatchFields.set(tgtPatchI))
+        if (!srcPatchFields.set(tgtPatchi))
         {
             srcPatchFields.set
             (
-                srcPatchI,
+                srcPatchi,
                 fvPatchField<Type>::New
                 (
-                    tgtBfld[srcPatchI],
-                    srcMesh.boundary()[tgtPatchI],
+                    tgtBfld[srcPatchi],
+                    srcMesh.boundary()[tgtPatchi],
                     DimensionedField<Type, volMesh>::null(),
                     directFvPatchFieldMapper
                     (
-                        labelList(srcMesh.boundary()[srcPatchI].size(), -1)
+                        labelList(srcMesh.boundary()[srcPatchi].size(), -1)
                     )
                 )
             );
@@ -617,19 +620,19 @@ Foam::meshToMesh::mapTgtToSrc
     }
 
     // Any unset srcPatchFields become calculated
-    forAll(srcPatchFields, srcPatchI)
+    forAll(srcPatchFields, srcPatchi)
     {
-        if (!srcPatchFields.set(srcPatchI))
+        if (!srcPatchFields.set(srcPatchi))
         {
             // Note: use factory New method instead of direct generation of
             //       calculated so we keep constraints
             srcPatchFields.set
             (
-                srcPatchI,
+                srcPatchi,
                 fvPatchField<Type>::New
                 (
                     calculatedFvPatchField<Type>::typeName,
-                    srcMesh.boundary()[srcPatchI],
+                    srcMesh.boundary()[srcPatchi],
                     DimensionedField<Type, volMesh>::null()
                 )
             );
@@ -650,7 +653,7 @@ Foam::meshToMesh::mapTgtToSrc
             ),
             srcMesh,
             field.dimensions(),
-            Field<Type>(srcMesh.nCells(), pTraits<Type>::zero),
+            Field<Type>(srcMesh.nCells(), Zero),
             srcPatchFields
         )
     );

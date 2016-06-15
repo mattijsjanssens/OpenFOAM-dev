@@ -50,7 +50,7 @@ void Foam::Pstream::combineGather
     const label comm
 )
 {
-    if (UPstream::nProcs(comm) > 1)
+    if (UPstream::parRun() && UPstream::nProcs(comm) > 1)
     {
         // Get my communication order
         const commsStruct& myComm = comms[UPstream::myProcNo(comm)];
@@ -134,7 +134,7 @@ void Foam::Pstream::combineGather
 }
 
 
-template <class T, class CombineOp>
+template<class T, class CombineOp>
 void Foam::Pstream::combineGather
 (
     T& Value,
@@ -177,7 +177,7 @@ void Foam::Pstream::combineScatter
     const label comm
 )
 {
-    if (UPstream::nProcs(comm) > 1)
+    if (UPstream::parRun() && UPstream::nProcs(comm) > 1)
     {
         // Get my communication order
         const UPstream::commsStruct& myComm = comms[UPstream::myProcNo(comm)];
@@ -249,7 +249,7 @@ void Foam::Pstream::combineScatter
 }
 
 
-template <class T>
+template<class T>
 void Foam::Pstream::combineScatter
 (
     T& Value,
@@ -278,7 +278,7 @@ void Foam::Pstream::listCombineGather
     const label comm
 )
 {
-    if (UPstream::nProcs(comm) > 1)
+    if (UPstream::parRun() && UPstream::nProcs(comm) > 1)
     {
         // Get my communication order
         const commsStruct& myComm = comms[UPstream::myProcNo(comm)];
@@ -412,7 +412,7 @@ void Foam::Pstream::listCombineScatter
     const label comm
 )
 {
-    if (UPstream::nProcs(comm) > 1)
+    if (UPstream::parRun() && UPstream::nProcs(comm) > 1)
     {
         // Get my communication order
         const UPstream::commsStruct& myComm = comms[UPstream::myProcNo(comm)];
@@ -484,7 +484,7 @@ void Foam::Pstream::listCombineScatter
 }
 
 
-template <class T>
+template<class T>
 void Foam::Pstream::listCombineScatter
 (
     List<T>& Values,
@@ -525,7 +525,7 @@ void Foam::Pstream::mapCombineGather
     const label comm
 )
 {
-    if (UPstream::nProcs(comm) > 1)
+    if (UPstream::parRun() && UPstream::nProcs(comm) > 1)
     {
         // Get my communication order
         const commsStruct& myComm = comms[UPstream::myProcNo(comm)];
@@ -625,7 +625,7 @@ void Foam::Pstream::mapCombineScatter
     const label comm
 )
 {
-    if (UPstream::nProcs(comm) > 1)
+    if (UPstream::parRun() && UPstream::nProcs(comm) > 1)
     {
         // Get my communication order
         const UPstream::commsStruct& myComm = comms[UPstream::myProcNo(comm)];
@@ -667,7 +667,7 @@ void Foam::Pstream::mapCombineScatter
 }
 
 
-template <class Container>
+template<class Container>
 void Foam::Pstream::mapCombineScatter
 (
     Container& Values,

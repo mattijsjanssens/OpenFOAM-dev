@@ -31,18 +31,9 @@ License
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-namespace Foam
-{
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-namespace fvc
-{
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 template<class Type, class CombineOp>
-tmp<GeometricField<Type, fvPatchField, volMesh>> cellReduce
+Foam::tmp<Foam::GeometricField<Type, Foam::fvPatchField, Foam::volMesh>>
+Foam::fvc::cellReduce
 (
     const GeometricField<Type, fvsPatchField, surfaceMesh>& ssf,
     const CombineOp& cop
@@ -65,7 +56,7 @@ tmp<GeometricField<Type, fvPatchField, volMesh>> cellReduce
                 IOobject::NO_WRITE
             ),
             mesh,
-            dimensioned<Type>("0", ssf.dimensions(), pTraits<Type>::zero),
+            dimensioned<Type>("0", ssf.dimensions(), Zero),
             extrapolatedCalculatedFvPatchField<Type>::typeName
         )
     );
@@ -77,13 +68,13 @@ tmp<GeometricField<Type, fvPatchField, volMesh>> cellReduce
 
     forAll(own, i)
     {
-        label cellI = own[i];
-        cop(result[cellI], ssf[i]);
+        label celli = own[i];
+        cop(result[celli], ssf[i]);
     }
     forAll(nbr, i)
     {
-        label cellI = nbr[i];
-        cop(result[cellI], ssf[i]);
+        label celli = nbr[i];
+        cop(result[celli], ssf[i]);
     }
 
     result.correctBoundaryConditions();
@@ -93,27 +84,19 @@ tmp<GeometricField<Type, fvPatchField, volMesh>> cellReduce
 
 
 template<class Type, class CombineOp>
-tmp<GeometricField<Type, fvPatchField, volMesh>> cellReduce
+Foam::tmp<Foam::GeometricField<Type, Foam::fvPatchField, Foam::volMesh>>
+Foam::fvc::cellReduce
 (
-    const tmp<GeometricField<Type, fvsPatchField, surfaceMesh>&> tssf,
+    const tmp<GeometricField<Type, fvsPatchField, surfaceMesh>>& tssf,
     const CombineOp& cop
 )
 {
-    tmp<GeometricField<Type, fvPatchField, volMesh>>
-        tvf(cellReduce(cop, tssf));
+    tmp<GeometricField<Type, fvPatchField, volMesh>> tvf(cellReduce(tssf, cop));
 
     tssf.clear();
 
     return tvf;
 }
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace fvc
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace Foam
 
 // ************************************************************************* //

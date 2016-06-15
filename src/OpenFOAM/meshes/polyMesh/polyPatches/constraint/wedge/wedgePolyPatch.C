@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -60,19 +60,19 @@ void Foam::wedgePolyPatch::calcGeometry(PstreamBuffers&)
 
 
         // Check the wedge is planar
-        forAll(nf, faceI)
+        forAll(nf, facei)
         {
-            if (magSqr(n_ - nf[faceI]) > SMALL)
+            if (magSqr(n_ - nf[facei]) > SMALL)
             {
                 // only issue warning instead of error so that the case can
                 // still be read for post-processing
                 WarningInFunction
                     << "Wedge patch '" << name() << "' is not planar." << nl
                     << "At local face at "
-                    << primitivePatch::faceCentres()[faceI]
-                    << " the normal " << nf[faceI]
+                    << primitivePatch::faceCentres()[facei]
+                    << " the normal " << nf[facei]
                     << " differs from the average normal " << n_
-                    << " by " << magSqr(n_ - nf[faceI]) << nl
+                    << " by " << magSqr(n_ - nf[facei]) << nl
                     << "Either correct the patch or split it into planar parts"
                     << endl;
             }
@@ -143,8 +143,8 @@ Foam::wedgePolyPatch::wedgePolyPatch
     centreNormal_(vector::rootMax),
     n_(vector::rootMax),
     cosAngle_(0.0),
-    faceT_(tensor::zero),
-    cellT_(tensor::zero)
+    faceT_(Zero),
+    cellT_(Zero)
 {}
 
 
@@ -162,8 +162,8 @@ Foam::wedgePolyPatch::wedgePolyPatch
     centreNormal_(vector::rootMax),
     n_(vector::rootMax),
     cosAngle_(0.0),
-    faceT_(tensor::zero),
-    cellT_(tensor::zero)
+    faceT_(Zero),
+    cellT_(Zero)
 {}
 
 

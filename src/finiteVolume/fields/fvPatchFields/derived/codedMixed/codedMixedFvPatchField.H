@@ -43,14 +43,14 @@ Description
         refGradient     uniform (0 0 0);
         valueFraction   uniform 1;
 
-        redirectType    rampedMixed;   // name of generated BC
+        name    rampedMixed;   // name of generated BC
 
         code
         #{
             this->refValue() =
                 vector(1, 0, 0)
                *min(10, 0.1*this->db().time().value());
-            this->refGrad() = vector::zero;
+            this->refGrad() = Zero;
             this->valueFraction() = 1.0;
         #};
 
@@ -76,7 +76,7 @@ Description
         code
         #{
             this->refValue() = min(10, 0.1*this->db().time().value());
-            this->refGrad() = vector::zero;
+            this->refGrad() = Zero;
             this->valueFraction() = 1.0;
         #};
     }
@@ -122,7 +122,7 @@ class codedMixedFvPatchField
         //- Dictionary contents for the boundary condition
         mutable dictionary dict_;
 
-        const word redirectType_;
+        const word name_;
 
         mutable autoPtr<mixedFvPatchField<Type>> redirectPatchFieldPtr_;
 
@@ -236,7 +236,7 @@ public:
         virtual void updateCoeffs();
 
         //- Evaluate the patch field
-        //  This is only needed to set the updated() flag of the redirectType
+        //  This is only needed to set the updated() flag of the name
         //  to false.
         virtual void evaluate
         (

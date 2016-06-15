@@ -45,10 +45,10 @@ timeVaryingMappedFixedValueFvPatchField
     sampleTimes_(0),
     startSampleTime_(-1),
     startSampledValues_(0),
-    startAverage_(pTraits<Type>::zero),
+    startAverage_(Zero),
     endSampleTime_(-1),
     endSampledValues_(0),
-    endAverage_(pTraits<Type>::zero),
+    endAverage_(Zero),
     offset_()
 {}
 
@@ -78,10 +78,10 @@ timeVaryingMappedFixedValueFvPatchField
     sampleTimes_(0),
     startSampleTime_(-1),
     startSampledValues_(0),
-    startAverage_(pTraits<Type>::zero),
+    startAverage_(Zero),
     endSampleTime_(-1),
     endSampledValues_(0),
-    endAverage_(pTraits<Type>::zero),
+    endAverage_(Zero),
     offset_(Function1<Type>::New("offset", dict))
 {
     if
@@ -98,7 +98,7 @@ timeVaryingMappedFixedValueFvPatchField
     }
 
 
-    dict.readIfPresent("fieldTableName", fieldTableName_);
+    dict.readIfPresent("fieldTable", fieldTableName_);
 
     if (dict.found("value"))
     {
@@ -134,10 +134,10 @@ timeVaryingMappedFixedValueFvPatchField
     sampleTimes_(0),
     startSampleTime_(-1),
     startSampledValues_(0),
-    startAverage_(pTraits<Type>::zero),
+    startAverage_(Zero),
     endSampleTime_(-1),
     endSampledValues_(0),
-    endAverage_(pTraits<Type>::zero),
+    endAverage_(Zero),
     offset_(ptf.offset_, false)
 {}
 
@@ -563,9 +563,9 @@ void Foam::timeVaryingMappedFixedValueFvPatchField<Type>::write
         os.writeKeyword("perturb") << perturb_ << token::END_STATEMENT << nl;
     }
 
-    if (fieldTableName_ != this->dimensionedInternalField().name())
+    if (fieldTableName_ != this->internalField().name())
     {
-        os.writeKeyword("fieldTableName") << fieldTableName_
+        os.writeKeyword("fieldTable") << fieldTableName_
             << token::END_STATEMENT << nl;
     }
 

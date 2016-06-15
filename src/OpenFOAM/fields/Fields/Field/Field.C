@@ -27,6 +27,8 @@ License
 #include "FieldM.H"
 #include "dictionary.H"
 #include "contiguous.H"
+#include "mapDistributeBase.H"
+#include "flipOp.H"
 
 // * * * * * * * * * * * * * * * Static Members  * * * * * * * * * * * * * * //
 
@@ -54,6 +56,13 @@ template<class Type>
 Foam::Field<Type>::Field(const label size, const Type& t)
 :
     List<Type>(size, t)
+{}
+
+
+template<class Type>
+Foam::Field<Type>::Field(const label size, const zero)
+:
+    List<Type>(size, Zero)
 {}
 
 
@@ -115,12 +124,13 @@ template<class Type>
 Foam::Field<Type>::Field
 (
     const UList<Type>& mapF,
-    const FieldMapper& mapper
+    const FieldMapper& mapper,
+    const bool applyFlip
 )
 :
     List<Type>(mapper.size())
 {
-    map(mapF, mapper);
+    map(mapF, mapper, applyFlip);
 }
 
 
@@ -129,12 +139,13 @@ Foam::Field<Type>::Field
 (
     const UList<Type>& mapF,
     const FieldMapper& mapper,
-    const Type& defaultValue
+    const Type& defaultValue,
+    const bool applyFlip
 )
 :
     List<Type>(mapper.size(), defaultValue)
 {
-    map(mapF, mapper);
+    map(mapF, mapper, applyFlip);
 }
 
 
@@ -143,12 +154,13 @@ Foam::Field<Type>::Field
 (
     const UList<Type>& mapF,
     const FieldMapper& mapper,
-    const UList<Type>& defaultValues
+    const UList<Type>& defaultValues,
+    const bool applyFlip
 )
 :
     List<Type>(defaultValues)
 {
-    map(mapF, mapper);
+    map(mapF, mapper, applyFlip);
 }
 
 
@@ -156,12 +168,13 @@ template<class Type>
 Foam::Field<Type>::Field
 (
     const tmp<Field<Type>>& tmapF,
-    const FieldMapper& mapper
+    const FieldMapper& mapper,
+    const bool applyFlip
 )
 :
     List<Type>(mapper.size())
 {
-    map(tmapF, mapper);
+    map(tmapF, mapper, applyFlip);
 }
 
 
@@ -170,12 +183,13 @@ Foam::Field<Type>::Field
 (
     const tmp<Field<Type>>& tmapF,
     const FieldMapper& mapper,
-    const Type& defaultValue
+    const Type& defaultValue,
+    const bool applyFlip
 )
 :
     List<Type>(mapper.size(), defaultValue)
 {
-    map(tmapF, mapper);
+    map(tmapF, mapper, applyFlip);
 }
 
 
@@ -184,12 +198,13 @@ Foam::Field<Type>::Field
 (
     const tmp<Field<Type>>& tmapF,
     const FieldMapper& mapper,
-    const UList<Type>& defaultValues
+    const UList<Type>& defaultValues,
+    const bool applyFlip
 )
 :
     List<Type>(defaultValues)
 {
-    map(tmapF, mapper);
+    map(tmapF, mapper, applyFlip);
 }
 
 
@@ -399,7 +414,7 @@ void Foam::Field<Type>::map
         const labelList&  localAddrs   = mapAddressing[i];
         const scalarList& localWeights = mapWeights[i];
 
-        f[i] = pTraits<Type>::zero;
+        f[i] = Zero;
 
         forAll(localAddrs, j)
         {
@@ -426,21 +441,57 @@ template<class Type>
 void Foam::Field<Type>::map
 (
     const UList<Type>& mapF,
-    const FieldMapper& mapper
+    const FieldMapper& mapper,
+    const bool applyFlip
 )
 {
-    if
-    (
-        mapper.direct()
-     && notNull(mapper.directAddressing())
-     && mapper.directAddressing().size()
-    )
+    if (mapper.distributed())
     {
-        map(mapF, mapper.directAddressing());
+        // Fetch remote parts of mapF
+        const mapDistributeBase& distMap = mapper.distributeMap();
+        Field<Type> newMapF(mapF);
+
+        if (applyFlip)
+        {
+            distMap.distribute(newMapF);
+        }
+        else
+        {
+            distMap.distribute(newMapF, noOp());
+        }
+
+        if (mapper.direct() && notNull(mapper.directAddressing()))
+        {
+            map(newMapF, mapper.directAddressing());
+        }
+        else if (!mapper.direct())
+        {
+            map(newMapF, mapper.addressing(), mapper.weights());
+        }
+        else if (mapper.direct() && isNull(mapper.directAddressing()))
+        {
+            // Special case, no local mapper. Assume ordering already correct
+            // from distribution. Note: this behaviour is different compared
+            // to local mapper.
+            this->transfer(newMapF);
+            this->setSize(mapper.size());
+        }
     }
-    else if (!mapper.direct() && mapper.addressing().size())
+    else
     {
-        map(mapF, mapper.addressing(), mapper.weights());
+        if
+        (
+            mapper.direct()
+         && notNull(mapper.directAddressing())
+         && mapper.directAddressing().size()
+        )
+        {
+            map(mapF, mapper.directAddressing());
+        }
+        else if (!mapper.direct() && mapper.addressing().size())
+        {
+            map(mapF, mapper.addressing(), mapper.weights());
+        }
     }
 }
 
@@ -449,10 +500,11 @@ template<class Type>
 void Foam::Field<Type>::map
 (
     const tmp<Field<Type>>& tmapF,
-    const FieldMapper& mapper
+    const FieldMapper& mapper,
+    const bool applyFlip
 )
 {
-    map(tmapF(), mapper);
+    map(tmapF(), mapper, applyFlip);
     tmapF.clear();
 }
 
@@ -460,25 +512,62 @@ void Foam::Field<Type>::map
 template<class Type>
 void Foam::Field<Type>::autoMap
 (
-    const FieldMapper& mapper
+    const FieldMapper& mapper,
+    const bool applyFlip
 )
 {
-    if
-    (
-        (
-            mapper.direct()
-         && notNull(mapper.directAddressing())
-         && mapper.directAddressing().size()
-        )
-     || (!mapper.direct() && mapper.addressing().size())
-    )
+    if (mapper.distributed())
     {
+        // Fetch remote parts of *this
+        const mapDistributeBase& distMap = mapper.distributeMap();
         Field<Type> fCpy(*this);
-        map(fCpy, mapper);
+
+        if (applyFlip)
+        {
+            distMap.distribute(fCpy);
+        }
+        else
+        {
+            distMap.distribute(fCpy, noOp());
+        }
+
+        if
+        (
+            (mapper.direct()
+         && notNull(mapper.directAddressing()))
+         || !mapper.direct()
+        )
+        {
+            this->map(fCpy, mapper);
+        }
+        else if (mapper.direct() && isNull(mapper.directAddressing()))
+        {
+            // Special case, no local mapper. Assume ordering already correct
+            // from distribution. Note: this behaviour is different compared
+            // to local mapper.
+            this->transfer(fCpy);
+            this->setSize(mapper.size());
+        }
     }
     else
     {
-        this->setSize(mapper.size());
+        if
+        (
+            (
+                mapper.direct()
+             && notNull(mapper.directAddressing())
+             && mapper.directAddressing().size()
+            )
+         || (!mapper.direct() && mapper.addressing().size())
+        )
+        {
+            Field<Type> fCpy(*this);
+            map(fCpy, mapper);
+        }
+        else
+        {
+            this->setSize(mapper.size());
+        }
     }
 }
 
@@ -526,7 +615,7 @@ void Foam::Field<Type>::rmap
 {
     Field<Type>& f = *this;
 
-    f = pTraits<Type>::zero;
+    f = Zero;
 
     forAll(mapF, i)
     {
@@ -601,6 +690,19 @@ void Foam::Field<Type>::replace
 {
     TFOR_ALL_F_OP_FUNC_S_S(Type, *this, ., replace, const direction, d,
         cmptType, c)
+}
+
+
+template<class Type>
+template<class VSForm>
+VSForm Foam::Field<Type>::block(const label start) const
+{
+    VSForm vs;
+    for (direction i=0; i<VSForm::nComponents; i++)
+    {
+        vs[i] = this->operator[](start + i);
+    }
+    return vs;
 }
 
 
@@ -697,6 +799,13 @@ template<class Type>
 void Foam::Field<Type>::operator=(const Type& t)
 {
     List<Type>::operator=(t);
+}
+
+
+template<class Type>
+void Foam::Field<Type>::operator=(const zero)
+{
+    List<Type>::operator=(Zero);
 }
 
 

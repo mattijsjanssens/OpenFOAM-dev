@@ -116,14 +116,14 @@ Foam::fvPatchField<Type>::fvPatchField
 {
     if (dict.found("value"))
     {
-        fvPatchField<Type>::operator=
+        Field<Type>::operator=
         (
             Field<Type>("value", dict, p.size())
         );
     }
     else if (!valueRequired)
     {
-        fvPatchField<Type>::operator=(pTraits<Type>::zero);
+        Field<Type>::operator=(Zero);
     }
     else
     {
@@ -315,14 +315,12 @@ void Foam::fvPatchField<Type>::updateCoeffs()
 
 
 template<class Type>
-void Foam::fvPatchField<Type>::updateCoeffs(const scalarField& weights)
+void Foam::fvPatchField<Type>::updateWeightedCoeffs(const scalarField& weights)
 {
+    // Default behaviour ignores the weights
     if (!updated_)
     {
         updateCoeffs();
-
-        Field<Type>& fld = *this;
-        fld *= weights;
 
         updated_ = true;
     }

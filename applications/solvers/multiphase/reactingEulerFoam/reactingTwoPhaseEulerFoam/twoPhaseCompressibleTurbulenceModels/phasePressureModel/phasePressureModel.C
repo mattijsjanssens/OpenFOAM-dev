@@ -144,7 +144,7 @@ Foam::RASModels::phasePressureModel::R() const
             (
                 "R",
                 dimensionSet(0, 2, -2, 0, 0),
-                symmTensor::zero
+                Zero
             )
         )
     );
@@ -164,8 +164,8 @@ Foam::RASModels::phasePressureModel::pPrime() const
         )
     );
 
-    volScalarField::GeometricBoundaryField& bpPrime =
-        tpPrime.ref().boundaryField();
+    volScalarField::Boundary& bpPrime =
+        tpPrime.ref().boundaryFieldRef();
 
     forAll(bpPrime, patchi)
     {
@@ -192,8 +192,8 @@ Foam::RASModels::phasePressureModel::pPrimef() const
         )
     );
 
-   surfaceScalarField::GeometricBoundaryField& bpPrime =
-       tpPrime.ref().boundaryField();
+   surfaceScalarField::Boundary& bpPrime =
+       tpPrime.ref().boundaryFieldRef();
 
     forAll(bpPrime, patchi)
     {
@@ -227,7 +227,7 @@ Foam::RASModels::phasePressureModel::devRhoReff() const
             (
                 "R",
                 rho_.dimensions()*dimensionSet(0, 2, -2, 0, 0),
-                symmTensor::zero
+                Zero
             )
         )
     );

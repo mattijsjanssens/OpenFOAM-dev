@@ -158,8 +158,8 @@ protected:
         //  ensure that it lies in a cell and not edge/face
         virtual bool findCellAtPosition
         (
-            label& cellI,
-            label& tetFaceI,
+            label& celli,
+            label& tetFacei,
             label& tetPtI,
             vector& position,
             bool errorOnNotFound = true
@@ -319,7 +319,7 @@ public:
                 const scalar time,
                 vector& position,
                 label& cellOwner,
-                label& tetFaceI,
+                label& tetFacei,
                 label& tetPtI
             ) = 0;
 

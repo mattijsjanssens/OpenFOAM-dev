@@ -297,30 +297,50 @@ void Foam::reduce
 
 void Foam::UPstream::allToAll
 (
-    const char* sendBuf,
-    const std::streamsize sendSize,
-    char* recvBuf,
+    const labelUList& sendData,
+    labelUList& recvData,
     const label communicator
 )
 {
-    if
-    (
-	    MPI_Alltoall
-	    (
-	        sendBuf,
-	        sendSize,   // Number of bytes per entry
-	        MPI_BYTE,
-	        recvBuf,
-	        sendSize,
-	        MPI_BYTE,
-	        PstreamGlobals::MPICommunicators_[communicator]
-	    )
-    )
+    label np = nProcs(communicator);
+
+    if (sendData.size() != np || recvData.size() != np)
     {
         FatalErrorInFunction
-            << "MPI_Alltoall failed for " << sendSize
-            << " bytes on communicator " << communicator
+            << "Size of sendData " << sendData.size()
+            << " or size of recvData " << recvData.size()
+            << " is not equal to the number of processors in the domain "
+            << np
             << Foam::abort(FatalError);
+    }
+
+    if (!UPstream::parRun())
+    {
+        recvData.deepCopy(sendData);
+    }
+    else
+    {
+        if
+        (
+            MPI_Alltoall
+            (
+                // NOTE: const_cast is a temporary hack for
+                // backward-compatibility with versions of OpenMPI < 1.7.4
+                const_cast<label*>(sendData.begin()),
+                sizeof(label),
+                MPI_BYTE,
+                recvData.begin(),
+                sizeof(label),
+                MPI_BYTE,
+                PstreamGlobals::MPICommunicators_[communicator]
+            )
+        )
+        {
+            FatalErrorInFunction
+                << "MPI_Alltoall failed for " << sendData
+                << " on communicator " << communicator
+                << Foam::abort(FatalError);
+        }
     }
 }
 
