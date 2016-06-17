@@ -323,6 +323,13 @@ then
     then
         targetType=libso
     fi
+elif [ "$targetType" != "options" -a "$targetType" != "exe" ]
+then
+    # Check if trying to build an application with libso
+    if grep -e '^ *EXE *=' "$MakeDir/files" >/dev/null 2>&1
+    then
+        unset targetType
+    fi
 fi
 
 
