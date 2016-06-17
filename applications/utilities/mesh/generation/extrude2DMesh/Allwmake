@@ -7,6 +7,8 @@ targetType=libso
 set -x
 
 wmake $targetType extrude2DMesh
-wmake
+
+[ $targetType = "objects" ] && execTargetType=$targetType
+wmake $execTargetType
 
 #------------------------------------------------------------------------------

@@ -8,6 +8,8 @@ set -x
 
 wmake $targetType twoPhaseSystem
 wmake $targetType twoPhaseCompressibleTurbulenceModels
-wmake
+
+[ $targetType = "objects" ] && execTargetType=$targetType
+wmake $execTargetType
 
 #------------------------------------------------------------------------------

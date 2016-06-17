@@ -2,6 +2,7 @@
 cd ${0%/*} || exit 1    # Run from this directory
 
 # Parse arguments for compilation (at least for error catching)
+targetType=libso
 . $WM_PROJECT_DIR/wmake/scripts/AllwmakeParseArguments
 
 unset COMP_FLAGS LINK_FLAGS
@@ -16,6 +17,7 @@ then
     export LINK_FLAGS="-lreadline"
 fi
 
-wmake
+[ $targetType = "objects" ] && execTargetType=$targetType
+wmake $execTargetType
 
 #------------------------------------------------------------------------------

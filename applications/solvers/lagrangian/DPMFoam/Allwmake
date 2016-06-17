@@ -7,5 +7,7 @@ targetType=libso
 set -x
 
 wmake $targetType DPMTurbulenceModels
-wmake
-wmake MPPICFoam
+
+[ $targetType = "objects" ] && execTargetType=$targetType
+wmake $execTargetType
+wmake $execTargetType MPPICFoam

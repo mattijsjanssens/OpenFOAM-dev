@@ -9,6 +9,8 @@ set -x
 wmakeLnInclude interfacialModels
 wmake $targetType multiphaseSystem
 wmake $targetType interfacialModels
-wmake
+
+[ $targetType = "objects" ] && execTargetType=$targetType
+wmake $execTargetType
 
 #------------------------------------------------------------------------------

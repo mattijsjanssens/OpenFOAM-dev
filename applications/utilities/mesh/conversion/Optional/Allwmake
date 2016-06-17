@@ -5,6 +5,7 @@
 cd ${0%/*} || exit 1    # Run from this directory
 
 # Parse arguments for compilation (at least for error catching)
+targetType=libso
 . $WM_PROJECT_DIR/wmake/scripts/AllwmakeParseArguments
 set -x
 
@@ -14,7 +15,8 @@ $WM_THIRD_PARTY_DIR/AllwmakeLibccmio
 # if the library built properly, the headers should exist too
 if [ -e $FOAM_EXT_LIBBIN/libccmio.so ]
 then
-    wmake ccm26ToFoam
+    [ $targetType = "objects" ] && execTargetType=$targetType
+    wmake $execTargetType ccm26ToFoam
 fi
 
 #------------------------------------------------------------------------------

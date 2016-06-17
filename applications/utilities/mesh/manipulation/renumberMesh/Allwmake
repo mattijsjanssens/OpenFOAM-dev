@@ -2,6 +2,7 @@
 cd ${0%/*} || exit 1    # Run from this directory
 
 # Parse arguments for compilation (at least for error catching)
+targetType=libso
 . $WM_PROJECT_DIR/wmake/scripts/AllwmakeParseArguments
 set -x
 
@@ -21,6 +22,7 @@ then
     export LINK_FLAGS="${LINK_FLAGS} -lzoltanRenumber -L${ZOLTAN_ARCH_PATH}/lib -lzoltan"
 fi
 
-wmake
+[ "$targetType" = "objects" ] && execTargetType=$targetType
+wmake $execTargetType
 
 #------------------------------------------------------------------------------

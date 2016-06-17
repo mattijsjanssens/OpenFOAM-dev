@@ -8,6 +8,8 @@ set -x
 
 wmake $targetType mixtureViscosityModels
 wmake $targetType relativeVelocityModels
-wmake
+
+[ $targetType = "objects" ] && execTargetType=$targetType
+wmake $execTargetType
 
 #------------------------------------------------------------------------------

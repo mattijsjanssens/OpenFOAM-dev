@@ -83,6 +83,7 @@ or a special target:
   libso             Compile dynamically linked lib (.so)
   dep               Compile lnInclude and dependencies only
   updatedep         Compile dependencies only (in case of broken dependencies)
+  objects           Compile but not link
 
 USAGE
     exit 1
@@ -217,7 +218,7 @@ if [ "$all" = "all" ]
 then
     if [ -e Allwmake ]
     then
-        ./Allwmake
+        ./Allwmake $targetType
         exit $?
     else
         # Have to keep track of the main exit code for the call to "make"

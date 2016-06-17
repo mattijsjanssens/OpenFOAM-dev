@@ -7,7 +7,9 @@ targetType=libso
 set -x
 
 wmake $targetType twoPhaseMixtureThermo
-wmake
-wmake compressibleInterDyMFoam
+
+[ $targetType = "objects" ] && execTargetType=$targetType
+wmake $execTargetType
+wmake $execTargetType compressibleInterDyMFoam
 
 #------------------------------------------------------------------------------

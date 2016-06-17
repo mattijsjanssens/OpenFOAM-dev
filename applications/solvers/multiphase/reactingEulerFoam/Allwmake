@@ -11,7 +11,7 @@ wmakeLnInclude interfacialCompositionModels
 wmake $targetType phaseSystems
 wmake $targetType interfacialModels
 wmake $targetType interfacialCompositionModels
-reactingTwoPhaseEulerFoam/Allwmake $*
-reactingMultiphaseEulerFoam/Allwmake $*
+reactingTwoPhaseEulerFoam/Allwmake $targetType $*
+reactingMultiphaseEulerFoam/Allwmake $targetType $*
 
 #------------------------------------------------------------------------------
