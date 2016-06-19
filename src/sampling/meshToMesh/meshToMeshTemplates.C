@@ -419,7 +419,7 @@ Foam::meshToMesh::mapSrcToTgt
 
     PtrList<fvPatchField<Type>> tgtPatchFields(tgtBm.size());
 
-    // constuct tgt boundary patch types as copy of 'field' boundary types
+    // construct tgt boundary patch types as copy of 'field' boundary types
     // note: this will provide place holders for fields with additional
     // entries, but these values will need to be reset
     forAll(tgtPatchID_, i)
@@ -592,8 +592,6 @@ void Foam::meshToMesh::mapTgtToSrc
         // Transfer all mapped quantities (value and e.g. gradient) onto
         // srcField. Value will get overwritten below
         srcField.rmap(tnewSrc(), identity(srcField.size()));
-
-        srcField == Type(Zero);
 
 
         // Override value to account for CombineOp (could be dummy for
