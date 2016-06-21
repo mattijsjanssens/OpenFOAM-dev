@@ -326,7 +326,7 @@ int main(int argc, char *argv[])
             meshSource,
             meshTarget,
             patchMap,
-            addProcessorPatches(meshTarget, cuttingPatches),
+            cuttingPatches,
             mapMethod,
             subtract,
             selectedFields,
