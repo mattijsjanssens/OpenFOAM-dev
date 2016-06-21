@@ -8,8 +8,7 @@ set -x
 
 wmake $targetType twoPhaseMixtureThermo
 
-[ $targetType = "objects" ] && execTargetType=$targetType
-wmake $execTargetType
-wmake $execTargetType compressibleInterDyMFoam
+wmake $targetType
+wmake $targetType compressibleInterDyMFoam
 
 #------------------------------------------------------------------------------

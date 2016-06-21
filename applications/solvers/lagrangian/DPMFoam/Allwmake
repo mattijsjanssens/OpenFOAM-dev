@@ -8,6 +8,5 @@ set -x
 
 wmake $targetType DPMTurbulenceModels
 
-[ $targetType = "objects" ] && execTargetType=$targetType
-wmake $execTargetType
-wmake $execTargetType MPPICFoam
+wmake $targetType
+wmake $targetType MPPICFoam

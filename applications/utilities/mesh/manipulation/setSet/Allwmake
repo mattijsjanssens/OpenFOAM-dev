@@ -17,7 +17,6 @@ then
     export LINK_FLAGS="-lreadline"
 fi
 
-[ $targetType = "objects" ] && execTargetType=$targetType
-wmake $execTargetType
+wmake $targetType
 
 #------------------------------------------------------------------------------

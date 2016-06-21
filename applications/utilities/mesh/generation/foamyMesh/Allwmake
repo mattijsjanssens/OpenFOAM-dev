@@ -9,11 +9,10 @@ set -x
 wmake $targetType conformalVoronoiMesh
 wmake $targetType conformalVoronoi2DMesh
 
-[ $targetType = "objects" ] && execTargetType=$targetType
-wmake $execTargetType foamyQuadMesh
-wmake $execTargetType foamyHexMesh
-#wmake $execTargetType foamyHexMeshBackgroundMesh
+wmake $targetType foamyQuadMesh
+wmake $targetType foamyHexMesh
+#wmake $targetType foamyHexMeshBackgroundMesh
 #(cd foamyHexMeshSurfaceSimplify && ./Allwmake $targetType $*)
-#wmake $execTargetType cellSizeAndAlignmentGrid
+#wmake $targetType cellSizeAndAlignmentGrid
 
 #------------------------------------------------------------------------------

@@ -8,8 +8,6 @@ set -x
 
 wmake $targetType multiphaseSystem
 wmake $targetType multiphaseCompressibleTurbulenceModels
-
-[ $targetType = "objects" ] && execTargetType=$targetType
-wmake $execTargetType
+wmake $targetType
 
 #------------------------------------------------------------------------------

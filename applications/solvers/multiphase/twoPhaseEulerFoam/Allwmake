@@ -10,8 +10,6 @@ wmakeLnInclude interfacialModels
 wmake $targetType twoPhaseSystem
 wmake $targetType interfacialModels
 wmake $targetType phaseCompressibleTurbulenceModels
-
-[ $targetType = "objects" ] && execTargetType=$targetType
-wmake $execTargetType
+wmake $targetType
 
 #------------------------------------------------------------------------------

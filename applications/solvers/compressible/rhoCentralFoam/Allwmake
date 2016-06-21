@@ -6,8 +6,6 @@ targetType=libso
 . $WM_PROJECT_DIR/wmake/scripts/AllwmakeParseArguments
 set -x
 
-[ $targetType = "objects" ] && execTargetType=$targetType
-
-(wmake $targetType BCs && wmake $execTargetType && wmake $execTargetType rhoCentralDyMFoam)
+(wmake $targetType BCs && wmake $targetType && wmake $targetType rhoCentralDyMFoam)
 
 #------------------------------------------------------------------------------
