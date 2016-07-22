@@ -71,7 +71,14 @@ public:
         //  - transform
         class less
         {
+            const globalIndexAndTransform& gi_;
+
         public:
+
+            less(const globalIndexAndTransform& gi)
+            :
+                gi_(gi)
+            {}
 
             inline bool operator()(const labelPair&, const labelPair&) const;
         };
@@ -105,13 +112,13 @@ private:
         //- Mapping from patch index to which transform it matches (or
         //  -1 for none) (.first()) and what sign to use for it,
         //  i.e. +/- 1 (.second()).
-        List<Pair<label>> patchTransformSign_;
+        List<labelPair> patchTransformSign_;
 
 
     // Private static data
 
         //- Number of spaces to reserve for transform encoding
-        static const label base_;
+        //static const label base_;
 
 
     // Private Member Functions
@@ -124,7 +131,7 @@ private:
         void determineTransformPermutations();
 
         //- Determine which patch uses which transform (if any) and which
-        //- Sign to use
+        //  sign to use
         void determinePatchTransformSign();
 
         //- Test a list of reference transforms to see if the test
@@ -221,74 +228,69 @@ public:
         ) const;
 
         //- Encode index and bare index as components on own processor
-        inline static labelPair encode
+        inline labelPair encode
         (
             const label index,
             const label transformIndex
-        );
+        ) const;
 
         //- Encode index and bare index as components on given processor
-        inline static labelPair encode
+        inline labelPair encode
         (
             const label proci,
             const label index,
             const label transformIndex
-        );
+        ) const;
 
         //- Index carried by the object
-        inline static label index(const labelPair& globalIAndTransform);
+        inline label index(const labelPair& globalIAndTransform) const;
 
         //- Which processor does this come from?
-        inline static label processor(const labelPair& globalIAndTransform);
+        inline label processor(const labelPair& globalIAndTransform) const;
 
         //- Transform carried by the object
-        inline static label transformIndex
+        inline label transformIndex(const labelPair& globalIAndTransform) const;
+
+        //- Return the number of independent transforms
+        inline label nIndependentTransforms() const;
+
+        //- Return access to the stored independent transforms
+        inline const List<vectorTensorTransform>& transforms() const;
+
+        //- Return access to the permuted transforms
+        inline const List<vectorTensorTransform>&
+        transformPermutations() const;
+
+        //- Return the transformIndex (index in transformPermutations)
+        //  of the identity transform
+        inline label nullTransformIndex() const;
+
+        //- Return access to the per-patch transform-sign pairs
+        inline const List<labelPair>& patchTransformSign() const;
+
+        //- Access the overall (permuted) transform corresponding
+        //  to the transformIndex
+        inline const vectorTensorTransform& transform
         (
-            const labelPair& globalIAndTransform
-        );
+            label transformIndex
+        ) const;
 
-        // Access
+        //- Access the all of the indices of the transform
+        //  permutations corresponding the transforms of the
+        //  listed patch indices
+        inline labelList transformIndicesForPatches
+        (
+            const labelHashSet& patchIs
+        ) const;
 
-            //- Return the number of independent transforms
-            inline label nIndependentTransforms() const;
-
-            //- Return access to the stored independent transforms
-            inline const List<vectorTensorTransform>& transforms() const;
-
-            //- Return access to the permuted transforms
-            inline const List<vectorTensorTransform>&
-            transformPermutations() const;
-
-            //- Return the transformIndex (index in transformPermutations)
-            //  of the identity transform
-            inline label nullTransformIndex() const;
-
-            //- Return access to the per-patch transform-sign pairs
-            inline const List<Pair<label>>& patchTransformSign() const;
-
-            //- Access the overall (permuted) transform corresponding
-            //  to the transformIndex
-            inline const vectorTensorTransform& transform
-            (
-                label transformIndex
-            ) const;
-
-            //- Access the all of the indices of the transform
-            //  permutations corresponding the transforms of the
-            //  listed patch indices
-            inline labelList transformIndicesForPatches
-            (
-                const labelHashSet& patchIs
-            ) const;
-
-            //- Apply all of the transform permutations
-            //  corresponding the transforms of the listed patch
-            //  indices to the supplied point
-            inline pointField transformPatches
-            (
-                const labelHashSet& patchIs,
-                const point& pt
-            ) const;
+        //- Apply all of the transform permutations
+        //  corresponding the transforms of the listed patch
+        //  indices to the supplied point
+        inline pointField transformPatches
+        (
+            const labelHashSet& patchIs,
+            const point& pt
+        ) const;
 
 };
 

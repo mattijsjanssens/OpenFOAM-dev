@@ -33,8 +33,8 @@ bool Foam::globalIndexAndTransform::less::operator()
     const labelPair& b
 ) const
 {
-    label procA = globalIndexAndTransform::processor(a);
-    label procB = globalIndexAndTransform::processor(b);
+    label procA = gi_.processor(a);
+    label procB = gi_.processor(b);
 
     if (procA < procB)
     {
@@ -47,8 +47,8 @@ bool Foam::globalIndexAndTransform::less::operator()
     else
     {
         // Equal proc.
-        label indexA = globalIndexAndTransform::index(a);
-        label indexB = globalIndexAndTransform::index(b);
+        label indexA = gi_.index(a);
+        label indexB = gi_.index(b);
 
         if (indexA < indexB)
         {
@@ -61,8 +61,8 @@ bool Foam::globalIndexAndTransform::less::operator()
         else
         {
             // Equal index
-            label transformA = globalIndexAndTransform::transformIndex(a);
-            label transformB = globalIndexAndTransform::transformIndex(b);
+            label transformA = gi_.transformIndex(a);
+            label transformB = gi_.transformIndex(b);
 
             return transformA < transformB;
         }
@@ -180,7 +180,7 @@ Foam::label Foam::globalIndexAndTransform::addToTransformIndex
     const scalar tol
 ) const
 {
-    const Pair<label>& transSign = patchTransformSign_[patchi];
+    const labelPair& transSign = patchTransformSign_[patchi];
 
     label matchTransI = transSign.first();
 
@@ -340,7 +340,7 @@ Foam::labelPair Foam::globalIndexAndTransform::encode
 (
     const label index,
     const label transformIndex
-)
+) const
 {
     return encode(Pstream::myProcNo(), index, transformIndex);
 }
@@ -351,21 +351,22 @@ Foam::labelPair Foam::globalIndexAndTransform::encode
     const label proci,
     const label index,
     const label transformIndex
-)
+) const
 {
-    if (transformIndex < 0 || transformIndex >= base_)
+    if (transformIndex < 0 || transformIndex >= transformPermutations_.size())
     {
         FatalErrorInFunction
             << "TransformIndex " << transformIndex
             << " is outside allowed range of 0 to "
-            << base_ - 1
+            << transformPermutations_.size() - 1
             << abort(FatalError);
     }
 
-    if (proci > labelMax/base_)
+    if (proci > labelMax/transformPermutations_.size())
     {
         FatalErrorInFunction
-            << "Overflow : encoding processor " << proci << " in base " << base_
+            << "Overflow : encoding processor " << proci
+            << " in base " << transformPermutations_.size()
             << " exceeds capability of label (" << labelMax
             << "). Please recompile with larger datatype for label."
             << exit(FatalError);
@@ -374,7 +375,7 @@ Foam::labelPair Foam::globalIndexAndTransform::encode
     return labelPair
     (
         index,
-        transformIndex + proci*base_
+        transformIndex + proci*transformPermutations_.size()
     );
 }
 
@@ -382,7 +383,7 @@ Foam::labelPair Foam::globalIndexAndTransform::encode
 Foam::label Foam::globalIndexAndTransform::index
 (
     const labelPair& globalIAndTransform
-)
+) const
 {
     return globalIAndTransform.first();
 }
@@ -391,18 +392,18 @@ Foam::label Foam::globalIndexAndTransform::index
 Foam::label Foam::globalIndexAndTransform::processor
 (
     const labelPair& globalIAndTransform
-)
+) const
 {
-    return globalIAndTransform.second()/base_;
+    return globalIAndTransform.second()/transformPermutations_.size();
 }
 
 
 Foam::label Foam::globalIndexAndTransform::transformIndex
 (
     const labelPair& globalIAndTransform
-)
+) const
 {
-    return globalIAndTransform.second() % base_;
+    return globalIAndTransform.second() % transformPermutations_.size();
 }
 
 
@@ -432,7 +433,7 @@ Foam::label Foam::globalIndexAndTransform::nullTransformIndex() const
 }
 
 
-const Foam::List<Foam::Pair<Foam::label>>&
+const Foam::labelPairList&
 Foam::globalIndexAndTransform::patchTransformSign() const
 {
     return patchTransformSign_;
@@ -466,7 +467,7 @@ Foam::labelList Foam::globalIndexAndTransform::transformIndicesForPatches
     {
         label patchi = iter.key();
 
-        const Pair<label>& transSign = patchTransformSign_[patchi];
+        const labelPair& transSign = patchTransformSign_[patchi];
 
         label matchTransI = transSign.first();
 
