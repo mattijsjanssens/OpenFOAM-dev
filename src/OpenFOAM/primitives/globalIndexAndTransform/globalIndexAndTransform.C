@@ -26,6 +26,7 @@ License
 #include "globalIndexAndTransform.H"
 #include "cyclicPolyPatch.H"
 #include "DynamicField.H"
+#include "globalMeshData.H"
 
 // * * * * * * * * * * * * Private Static Data Members * * * * * * * * * * * //
 
@@ -216,6 +217,10 @@ void Foam::globalIndexAndTransform::determineTransforms()
     }
 
 
+DebugVar(localTransforms);
+DebugVar(localTols);
+
+
     // Collect transforms on master
     List<List<vectorTensorTransform>> allTransforms(Pstream::nProcs());
     allTransforms[Pstream::myProcNo()] = localTransforms;
@@ -260,19 +265,15 @@ void Foam::globalIndexAndTransform::determineTransforms()
         }
     }
 
-    transforms_.transfer(localTransforms);
-    Pstream::scatter(transforms_);
+DebugVar(localTols);
 
-    if (transforms_.size() > 3)
-    {
-        WarningInFunction
-            << "More than three independent basic "
-            << "transforms detected:" << nl
-            << transforms_ << nl
-            << "This is not a space filling tiling and might"
-            << " give problems for e.g. lagrangian tracking or interpolation"
-            << endl;
-    }
+    transforms_.transfer(localTransforms);
+
+DebugVar(transforms_);
+
+    Pstream::scatter(transforms_);
+DebugVar(transforms_);
+
 }
 
 
@@ -406,6 +407,52 @@ void Foam::globalIndexAndTransform::determinePatchTransformSign()
 }
 
 
+bool Foam::globalIndexAndTransform::uniqueTransform
+(
+    const point& pt,
+    labelPairList& trafos,
+    const label patchi,
+    const labelPair& patchTrafo
+) const
+{
+    if (findIndex(trafos, patchTrafo) == -1)
+    {
+        // New transform. Check if already have 3
+        if (trafos.size() == 3)
+        {
+            if (patchi > -1)
+            {
+                WarningInFunction
+                    << "Point " << pt
+                    << " is on patch " << mesh_.boundaryMesh()[patchi].name();
+            }
+            else
+            {
+                WarningInFunction
+                    << "Point " << pt << " is on a coupled patch";
+            }
+            Warning
+                << " with transformation " << patchTrafo
+                << " but also on 3 other patches with transforms "
+                << trafos << nl
+                << "This is not a space filling tiling and might"
+                << " indicate a setup problem and give problems"
+                << " for e.g. lagrangian tracking or interpolation" << endl;
+
+            // Already warned so no need to extend more
+            trafos.clear();
+            return false;
+        }
+
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 Foam::globalIndexAndTransform::globalIndexAndTransform(const polyMesh& mesh)
@@ -477,13 +524,102 @@ Foam::globalIndexAndTransform::globalIndexAndTransform(const polyMesh& mesh)
         Info<< "nullTransformIndex:" << nullTransformIndex() << endl
             << endl;
     }
+
+
+    if (transforms_.size() > 0)
+    {
+        // Check that the transforms are space filling : any point
+        // can only use up to three transforms
+
+        const polyBoundaryMesh& patches = mesh_.boundaryMesh();
+
+
+        // 1. Collect transform&sign per point and do local check
+
+        List<labelPairList> pointToTrafos(mesh_.nPoints());
+
+        forAll(patches, patchi)
+        {
+            const polyPatch& pp = patches[patchi];
+
+            const labelPair& transSign = patchTransformSign_[patchi];
+
+            if (transSign.first() > -1)
+            {
+                const labelList& mp = pp.meshPoints();
+                forAll(mp, i)
+                {
+                    labelPairList& trafos = pointToTrafos[mp[i]];
+
+                    bool newTransform = uniqueTransform
+                    (
+                        mesh_.points()[mp[i]],
+                        trafos,
+                        patchi,
+                        transSign
+                    );
+
+                    if (newTransform)
+                    {
+                        trafos.append(transSign);
+                    }
+                }
+            }
+        }
+
+
+        // Synchronise across collocated (= untransformed) points
+        // TBD: there is a big problem in that globalMeshData uses
+        //      globalIndexAndTransform. Triggers recursion.
+        if (false)
+        {
+            const globalMeshData& gmd = mesh_.globalData();
+            const indirectPrimitivePatch& cpp = gmd.coupledPatch();
+            const labelList& meshPoints = cpp.meshPoints();
+            const mapDistribute& slavesMap = gmd.globalCoPointSlavesMap();
+            const labelListList& slaves = gmd.globalCoPointSlaves();
+
+            List<labelPairList> elems(slavesMap.constructSize());
+            forAll(meshPoints, i)
+            {
+                elems[i] = pointToTrafos[meshPoints[i]];
+            }
+
+            // Pull slave data onto master. No need to update transformed slots.
+            slavesMap.distribute(elems, false);
+
+            // Combine master data with slave data
+            forAll(slaves, i)
+            {
+                labelPairList& trafos = elems[i];
+
+                const labelList& slavePoints = slaves[i];
+
+                // Combine master with untransformed slave data
+                forAll(slavePoints, j)
+                {
+                    const labelPairList& slaveTrafos = elems[slavePoints[j]];
+
+                    forAll(slaveTrafos, slaveI)
+                    {
+                        bool newTransform = uniqueTransform
+                        (
+                            mesh_.points()[meshPoints[i]],
+                            trafos,
+                            -1,
+                            slaveTrafos[slaveI]
+                        );
+
+                        if (newTransform)
+                        {
+                            trafos.append(slaveTrafos[slaveI]);
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
-
-
-// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
-
-Foam::globalIndexAndTransform::~globalIndexAndTransform()
-{}
 
 
 // ************************************************************************* //
