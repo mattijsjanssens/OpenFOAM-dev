@@ -217,10 +217,6 @@ void Foam::globalIndexAndTransform::determineTransforms()
     }
 
 
-DebugVar(localTransforms);
-DebugVar(localTols);
-
-
     // Collect transforms on master
     List<List<vectorTensorTransform>> allTransforms(Pstream::nProcs());
     allTransforms[Pstream::myProcNo()] = localTransforms;
@@ -265,15 +261,8 @@ DebugVar(localTols);
         }
     }
 
-DebugVar(localTols);
-
     transforms_.transfer(localTransforms);
-
-DebugVar(transforms_);
-
     Pstream::scatter(transforms_);
-DebugVar(transforms_);
-
 }
 
 
