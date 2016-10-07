@@ -29,7 +29,6 @@ License
 #include "pointFields.H"
 #include "dynamicCode.H"
 #include "dynamicCodeContext.H"
-#include "stringOps.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -131,11 +130,11 @@ void Foam::codedFixedValuePointPatchField<Type>::prepare
         (
             "EXE_INC = -g \\\n"
             "-I$(LIB_SRC)/finiteVolume/lnInclude \\\n"
-            + context.options()
+            + dynCode.filterVar("codeOptions")
             + "\n\nLIB_LIBS = \\\n"
             + "    -lOpenFOAM \\\n"
             + "    -lfiniteVolume \\\n"
-            + context.libs()
+            + dynCode.filterVar("codeLibs")
         );
 }
 
@@ -225,7 +224,23 @@ Foam::codedFixedValuePointPatchField<Type>::codedFixedValuePointPatchField
     ),
     redirectPatchFieldPtr_()
 {
-    updateLibrary(name_);
+    // Compilation options
+    context_.addFilterVariable(false, dict, "codeOptions");
+    context_.addFilterVariable(false, dict, "codeLibs");
+
+    // From looking through the fixedValuePointPatchFieldTemplate*[CH] :
+    context_.addFilterVariables
+    (
+        dynamicCode::resolveTemplate(codeTemplateC),
+        dict
+    );
+    context_.addFilterVariables
+    (
+        dynamicCode::resolveTemplate(codeTemplateH),
+        dict
+    );
+
+    updateLibrary(name_, context_);
 }
 
 
@@ -299,7 +314,7 @@ void Foam::codedFixedValuePointPatchField<Type>::updateCoeffs()
     }
 
     // Make sure library containing user-defined pointPatchField is up-to-date
-    updateLibrary(name_);
+    updateLibrary(name_, context_);
 
     const pointPatchField<Type>& fvp = redirectPatchField();
 
@@ -319,7 +334,7 @@ void Foam::codedFixedValuePointPatchField<Type>::evaluate
 )
 {
     // Make sure library containing user-defined pointPatchField is up-to-date
-    updateLibrary(name_);
+    updateLibrary(name_, context_);
 
     const pointPatchField<Type>& fvp = redirectPatchField();
 
@@ -333,58 +348,9 @@ template<class Type>
 void Foam::codedFixedValuePointPatchField<Type>::write(Ostream& os) const
 {
     fixedValuePointPatchField<Type>::write(os);
-    os.writeKeyword("name") << name_
-        << token::END_STATEMENT << nl;
+    os.writeKeyword("name") << name_ << token::END_STATEMENT << nl;
 
-    if (dict_.found("codeInclude"))
-    {
-        os.writeKeyword("codeInclude")
-            << token::HASH << token::BEGIN_BLOCK;
-
-        os.writeQuoted(string(dict_["codeInclude"]), false)
-            << token::HASH << token::END_BLOCK
-            << token::END_STATEMENT << nl;
-    }
-
-    if (dict_.found("localCode"))
-    {
-        os.writeKeyword("localCode")
-            << token::HASH << token::BEGIN_BLOCK;
-
-        os.writeQuoted(string(dict_["localCode"]), false)
-            << token::HASH << token::END_BLOCK
-            << token::END_STATEMENT << nl;
-    }
-
-    if (dict_.found("code"))
-    {
-        os.writeKeyword("code")
-            << token::HASH << token::BEGIN_BLOCK;
-
-        os.writeQuoted(string(dict_["code"]), false)
-            << token::HASH << token::END_BLOCK
-            << token::END_STATEMENT << nl;
-    }
-
-    if (dict_.found("codeOptions"))
-    {
-        os.writeKeyword("codeOptions")
-            << token::HASH << token::BEGIN_BLOCK;
-
-        os.writeQuoted(string(dict_["codeOptions"]), false)
-            << token::HASH << token::END_BLOCK
-            << token::END_STATEMENT << nl;
-    }
-
-    if (dict_.found("codeLibs"))
-    {
-        os.writeKeyword("codeLibs")
-            << token::HASH << token::BEGIN_BLOCK;
-
-        os.writeQuoted(string(dict_["codeLibs"]), false)
-            << token::HASH << token::END_BLOCK
-            << token::END_STATEMENT << nl;
-    }
+    context_.write(os, dict_);
 }
 
 

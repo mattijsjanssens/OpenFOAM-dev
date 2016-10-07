@@ -25,7 +25,8 @@ Class
     Foam::dynamicCodeContext
 
 Description
-    Encapsulation of dynamic code dictionaries
+    Encapsulation of dynamic code dictionaries. Extracts all strings from
+    dictionary, assuming they are C++ code snippets. Constructs a SHA1 key.
 
 SourceFiles
     dynamicCodeContext.C
@@ -37,6 +38,7 @@ SourceFiles
 
 #include "dictionary.H"
 #include "SHA1Digest.H"
+#include "OSHA1stream.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -51,79 +53,83 @@ class dynamicCodeContext
 {
     // Private data
 
-        //- The parent dictionary context
-        const dictionary& dict_;
+        //- Collection of filter variables
+        HashTable<string> filterVars_;
 
-        //- Optional "code" entry
-        string code_;
-
-        //- Optional "localCode" entry
-        string localCode_;
-
-        //- Optional "codeInclude" entry
-        string include_;
-
-        //- Optional "codeOptions" entry
-        string options_;
-
-        //- Optional "codeLib" entry
-        string libs_;
+        //- Running stream
+        mutable OSHA1stream stream_;
 
         //- Calculated SHA1Digest
-        SHA1Digest sha1_;
+        mutable autoPtr<SHA1Digest> sha1_;
 
 
 public:
 
     // Constructors
 
-        //- Construct from a dictionary
+        //- Construct from a dictionary. Adds as filterVars
+        //  - codeInclude, codeOptions without line directive
+        //  - all others strings with line directive
         dynamicCodeContext(const dictionary&);
+
+        //- Construct null
+        dynamicCodeContext();
 
 
     // Member functions
 
-        //- Return the parent dictionary context
-        const dictionary& dict() const
+        //- Collection of filter variables
+        const HashTable<string>& filterVars() const
         {
-            return dict_;
+            return filterVars_;
         }
 
-        //- Return the code-includes
-        const string& include() const
-        {
-            return include_;
-        }
+//         //- Helper: return variable content if set, default otherwise
+//         const string& filterVar
+//         (
+//             const word& var,
+//             const word& defaultVal = ""
+//         ) const;
 
-        //- Return the code-options
-        const string& options() const
-        {
-            return options_;
-        }
-
-        //- Return the code-libs
-        const string& libs() const
-        {
-            return libs_;
-        }
-
-        //- Return the code
-        const string& code() const
-        {
-            return code_;
-        }
-
-        //- Return the local (file-scope) code
-        const string& localCode() const
-        {
-            return localCode_;
-        }
-
-        //- Return SHA1 digest calculated from include, options, code
+        //- Return SHA1 digest calculated from current stream. Call only
+        //  after all filterVars have been added
         const SHA1Digest& sha1() const
         {
-            return sha1_;
+            if (sha1_.empty())
+            {
+                sha1_.reset(new SHA1Digest(stream_.digest()));
+            }
+            return sha1_();
         }
+
+        //- Reset the context
+        void clear();
+
+        //- Read from dictionary
+        void read(const dictionary&);
+
+        //- Helper: write filter variables with original (unexpanded) value
+        //  (from dictionary) to stream
+        void write(Ostream&, const dictionary&) const;
+
+
+        //- Helper: add a filter variable from a dictionary. If addDirective
+        //          if adds the dictionary line number (after updating the
+        //          SHA1)
+        void addFilterVariable
+        (
+            const bool addDirective,
+            const dictionary& dict,
+            const word& key
+        );
+
+        //- Helper: add entries for all variables that occur in (C++) template
+        //  file
+        void addFilterVariables
+        (
+            const fileName&,
+            const dictionary& dict
+        );
 
         //- Helper: add \#line directive
         static void addLineDirective

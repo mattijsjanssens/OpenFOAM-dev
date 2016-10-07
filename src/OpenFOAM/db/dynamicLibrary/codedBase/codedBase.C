@@ -191,7 +191,7 @@ void Foam::codedBase::createLibrary
             {
                 FatalIOErrorInFunction
                 (
-                    context.dict()
+                    codeDict()
                 )   << "Failed writing files for" << nl
                     << dynCode.libRelPath() << nl
                     << exit(FatalIOError);
@@ -202,7 +202,7 @@ void Foam::codedBase::createLibrary
         {
             FatalIOErrorInFunction
             (
-                context.dict()
+                codeDict()
             )   << "Failed wmake " << dynCode.libRelPath() << nl
                 << exit(FatalIOError);
         }
@@ -252,7 +252,7 @@ void Foam::codedBase::createLibrary
             {
                 FatalIOErrorInFunction
                 (
-                    context.dict()
+                    codeDict()
                 )   << "Cannot read (NFS mounted) library " << nl
                     << libPath << nl
                     << "on processor " << Pstream::myProcNo()
@@ -280,7 +280,8 @@ void Foam::codedBase::createLibrary
 
 void Foam::codedBase::updateLibrary
 (
-    const word& name
+    const word& name,
+    const dynamicCodeContext& context
 ) const
 {
     const dictionary& dict = this->codeDict();
@@ -290,8 +291,6 @@ void Foam::codedBase::updateLibrary
         "codedBase::updateLibrary()",
         dict
     );
-
-    dynamicCodeContext context(dict);
 
     // codeName: name + _<sha1>
     // codeDir : name
@@ -314,7 +313,7 @@ void Foam::codedBase::updateLibrary
         << " in " << dict.name() << endl;
 
 
-    // remove instantiation of fvPatchField provided by library
+    // remove instantiation of e.g. fvPatchField provided by library
     this->clearRedirect();
 
     // may need to unload old library
@@ -322,15 +321,15 @@ void Foam::codedBase::updateLibrary
     (
         oldLibPath_,
         dynamicCode::libraryBaseName(oldLibPath_),
-        context.dict()
+        dict
     );
 
     // try loading an existing library (avoid compilation when possible)
-    if (!loadLibrary(libPath, dynCode.codeName(), context.dict()))
+    if (!loadLibrary(libPath, dynCode.codeName(), dict))
     {
         createLibrary(dynCode, context);
 
-        loadLibrary(libPath, dynCode.codeName(), context.dict());
+        loadLibrary(libPath, dynCode.codeName(), dict);
     }
 
     // retain for future reference

@@ -74,13 +74,13 @@ void Foam::fv::CodedSource<Type>::prepare
         "-I$(LIB_SRC)/meshTools/lnInclude \\\n"
         "-I$(LIB_SRC)/sampling/lnInclude \\\n"
         "-I$(LIB_SRC)/fvOptions/lnInclude \\\n"
-        + context.filterVar("codeOptions")
+        + dynCode.filterVar("codeOptions")
         + "\n\nLIB_LIBS = \\\n"
         + "    -lmeshTools \\\n"
         + "    -lfvOptions \\\n"
         + "    -lsampling \\\n"
         + "    -lfiniteVolume \\\n"
-        + context.filterVar("codeLibs")
+        + dynCode.filterVar("codeLibs")
     );
 }
 

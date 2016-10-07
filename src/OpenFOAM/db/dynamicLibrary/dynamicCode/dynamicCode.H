@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -36,7 +36,7 @@ SourceFiles
 #define dynamicCode_H
 
 #include "Tuple2.H"
-#include "HashTable.H"
+#include "HashSet.H"
 #include "DynamicList.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -74,7 +74,7 @@ private:
         //- Name for code subdirectory
         word codeDirName_;
 
-        //- Files to copy and filter
+        //- Files to copy and filter and compile
         DynamicList<fileName> compileFiles_;
 
         //- Files to copy and filter
@@ -117,7 +117,8 @@ protected:
         (
             ISstream&,
             OSstream&,
-            const HashTable<string>& mapping
+            const HashTable<string>& mapping,
+            wordHashSet usedVars
         );
 
         //- Resolve code-templates via the codeTemplateEnvName
@@ -137,7 +138,6 @@ protected:
 
         //- Copy/create Make/options prior to compilation
         bool createMakeOptions() const;
-
 
         //- Write digest to Make/SHA1Digest
         bool writeDigest(const SHA1Digest&) const;
@@ -203,6 +203,13 @@ public:
             return codeRoot_;
         }
 
+        //- Helper: return variable content if set, default otherwise
+        const string& filterVar
+        (
+            const word& var,
+            const word& defaultVal = ""
+        ) const;
+
         //- Subdirectory name for loading libraries
         //  Expanded from platforms/\$WM_OPTIONS/lib
         fileName libSubDir() const
@@ -249,8 +256,15 @@ public:
         //- Clear files and reset variables to specified context
         void reset(const dynamicCodeContext&);
 
+        //- Clear files and reset code path
+        void reset(const word& codeName, const word& codeDirName);
 
-        //- Add a file template name, which will be found and filtered
+        //- Resolve code-templates via the codeTemplateEnvName
+        //  alternatively in the codeTemplateDirName via Foam::findEtcFile
+        static fileName resolveTemplate(const fileName& templateName);
+
+        //- Add a file template name, which will be found and filtered and
+        //  compiled
         void addCompileFile(const fileName& name);
 
         //- Add a file template name, which will be found and filtered
@@ -259,10 +273,10 @@ public:
         //- Add a file to create with its contents. Will not be filtered
         void addCreateFile(const fileName& name, const string& contents);
 
-        //- Define filter variables for code, codeInclude, SHA1sum
+        //- Define set of filter variables
         void setFilterContext(const dynamicCodeContext&);
 
-        //- Define a filter variable
+        //- Define a single filter variable
         void setFilterVariable(const word& key, const std::string& value);
 
         //- Define contents for Make/options
@@ -278,9 +292,8 @@ public:
         //- Copy/create files prior to compilation
         bool copyOrCreateFiles(const bool verbose = false) const;
 
-        //- Compile a libso
+        //- Compile a libso. Return success state
         bool wmakeLibso() const;
-
 };
 
 

@@ -24,7 +24,6 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "CodedSource.H"
-#include "stringOps.H"
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
@@ -46,57 +45,21 @@ bool Foam::fv::CodedSource<Type>::read(const dictionary& dict)
             dict.lookup("name") >> name_;
         }
 
-        // Code snippets
-        {
-            const entry& e = coeffs_.lookupEntry
-            (
-                "codeCorrect",
-                false,
-                false
-            );
-            codeCorrect_ = stringOps::trim(e.stream());
-            stringOps::inplaceExpand(codeCorrect_, coeffs_);
-            dynamicCodeContext::addLineDirective
-            (
-                codeCorrect_,
-                e.startLineNumber(),
-                coeffs_.name()
-            );
-        }
+        // Compilation options
+        context_.addFilterVariable(false, dict, "codeOptions");
+        context_.addFilterVariable(false, dict, "codeLibs");
 
-        {
-            const entry& e = coeffs_.lookupEntry
-            (
-                "codeAddSup",
-                false,
-                false
-            );
-            codeAddSup_ = stringOps::trim(e.stream());
-            stringOps::inplaceExpand(codeAddSup_, coeffs_);
-            dynamicCodeContext::addLineDirective
-            (
-                codeAddSup_,
-                e.startLineNumber(),
-                coeffs_.name()
-            );
-        }
-
-        {
-            const entry& e = coeffs_.lookupEntry
-            (
-                "codeSetValue",
-                false,
-                false
-            );
-            codeSetValue_ = stringOps::trim(e.stream());
-            stringOps::inplaceExpand(codeSetValue_, coeffs_);
-            dynamicCodeContext::addLineDirective
-            (
-                codeSetValue_,
-                e.startLineNumber(),
-                coeffs_.name()
-            );
-        }
+        // From looking through the functionObjectTemplate*[CH] :
+        context_.addFilterVariables
+        (
+            dynamicCode::resolveTemplate(codeTemplateC),
+            dict
+        );
+        context_.addFilterVariables
+        (
+            dynamicCode::resolveTemplate(codeTemplateH),
+            dict
+        );
 
         return true;
     }

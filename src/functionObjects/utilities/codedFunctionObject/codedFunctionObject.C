@@ -24,13 +24,9 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "codedFunctionObject.H"
-#include "volFields.H"
-#include "dictionary.H"
 #include "Time.H"
-#include "SHA1Digest.H"
 #include "dynamicCode.H"
 #include "dynamicCodeContext.H"
-#include "stringOps.H"
 #include "addToRunTimeSelectionTable.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
@@ -47,6 +43,13 @@ namespace Foam
     );
 }
 
+const Foam::word Foam::codedFunctionObject::codeTemplateC
+    = "functionObjectTemplate.C";
+
+const Foam::word Foam::codedFunctionObject::codeTemplateH
+    = "functionObjectTemplate.H";
+
+
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
 void Foam::codedFunctionObject::prepare
@@ -57,17 +60,12 @@ void Foam::codedFunctionObject::prepare
 {
     // Set additional rewrite rules
     dynCode.setFilterVariable("typeName", name_);
-    dynCode.setFilterVariable("codeData", codeData_);
-    dynCode.setFilterVariable("codeRead", codeRead_);
-    dynCode.setFilterVariable("codeExecute", codeExecute_);
-    dynCode.setFilterVariable("codeWrite", codeWrite_);
-    dynCode.setFilterVariable("codeEnd", codeEnd_);
 
     // Compile filtered C template
-    dynCode.addCompileFile("functionObjectTemplate.C");
+    dynCode.addCompileFile(codeTemplateC);
 
     // Copy filtered H template
-    dynCode.addCopyFile("functionObjectTemplate.H");
+    dynCode.addCopyFile(codeTemplateH);
 
     // Debugging: make BC verbose
     // dynCode.setFilterVariable("verbose", "true");
@@ -80,12 +78,12 @@ void Foam::codedFunctionObject::prepare
         "EXE_INC = -g \\\n"
         "-I$(LIB_SRC)/finiteVolume/lnInclude \\\n"
         "-I$(LIB_SRC)/meshTools/lnInclude \\\n"
-      + context.options()
+      + dynCode.filterVar("codeOptions")
       + "\n\nLIB_LIBS = \\\n"
       + "    -lOpenFOAM \\\n"
       + "    -lfiniteVolume \\\n"
       + "    -lmeshTools \\\n"
-      + context.libs()
+      + dynCode.filterVar("codeLibs")
     );
 }
 
@@ -130,7 +128,7 @@ Foam::codedFunctionObject::codedFunctionObject
 {
     read(dict_);
 
-    updateLibrary(name_);
+    updateLibrary(name_, context_);
     redirectFunctionObject();
 }
 
@@ -163,21 +161,21 @@ Foam::functionObject& Foam::codedFunctionObject::redirectFunctionObject() const
 
 bool Foam::codedFunctionObject::execute()
 {
-    updateLibrary(name_);
+    updateLibrary(name_, context_);
     return redirectFunctionObject().execute();
 }
 
 
 bool Foam::codedFunctionObject::write()
 {
-    updateLibrary(name_);
+    updateLibrary(name_, context_);
     return redirectFunctionObject().write();
 }
 
 
 bool Foam::codedFunctionObject::end()
 {
-    updateLibrary(name_);
+    updateLibrary(name_, context_);
     return redirectFunctionObject().end();
 }
 
@@ -194,97 +192,23 @@ bool Foam::codedFunctionObject::read(const dictionary& dict)
         dict.lookup("name") >> name_;
     }
 
-    const entry* dataPtr = dict.lookupEntryPtr
-    (
-        "codeData",
-        false,
-        false
-    );
-    if (dataPtr)
-    {
-        codeData_ = stringOps::trim(dataPtr->stream());
-        stringOps::inplaceExpand(codeData_, dict);
-        dynamicCodeContext::addLineDirective
-        (
-            codeData_,
-            dataPtr->startLineNumber(),
-            dict.name()
-        );
-    }
+    // Compilation options
+    context_.addFilterVariable(false, dict, "codeOptions");
+    context_.addFilterVariable(false, dict, "codeLibs");
 
-    const entry* readPtr = dict.lookupEntryPtr
+    // From looking through the functionObjectTemplate*[CH] :
+    context_.addFilterVariables
     (
-        "codeRead",
-        false,
-        false
+        dynamicCode::resolveTemplate(codeTemplateC),
+        dict
     );
-    if (readPtr)
-    {
-        codeRead_ = stringOps::trim(readPtr->stream());
-        stringOps::inplaceExpand(codeRead_, dict);
-        dynamicCodeContext::addLineDirective
-        (
-            codeRead_,
-            readPtr->startLineNumber(),
-            dict.name()
-        );
-    }
-
-    const entry* execPtr = dict.lookupEntryPtr
+    context_.addFilterVariables
     (
-        "codeExecute",
-        false,
-        false
+        dynamicCode::resolveTemplate(codeTemplateH),
+        dict
     );
-    if (execPtr)
-    {
-        codeExecute_ = stringOps::trim(execPtr->stream());
-        stringOps::inplaceExpand(codeExecute_, dict);
-        dynamicCodeContext::addLineDirective
-        (
-            codeExecute_,
-            execPtr->startLineNumber(),
-            dict.name()
-        );
-    }
 
-    const entry* writePtr = dict.lookupEntryPtr
-    (
-        "codeWrite",
-        false,
-        false
-    );
-    if (writePtr)
-    {
-        codeWrite_ = stringOps::trim(writePtr->stream());
-        stringOps::inplaceExpand(codeWrite_, dict);
-        dynamicCodeContext::addLineDirective
-        (
-            codeWrite_,
-            writePtr->startLineNumber(),
-            dict.name()
-        );
-    }
-
-    const entry* endPtr = dict.lookupEntryPtr
-    (
-        "codeEnd",
-        false,
-        false
-    );
-    if (endPtr)
-    {
-        codeEnd_ = stringOps::trim(endPtr->stream());
-        stringOps::inplaceExpand(codeEnd_, dict);
-        dynamicCodeContext::addLineDirective
-        (
-            codeEnd_,
-            endPtr->startLineNumber(),
-            dict.name()
-        );
-    }
-
-    updateLibrary(name_);
+    updateLibrary(name_, context_);
     return redirectFunctionObject().read(dict);
 }
 

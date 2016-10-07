@@ -36,6 +36,7 @@ SourceFiles
 #define codedBase_H
 
 #include "dictionary.H"
+#include "dynamicCodeContext.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -44,7 +45,7 @@ namespace Foam
 
 // Forward declaration of classes
 class dynamicCode;
-class dynamicCodeContext;
+//class dynamicCodeContext;
 class dlLibraryTable;
 
 /*---------------------------------------------------------------------------*\
@@ -91,10 +92,13 @@ class codedBase
 
 protected:
 
+        dynamicCodeContext context_;
+
         //- Update library as required
         void updateLibrary
         (
-            const word& name
+            const word& name,
+            const dynamicCodeContext&
         ) const;
 
         //- Get the loaded dynamic libraries

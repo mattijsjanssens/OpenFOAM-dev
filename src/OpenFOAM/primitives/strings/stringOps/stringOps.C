@@ -87,7 +87,8 @@ Foam::string& Foam::stringOps::inplaceExpand
 (
     string& s,
     const HashTable<string, word, string::hash>& mapping,
-    const char sigil
+    const char sigil,
+    wordHashSet* substitutedPtr
 )
 {
     string::size_type begVar = 0;
@@ -207,6 +208,11 @@ Foam::string& Foam::stringOps::inplaceExpand
                             *fnd
                         );
                         begVar += (*fnd).size();
+
+                        if (substitutedPtr)
+                        {
+                            substitutedPtr->insert(varName);
+                        }
                     }
                 }
                 else if (altPos != string::npos && altType == '-')
@@ -840,6 +846,104 @@ Foam::string& Foam::stringOps::inplaceExpand
     }
 
     return s;
+}
+
+
+void Foam::stringOps::variables
+(
+    wordHashSet& vars,
+    const string& s,
+    const char sigil
+)
+{
+    string::size_type begVar = 0;
+
+    // Expand $VAR or ${VAR}
+    // Repeat until nothing more is found
+    while
+    (
+        (begVar = s.find(sigil, begVar)) != string::npos
+     && begVar < s.size()-1
+    )
+    {
+        if (begVar == 0 || s[begVar-1] != '\\')
+        {
+            // Find end of first occurrence
+            string::size_type endVar = begVar;
+            string::size_type delim = 0;
+
+            // The type/position of the ":-" or ":+" alternative values
+            string::size_type altPos = string::npos;
+
+            if (s[begVar+1] == '{')
+            {
+                endVar = s.find('}', begVar);
+                delim = 1;
+
+                // check for ${parameter:-word} or ${parameter:+word}
+                if (endVar != string::npos)
+                {
+                    altPos = begVar;
+                    findParameterAlternative(s, altPos, endVar);
+                }
+            }
+            else
+            {
+                string::const_iterator iter = s.cbegin() + begVar + 1;
+
+                // more generous in accepting keywords than for env variables
+                while
+                (
+                    iter != s.cend()
+                 &&
+                    (
+                        isalnum(*iter)
+                     || *iter == '.'
+                     || *iter == ':'
+                     || *iter == '_'
+                    )
+                )
+                {
+                    ++iter;
+                    ++endVar;
+                }
+            }
+
+            if (endVar == string::npos)
+            {
+                // likely parsed '${...' without closing '}' - abort
+                break;
+            }
+            else if (endVar == begVar)
+            {
+                // parsed '${}' or $badChar  - skip over
+                begVar = endVar + 1;
+            }
+            else
+            {
+                const word varName
+                (
+                    s.substr
+                    (
+                        begVar + 1 + delim,
+                        (
+                            (altPos == string::npos ? endVar : altPos)
+                          - begVar - 2*delim
+                        )
+                    ),
+                    false
+                );
+
+                vars.insert(varName);
+
+                begVar = endVar + 1;
+            }
+        }
+        else
+        {
+            ++begVar;
+        }
+    }
 }
 
 
