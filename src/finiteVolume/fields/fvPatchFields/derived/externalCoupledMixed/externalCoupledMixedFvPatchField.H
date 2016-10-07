@@ -83,8 +83,7 @@ Description
     read the return values, and pass program execution back to OpenFOAM.
 
 
-    \heading Patch usage
-
+Usage
     \table
         Property     | Description             | Required    | Default value
         commsDir     | communications directory   | yes         |
@@ -98,7 +97,7 @@ Description
 
     Example of the boundary condition specification:
     \verbatim
-    myPatch
+    <patchName>
     {
         type            externalCoupled;
         commsDir        "$FOAM_CASE/comms";
@@ -108,7 +107,7 @@ Description
     }
     \endverbatim
 
-SeeAlso
+See also
     mixedFvPatchField
 
 SourceFiles

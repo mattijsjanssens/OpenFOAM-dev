@@ -28,7 +28,7 @@ Group
     grpFieldFunctionObjects
 
 Description
-    This function object samples near-patch volume fields
+    Samples near-patch volume fields.
 
     Fields are stored
     - every time step the field is updated with new values
@@ -43,15 +43,23 @@ Description
     nearWallFields1
     {
         type        nearWallFields;
-        libs ("libfieldFunctionObjects.so");
-        ...
-        fields      ((p pNear)(U UNear));
+        libs        ("libfieldFunctionObjects.so");
+
+        writeControl writeTime;
+
+        fields
+        (
+            (p pNear)
+            (U UNear)
+        );
+
         patches     (movingWall);
+
         distance    0.13;
     }
     \endverbatim
 
-    \heading Function object usage
+Usage
     \table
         Property | Description               | Required    | Default value
         type     | type name: nearWallFields | yes         |
@@ -60,7 +68,7 @@ Description
         distance | distance from patch to sample | yes     |
     \endtable
 
-SeeAlso
+See also
     Foam::functionObjects::fvMeshFunctionObject
 
 SourceFiles

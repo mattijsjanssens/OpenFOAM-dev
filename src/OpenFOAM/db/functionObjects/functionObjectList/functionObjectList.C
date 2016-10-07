@@ -72,6 +72,35 @@ Foam::functionObject* Foam::functionObjectList::remove
 }
 
 
+void Foam::functionObjectList::listDir
+(
+    const fileName& dir,
+    HashSet<word>& foMap
+)
+{
+    // Search specified directory for functionObject configuration files
+    {
+        fileNameList foFiles(readDir(dir));
+        forAll(foFiles, f)
+        {
+            if (foFiles[f].ext().empty())
+            {
+                foMap.insert(foFiles[f]);
+            }
+        }
+    }
+
+    // Recurse into sub-directories
+    {
+        fileNameList foDirs(readDir(dir, fileName::DIRECTORY));
+        forAll(foDirs, fd)
+        {
+            listDir(dir/foDirs[fd], foMap);
+        }
+    }
+}
+
+
 void Foam::functionObjectList::list()
 {
     HashSet<word> foMap;
@@ -80,20 +109,7 @@ void Foam::functionObjectList::list()
 
     forAll(etcDirs, ed)
     {
-        fileNameList foDirs(readDir(etcDirs[ed], fileName::DIRECTORY));
-        forAll(foDirs, fd)
-        {
-            fileNameList foFiles(readDir(etcDirs[ed]/foDirs[fd]));
-            {
-                forAll(foFiles, f)
-                {
-                    if (foFiles[f].ext().empty())
-                    {
-                        foMap.insert(foFiles[f]);
-                    }
-                }
-            }
-        }
+        listDir(etcDirs[ed], foMap);
     }
 
     Info<< nl
@@ -135,7 +151,8 @@ bool Foam::functionObjectList::readFunctionObject
 (
     const string& funcNameArgs,
     dictionary& functionsDict,
-    HashSet<word>& requiredFields
+    HashSet<word>& requiredFields,
+    const word& region
 )
 {
     // Parse the optional functionObject arguments:
@@ -275,6 +292,12 @@ bool Foam::functionObjectList::readFunctionObject
         funcDict.set(entry::New(entryStream).ptr());
     }
 
+    // Insert the region name if specified
+    if (region != word::null)
+    {
+        funcDict.set("region", region);
+    }
+
     // Merge this functionObject dictionary into functionsDict
     dictionary funcArgsDict;
     funcArgsDict.add(string::validate<word>(funcNameArgs), funcDict);
@@ -336,6 +359,14 @@ Foam::autoPtr<Foam::functionObjectList> Foam::functionObjectList::New
 
     dictionary& functionsDict = controlDict.subDict("functions");
 
+    word region = word::null;
+
+    // Set the region name if specified
+    if (args.optionFound("region"))
+    {
+        region = args["region"];
+    }
+
     if
     (
         args.optionFound("dict")
@@ -361,7 +392,13 @@ Foam::autoPtr<Foam::functionObjectList> Foam::functionObjectList::New
 
         if (args.optionFound("func"))
         {
-            readFunctionObject(args["func"], functionsDict, requiredFields);
+            readFunctionObject
+            (
+                args["func"],
+                functionsDict,
+                requiredFields,
+                region
+            );
         }
 
         if (args.optionFound("funcs"))
@@ -370,7 +407,13 @@ Foam::autoPtr<Foam::functionObjectList> Foam::functionObjectList::New
 
             forAll(funcs, i)
             {
-                readFunctionObject(funcs[i], functionsDict, requiredFields);
+                readFunctionObject
+                (
+                    funcs[i],
+                    functionsDict,
+                    requiredFields,
+                    region
+                );
             }
         }
 
@@ -590,7 +633,7 @@ bool Foam::functionObjectList::read()
                 {
                     // Delete the disabled functionObject
                     delete objPtr;
-                    objPtr = NULL;
+                    objPtr = nullptr;
                     continue;
                 }
             }

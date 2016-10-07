@@ -123,8 +123,8 @@ s/^    //
 }
 
 
-/^See *Also *$/,/^[^ ]/{
-/^See *Also/c\
+/^See *[Aa]lso *$/,/^[^ ]/{
+/^See *[Aa]lso/c\
 \\see
 s/^    //
 }
@@ -136,23 +136,9 @@ s/^    //
 }
 
 
-# Remove ToDo paragraph to avoid them showing on related pages
-/^To[Dd]o *$/,/^[^ ]/{
-s/^To[Dd]o *$//
-s/^    .*//
-}
-
-
 /^Warning *$/,/^[^ ]/{
 /^Warning/c\
 \\warning
-s/^    //
-}
-
-
-/^Deprecated *$/,/^[^ ]/{
-/^Deprecated/c\
-\\deprecated
 s/^    //
 }
 
@@ -164,6 +150,7 @@ s? *\([a-zA-Z0-9]*\.[a-zA-Z]*\)?  <li><a href="%dirName%/\1">\1</a></li>?
 s?^$?</ul>?
 }
 
+
 /fileName%<\/a><\/li>$/{
 N
 s?\n$?</ul>?g
@@ -173,13 +160,7 @@ s? *\([a-zA-Z0-9]*\.[a-zA-Z]*\)?  <li><a href="%dirName%/\1">\1</a></li>?
 
 s/.*\*\//\*\//
 
-
-# Convert /heading in source files to bold font and add some space
-s#\\heading \(.*\)#<br><b>\1</b>#g
-
-# Add a linebreak
-s#\\linebreak#<br>#g
-
 }
+
 
 #------------------------------------------------------------------------------

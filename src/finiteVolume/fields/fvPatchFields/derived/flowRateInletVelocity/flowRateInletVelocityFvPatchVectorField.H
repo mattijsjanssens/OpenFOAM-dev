@@ -42,8 +42,7 @@ Description
     For a volumetric-based flux:
     - the flow rate is in m3/s
 
-    \heading Patch usage
-
+Usage
     \table
         Property     | Description             | Required    | Default value
         massFlowRate | mass flow rate [kg/s]   | no          |
@@ -54,7 +53,7 @@ Description
 
     Example of the boundary condition specification for a volumetric flow rate:
     \verbatim
-    myPatch
+    <patchName>
     {
         type                flowRateInletVelocity;
         volumetricFlowRate  0.2;
@@ -65,7 +64,7 @@ Description
 
     Example of the boundary condition specification for a mass flow rate:
     \verbatim
-    myPatch
+    <patchName>
     {
         type                flowRateInletVelocity;
         massFlowRate        0.2;
@@ -85,7 +84,7 @@ Note
     - May not work correctly for transonic inlets
     - Strange behaviour with potentialFoam since the U equation is not solved
 
-SeeAlso
+See also
     Foam::fixedValueFvPatchField
     Foam::Function1Types
 

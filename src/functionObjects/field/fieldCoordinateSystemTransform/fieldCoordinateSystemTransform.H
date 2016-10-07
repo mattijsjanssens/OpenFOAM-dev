@@ -28,16 +28,16 @@ Group
     grpFieldFunctionObjects
 
 Description
-    This function object transforms a user-specified selection of fields from
-    global Cartesian co-ordinates to a local co-ordinate system.  The fields
-    are run-time modifiable.
+    Transforms a user-specified selection of fields from global Cartesian
+    co-ordinates to a local co-ordinate system.  The fields are run-time
+    modifiable.
 
     Example of function object specification:
     \verbatim
     fieldCoordinateSystemTransform1
     {
         type        fieldCoordinateSystemTransform;
-        libs ("libfieldFunctionObjects.so");
+        libs        ("libfieldFunctionObjects.so");
         ...
         fields
         (
@@ -54,7 +54,7 @@ Description
     }
     \endverbatim
 
-    \heading Function object usage
+Usage
     \table
         Property     | Description             | Required    | Default value
         type         | type name: fieldCoordinateSystemTransform | yes |
@@ -62,7 +62,7 @@ Description
         coordinateSystem | local co-ordinate system | yes    |
     \endtable
 
-SeeAlso
+See also
     Foam::functionObjects::fvMeshFunctionObject
     Foam::coordinateSystem
 

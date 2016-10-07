@@ -39,8 +39,7 @@ Description
     The first of these is not instantiated by default as the standard
     leastSquaresGrad is equivalent and more efficient.
 
-    \heading Usage
-
+Usage
     Example of the gradient specification:
     \verbatim
     gradSchemes
@@ -49,7 +48,7 @@ Description
     }
     \endverbatim
 
-See Also
+See also
     Foam::fv::LeastSquaresVectors
     Foam::fv::leastSquaresGrad
 

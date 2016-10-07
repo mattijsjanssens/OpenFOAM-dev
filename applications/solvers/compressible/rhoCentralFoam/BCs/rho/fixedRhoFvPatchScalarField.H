@@ -44,8 +44,7 @@ Description
     \endvartable
 
 
-    \heading Patch usage
-
+Usage
     \table
         Property     | Description                | Required    | Default value
         p            | Pressure field name        | no          | p
@@ -54,7 +53,7 @@ Description
 
     Example of the boundary condition specification:
     \verbatim
-    myPatch
+    <patchName>
     {
         type            fixedRho;
     }

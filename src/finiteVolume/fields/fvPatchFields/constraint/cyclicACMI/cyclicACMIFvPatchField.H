@@ -32,17 +32,16 @@ Description
     boundaries, whereby communication between the patches is performed using
     an arbitrarily coupled mesh interface (ACMI) interpolation.
 
-    \heading Patch usage
-
+Usage
     Example of the boundary condition specification:
     \verbatim
-    myPatch
+    <patchName>
     {
         type            cyclicACMI;
     }
     \endverbatim
 
-SeeAlso
+See also
     Foam::AMIInterpolation
 
 SourceFiles
@@ -222,7 +221,7 @@ public:
             virtual void manipulateMatrix(fvMatrix<Type>& matrix);
 
             //- Update the coefficients associated with the patch field
-            void updateCoeffs();
+            virtual void updateCoeffs();
 
 
         // Cyclic AMI coupled interface functions

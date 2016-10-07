@@ -28,8 +28,7 @@ Group
     grpFieldFunctionObjects
 
 Description
-    This function object stores turbulence fields on the mesh database for
-    further manipulation.
+    Stores turbulence fields on the mesh database for further manipulation.
 
     Fields are stored as copies of the original, with the prefix
     "tubulenceModel:", e.g.:
@@ -43,7 +42,7 @@ Description
     turbulenceFields1
     {
         type        turbulenceFields;
-        libs ("libfieldFunctionObjects.so");
+        libs        ("libfieldFunctionObjects.so");
         ...
         fields
         (
@@ -53,7 +52,7 @@ Description
     }
     \endverbatim
 
-    \heading Function object usage
+Usage
     \table
         Property     | Description                 | Required | Default value
         type         | type name: processorField   | yes      |
@@ -76,7 +75,7 @@ Description
         devRhoReff  | Divergence of the Reynolds stress
     \endplaintable
 
-SeeAlso
+See also
     Foam::functionObjects::fvMeshFunctionObject
     Foam::functionObjects::timeControl
 

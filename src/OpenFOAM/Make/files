@@ -222,7 +222,7 @@ $(dll)/codedBase/codedBase.C
 db/functionObjects/functionObject/functionObject.C
 db/functionObjects/functionObjectList/functionObjectList.C
 db/functionObjects/writeFile/writeFile.C
-db/functionObjects/writeFiles/writeFiles.C
+db/functionObjects/logFiles/logFiles.C
 db/functionObjects/timeControl/timeControl.C
 db/functionObjects/timeControl/timeControlFunctionObject.C
 db/functionObjects/regionFunctionObject/regionFunctionObject.C
@@ -271,6 +271,7 @@ $(lduMatrix)/solvers/diagonalSolver/diagonalSolver.C
 $(lduMatrix)/solvers/smoothSolver/smoothSolver.C
 $(lduMatrix)/solvers/PCG/PCG.C
 $(lduMatrix)/solvers/PBiCG/PBiCG.C
+$(lduMatrix)/solvers/PBiCGStab/PBiCGStab.C
 
 $(lduMatrix)/smoothers/GaussSeidel/GaussSeidelSmoother.C
 $(lduMatrix)/smoothers/symGaussSeidel/symGaussSeidelSmoother.C

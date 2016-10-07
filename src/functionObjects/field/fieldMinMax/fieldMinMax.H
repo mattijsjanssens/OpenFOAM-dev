@@ -28,18 +28,19 @@ Group
     grpFieldFunctionObjects
 
 Description
-    This function object calculates the value and location of scalar minimim
-    and maximum for a list of user-specified fields.  For variables with a rank
-    greater than zero, either the min/max of a component value or the magnitude
-    is reported.  When operating in parallel, the processor owning the value
-    is also given.
+    Calculates the value and location of scalar minimim and maximum for a list
+    of user-specified fields.
+
+    For variables with a rank greater than zero, either the min/max of a
+    component value or the magnitude is reported.  When operating in parallel,
+    the processor owning the value is also given.
 
     Example of function object specification:
     \verbatim
     fieldMinMax1
     {
         type        fieldMinMax;
-        libs ("libfieldFunctionObjects.so");
+        libs        ("libfieldFunctionObjects.so");
         ...
         write       yes;
         log         yes;
@@ -53,7 +54,7 @@ Description
     }
     \endverbatim
 
-    \heading Function object usage
+Usage
     \table
         Property     | Description             | Required    | Default value
         type         | type name: fieldMinMax  | yes         |
@@ -65,9 +66,9 @@ Description
 
     Output data is written to the file \<timeDir\>/fieldMinMax.dat
 
-SeeAlso
-    Foam::functionObject
-    Foam::functionObjects::writeFiles
+See also
+    Foam::functionObjects::fvMeshFunctionObject
+    Foam::functionObjects::logFiles
 
 SourceFiles
     fieldMinMax.C
@@ -77,7 +78,8 @@ SourceFiles
 #ifndef functionObjects_fieldMinMax_H
 #define functionObjects_fieldMinMax_H
 
-#include "writeFiles.H"
+#include "fvMeshFunctionObject.H"
+#include "logFiles.H"
 #include "vector.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -93,7 +95,8 @@ namespace functionObjects
 
 class fieldMinMax
 :
-    public writeFiles
+    public fvMeshFunctionObject,
+    public logFiles
 {
 public:
 

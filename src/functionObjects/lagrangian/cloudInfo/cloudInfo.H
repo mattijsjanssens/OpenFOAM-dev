@@ -28,8 +28,9 @@ Group
     grpLagrangianFunctionObjects
 
 Description
-    This function object outputs Lagrangian cloud information to a file.  The
-    current outputs include:
+    Outputs Lagrangian cloud information to a file.
+
+    The current outputs include:
     - total current number of parcels
     - total current mass of parcels
 
@@ -38,7 +39,7 @@ Description
     cloudInfo1
     {
         type        cloudInfo;
-        libs ("libcloudFunctionObjects.so");
+        libs        ("libcloudFunctionObjects.so");
         ...
         clouds
         (
@@ -49,8 +50,7 @@ Description
     \endverbatim
 
 
-    \heading Function object usage
-
+Usage
     \table
         Property     | Description             | Required    | Default value
         type         | type name: cloudInfo    | yes         |
@@ -59,9 +59,10 @@ Description
 
     The output data of each cloud is written to a file named \<cloudName\>.dat
 
-SeeAlso
+See also
     Foam::functionObject
-    Foam::functionObjects::writeFiles
+    Foam::functionObjects::regionFunctionObject
+    Foam::functionObjects::logFiles
 
 SourceFiles
     cloudInfo.C
@@ -71,7 +72,8 @@ SourceFiles
 #ifndef functionObjects_cloudInfo_H
 #define functionObjects_cloudInfo_H
 
-#include "writeFiles.H"
+#include "regionFunctionObject.H"
+#include "logFiles.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -86,7 +88,8 @@ namespace functionObjects
 
 class cloudInfo
 :
-    public writeFiles
+    public regionFunctionObject,
+    public logFiles
 {
 protected:
 

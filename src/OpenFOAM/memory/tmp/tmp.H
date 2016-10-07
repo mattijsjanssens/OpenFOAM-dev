@@ -30,7 +30,7 @@ Description
 SourceFiles
     tmpI.H
 
-SeeAlso
+See also
     Foam::refCount
     Foam::autoPtr
 
@@ -134,7 +134,7 @@ public:
             inline T* ptr() const;
 
             //- If object pointer points to valid object:
-            //  delete object and set pointer to NULL
+            //  delete object and set pointer to nullptr
             inline void clear() const;
 
 

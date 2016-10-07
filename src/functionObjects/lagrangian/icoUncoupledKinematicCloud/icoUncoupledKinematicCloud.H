@@ -47,12 +47,12 @@ Description
     \verbatim
         tracks
         {
-            libs ("liblagrangianFunctionObjects.so");
-            type icoUncoupledKinematicCloud;
+            libs        ("liblagrangianFunctionObjects.so");
+            type        icoUncoupledKinematicCloud;
         }
     \endverbatim
 
-    \heading Function object usage
+Usage
     \table
         Property | Description                     | Required   | Default value
         type     | Type name: icoUncoupledKinematicCloud | yes  |
@@ -60,7 +60,7 @@ Description
         kinematicCloud | Name of the kinematicCloud | no        | kinematicCloud
     \endtable
 
-SeeAlso
+See also
     Foam::functionObjects::fvMeshFunctionObject
 
 SourceFiles

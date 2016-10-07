@@ -28,7 +28,7 @@ Group
     grpSolversFunctionObjects
 
 Description
-    This function object evolves a passive scalar transport equation.
+    Evolves a passive scalar transport equation.
 
     - To specify the field name set the 'field' entry
     - To employ the same numerical schemes as another field set
@@ -36,7 +36,7 @@ Description
     - The diffusivity can be set manually using the 'D' entry, or retrieved
       from the turbulence model (if applicable).
 
-SeeAlso
+See also
     Foam::functionObjects::fvMeshFunctionObject
 
 SourceFiles

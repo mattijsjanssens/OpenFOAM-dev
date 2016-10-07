@@ -66,7 +66,7 @@ void Foam::fvMesh::clearGeomNotOldVol()
     slicedVolScalarField::Internal* VPtr =
         static_cast<slicedVolScalarField::Internal*>(VPtr_);
     deleteDemandDrivenData(VPtr);
-    VPtr_ = NULL;
+    VPtr_ = nullptr;
 
     deleteDemandDrivenData(SfPtr_);
     deleteDemandDrivenData(magSfPtr_);
@@ -77,11 +77,11 @@ void Foam::fvMesh::clearGeomNotOldVol()
 
 void Foam::fvMesh::updateGeomNotOldVol()
 {
-    bool haveV = (VPtr_ != NULL);
-    bool haveSf = (SfPtr_ != NULL);
-    bool haveMagSf = (magSfPtr_ != NULL);
-    bool haveCP = (CPtr_ != NULL);
-    bool haveCf = (CfPtr_ != NULL);
+    bool haveV = (VPtr_ != nullptr);
+    bool haveSf = (SfPtr_ != nullptr);
+    bool haveMagSf = (magSfPtr_ != nullptr);
+    bool haveCP = (CPtr_ != nullptr);
+    bool haveCf = (CfPtr_ != nullptr);
 
     clearGeomNotOldVol();
 
@@ -251,16 +251,16 @@ Foam::fvMesh::fvMesh(const IOobject& io)
     fvSolution(static_cast<const objectRegistry&>(*this)),
     data(static_cast<const objectRegistry&>(*this)),
     boundary_(*this, boundaryMesh()),
-    lduPtr_(NULL),
+    lduPtr_(nullptr),
     curTimeIndex_(time().timeIndex()),
-    VPtr_(NULL),
-    V0Ptr_(NULL),
-    V00Ptr_(NULL),
-    SfPtr_(NULL),
-    magSfPtr_(NULL),
-    CPtr_(NULL),
-    CfPtr_(NULL),
-    phiPtr_(NULL)
+    VPtr_(nullptr),
+    V0Ptr_(nullptr),
+    V00Ptr_(nullptr),
+    SfPtr_(nullptr),
+    magSfPtr_(nullptr),
+    CPtr_(nullptr),
+    CfPtr_(nullptr),
+    phiPtr_(nullptr)
 {
     if (debug)
     {
@@ -361,16 +361,16 @@ Foam::fvMesh::fvMesh
     fvSolution(static_cast<const objectRegistry&>(*this)),
     data(static_cast<const objectRegistry&>(*this)),
     boundary_(*this, boundaryMesh()),
-    lduPtr_(NULL),
+    lduPtr_(nullptr),
     curTimeIndex_(time().timeIndex()),
-    VPtr_(NULL),
-    V0Ptr_(NULL),
-    V00Ptr_(NULL),
-    SfPtr_(NULL),
-    magSfPtr_(NULL),
-    CPtr_(NULL),
-    CfPtr_(NULL),
-    phiPtr_(NULL)
+    VPtr_(nullptr),
+    V0Ptr_(nullptr),
+    V00Ptr_(nullptr),
+    SfPtr_(nullptr),
+    magSfPtr_(nullptr),
+    CPtr_(nullptr),
+    CfPtr_(nullptr),
+    phiPtr_(nullptr)
 {
     if (debug)
     {
@@ -395,16 +395,16 @@ Foam::fvMesh::fvMesh
     fvSolution(static_cast<const objectRegistry&>(*this)),
     data(static_cast<const objectRegistry&>(*this)),
     boundary_(*this, boundaryMesh()),
-    lduPtr_(NULL),
+    lduPtr_(nullptr),
     curTimeIndex_(time().timeIndex()),
-    VPtr_(NULL),
-    V0Ptr_(NULL),
-    V00Ptr_(NULL),
-    SfPtr_(NULL),
-    magSfPtr_(NULL),
-    CPtr_(NULL),
-    CfPtr_(NULL),
-    phiPtr_(NULL)
+    VPtr_(nullptr),
+    V0Ptr_(nullptr),
+    V00Ptr_(nullptr),
+    SfPtr_(nullptr),
+    magSfPtr_(nullptr),
+    CPtr_(nullptr),
+    CfPtr_(nullptr),
+    phiPtr_(nullptr)
 {
     if (debug)
     {
@@ -428,16 +428,16 @@ Foam::fvMesh::fvMesh
     fvSolution(static_cast<const objectRegistry&>(*this)),
     data(static_cast<const objectRegistry&>(*this)),
     boundary_(*this),
-    lduPtr_(NULL),
+    lduPtr_(nullptr),
     curTimeIndex_(time().timeIndex()),
-    VPtr_(NULL),
-    V0Ptr_(NULL),
-    V00Ptr_(NULL),
-    SfPtr_(NULL),
-    magSfPtr_(NULL),
-    CPtr_(NULL),
-    CfPtr_(NULL),
-    phiPtr_(NULL)
+    VPtr_(nullptr),
+    V0Ptr_(nullptr),
+    V00Ptr_(nullptr),
+    SfPtr_(nullptr),
+    magSfPtr_(nullptr),
+    CPtr_(nullptr),
+    CfPtr_(nullptr),
+    phiPtr_(nullptr)
 {
     if (debug)
     {
@@ -856,18 +856,12 @@ void Foam::fvMesh::updateMesh(const mapPolyMesh& mpm)
 }
 
 
-bool Foam::fvMesh::writeObjects
+bool Foam::fvMesh::writeObject
 (
     IOstream::streamFormat fmt,
     IOstream::versionNumber ver,
     IOstream::compressionType cmp
 ) const
-{
-    return polyMesh::writeObject(fmt, ver, cmp);
-}
-
-
-bool Foam::fvMesh::write() const
 {
     bool ok = true;
     if (phiPtr_)
@@ -875,7 +869,13 @@ bool Foam::fvMesh::write() const
         ok = phiPtr_->write();
     }
 
-    return ok && polyMesh::write();
+    return ok && polyMesh::writeObject(fmt, ver, cmp);
+}
+
+
+bool Foam::fvMesh::write() const
+{
+    return polyMesh::write();
 }
 
 

@@ -28,9 +28,9 @@ Group
     grpFieldFunctionObjects
 
 Description
-    This function object calculates the vorticity, the curl of the velocity.
+    Calculates the vorticity, the curl of the velocity.
 
-SeeAlso
+See also
     Foam::functionObjects::fieldExpression
     Foam::functionObjects::fvMeshFunctionObject
 

@@ -58,7 +58,7 @@ Description
     }
     \endverbatim
 
-See Also
+See also
     Foam::CoBlended
     Foam::localBlended
 
@@ -343,7 +343,7 @@ public:
             {
                 return tmp<GeometricField<Type, fvsPatchField, surfaceMesh>>
                 (
-                    NULL
+                    nullptr
                 );
             }
         }

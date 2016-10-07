@@ -96,31 +96,6 @@ template<class ParticleType>
 Foam::Cloud<ParticleType>::Cloud
 (
     const polyMesh& pMesh,
-    const IDLList<ParticleType>& particles
-)
-:
-    cloud(pMesh),
-    IDLList<ParticleType>(),
-    polyMesh_(pMesh),
-    labels_(),
-    nTrackingRescues_(),
-    cellWallFacesPtr_()
-{
-    checkPatches();
-
-    // Ask for the tetBasePtIs to trigger all processors to build
-    // them, otherwise, if some processors have no particles then
-    // there is a comms mismatch.
-    polyMesh_.tetBasePtIs();
-
-    IDLList<ParticleType>::operator=(particles);
-}
-
-
-template<class ParticleType>
-Foam::Cloud<ParticleType>::Cloud
-(
-    const polyMesh& pMesh,
     const word& cloudName,
     const IDLList<ParticleType>& particles
 )
@@ -139,7 +114,10 @@ Foam::Cloud<ParticleType>::Cloud
     // there is a comms mismatch.
     polyMesh_.tetBasePtIs();
 
-    IDLList<ParticleType>::operator=(particles);
+    if (particles.size())
+    {
+        IDLList<ParticleType>::operator=(particles);
+    }
 }
 
 
@@ -169,6 +147,25 @@ template<class ParticleType>
 void Foam::Cloud<ParticleType>::deleteParticle(ParticleType& p)
 {
     delete(this->remove(&p));
+}
+
+
+template<class ParticleType>
+void Foam::Cloud<ParticleType>::deleteLostParticles()
+{
+    forAllIter(typename Cloud<ParticleType>, *this, pIter)
+    {
+        ParticleType& p = pIter();
+
+        if (p.cell() == -1)
+        {
+            WarningInFunction
+                << "deleting lost particle at position " << p.position()
+                << endl;
+
+            deleteParticle(p);
+        }
+    }
 }
 
 

@@ -28,29 +28,34 @@ Group
     grpFieldFunctionObjects
 
 Description
-    This function object generates streamline data by sampling a set of
-    user-specified fields along a particle track, transported by a
-    user-specified velocity field, constrained to a patch.
+    Generates streamline data by sampling a set of user-specified fields along a
+    particle track, transported by a user-specified velocity field, constrained
+    to a patch.
 
     Example of function object specification:
     \verbatim
     wallBoundedStreamLine1
     {
         type            wallBoundedStreamLine;
-        libs ("libfieldFunctionObjects.so");
-        ...
+        libs            ("libfieldFunctionObjects.so");
+
+        writeControl    writeTime;
+
         setFormat       vtk;
         U               UNear;
         trackForward    yes;
+
         fields
         (
             UNear
             p
         );
+
         lifeTime        10000;
         trackLength     1e-3;
         nSubCycle       5;
         cloudName       particleTracks;
+
         seedSampleSet   patchSeed;
         patchSeedCoeffs
         {
@@ -62,7 +67,7 @@ Description
     }
     \endverbatim
 
-    \heading Function object usage
+Usage
     \table
         Property     | Description             | Required    | Default value
         type         | Type name: wallBoundedStreamLine| yes |
@@ -76,7 +81,6 @@ Description
         seedSampleSet| Seeding method (see below)| yes       |
     \endtable
 
-    \linebreak
     Where \c seedSampleSet is typically one of
     \plaintable
         uniform | uniform particle seeding
@@ -89,8 +93,8 @@ Note
     When specifying the track resolution, the \c trackLength OR \c nSubCycle
     option should be used
 
-SeeAlso
-    Foam::functionObject
+See also
+    Foam::fvMeshFunctionObject
     Foam::functionObjects::timeControl
     Foam::sampledSet
     Foam::streamLine
@@ -103,7 +107,7 @@ SourceFiles
 #ifndef functionObjects_wallBoundedStreamLine_H
 #define functionObjects_wallBoundedStreamLine_H
 
-#include "functionObject.H"
+#include "fvMeshFunctionObject.H"
 #include "volFieldsFwd.H"
 #include "DynamicList.H"
 #include "scalarList.H"
@@ -118,7 +122,6 @@ namespace Foam
 {
 
 // Forward declaration of classes
-class objectRegistry;
 class meshSearch;
 class sampledSet;
 
@@ -131,12 +134,9 @@ namespace functionObjects
 
 class wallBoundedStreamLine
 :
-    public functionObject
+    public fvMeshFunctionObject
 {
     // Private data
-
-        //- Database this class is registered to
-        const objectRegistry& obr_;
 
         //- Input dictionary
         dictionary dict_;
