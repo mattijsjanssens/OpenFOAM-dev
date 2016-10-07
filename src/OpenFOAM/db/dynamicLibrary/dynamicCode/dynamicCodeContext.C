@@ -27,6 +27,7 @@ License
 #include "stringOps.H"
 #include "OSHA1stream.H"
 #include "IFstream.H"
+#include "Pstream.H"
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
@@ -42,6 +43,7 @@ Foam::dynamicCodeContext::dynamicCodeContext()
 
 Foam::dynamicCodeContext::dynamicCodeContext(const dynamicCodeContext& context)
 :
+    vars_(context.vars_),
     filterVars_(context.filterVars_),
     stream_(),
     sha1_()
@@ -52,6 +54,7 @@ Foam::dynamicCodeContext::dynamicCodeContext(const dynamicCodeContext& context)
 
 void Foam::dynamicCodeContext::clear()
 {
+    vars_.clear();
     filterVars_.clear();
     stream_.rewind();
     sha1_.clear();
@@ -108,6 +111,8 @@ void Foam::dynamicCodeContext::addFilterVariable
     const word& key
 )
 {
+    vars_.insert(key);
+
     const entry* ePtr = dict.lookupEntryPtr(key, false, false);
     if (ePtr)
     {
@@ -140,24 +145,32 @@ void Foam::dynamicCodeContext::addFilterVariables
     const dictionary& dict
 )
 {
-    IFstream is(srcFile);
-
-    if (!is.good())
-    {
-        FatalIOErrorInFunction(dict)
-            << "Failed opening " << srcFile
-            << exit(FatalIOError);
-    }
-
-    // Extract all variables from file
-    string line;
     wordHashSet vars;
-    do
+
+    if (Pstream::master())
     {
-        is.getLine(line);
-        stringOps::variables(vars, line);
+        IFstream is(srcFile);
+
+        if (!is.good())
+        {
+            FatalIOErrorInFunction(dict)
+                << "Failed opening " << srcFile
+                << exit(FatalIOError);
+        }
+
+        // Extract all variables from file
+        string line;
+        do
+        {
+            is.getLine(line);
+            stringOps::variables(vars, line);
+        }
+        while (is.good());
     }
-    while (is.good());
+    Pstream::scatter(vars);
+
+    Info<< "For file " << srcFile
+        << " detected variables " << vars.sortedToc() << endl;
 
     forAllConstIter(wordHashSet, vars, iter)
     {

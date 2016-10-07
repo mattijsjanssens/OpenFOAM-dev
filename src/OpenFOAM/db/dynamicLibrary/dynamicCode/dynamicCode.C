@@ -462,8 +462,7 @@ bool Foam::dynamicCode::copyOrCreateFiles(const bool verbose) const
     DynamicList<fileName> resolvedFiles(nFiles);
     DynamicList<fileName> badFiles(nFiles);
 
-    // Resolve template, or add to bad-files. Extracts list of variables to
-    // substitute.
+    // Resolve template, or add to bad-files
     resolveTemplates(compileFiles_, resolvedFiles, badFiles);
     resolveTemplates(copyFiles_, resolvedFiles, badFiles);
 

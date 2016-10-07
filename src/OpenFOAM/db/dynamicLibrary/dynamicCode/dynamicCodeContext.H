@@ -39,6 +39,7 @@ SourceFiles
 #include "dictionary.H"
 #include "SHA1Digest.H"
 #include "OSHA1stream.H"
+#include "HashSet.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -53,7 +54,10 @@ class dynamicCodeContext
 {
     // Private data
 
-        //- Collection of filter variables
+        //- Collection of filter variables (from template files)
+        wordHashSet vars_;
+
+        //- Collection of filter variables and their expansion
         HashTable<string> filterVars_;
 
         //- Running stream
@@ -82,6 +86,12 @@ public:
     // Member functions
 
         //- Collection of filter variables
+        const wordHashSet& vars() const
+        {
+            return vars_;
+        }
+
+        //- Collection of filter variables and their expansion
         const HashTable<string>& filterVars() const
         {
             return filterVars_;
