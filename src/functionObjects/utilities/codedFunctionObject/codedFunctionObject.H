@@ -28,8 +28,7 @@ Group
     grpUtilitiesFunctionObjects
 
 Description
-    This function object provides a general interface to enable dynamic code
-    compilation.
+    Provides a general interface to enable dynamic code compilation.
 
     The entries are
         codeInclude : include files
@@ -46,7 +45,7 @@ Description
     \verbatim
     difference
     {
-        libs ("libutilityFunctionObjects.so");
+        libs        ("libutilityFunctionObjects.so");
 
         type coded;
         // Name of on-the-fly generated functionObject
@@ -62,7 +61,7 @@ Description
     \endverbatim
 
 
-SeeAlso
+See also
     Foam::functionObject
     Foam::codedBase
 
@@ -103,12 +102,6 @@ protected:
 
         word name_;
 
-        string codeData_;
-        string codeRead_;
-        string codeExecute_;
-        string codeWrite_;
-        string codeEnd_;
-
         //- Underlying functionObject
         mutable autoPtr<functionObject> redirectFunctionObjectPtr_;
 
@@ -141,6 +134,15 @@ private:
 
 
 public:
+
+    // Static data members
+
+        //- Name of the C code template to be used
+        static const word codeTemplateC;
+
+        //- Name of the H code template to be used
+        static const word codeTemplateH;
+
 
     //- Runtime type information
     TypeName("coded");

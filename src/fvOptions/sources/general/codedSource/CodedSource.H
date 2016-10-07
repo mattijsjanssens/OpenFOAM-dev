@@ -50,22 +50,19 @@ Description
         field is the field in fieldNames
         eqn is the fvMatrix
 
-    \heading Source usage
-
+Usage
     Example usage in controlDict:
     \verbatim
     energySource
     {
         type            scalarCodedSource;
 
-        active          yes;
-
         scalarCodedSourceCoeffs
         {
             selectionMode   all;
 
-            fieldNames      (h);
-            name    sourceTime;
+            fields          (h);
+            name            sourceTime;
 
             codeInclude
             #{
@@ -143,10 +140,6 @@ protected:
 
         word name_;
 
-        string codeCorrect_;
-        string codeAddSup_;
-        string codeSetValue_;
-
         //- Underlying functionObject
         mutable autoPtr<option> redirectFvOptionPtr_;
 
@@ -170,6 +163,15 @@ protected:
 
 
 public:
+
+    // Static data members
+
+        //- Name of the C code template to be used
+        static const word codeTemplateC;
+
+        //- Name of the H code template to be used
+        static const word codeTemplateH;
+
 
     //- Runtime type information
     TypeName("coded");
