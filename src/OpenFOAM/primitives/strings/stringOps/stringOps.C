@@ -29,7 +29,6 @@ License
 #include "etcFiles.H"
 #include "OStringStream.H"
 
-
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 //! \cond fileScope

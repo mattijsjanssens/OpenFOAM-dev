@@ -105,7 +105,7 @@ void Foam::dynamicCode::copyAndFilter
     ISstream& is,
     OSstream& os,
     const HashTable<string>& mapping,
-    wordHashSet usedVars
+    wordHashSet& usedVars
 )
 {
     if (!is.good())
@@ -547,10 +547,10 @@ bool Foam::dynamicCode::copyOrCreateFiles(const bool verbose) const
 
     if (verbose)
     {
-        Info<< "Code " << codeName_ << " has variables " << nl
+        Info<< "Code " << codeName_ << " has variables "
             << incrIndent << indent << filterVars_.sortedToc()
             << decrIndent << nl
-            << "Code " << codeName_ << " uses variables " << nl
+            << "Code " << codeName_ << " uses variables "
             << incrIndent << indent << usedVars.sortedToc() << decrIndent
             << endl;
     }

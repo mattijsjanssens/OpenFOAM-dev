@@ -196,7 +196,7 @@ Foam::codedFixedValueFvPatchField<Type>::codedFixedValueFvPatchField
 )
 :
     fixedValueFvPatchField<Type>(ptf, p, iF, mapper),
-    codedBase(),
+    codedBase(ptf),
     dict_(ptf.dict_),
     name_(ptf.name_),
     redirectPatchFieldPtr_()
@@ -249,7 +249,7 @@ Foam::codedFixedValueFvPatchField<Type>::codedFixedValueFvPatchField
 )
 :
     fixedValueFvPatchField<Type>(ptf),
-    codedBase(),
+    codedBase(ptf),
     dict_(ptf.dict_),
     name_(ptf.name_),
     redirectPatchFieldPtr_()
@@ -264,7 +264,7 @@ Foam::codedFixedValueFvPatchField<Type>::codedFixedValueFvPatchField
 )
 :
     fixedValueFvPatchField<Type>(ptf, iF),
-    codedBase(),
+    codedBase(ptf),
     dict_(ptf.dict_),
     name_(ptf.name_),
     redirectPatchFieldPtr_()

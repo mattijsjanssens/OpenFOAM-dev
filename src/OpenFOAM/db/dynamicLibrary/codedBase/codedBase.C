@@ -343,6 +343,13 @@ Foam::codedBase::codedBase()
 {}
 
 
+Foam::codedBase::codedBase(const codedBase& cb)
+:
+    oldLibPath_(cb.oldLibPath_),
+    context_(cb.context_)
+{}
+
+
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
 Foam::codedBase::~codedBase()

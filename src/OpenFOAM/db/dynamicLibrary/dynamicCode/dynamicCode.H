@@ -118,7 +118,7 @@ protected:
             ISstream&,
             OSstream&,
             const HashTable<string>& mapping,
-            wordHashSet usedVars
+            wordHashSet& usedVars
         );
 
         //- Resolve code-templates via the codeTemplateEnvName

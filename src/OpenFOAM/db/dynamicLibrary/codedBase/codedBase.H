@@ -45,7 +45,6 @@ namespace Foam
 
 // Forward declaration of classes
 class dynamicCode;
-//class dynamicCodeContext;
 class dlLibraryTable;
 
 /*---------------------------------------------------------------------------*\
@@ -82,12 +81,6 @@ class codedBase
 
         //- Create library based on the dynamicCodeContext
         void createLibrary(dynamicCode&, const dynamicCodeContext&) const;
-
-        //- Disallow default bitwise copy construct
-        codedBase(const codedBase&);
-
-        //- Disallow default bitwise assignment
-        void operator=(const codedBase&);
 
 
 protected:
@@ -131,6 +124,9 @@ public:
 
         //- Construct null
         codedBase();
+
+        //- Construct copy
+        codedBase(const codedBase&);
 
 
     //- Destructor

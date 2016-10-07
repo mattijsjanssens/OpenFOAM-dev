@@ -40,6 +40,14 @@ Foam::dynamicCodeContext::dynamicCodeContext()
 {}
 
 
+Foam::dynamicCodeContext::dynamicCodeContext(const dynamicCodeContext& context)
+:
+    filterVars_(context.filterVars_),
+    stream_(),
+    sha1_()
+{}
+
+
 // * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
 
 void Foam::dynamicCodeContext::clear()
@@ -48,24 +56,6 @@ void Foam::dynamicCodeContext::clear()
     stream_.rewind();
     sha1_.clear();
 }
-
-
-// const Foam::string& Foam::dynamicCodeContext::filterVar
-// (
-//     const word& var,
-//     const word& defaultVal
-// ) const
-// {
-//     HashTable<string>::const_iterator fnd = filterVars_.find(var);
-//     if (fnd != filterVars_.end())
-//     {
-//         return var;
-//     }
-//     else
-//     {
-//         return defaultVal;
-//     }
-// }
 
 
 void Foam::dynamicCodeContext::read(const dictionary& dict)
