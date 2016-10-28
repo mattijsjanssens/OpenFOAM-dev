@@ -24,6 +24,7 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "blockFace.H"
+#include "blockDescriptor.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -42,9 +43,21 @@ Foam::blockFace::blockFace(const face& vertices)
 {}
 
 
-Foam::blockFace::blockFace(Istream& is)
+Foam::blockFace::blockFace
+(
+    const dictionary& dict,
+    const label index,
+    Istream& is
+)
 :
-    vertices_(is)
+    vertices_
+    (
+        blockDescriptor::read<label>
+        (
+            is,
+            dict.subOrEmptyDict("namedVertices")
+        )
+    )
 {}
 
 
@@ -57,6 +70,8 @@ Foam::autoPtr<Foam::blockFace> Foam::blockFace::clone() const
 
 Foam::autoPtr<Foam::blockFace> Foam::blockFace::New
 (
+    const dictionary& dict,
+    const label index,
     const searchableSurfaces& geometry,
     Istream& is
 )
@@ -81,7 +96,7 @@ Foam::autoPtr<Foam::blockFace> Foam::blockFace::New
             << abort(FatalError);
     }
 
-    return autoPtr<blockFace>(cstrIter()(geometry, is));
+    return autoPtr<blockFace>(cstrIter()(dict, index, geometry, is));
 }
 
 

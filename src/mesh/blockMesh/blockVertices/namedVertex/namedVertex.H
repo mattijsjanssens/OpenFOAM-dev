@@ -22,102 +22,79 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::projectEdge
+    Foam::blockVertices::namedVertex
 
 Description
-    Defines the edge from the projection onto a surface (single surface)
-    or intersection of two surfaces.
+    Gives name to a vertex.
 
 SourceFiles
-    projectEdge.C
+    namedVertex.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef projectEdge_H
-#define projectEdge_H
+#ifndef blockVertices_namedVertex_H
+#define blockVertices_namedVertex_H
 
-#include "blockEdge.H"
+#include "blockVertex.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
-
-class pointConstraint;
+namespace blockVertices
+{
 
 /*---------------------------------------------------------------------------*\
-                         Class projectEdge Declaration
+                           Class namedVertex Declaration
 \*---------------------------------------------------------------------------*/
 
-class projectEdge
+class namedVertex
 :
-    public blockEdge
+    public blockVertex
 {
-    // Private data
+protected:
 
-        const searchableSurfaces& geometry_;
+    // Protected member data
 
-        //- The indices of surfaces onto which the points are projected
-        labelList surfaces_;
+        //- The dictionary variable name for the vertex number
+        word name_;
 
-
-    // Private Member Functions
-
-        //- Single point find nearest
-        void findNearest(const point&, point& near, pointConstraint&) const;
-
-        //- Disallow default bitwise copy construct
-        projectEdge(const projectEdge&);
-
-        //- Disallow default bitwise assignment
-        void operator=(const projectEdge&);
+        //- The vertex location
+        autoPtr<blockVertex> vertexPtr_;
 
 
 public:
 
     //- Runtime type information
-    TypeName("project");
+    TypeName("named");
 
 
     // Constructors
 
         //- Construct from Istream setting pointsList
-        projectEdge
+        namedVertex
         (
-            const dictionary& dict,
+            const dictionary&,
             const label index,
             const searchableSurfaces& geometry,
-            const pointField& points,
             Istream&
         );
 
 
     //- Destructor
-    virtual ~projectEdge()
+    virtual ~namedVertex()
     {}
 
 
     // Member Functions
 
-        //- Return the point positions corresponding to the curve parameters
-        //  0 <= lambda <= 1
-        virtual point position(const scalar) const;
-
-        //- Return the point positions corresponding to the curve parameters
-        //  0 <= lambda <= 1
-        virtual tmp<pointField> position(const scalarList&) const;
-
-        //- Return the length of the curve
-        virtual scalar length() const
-        {
-            NotImplemented;
-            return 1;
-        }
+        virtual operator point() const;
 };
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+} // End namespace blockVertices
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
