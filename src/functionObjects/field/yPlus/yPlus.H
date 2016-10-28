@@ -31,9 +31,10 @@ Description
     Evaluates and outputs turbulence y+ for  models.  Values written to
     time directories as field 'yPlus'
 
-SeeAlso
+See also
     Foam::functionObject
-    Foam::functionObjects::writeFiles
+    Foam::functionObjects::fvMeshFunctionObject
+    Foam::functionObjects::logFiles
     Foam::functionObjects::timeControl
 
 SourceFiles
@@ -44,7 +45,8 @@ SourceFiles
 #ifndef functionObjects_yPlus_H
 #define functionObjects_yPlus_H
 
-#include "writeFiles.H"
+#include "fvMeshFunctionObject.H"
+#include "logFiles.H"
 #include "volFieldsFwd.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -53,7 +55,6 @@ namespace Foam
 {
 
 // Forward declaration of classes
-class fvMesh;
 class turbulenceModel;
 
 namespace functionObjects
@@ -65,7 +66,8 @@ namespace functionObjects
 
 class yPlus
 :
-    public writeFiles
+    public fvMeshFunctionObject,
+    public logFiles
 {
     // Private Member Functions
 
@@ -76,7 +78,6 @@ class yPlus
         void calcYPlus
         (
             const turbulenceModel& turbModel,
-            const fvMesh& mesh,
             volScalarField& yPlus
         );
 

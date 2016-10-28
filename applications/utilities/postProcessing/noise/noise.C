@@ -32,8 +32,7 @@ Description
     or user-specified dictionary using the -dict option.  Pressure data is
     read using a CSV reader:
 
-    \heading Usage
-
+Usage
     \verbatim
     pRef        101325;
     N           65536;
@@ -72,7 +71,7 @@ Description
     - one-third-octave-band PFL spectrum
     - one-third-octave-band pressure spectrum
 
-SeeAlso
+See also
     CSV.H
     noiseFFT.H
 
@@ -82,7 +81,6 @@ SeeAlso
 #include "noiseFFT.H"
 #include "argList.H"
 #include "Time.H"
-#include "writeFiles.H"
 #include "CSV.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

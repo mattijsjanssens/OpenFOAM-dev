@@ -29,8 +29,7 @@ Description
 
     Motion specified as pointVectorFields.
 
-    \heading Patch usage
-
+Usage
     Example:
     \verbatim
     walls

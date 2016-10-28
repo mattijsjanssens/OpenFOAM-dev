@@ -28,12 +28,12 @@ Group
     grpFieldFunctionObjects
 
 Description
-    This function object calculates the magnitude of the sqr of a field.
+    Calculates the magnitude of the sqr of a field.
 
     The operation can be applied to any volume or surface field generating a
     volume or surface scalar field.
 
-SeeAlso
+See also
     Foam::functionObjects::fvMeshFunctionObject
 
 SourceFiles

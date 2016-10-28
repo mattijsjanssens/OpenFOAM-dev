@@ -41,8 +41,7 @@ Description
       - fixTangentialInflow is false
         apply zero-gradient condition to tangential components.
 
-    \heading Patch usage
-
+Usage
     \table
         Property     | Description             | Required    | Default value
         phi          | flux field name         | no          | phi
@@ -52,7 +51,7 @@ Description
 
     Example of the boundary condition specification:
     \verbatim
-    myPatch
+    <patchName>
     {
         type            fixedNormalInletOutletVelocity;
 

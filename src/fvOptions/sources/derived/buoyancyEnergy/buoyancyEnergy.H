@@ -28,12 +28,12 @@ Description
     Calculates and applies the buoyancy energy source rho*(U&g) to the energy
     equation.
 
-    \heading Source usage
+Usage
     Example usage:
     \verbatim
     buoyancyEnergyCoeffs
     {
-        fieldNames      (h);                    // Name of energy field
+        fields          (h);                    // Name of energy field
     }
     \endverbatim
 

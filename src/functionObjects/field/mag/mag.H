@@ -28,12 +28,12 @@ Group
     grpFieldFunctionObjects
 
 Description
-    This function object calculates the magnitude of a field.
+    Calculates the magnitude of a field.
 
     The operation can be applied to any volume or surface fields generating a
     volume or surface scalar field.
 
-SeeAlso
+See also
     Foam::functionObjects::fvMeshFunctionObject
 
 SourceFiles
