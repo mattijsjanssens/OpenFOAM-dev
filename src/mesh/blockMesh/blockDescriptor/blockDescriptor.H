@@ -252,6 +252,9 @@ public:
         template<class T>
         static List<T> read(Istream& is, const dictionary&);
 
+        //- Write with dictionary lookup
+        static void write(Ostream&, const label, const dictionary&);
+
 
     // IOstream Operators
 

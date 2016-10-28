@@ -564,7 +564,7 @@ Foam::polyMesh* Foam::blockMesh::createTopology
         );
     }
 
-    check(*blockMeshPtr);
+    check(*blockMeshPtr, meshDescription);
 
     return blockMeshPtr;
 }

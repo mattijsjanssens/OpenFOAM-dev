@@ -189,6 +189,29 @@ Foam::label Foam::blockDescriptor::read
 }
 
 
+void Foam::blockDescriptor::write
+(
+    Ostream& os,
+    const label val,
+    const dictionary& dict
+)
+{
+    forAllConstIter(dictionary, dict, iter)
+    {
+        if (iter().isStream())
+        {
+            label keyVal(Foam::readLabel(iter().stream()));
+            if (keyVal == val)
+            {
+                os << iter().keyword();
+                return;
+            }
+        }
+    }
+    os << val;
+}
+
+
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 Foam::blockDescriptor::blockDescriptor

@@ -210,6 +210,9 @@ public:
         //- Return the length of the curve
         virtual scalar length() const = 0;
 
+        //- Write edge with variable backsubstitution
+        void write(Ostream&, const dictionary&) const;
+
 
     // Ostream operator
 

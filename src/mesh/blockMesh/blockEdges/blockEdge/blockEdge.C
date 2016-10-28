@@ -144,6 +144,25 @@ Foam::blockEdge::position(const scalarList& lambdas) const
 }
 
 
+void Foam::blockEdge::write(Ostream& os, const dictionary& d) const
+{
+    const dictionary* varDictPtr = d.subDictPtr("namedVertices");
+    if (varDictPtr)
+    {
+        const dictionary& varDict = *varDictPtr;
+
+        blockDescriptor::write(os, start_, varDict);
+        os << tab;
+        blockDescriptor::write(os, end_, varDict);
+        os << endl;
+    }
+    else
+    {
+        os << start_ << tab << end_ << endl;
+    }
+}
+
+
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
 
 Foam::Ostream& Foam::operator<<(Ostream& os, const blockEdge& p)

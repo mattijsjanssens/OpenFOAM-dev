@@ -158,6 +158,9 @@ public:
             pointField& points
         ) const = 0;
 
+        //- Write face with variable backsubstitution
+        void write(Ostream&, const dictionary&) const;
+
 
     // Ostream operator
 

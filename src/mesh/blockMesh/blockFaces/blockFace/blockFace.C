@@ -100,6 +100,35 @@ Foam::autoPtr<Foam::blockFace> Foam::blockFace::New
 }
 
 
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+void Foam::blockFace::write(Ostream& os, const dictionary& d) const
+{
+    const dictionary* varDictPtr = d.subDictPtr("namedVertices");
+    if (varDictPtr)
+    {
+        const dictionary& varDict = *varDictPtr;
+
+        // Write size and start delimiter
+        os << vertices_.size() << token::BEGIN_LIST;
+
+        // Write contents
+        forAll(vertices_, i)
+        {
+            if (i > 0) os << token::SPACE;
+            blockDescriptor::write(os, vertices_[i], varDict);
+        }
+
+        // Write end delimiter
+        os << token::END_LIST;
+    }
+    else
+    {
+        os << vertices_ << endl;
+    }
+}
+
+
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
 
 Foam::Ostream& Foam::operator<<(Ostream& os, const blockFace& p)
