@@ -33,7 +33,6 @@ namespace Foam
     defineRunTimeSelectionTable(block, Istream);
 }
 
-
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 Foam::block::block
@@ -45,7 +44,7 @@ Foam::block::block
     const blockFaceList& faces,
     Istream& is
 )
-:   
+:
     blockDescriptor(dict, index, vertices, edges, faces, is)
 {
     createPoints();
