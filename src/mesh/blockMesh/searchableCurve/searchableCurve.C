@@ -217,6 +217,7 @@ void Foam::searchableCurve::findNearest
 
 
     scalarField curveLambdas(points.size(), -1.0);
+    vectorField pointVecs(points.size(), vector::one);
 
     {
         scalar endDistance = -1.0;
@@ -282,6 +283,14 @@ void Foam::searchableCurve::findNearest
             label oldPointi = pointi;
             pointi = edges[edgei].otherVertex(oldPointi);
 
+            // Now we know the orientation of the edge. Accumulate the
+            // edge direction vectors.
+            {
+                vector eVec = points[pointi]-points[oldPointi];
+                pointVecs[pointi] += eVec;
+                pointVecs[oldPointi] += eVec;
+            }
+
             if (curveLambdas[pointi] >= 0)
             {
                 break;
@@ -301,6 +310,7 @@ void Foam::searchableCurve::findNearest
         }
     }
 
+    pointVecs /= mag(pointVecs);
 
 
     // Interpolation engine
@@ -325,9 +335,18 @@ void Foam::searchableCurve::findNearest
         }
         else if (indices.size() == 2)
         {
-            const point& p0 = points[indices[0]];
-            const point& p1 = points[indices[1]];
-            axialVecs[i] = p1-p0;
+            label point0 = indices[0];
+            const point& p0 = points[point0];
+            label point1 = indices[1];
+            const point& p1 = points[point1];
+            //axialVecs[i] = p1-p0;
+            axialVecs[i] =
+                weights[0]*pointVecs[point0]
+               +weights[1]*pointVecs[point1];
+
+            //Pout<< "new axialVecs:" << axialVecs[i]/mag(axialVecs[i])
+            //    << " instead of:" << (p1-p0)/mag(p1-p0) << endl;
+
             curvePoints[i] = weights[0]*p0+weights[1]*p1;
         }
     }

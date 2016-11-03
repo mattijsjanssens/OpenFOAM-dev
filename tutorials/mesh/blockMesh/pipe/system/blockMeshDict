@@ -36,6 +36,12 @@ geometry
         file    "curve2.vtk";
         radius  0.5;
     }
+//    cylinder2
+//    {
+//        type    searchableCurve;
+//        file    "curve3.vtk";
+//        radius  0.5;
+//    }
     inletPlane
     {
         type    searchablePlate;
