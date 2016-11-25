@@ -71,7 +71,7 @@ protected:
 
     // Protected member functions
 
-        virtual bool calc();
+        virtual bool calc() = 0;
 
         void setResultName(const word& typeName, const word& defaultArg);
 

@@ -39,13 +39,6 @@ namespace functionObjects
 
 // * * * * * * * * * * * * * Protected Member Functions  * * * * * * * * * * //
 
-bool Foam::functionObjects::fieldExpression::calc()
-{
-    NotImplemented;
-    return false;
-}
-
-
 void Foam::functionObjects::fieldExpression::setResultName
 (
     const word& typeName,

@@ -56,7 +56,7 @@ class namedBlock
 public:
 
     //- Runtime type information
-    TypeName("named");
+    TypeName("name");
 
 
     // Constructors

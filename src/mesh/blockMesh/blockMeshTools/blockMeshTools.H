@@ -21,7 +21,7 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
-Class
+Namespace
     Foam::blockMeshTools
 
 Description
@@ -42,39 +42,34 @@ SourceFiles
 
 namespace Foam
 {
-
-/*---------------------------------------------------------------------------*\
-                       Class blockMeshTools Declaration
-\*---------------------------------------------------------------------------*/
-
-class blockMeshTools
+namespace blockMeshTools
 {
-public:
-
-        //- In-place read with dictionary lookup
-        static void read(Istream&, label&, const dictionary&);
-
-        //- In-place read with dictionary lookup
-        template<class T>
-        static void read(Istream&, List<T>&, const dictionary&);
-
-        //- Return-read with dictionary lookup
-        static label read(Istream&, const dictionary&);
-
-        //- Return-read with dictionary lookup
-        template<class T>
-        static List<T> read(Istream& is, const dictionary&);
-
-        //- Write with dictionary lookup
-        static void write(Ostream&, const label, const dictionary&);
-
-        //- Linear search for label entry
-        static const keyType& findEntry(const dictionary&, const label);
-};
-
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+    //- In-place read with dictionary lookup
+    void read(Istream&, label&, const dictionary&);
+
+    //- In-place read with dictionary lookup
+    template<class T>
+    void read(Istream&, List<T>&, const dictionary&);
+
+    //- Return-read with dictionary lookup
+    label read(Istream&, const dictionary&);
+
+    //- Return-read with dictionary lookup
+    template<class T>
+    List<T> read(Istream& is, const dictionary&);
+
+    //- Write with dictionary lookup
+    void write(Ostream&, const label, const dictionary&);
+
+    //- Linear search for label entry
+    const keyType& findEntry(const dictionary&, const label);
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace blockMeshTools
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
