@@ -126,7 +126,7 @@ namespace Foam
         // For stat
 
             //- From watch descriptor to modified time
-            DynamicList<scalar> lastMod_;
+            DynamicList<double> lastMod_;
 
 
 
@@ -395,12 +395,12 @@ void Foam::fileMonitor::checkFiles() const
     {
         forAll(watcher_->lastMod_, watchFd)
         {
-            scalar oldTime = watcher_->lastMod_[watchFd];
+            double oldTime = watcher_->lastMod_[watchFd];
 
             if (oldTime != 0)
             {
                 const fileName& fName = watchFile_[watchFd];
-                scalar newTime = highResLastModified(fName);
+                double newTime = highResLastModified(fName);
 
                 if (newTime == 0)
                 {

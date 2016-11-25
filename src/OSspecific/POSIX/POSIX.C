@@ -523,14 +523,14 @@ time_t Foam::lastModified(const fileName& name)
 }
 
 
-Foam::scalar Foam::highResLastModified(const fileName& name)
+double Foam::highResLastModified(const fileName& name)
 {
     fileStat fileStatus(name);
     if (fileStatus.isValid())
     {
         return
             fileStatus.status().st_mtime
-          + 1e-9*fileStatus.status().st_atim.tv_nsec;
+          + 1e-9d*fileStatus.status().st_atim.tv_nsec;
     }
     else
     {
