@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2012-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,122 +22,112 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::functionObjects::fieldExpression
-
-Group
-    grpFieldFunctionObjects
+    Foam::combustionModels::zoneCombustion
 
 Description
+    Zone-filtered combustion model.
 
-See also
-    Foam::functionObjects::fvMeshFunctionObject
+    Enable the reactions within the specified list of cell-zones and set
+    to zero elsewhere.
 
 SourceFiles
-    fieldExpression.C
+    zoneCombustion.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef functionObjects_fieldExpression_H
-#define functionObjects_fieldExpression_H
-
-#include "fvMeshFunctionObject.H"
-#include "volFieldsFwd.H"
+#ifndef zoneCombustion_H
+#define zoneCombustion_H
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
-namespace functionObjects
+namespace combustionModels
 {
 
 /*---------------------------------------------------------------------------*\
-                         Class fieldExpression Declaration
+                            Class zoneCombustion Declaration
 \*---------------------------------------------------------------------------*/
 
-class fieldExpression
+template<class Type>
+class zoneCombustion
 :
-    public fvMeshFunctionObject
+    public Type
 {
-protected:
+    // Private data
 
-    // Protected member data
+        //- The combustion model to be zone-filtered
+        autoPtr<typename Type::CombustionModel> combustionModelPtr_;
 
-        //- Name of field to process
-        word fieldName_;
+        //- List of zone names in which the reactions are active
+        wordList zoneNames_;
 
-        //- Name of result field
-        word resultName_;
-
-
-    // Protected member functions
-
-        virtual bool calc() = 0;
-
-        void setResultName(const word& typeName, const word& defaultArg);
-
-        template<class Type>
-        bool foundObject(const word& name);
-
-
-private:
 
     // Private Member Functions
 
-        //- Disallow default bitwise copy construct
-        fieldExpression(const fieldExpression&);
+        //- Filter the reaction-rate matrix on the cellZones
+        tmp<fvScalarMatrix> filter(const tmp<fvScalarMatrix>& tR) const;
+
+        //- Filter the given field on the cellZones
+        tmp<volScalarField> filter(const tmp<volScalarField>& tS) const;
+
+        //- Disallow copy construct
+        zoneCombustion(const zoneCombustion&);
 
         //- Disallow default bitwise assignment
-        void operator=(const fieldExpression&);
+        void operator=(const zoneCombustion&);
 
 
 public:
 
     //- Runtime type information
-    TypeName("fieldExpression");
+    TypeName("zoneCombustion");
 
 
     // Constructors
 
-        //- Construct from Time and dictionary
-        fieldExpression
+        //- Construct from components
+        zoneCombustion
         (
-            const word& name,
-            const Time& runTime,
-            const dictionary& dict,
-            const word& fieldName = word::null,
-            const word& resultName = word::null
+            const word& modelType,
+            const fvMesh& mesh,
+            const word& combustionProperties,
+            const word& phaseName
         );
 
 
     //- Destructor
-    virtual ~fieldExpression();
+    virtual ~zoneCombustion();
 
 
     // Member Functions
 
-        //- Read the fieldExpression data
-        virtual bool read(const dictionary&);
+        //- Correct combustion rate
+        virtual void correct();
 
-        //- Calculate the result field
-        virtual bool execute();
+        //- Fuel consumption rate matrix.
+        virtual tmp<fvScalarMatrix> R(volScalarField& Y) const;
 
-        //- Write the result field
-        virtual bool write();
+        //- Heat release rate calculated from fuel consumption rate matrix
+        virtual tmp<volScalarField> dQ() const;
 
-        //- Clear the result field from the objectRegistry
-        virtual bool clear();
+        //-  Return source for enthalpy equation [kg/m/s3]
+        virtual tmp<volScalarField> Sh() const;
+
+        //- Update properties from given dictionary
+        virtual bool read();
 };
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-} // End namespace functionObjects
+} // End namespace combustionModels
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #ifdef NoRepository
-    #include "fieldExpressionTemplates.C"
+    #include "zoneCombustion.C"
 #endif
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

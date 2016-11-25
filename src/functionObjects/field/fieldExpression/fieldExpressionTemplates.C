@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2012-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,42 +23,29 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "psiChemistryCombustion.H"
+#include "fieldExpression.H"
 
-// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * Protected Member Functions  * * * * * * * * * * //
 
-Foam::combustionModels::psiChemistryCombustion::psiChemistryCombustion
+template<class Type>
+bool Foam::functionObjects::fieldExpression::foundObject
 (
-    const word& modelType,
-    const fvMesh& mesh,
-    const word& combustionProperties,
-    const word& phaseName
+    const word& name
 )
-:
-    psiCombustionModel(modelType, mesh, combustionProperties, phaseName),
-    chemistryPtr_(psiChemistryModel::New(mesh, phaseName))
-{}
-
-
-// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
-
-Foam::combustionModels::psiChemistryCombustion::~psiChemistryCombustion()
-{}
-
-
-// * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
-
-Foam::psiReactionThermo&
-Foam::combustionModels::psiChemistryCombustion::thermo()
 {
-    return chemistryPtr_->thermo();
-}
+    if (fvMeshFunctionObject::foundObject<Type>(name))
+    {
+        return true;
+    }
+    else
+    {
+        Warning
+            << "    functionObjects::" << type() << " " << this->name()
+            << " cannot find required object " << name << " of type "
+            << Type::typeName << endl;
 
-
-const Foam::psiReactionThermo&
-Foam::combustionModels::psiChemistryCombustion::thermo() const
-{
-    return chemistryPtr_->thermo();
+        return false;
+    }
 }
 
 
