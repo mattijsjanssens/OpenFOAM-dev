@@ -28,14 +28,14 @@ Description
     Tool to upgrade mesh and fields for split cyclics.
 
 Usage
+    \b foamUpgradeCyclics [OPTION]
 
-    - foamUpgradeCyclics [OPTION]
+    Options:
+      - \par -test
+        Suppress writing the updated files with split cyclics
 
-    \param -test \n
-    Suppress writing the updated files with split cyclics
-
-    \param -enableFunctionEntries \n
-    By default all dictionary preprocessing of fields is disabled
+      - \par -enableFunctionEntries
+        By default all dictionary preprocessing of fields is disabled
 
 \*---------------------------------------------------------------------------*/
 
@@ -133,7 +133,7 @@ void rewriteBoundary
 
             if (patchDict.found("neighbourPatch"))
             {
-                patches.set(patchi, oldPatches.set(patchi, NULL));
+                patches.set(patchi, oldPatches.set(patchi, nullptr));
                 oldToNew[patchi] = newPatchi++;
 
                 // Check if patches come from automatic conversion
@@ -181,7 +181,7 @@ void rewriteBoundary
                 const dictionary patchDict(patches[patchi].dict());
 
                 // Change entry on this side
-                patches.set(patchi, oldPatches.set(patchi, NULL));
+                patches.set(patchi, oldPatches.set(patchi, nullptr));
                 oldToNew[patchi] = newPatchi++;
                 dictionary& thisPatchDict = patches[patchi].dict();
                 thisPatchDict.add("neighbourPatch", nbrName);
@@ -226,7 +226,7 @@ void rewriteBoundary
         }
         else
         {
-            patches.set(patchi, oldPatches.set(patchi, NULL));
+            patches.set(patchi, oldPatches.set(patchi, nullptr));
             oldToNew[patchi] = newPatchi++;
         }
     }

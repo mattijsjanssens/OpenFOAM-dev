@@ -28,9 +28,9 @@ Group
     grpFieldFunctionObjects
 
 Description
-    This function object includes tools to manipulate the pressure into
-    different forms.  These currently include:
+    Includes tools to manipulate the pressure into different forms.
 
+    These currently include:
     - static pressure
         \f[
             p = \rho p_k
@@ -81,14 +81,14 @@ Description
     pressure1
     {
         type        pressure;
-        libs ("libfieldFunctionObjects.so");
+        libs        ("libfieldFunctionObjects.so");
         ...
         calcTotal   no;
         calcCoeff   yes;
     }
     \endverbatim
 
-    \heading Function object usage
+Usage
     \table
         Property     | Description                 | Required   | Default value
         type         | type name: pressure    | yes        |
@@ -104,7 +104,7 @@ Description
         rhoInf       | Freestream density for coefficient calculation  | no |
     \endtable
 
-SeeAlso
+See also
     Foam::functionObjects::fieldExpression
     Foam::functionObjects::fvMeshFunctionObject
 

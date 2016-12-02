@@ -59,8 +59,7 @@ Description
         T_{ref} | min or max(T) in cell zone depending on the sign of Q_t [K]
     \endvartable
 
-    \heading Source usage
-
+Usage
     Example usage:
     \verbatim
     effectivenessHeatExchangerSource1
@@ -202,7 +201,6 @@ protected:
 private:
 
     // Private Member Functions
-
 
         //- Disallow default bitwise copy construct
         effectivenessHeatExchangerSource

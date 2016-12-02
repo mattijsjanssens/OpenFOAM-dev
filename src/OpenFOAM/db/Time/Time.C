@@ -78,7 +78,7 @@ const int Foam::Time::maxPrecision_(3 - log10(SMALL));
 Foam::word Foam::Time::controlDictName("controlDict");
 
 
-// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
+// * * * * * * * * * * * * Protected Member Functions  * * * * * * * * * * * //
 
 void Foam::Time::adjustDeltaT()
 {
@@ -850,11 +850,9 @@ bool Foam::Time::run() const
 
     if (!subCycling_)
     {
-        // only execute when the condition is no longer true
-        // ie, when exiting the control loop
         if (!running && timeIndex_ != startTimeIndex_)
         {
-            // Note, end() also calls an indirect start() as required
+            functionObjects_.execute();
             functionObjects_.end();
         }
     }

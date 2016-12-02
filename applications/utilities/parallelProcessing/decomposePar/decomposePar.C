@@ -29,46 +29,47 @@ Description
     execution of OpenFOAM.
 
 Usage
+    \b decomposePar [OPTION]
 
-    - decomposePar [OPTION]
+    Options:
+      - \par -cellDist
+        Write the cell distribution as a labelList, for use with 'manual'
+        decomposition method or as a volScalarField for post-processing.
 
-    \param -cellDist \n
-    Write the cell distribution as a labelList, for use with 'manual'
-    decomposition method or as a volScalarField for post-processing.
+      - \par -region \<regionName\> \n
+        Decompose named region. Does not check for existence of processor*.
 
-    \param -region regionName \n
-    Decompose named region. Does not check for existence of processor*.
+      - \par -allRegions \n
+        Decompose all regions in regionProperties. Does not check for
+        existence of processor*.
 
-    \param -allRegions \n
-    Decompose all regions in regionProperties. Does not check for
-    existence of processor*.
+      - \par -copyUniform \n
+        Copy any \a uniform directories too.
 
-    \param -copyUniform \n
-    Copy any \a uniform directories too.
+      - \par -constant
 
-    \param -constant \n
-    \param -time xxx:yyy \n
-    Override controlDict settings and decompose selected times. Does not
-    re-decompose the mesh i.e. does not handle moving mesh or changing
-    mesh cases.
+      - \par -time xxx:yyy \n
+        Override controlDict settings and decompose selected times. Does not
+        re-decompose the mesh i.e. does not handle moving mesh or changing
+        mesh cases.
 
-    \param -fields \n
-    Use existing geometry decomposition and convert fields only.
+      - \par -fields \n
+        Use existing geometry decomposition and convert fields only.
 
-    \param -noSets \n
-    Skip decomposing cellSets, faceSets, pointSets.
+      - \par -noSets \n
+        Skip decomposing cellSets, faceSets, pointSets.
 
-    \param -force \n
-    Remove any existing \a processor subdirectories before decomposing the
-    geometry.
+      - \par -force \n
+        Remove any existing \a processor subdirectories before decomposing the
+        geometry.
 
-    \param -ifRequired \n
-    Only decompose the geometry if the number of domains has changed from a
-    previous decomposition. No \a processor subdirectories will be removed
-    unless the \a -force option is also specified. This option can be used
-    to avoid redundant geometry decomposition (eg, in scripts), but should
-    be used with caution when the underlying (serial) geometry or the
-    decomposition method etc. have been changed between decompositions.
+      - \par -ifRequired \n
+        Only decompose the geometry if the number of domains has changed from a
+        previous decomposition. No \a processor subdirectories will be removed
+        unless the \a -force option is also specified. This option can be used
+        to avoid redundant geometry decomposition (eg, in scripts), but should
+        be used with caution when the underlying (serial) geometry or the
+        decomposition method etc. have been changed between decompositions.
 
 \*---------------------------------------------------------------------------*/
 
@@ -99,6 +100,9 @@ Usage
 #include "decompositionModel.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
 
 const labelIOList& procAddressing
 (
@@ -134,6 +138,61 @@ const labelIOList& procAddressing
 }
 
 
+void decomposeUniform
+(
+    const bool copyUniform,
+    const domainDecomposition& mesh,
+    const Time& processorDb,
+    const word& regionDir = word::null
+)
+{
+    const Time& runTime = mesh.time();
+
+    // Any uniform data to copy/link?
+    const fileName uniformDir(regionDir/"uniform");
+
+    if (isDir(runTime.timePath()/uniformDir))
+    {
+        Info<< "Detected additional non-decomposed files in "
+            << runTime.timePath()/uniformDir
+            << endl;
+
+        const fileName timePath = processorDb.timePath();
+
+        if (copyUniform || mesh.distributed())
+        {
+            cp
+            (
+                runTime.timePath()/uniformDir,
+                timePath/uniformDir
+            );
+        }
+        else
+        {
+            // link with relative paths
+            string parentPath = string("..")/"..";
+
+            if (regionDir != word::null)
+            {
+                parentPath = parentPath/"..";
+            }
+
+            fileName currentDir(cwd());
+            chDir(timePath);
+            ln
+            (
+                parentPath/runTime.timeName()/uniformDir,
+                uniformDir
+            );
+            chDir(currentDir);
+        }
+    }
+}
+
+}
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 int main(int argc, char *argv[])
 {
@@ -236,10 +295,10 @@ int main(int argc, char *argv[])
 
 
 
-    forAll(regionNames, regionI)
+    forAll(regionNames, regioni)
     {
-        const word& regionName = regionNames[regionI];
-        const word& regionDir = regionDirs[regionI];
+        const word& regionName = regionNames[regioni];
+        const word& regionDir = regionDirs[regioni];
 
         Info<< "\n\nDecomposing mesh " << regionName << nl << endl;
 
@@ -621,7 +680,7 @@ int main(int argc, char *argv[])
                         new List<SLList<indexedParticle*>*>
                         (
                             mesh.nCells(),
-                            static_cast<SLList<indexedParticle*>*>(NULL)
+                            static_cast<SLList<indexedParticle*>*>(nullptr)
                         )
                     );
 
@@ -778,21 +837,6 @@ int main(int argc, char *argv[])
             lagrangianTensorFields.setSize(cloudI);
             lagrangianTensorFieldFields.setSize(cloudI);
 
-
-            // Any uniform data to copy/link?
-            fileName uniformDir("uniform");
-
-            if (isDir(runTime.timePath()/uniformDir))
-            {
-                Info<< "Detected additional non-decomposed files in "
-                    << runTime.timePath()/uniformDir
-                    << endl;
-            }
-            else
-            {
-                uniformDir.clear();
-            }
-
             Info<< endl;
 
             // split the fields over processors
@@ -903,7 +947,7 @@ int main(int argc, char *argv[])
                     if (times.size() == 1)
                     {
                         // Clear cached decomposer
-                        fieldDecomposerList.set(proci, NULL);
+                        fieldDecomposerList.set(proci, nullptr);
                     }
                 }
 
@@ -934,7 +978,7 @@ int main(int argc, char *argv[])
 
                     if (times.size() == 1)
                     {
-                        dimFieldDecomposerList.set(proci, NULL);
+                        dimFieldDecomposerList.set(proci, nullptr);
                     }
                 }
 
@@ -985,8 +1029,8 @@ int main(int argc, char *argv[])
 
                     if (times.size() == 1)
                     {
-                        pointProcAddressingList.set(proci, NULL);
-                        pointFieldDecomposerList.set(proci, NULL);
+                        pointProcAddressingList.set(proci, nullptr);
+                        pointFieldDecomposerList.set(proci, nullptr);
                     }
                 }
 
@@ -1073,48 +1117,27 @@ int main(int argc, char *argv[])
                     }
                 }
 
+                // Decompose the "uniform" directory in the time region
+                // directory
+                decomposeUniform(copyUniform, mesh, processorDb, regionDir);
 
-                // Any non-decomposed data to copy?
-                if (uniformDir.size())
+                // For the first region of a multi-region case additionally
+                // decompose the "uniform" directory in the time directory
+                if (regionNames.size() > 1 && regioni == 0)
                 {
-                    const fileName timePath = processorDb.timePath();
-
-                    if (copyUniform || mesh.distributed())
-                    {
-                        cp
-                        (
-                            runTime.timePath()/uniformDir,
-                            timePath/uniformDir
-                        );
-                    }
-                    else
-                    {
-                        // link with relative paths
-                        const string parentPath = string("..")/"..";
-
-                        fileName currentDir(cwd());
-                        chDir(timePath);
-                        ln
-                        (
-                            parentPath/runTime.timeName()/uniformDir,
-                            uniformDir
-                        );
-                        chDir(currentDir);
-                    }
+                    decomposeUniform(copyUniform, mesh, processorDb);
                 }
-
-
 
                 // We have cached all the constant mesh data for the current
                 // processor. This is only important if running with multiple
                 // times, otherwise it is just extra storage.
                 if (times.size() == 1)
                 {
-                    boundaryProcAddressingList.set(proci, NULL);
-                    cellProcAddressingList.set(proci, NULL);
-                    faceProcAddressingList.set(proci, NULL);
-                    procMeshList.set(proci, NULL);
-                    processorDbList.set(proci, NULL);
+                    boundaryProcAddressingList.set(proci, nullptr);
+                    cellProcAddressingList.set(proci, nullptr);
+                    faceProcAddressingList.set(proci, nullptr);
+                    procMeshList.set(proci, nullptr);
+                    processorDbList.set(proci, nullptr);
                 }
             }
         }

@@ -28,16 +28,16 @@ Group
     grpForcesFunctionObjects
 
 Description
-    This function object extends the Foam::forces function object by providing
-    lift, drag and moment coefficients.  The data can optionally be output into
-    bins, defined in a given direction.
+    Extends the forces functionObject by providing lift, drag and moment
+    coefficients.  The data can optionally be output into bins, defined in a
+    given direction.
 
     Example of function object specification:
     \verbatim
     forceCoeffs1
     {
         type        forceCoeffs;
-        libs ("libforces.so");
+        libs        ("libforces.so");
         ...
         log         yes;
         patches     (walls);
@@ -57,7 +57,7 @@ Description
     }
     \endverbatim
 
-    \heading Function object usage
+Usage
     \table
         Property     | Description             | Required    | Default value
         type         | type name: forces       | yes         |
@@ -79,7 +79,7 @@ Description
         cumulative   | bin data accumulated with incresing distance | yes |
     \endtable
 
-SeeAlso
+See also
     Foam::functionObject
     Foam::functionObjects::timeControl
     Foam::functionObjects::forces

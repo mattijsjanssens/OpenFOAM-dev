@@ -45,6 +45,24 @@ namespace functionObjects
 }
 }
 
+template<>
+const char* Foam::NamedEnum
+<
+    Foam::functionObjects::writeObjects::writeOption,
+    3
+>::names[] =
+{
+    "autoWrite",
+    "noWrite",
+    "anyWrite"
+};
+
+const Foam::NamedEnum
+<
+    Foam::functionObjects::writeObjects::writeOption,
+    3
+> Foam::functionObjects::writeObjects::writeOptionNames_;
+
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
@@ -63,7 +81,7 @@ Foam::functionObjects::writeObjects::writeObjects
             dict.lookupOrDefault("region", polyMesh::defaultRegion)
         )
     ),
-    exclusiveWriting_(false),
+    writeOption_(ANY_WRITE),
     objectNames_()
 {
     read(dict);
@@ -94,7 +112,14 @@ bool Foam::functionObjects::writeObjects::read(const dictionary& dict)
         dict.lookup("objects") >> objectNames_;
     }
 
-    dict.readIfPresent("exclusiveWriting", exclusiveWriting_);
+    if (dict.found("writeOption"))
+    {
+        writeOption_ = writeOptionNames_.read(dict.lookup("writeOption"));
+    }
+    else
+    {
+        writeOption_ = ANY_WRITE;
+    }
 
     return true;
 }
@@ -140,15 +165,54 @@ bool Foam::functionObjects::writeObjects::write()
             obr_.lookupObject<regIOobject>(allNames[i])
         );
 
-        if (exclusiveWriting_)
+        switch (writeOption_)
         {
-            // Switch off automatic writing to prevent double write
-            obj.writeOpt() = IOobject::NO_WRITE;
+            case AUTO_WRITE:
+            {
+                if(obj.writeOpt() != IOobject::AUTO_WRITE)
+                {
+                    continue;
+                }
+
+                break;
+            }
+            case NO_WRITE:
+            {
+                if(obj.writeOpt() != IOobject::NO_WRITE)
+                {
+                    continue;
+                }
+
+                break;
+            }
+            case ANY_WRITE:
+            {
+                break;
+            }
+            default:
+            {
+                FatalErrorInFunction
+                    << "Unknown writeOption "
+                    << writeOptionNames_[writeOption_]
+                    << ". Valid writeOption types are" << writeOptionNames_
+                    << exit(FatalError);
+            }
         }
 
-        Info<< "    writing object " << obj.name() << endl;
+        if
+        (
+            obj.writeOpt() == IOobject::AUTO_WRITE
+         && obr_.time().writeTime()
+        )
+        {
+            Info<< "    automatically written object " << obj.name() << endl;
+        }
+        else
+        {
+            Info<< "    writing object " << obj.name() << endl;
 
-        obj.write();
+            obj.write();
+        }
     }
 
     return true;

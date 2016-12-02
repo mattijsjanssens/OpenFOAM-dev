@@ -63,8 +63,7 @@ Description
         Chapter 4, Section 4.3.1.2, 77-80.
     \endverbatim
 
-    \heading Patch usage
-
+Usage
     \table
         Property        | Description                 | Required | Default value
         gamma           | ratio of specific heats     | yes      | none
@@ -84,7 +83,7 @@ Description
 
     Example of the boundary condition specification:
     \verbatim
-    myPatch
+    <patchName>
     {
         type            plenumPressure;
         gamma           1.4;

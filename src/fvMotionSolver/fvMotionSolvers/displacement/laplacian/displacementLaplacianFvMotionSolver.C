@@ -56,7 +56,7 @@ Foam::displacementLaplacianFvMotionSolver::displacementLaplacianFvMotionSolver
 )
 :
     displacementMotionSolver(mesh, dict, typeName),
-    fvMotionSolverCore(mesh),
+    fvMotionSolver(mesh),
     cellDisplacement_
     (
         IOobject
@@ -76,7 +76,7 @@ Foam::displacementLaplacianFvMotionSolver::displacementLaplacianFvMotionSolver
         ),
         cellMotionBoundaryTypes<vector>(pointDisplacement_.boundaryField())
     ),
-    pointLocation_(NULL),
+    pointLocation_(nullptr),
     diffusivityPtr_
     (
         motionDiffusivity::New(fvMesh_, coeffDict().lookup("diffusivity"))

@@ -32,7 +32,6 @@ Description
     field and derived quantities.  Alternatively, the same actions can be
     executed after the simulation using the \c -postProcess command-line option.
 
-    \linebreak
     \subsection secFunctionObjects Using function objects
 
     FunctionObjects are selected by additional entries in the
@@ -41,56 +40,65 @@ Description
     functionObject the following entry would be specified:
 
     \verbatim
-        functions
+    functions
+    {
+        <functionObjectName>
         {
-            myFunctionObject    // Name of functionObject entry
-            {
-                type                functionObjectType;
-                libs  ("libMyFunctionObjectlib.so");
-                region              defaultRegion;
-                enabled             yes;
-                timeStart           0;
-                timeEnd             10;
-                writeControl        writeTime;
-                writeInterval       1;
-                ...
-            }
+            type                functionObjectType;
+            libs                ("libMyFunctionObjectlib.so");
+            region              defaultRegion;
+            enabled             yes;
+            timeStart           0;
+            timeEnd             10;
+            writeControl        writeTime;
+            writeInterval       1;
+            ...
         }
+    }
     \endverbatim
 
     Where:
     \table
         Property | Description                       | Required | Default value
         type     | Type of function object               | yes      |
-        libs | Libraries containing implementation | yes |
+        libs     | Libraries containing implementation   | yes      |
         region   | Name of region for multi-region cases | no       |
         enabled  | On/off switch                         | no       | yes
+        log      | Log information to standard output    | no       | yes
         timeStart| Start time                            | no       |
         timeEnd  | End time                              | no       |
-        evaluateControl | See time controls below        | no       | timeStep
-        evaluateInterval   | Steps between output           | no       |
-        writeControl   | See time controls below        | no       | timeStep
-        writeInterval   | Steps between output           | no       |
+        executeControl  | See time controls below        | no       | timeStep
+        executeInterval | Steps between each execute phase | no     |
+        writeControl    | See time controls below        | no       | timeStep
+        writeInterval   | Steps between each write phase | no       |
     \endtable
 
     Time controls:
     \table
         Option            | Description
-        timeStep          | Execute/write every 'writeInterval' time-steps
-        writeTime        | Execute/write every 'writeInterval' output times
-        adjustableRunTime | Execute/write every 'writeInterval' run time period
-        runTime           | Execute/write every 'writeInterval' run time period
-        clockTime       | Execute/write every 'writeInterval' clock time period
-        cpuTime           | Execute/write every 'writeInterval' CPU time period
+        timeStep          | Execute/write every 'Interval' time-steps
+        writeTime         | Execute/write every 'Interval' output times
+        adjustableRunTime | Execute/write every 'Interval' run time period
+        runTime           | Execute/write every 'Interval' run time period
+        clockTime         | Execute/write every 'Interval' clock time period
+        cpuTime           | Execute/write every 'Interval' CPU time period
         none              | Execute/write every time-step
     \endtable
 
-    The sub-dictionary name \c myFunctionObject is chosen by the user, and is
-    typically used as the name of the output directory for any data written by
-    the functionObject.  The \c type entry defines the type of function object
-    properties that follow.  FunctionObjects are packaged into separate
-    libraries and the \c libs entry is used to specify which library
-    should be loaded.
+    The sub-dictionary name \c \<functionObjectName\> is chosen by the user, and
+    is typically used as the name of the output directory for any data written
+    by the functionObject.  The \c type entry defines the type of function
+    object properties that follow.  FunctionObjects are packaged into separate
+    libraries and the \c libs entry is used to specify which library should be
+    loaded.
+
+    Each function object has two separate run phases:
+
+      - The \c execute phase is meant to be used for updating calculations
+        or for management tasks.
+      - The \c write phase is meant for writing the calculated data to disk.
+
+    For each phase the respective time controls are provided, as listed above.
 
 Class
     Foam::functionObject
@@ -98,7 +106,7 @@ Class
 Description
     Abstract base-class for Time/database function objects.
 
-See Also
+See also
     Foam::functionObjectList
     Foam::functionObjects::timeControl
 
@@ -181,7 +189,7 @@ public:
         autoPtr<functionObject> clone() const
         {
             NotImplemented;
-            return autoPtr<functionObject>(NULL);
+            return autoPtr<functionObject>(nullptr);
         }
 
 

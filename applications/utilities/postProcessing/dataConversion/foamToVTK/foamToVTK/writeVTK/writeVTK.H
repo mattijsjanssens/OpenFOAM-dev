@@ -46,14 +46,14 @@ Description
         }
     \endverbatim
 
-    \heading Function object usage
+Usage
     \table
         Property     | Description             | Required    | Default value
         type         | type name: writeVTK     | yes         |
         objectNames  | objects to write        | yes         |
     \endtable
 
-SeeAlso
+See also
     Foam::functionObjects::fvMeshFunctionObject
     Foam::functionObjects::timeControl
 

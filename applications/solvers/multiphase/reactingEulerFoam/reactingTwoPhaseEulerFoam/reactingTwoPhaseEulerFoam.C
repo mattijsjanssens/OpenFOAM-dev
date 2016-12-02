@@ -51,7 +51,6 @@ int main(int argc, char *argv[])
     #include "createMesh.H"
     #include "createControl.H"
     #include "createTimeControls.H"
-    #include "createRDeltaT.H"
     #include "createFields.H"
     #include "createFieldRefs.H"
 
@@ -76,11 +75,6 @@ int main(int argc, char *argv[])
 
     #include "pUf/createDDtU.H"
 
-    int nEnergyCorrectors
-    (
-        pimple.dict().lookupOrDefault<int>("nEnergyCorrectors", 1)
-    );
-
     // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
     Info<< "\nStarting time loop\n" << endl;
@@ -88,6 +82,11 @@ int main(int argc, char *argv[])
     while (runTime.run())
     {
         #include "readTimeControls.H"
+
+        int nEnergyCorrectors
+        (
+            pimple.dict().lookupOrDefault<int>("nEnergyCorrectors", 1)
+        );
 
         if (LTS)
         {

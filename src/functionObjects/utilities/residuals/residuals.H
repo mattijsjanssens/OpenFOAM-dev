@@ -28,7 +28,7 @@ Group
     grpUtilitiesFunctionObjects
 
 Description
-    This function object writes out the initial residual for specified fields.
+    Writes out the initial residual for specified fields.
 
     Example of function object specification:
     \verbatim
@@ -49,9 +49,10 @@ Description
     For vector/tensor fields, e.g. U, where an equation is solved for each
     component, the largest residual of each component is written out.
 
-SeeAlso
+See also
     Foam::functionObject
-    Foam::functionObjects::writeFiles
+    Foam::functionObjects::fvMeshFunctionObject
+    Foam::functionObjects::logFiles
     Foam::functionObjects::timeControl
 
 SourceFiles
@@ -62,7 +63,8 @@ SourceFiles
 #ifndef functionObjects_residuals_H
 #define functionObjects_residuals_H
 
-#include "writeFiles.H"
+#include "fvMeshFunctionObject.H"
+#include "logFiles.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -77,7 +79,8 @@ namespace functionObjects
 
 class residuals
 :
-    public writeFiles
+    public fvMeshFunctionObject,
+    public logFiles
 {
 protected:
 

@@ -37,11 +37,10 @@ Description
     \endverbatim
 
     where:
+      - %r gets replaced by current processor rank
+      - it will decompose into 2 domains
 
-    \li \c %r gets replaced by current processor rank
-    \li it will decompose into 2 domains
-
-SeeAlso
+See also
     Foam::scotchDecomp
 
 SourceFiles

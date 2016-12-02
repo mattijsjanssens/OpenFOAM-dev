@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2012 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,6 +23,20 @@ License
 
 \*---------------------------------------------------------------------------*/
 
+// * * * * * * * * * * * * Protected Member Functions  * * * * * * * * * * * //
+
+inline Foam::pointField& Foam::edgeMesh::storedPoints()
+{
+    return points_;
+}
+
+
+inline Foam::edgeList& Foam::edgeMesh::storedEdges()
+{
+    return edges_;
+}
+
+
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 inline Foam::edgeMesh::edgeMesh(const edgeMesh& em)
@@ -30,7 +44,7 @@ inline Foam::edgeMesh::edgeMesh(const edgeMesh& em)
     fileFormats::edgeMeshFormatsCore(),
     points_(em.points_),
     edges_(em.edges_),
-    pointEdgesPtr_(NULL)
+    pointEdgesPtr_(nullptr)
 {}
 
 
@@ -55,18 +69,6 @@ inline const Foam::labelListList& Foam::edgeMesh::pointEdges() const
         calcPointEdges();
     }
     return pointEdgesPtr_();
-}
-
-
-inline Foam::pointField& Foam::edgeMesh::storedPoints()
-{
-    return points_;
-}
-
-
-inline Foam::edgeList& Foam::edgeMesh::storedEdges()
-{
-    return edges_;
 }
 
 

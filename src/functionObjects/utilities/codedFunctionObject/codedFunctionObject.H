@@ -28,8 +28,7 @@ Group
     grpUtilitiesFunctionObjects
 
 Description
-    This function object provides a general interface to enable dynamic code
-    compilation.
+    Provides a general interface to enable dynamic code compilation.
 
     The entries are
         codeInclude : include files
@@ -46,7 +45,7 @@ Description
     \verbatim
     difference
     {
-        libs ("libutilityFunctionObjects.so");
+        libs        ("libutilityFunctionObjects.so");
 
         type coded;
         // Name of on-the-fly generated functionObject
@@ -56,13 +55,12 @@ Description
             // Lookup U
             const volVectorField& U = mesh().lookupObject<volVectorField>("U");
             // Write
-            mag(U).write();
-        }
+            mag(U)().write();
+        #};"
     }
     \endverbatim
 
-
-SeeAlso
+See also
     Foam::functionObject
     Foam::codedBase
 

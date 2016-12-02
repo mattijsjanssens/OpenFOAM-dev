@@ -48,8 +48,7 @@ Description
     - 1: apply \$fp_{hyd}\$f
     - 0: apply a zero-gradient condition
 
-    \heading Patch usage
-
+Usage
     \table
         Property      | Description                 | Required | Default value
         phaseFraction | phase-fraction field name   | no       | alpha
@@ -60,7 +59,7 @@ Description
 
     Example of the boundary condition specification:
     \verbatim
-    myPatch
+    <patchName>
     {
         type            phaseHydrostaticPressure;
         phaseFraction   alpha1;
@@ -71,7 +70,7 @@ Description
     }
     \endverbatim
 
-SeeAlso
+See also
     Foam::mixedFvPatchScalarField
 
 SourceFiles
