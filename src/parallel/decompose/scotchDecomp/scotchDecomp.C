@@ -30,6 +30,7 @@ License
 #include "OFstream.H"
 #include "globalIndex.H"
 #include "SubField.H"
+#include "tmpNrc.H"
 
 extern "C"
 {
@@ -59,6 +60,35 @@ namespace Foam
         scotchDecomp,
         dictionary
     );
+
+    // Template specialisation to handle conversion to/from SCOTCH_Num
+
+    template<class T>
+    tmpNrc<List<SCOTCH_Num>> cast(const List<T>& ids)
+    {
+        tmpNrc<List<SCOTCH_Num>> tfld(new List<SCOTCH_Num>(ids.size()));
+        List<SCOTCH_Num>& fld = tfld();
+        forAll(ids, i)
+        {
+            fld[i] = ids[i];
+        }
+        return tfld;
+    }
+    template<>
+    tmpNrc<List<SCOTCH_Num>> cast(const List<SCOTCH_Num>& ids)
+    {
+        return tmpNrc<List<SCOTCH_Num>>(ids);
+    }
+    template<class T>
+    void transfer(List<SCOTCH_Num>& in, List<T>& out)
+    {
+        out = in;
+    }
+    template<>
+    void transfer(List<SCOTCH_Num>& in, List<SCOTCH_Num>& out)
+    {
+        out.transfer(in);
+    }
 }
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
@@ -325,6 +355,8 @@ Foam::label Foam::scotchDecomp::decomposeOneProc
     }
 
 
+    tmpNrc<List<SCOTCH_Num>> tscotchAdj(cast(xadj));
+    const List<SCOTCH_Num>& scotchAdj = tscotchAdj();
 
     SCOTCH_Graph grafdat;
     check(SCOTCH_graphInit(&grafdat), "SCOTCH_graphInit");
@@ -334,14 +366,14 @@ Foam::label Foam::scotchDecomp::decomposeOneProc
         (
             &grafdat,
             0,                      // baseval, c-style numbering
-            xadj.size()-1,          // vertnbr, nCells
-            xadj.begin(),           // verttab, start index per cell into adjncy
-            &xadj[1],               // vendtab, end index  ,,
-            velotab.begin(),        // velotab, vertex weights
-            nullptr,                   // vlbltab
+            scotchAdj.size()-1,     // vertnbr, nCells
+            scotchAdj.begin(),      // verttab, start index per cell into adjncy
+            &scotchAdj[1],          // vendtab, end index  ,,
+            cast(velotab)().begin(),// velotab, vertex weights
+            nullptr,                // vlbltab
             adjncy.size(),          // edgenbr, number of arcs
-            adjncy.begin(),         // edgetab
-            nullptr                    // edlotab, edge weights
+            cast(adjncy)().begin(), // edgetab
+            nullptr                 // edlotab, edge weights
         ),
         "SCOTCH_graphBuild"
     );
@@ -372,7 +404,12 @@ Foam::label Foam::scotchDecomp::decomposeOneProc
         }
         check
         (
-            SCOTCH_archCmpltw(&archdat, nProcessors_, processorWeights.begin()),
+            SCOTCH_archCmpltw
+            (
+                &archdat,
+                nProcessors_,
+                cast(processorWeights)().begin()
+            ),
             "SCOTCH_archCmpltw"
         );
     }
@@ -436,8 +473,7 @@ Foam::label Foam::scotchDecomp::decomposeOneProc
     );
     #endif
 
-    finalDecomp.setSize(xadj.size()-1);
-    finalDecomp = 0;
+    List<SCOTCH_Num> scDecomp(xadj.size()-1, 0);
     check
     (
         SCOTCH_graphMap
@@ -445,10 +481,12 @@ Foam::label Foam::scotchDecomp::decomposeOneProc
             &grafdat,
             &archdat,
             &stradat,           // const SCOTCH_Strat *
-            finalDecomp.begin() // parttab
+            scDecomp.begin()    // parttab
         ),
         "SCOTCH_graphMap"
     );
+    transfer(scDecomp, finalDecomp);
+
 
     #ifdef FE_NOMASK_ENV
     feenableexcept(oldExcepts);
