@@ -22,21 +22,25 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::IOMap
+    Foam::baseIOdictionary
 
 Description
-    A Map of objects of type \<T\> with automated input and output.
-    Is a global object; i.e. can be read from undecomposed case.
+    baseIOdictionary is derived from dictionary and IOobject to give the
+    dictionary automatic IO functionality via the objectRegistry.
+    To facilitate IO,
+    IOdictioanry is provided with a constructor from IOobject and writeData and
+    write functions.
 
 SourceFiles
-    IOMap.C
+    baseIOdictionary.C
+    baseIOdictionaryIO.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef IOMap_H
-#define IOMap_H
+#ifndef baseIOdictionary_H
+#define baseIOdictionary_H
 
-#include "Map.H"
+#include "dictionary.H"
 #include "regIOobject.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -45,77 +49,70 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class IOMap Declaration
+                           Class baseIOdictionary Declaration
 \*---------------------------------------------------------------------------*/
 
-template<class T>
-class IOMap
+class baseIOdictionary
 :
     public regIOobject,
-    public Map<T>
+    public dictionary
 {
+    // Private data
+
+        static bool writeDictionaries;
 
 public:
 
-    //- Runtime type information
-    TypeName("Map");
+    TypeName("dictionary");
 
 
     // Constructors
 
-        //- Construct from IOobject
-        IOMap(const IOobject&);
+        //- Construct given an IOobject
+        baseIOdictionary(const IOobject&);
 
-        //- Construct from IOobject and size of Map
-        IOMap(const IOobject&, const label);
+        //- Construct given an IOobject and dictionary
+        baseIOdictionary(const IOobject&, const dictionary&);
 
-        //- Construct from IOobject and a Map
-        IOMap(const IOobject&, const Map<T>&);
-
-        //- Construct by transferring the Map contents
-        IOMap(const IOobject&, const Xfer<Map<T>>&);
+        //- Construct given an IOobject and Istream
+        baseIOdictionary(const IOobject&, Istream&);
 
 
     //- Destructor
-    virtual ~IOMap();
+    virtual ~baseIOdictionary();
 
 
     // Member functions
 
-        bool writeData(Ostream&) const;
-
-        //- Is object global
-        virtual bool global() const
-        {
-            return true;
-        }
-
         //- Return complete path + object name if the file exists
         //  either in the case/processor or case otherwise null
-        virtual fileName filePath() const
-        {
-            return globalFilePath();
-        }
+        virtual fileName filePath() const = 0;
+
+        //- Name function is needed to disambiguate those inherited
+        //  from regIOobject and dictionary
+        const word& name() const;
+
+        //- ReadData function required for regIOobject read operation
+        virtual bool readData(Istream&);
+
+        //- WriteData function required for regIOobject write operation
+        virtual bool writeData(Ostream&) const;
+
+        //- Is object global
+        virtual bool global() const = 0;
+
 
     // Member operators
 
-        //- Assignment of other IOMap's entries to this IOMap
-        void operator=(const IOMap<T>&);
-
-        //- Assignment of other Map's entries to this IOMap
-        void operator=(const Map<T>&);
+        //- Assignment of other baseIOdictionary's entries to this
+        //  baseIOdictionary
+        void operator=(const baseIOdictionary&);
 };
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-#ifdef NoRepository
-    #include "IOMap.C"
-#endif
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

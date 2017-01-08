@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -33,19 +33,6 @@ License
 namespace Foam
 {
     defineTypeNameAndDebug(regIOobject, 0);
-
-    template<>
-    const char* NamedEnum
-    <
-        regIOobject::fileCheckTypes,
-        4
-    >::names[] =
-    {
-        "timeStamp",
-        "timeStampMaster",
-        "inotify",
-        "inotifyMaster"
-    };
 }
 
 float Foam::regIOobject::fileModificationSkew
@@ -60,57 +47,6 @@ registerOptSwitch
 );
 
 
-const Foam::NamedEnum<Foam::regIOobject::fileCheckTypes, 4>
-    Foam::regIOobject::fileCheckTypesNames;
-
-Foam::regIOobject::fileCheckTypes Foam::regIOobject::fileModificationChecking
-(
-    fileCheckTypesNames.read
-    (
-        debug::optimisationSwitches().lookup
-        (
-            "fileModificationChecking"
-        )
-    )
-);
-
-namespace Foam
-{
-    // Register re-reader
-    class addfileModificationCheckingToOpt
-    :
-        public ::Foam::simpleRegIOobject
-    {
-    public:
-
-        addfileModificationCheckingToOpt(const char* name)
-        :
-            ::Foam::simpleRegIOobject(Foam::debug::addOptimisationObject, name)
-        {}
-
-        virtual ~addfileModificationCheckingToOpt()
-        {}
-
-        virtual void readData(Foam::Istream& is)
-        {
-            regIOobject::fileModificationChecking =
-                regIOobject::fileCheckTypesNames.read(is);
-        }
-
-        virtual void writeData(Foam::Ostream& os) const
-        {
-            os <<  regIOobject::fileCheckTypesNames
-                [regIOobject::fileModificationChecking];
-        }
-    };
-
-    addfileModificationCheckingToOpt addfileModificationCheckingToOpt_
-    (
-        "fileModificationChecking"
-    );
-}
-
-
 bool Foam::regIOobject::masterOnlyReading = false;
 
 
@@ -121,7 +57,7 @@ Foam::regIOobject::regIOobject(const IOobject& io, const bool isTime)
     IOobject(io),
     registered_(false),
     ownedByRegistry_(false),
-    watchIndex_(-1),
+    watchIndices_(),
     eventNo_                // Do not get event for top level Time database
     (
         isTime
@@ -143,7 +79,7 @@ Foam::regIOobject::regIOobject(const regIOobject& rio)
     IOobject(rio),
     registered_(false),
     ownedByRegistry_(false),
-    watchIndex_(rio.watchIndex_),
+    watchIndices_(rio.watchIndices_),
     eventNo_(db().getEvent()),
     isPtr_(nullptr)
 {
@@ -156,7 +92,7 @@ Foam::regIOobject::regIOobject(const regIOobject& rio, bool registerCopy)
     IOobject(rio),
     registered_(false),
     ownedByRegistry_(false),
-    watchIndex_(-1),
+    watchIndices_(),
     eventNo_(db().getEvent()),
     isPtr_(nullptr)
 {
@@ -178,7 +114,7 @@ Foam::regIOobject::regIOobject
     IOobject(newName, rio.instance(), rio.local(), rio.db()),
     registered_(false),
     ownedByRegistry_(false),
-    watchIndex_(-1),
+    watchIndices_(),
     eventNo_(db().getEvent()),
     isPtr_(nullptr)
 {
@@ -198,7 +134,7 @@ Foam::regIOobject::regIOobject
     IOobject(io),
     registered_(false),
     ownedByRegistry_(false),
-    watchIndex_(-1),
+    watchIndices_(),
     eventNo_(db().getEvent()),
     isPtr_(nullptr)
 {
@@ -215,7 +151,7 @@ Foam::regIOobject::~regIOobject()
 {
     if (objectRegistry::debug)
     {
-        Info<< "Destroying regIOobject called " << name()
+        Pout<< "Destroying regIOobject called " << name()
             << " of type " << type()
             << " in directory " << path()
             << endl;
@@ -245,31 +181,6 @@ bool Foam::regIOobject::checkIn()
         // multiple checkin of same object is disallowed - this would mess up
         // any mapping
         registered_ = db().checkIn(*this);
-
-        if
-        (
-            registered_
-         && readOpt() == MUST_READ_IF_MODIFIED
-         && time().runTimeModifiable()
-        )
-        {
-            if (watchIndex_ != -1)
-            {
-                FatalErrorInFunction
-                    << "Object " << objectPath()
-                    << " already watched with index " << watchIndex_
-                    << abort(FatalError);
-            }
-
-            fileName f = filePath();
-            if (!f.size())
-            {
-                // We don't have this file but would like to re-read it.
-                // Possibly if master-only reading mode.
-                f = objectPath();
-            }
-            watchIndex_ = time().addWatch(f);
-        }
 
         // check-in on defaultRegion is allowed to fail, since subsetted meshes
         // are created with the same name as their originating mesh
@@ -305,15 +216,108 @@ bool Foam::regIOobject::checkOut()
     {
         registered_ = false;
 
-        if (watchIndex_ != -1)
+        forAllReverse(watchIndices_, i)
         {
-            time().removeWatch(watchIndex_);
-            watchIndex_ = -1;
+            time().removeWatch(watchIndices_[i]);
         }
+        watchIndices_.clear();
         return db().checkOut(*this);
     }
 
     return false;
+}
+
+
+Foam::label Foam::regIOobject::addWatch(const fileName& f)
+{
+    label index = -1;
+
+    if
+    (
+        registered_
+     && readOpt() == MUST_READ_IF_MODIFIED
+     && time().runTimeModifiable()
+    )
+    {
+        index = time().findWatch(watchIndices_, f);
+
+        if (index == -1)
+        {
+            index = watchIndices_.size();
+            watchIndices_.append(time().addTimeWatch(f));
+        }
+    }
+    return index;
+}
+
+
+void Foam::regIOobject::addWatch()
+{
+    if
+    (
+        registered_
+     && readOpt() == MUST_READ_IF_MODIFIED
+     && time().runTimeModifiable()
+    )
+    {
+        fileName f = filePath();
+        if (!f.size())
+        {
+            // We don't have this file but would like to re-read it.
+            // Possibly if master-only reading mode.
+            f = objectPath();
+        }
+
+        label index = time().findWatch(watchIndices_, f);
+        if (index != -1)
+        {
+            FatalErrorIn("regIOobject::addWatch()")
+                << "Object " << objectPath() << " of type " << type()
+                << " already watched with index " << watchIndices_[index]
+                << abort(FatalError);
+        }
+
+        // If master-only reading only the master will have all dependencies
+        // so scatter these to slaves
+        bool masterOnly =
+            global()
+         && (
+                regIOobject::fileModificationChecking == timeStampMaster
+             || regIOobject::fileModificationChecking == inotifyMaster
+            );
+
+        if (masterOnly && Pstream::parRun())
+        {
+            // Get master watched files
+            fileNameList watchFiles;
+            if (Pstream::master())
+            {
+                watchFiles.setSize(watchIndices_.size());
+                forAll(watchIndices_, i)
+                {
+                    watchFiles[i] = time().getFile(watchIndices_[i]);
+                }
+            }
+            Pstream::scatter(watchFiles);
+
+            if (!Pstream::master())
+            {
+                // unregister current ones
+                forAllReverse(watchIndices_, i)
+                {
+                    time().removeWatch(watchIndices_[i]);
+                }
+
+                watchIndices_.clear();
+                forAll(watchFiles, i)
+                {
+                    watchIndices_.append(time().addTimeWatch(watchFiles[i]));
+                }
+            }
+        }
+
+        addWatch(f);
+    }
 }
 
 
@@ -417,6 +421,59 @@ void Foam::regIOobject::rename(const word& newName)
         // Re-register object with objectRegistry
         checkIn();
     }
+}
+
+
+Foam::fileName Foam::regIOobject::filePath() const
+{
+    return localFilePath();
+}
+
+
+Foam::Istream* Foam::regIOobject::objectStream()
+{
+    return IOobject::objectStream(filePath());
+}
+
+
+bool Foam::regIOobject::headerOk()
+{
+    bool ok = true;
+
+    Istream* isPtr = objectStream();
+
+    // If the stream has failed return
+    if (!isPtr)
+    {
+        if (objectRegistry::debug)
+        {
+            Info
+                << "regIOobject::headerOk() : "
+                << "file " << objectPath() << " could not be opened"
+                << endl;
+        }
+
+        ok = false;
+    }
+    else
+    {
+        // Try reading header
+        if (!readHeader(*isPtr))
+        {
+            if (objectRegistry::debug)
+            {
+                IOWarningIn("regIOobject::headerOk()", (*isPtr))
+                    << "failed to read header of file " << objectPath()
+                    << endl;
+            }
+
+            ok = false;
+        }
+    }
+
+    delete isPtr;
+
+    return ok;
 }
 
 

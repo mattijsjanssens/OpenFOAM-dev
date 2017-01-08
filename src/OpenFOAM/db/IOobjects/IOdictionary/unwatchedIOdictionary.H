@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2015-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,22 +22,19 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::IOMap
+    Foam::unwatchedIOdictionary
 
 Description
-    A Map of objects of type \<T\> with automated input and output.
-    Is a global object; i.e. can be read from undecomposed case.
-
-SourceFiles
-    IOMap.C
+    unwatchedIOdictionary is like IOdictionary but stores
+    dependencies as files instead of fileMonitor watchIndices. Used
+    to read controlDict since there fileMonitor not yet setup.
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef IOMap_H
-#define IOMap_H
+#ifndef unwatchedIOdictionary_H
+#define unwatchedIOdictionary_H
 
-#include "Map.H"
-#include "regIOobject.H"
+#include "baseIOdictionary.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -45,44 +42,38 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class IOMap Declaration
+                   Class unwatchedIOdictionary Declaration
 \*---------------------------------------------------------------------------*/
 
-template<class T>
-class IOMap
+class unwatchedIOdictionary
 :
-    public regIOobject,
-    public Map<T>
+    public baseIOdictionary
 {
+
+    fileNameList files_;
 
 public:
 
-    //- Runtime type information
-    TypeName("Map");
-
-
     // Constructors
 
-        //- Construct from IOobject
-        IOMap(const IOobject&);
+        //- Construct given an IOobject
+        unwatchedIOdictionary(const IOobject& io);
 
-        //- Construct from IOobject and size of Map
-        IOMap(const IOobject&, const label);
+        //- Construct given an IOobject and dictionary
+        unwatchedIOdictionary
+        (
+            const IOobject& io,
+            const dictionary& dict
+        );
 
-        //- Construct from IOobject and a Map
-        IOMap(const IOobject&, const Map<T>&);
-
-        //- Construct by transferring the Map contents
-        IOMap(const IOobject&, const Xfer<Map<T>>&);
-
+        //- Construct given an IOobject and Istream
+        unwatchedIOdictionary(const IOobject& io, Istream& is);
 
     //- Destructor
-    virtual ~IOMap();
+    virtual ~unwatchedIOdictionary();
 
 
     // Member functions
-
-        bool writeData(Ostream&) const;
 
         //- Is object global
         virtual bool global() const
@@ -97,25 +88,37 @@ public:
             return globalFilePath();
         }
 
-    // Member operators
+        //- Add file watch on object (READ_IF_MODIFIED)
+        virtual void addWatch();
 
-        //- Assignment of other IOMap's entries to this IOMap
-        void operator=(const IOMap<T>&);
+        //- Add file watch for fileName on object if not yet watched. Return
+        //  index of watch
+        virtual label addWatch(const fileName&);
 
-        //- Assignment of other Map's entries to this IOMap
-        void operator=(const Map<T>&);
+        const fileNameList& files() const
+        {
+            return files_;
+        }
+
+        fileNameList& files()
+        {
+            return files_;
+        }
+
 };
+
+
+//- Template function for obtaining global status
+template<>
+inline bool typeGlobal<unwatchedIOdictionary>()
+{
+    return true;
+}
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-#ifdef NoRepository
-    #include "IOMap.C"
-#endif
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

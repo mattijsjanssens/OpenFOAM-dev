@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -32,6 +32,71 @@ License
 namespace Foam
 {
     defineTypeNameAndDebug(IOobject, 0);
+
+    template<>
+    const char* NamedEnum
+    <
+        IOobject::fileCheckTypes,
+        4
+    >::names[] =
+    {
+        "timeStamp",
+        "timeStampMaster",
+        "inotify",
+        "inotifyMaster"
+    };
+}
+
+
+const Foam::NamedEnum<Foam::IOobject::fileCheckTypes, 4>
+    Foam::IOobject::fileCheckTypesNames;
+
+// Default fileCheck type
+Foam::IOobject::fileCheckTypes Foam::IOobject::fileModificationChecking
+(
+    fileCheckTypesNames.read
+    (
+        debug::optimisationSwitches().lookup
+        (
+            "fileModificationChecking"
+        )
+    )
+);
+
+namespace Foam
+{
+    // Register re-reader
+    class addfileModificationCheckingToOpt
+    :
+        public ::Foam::simpleRegIOobject
+    {
+    public:
+
+        addfileModificationCheckingToOpt(const char* name)
+        :
+            ::Foam::simpleRegIOobject(Foam::debug::addOptimisationObject, name)
+        {}
+
+        virtual ~addfileModificationCheckingToOpt()
+        {}
+
+        virtual void readData(Foam::Istream& is)
+        {
+            IOobject::fileModificationChecking =
+                IOobject::fileCheckTypesNames.read(is);
+        }
+
+        virtual void writeData(Foam::Ostream& os) const
+        {
+            os <<  IOobject::fileCheckTypesNames
+                [IOobject::fileModificationChecking];
+        }
+    };
+
+    addfileModificationCheckingToOpt addfileModificationCheckingToOpt_
+    (
+        "fileModificationChecking"
+    );
 }
 
 
@@ -129,6 +194,7 @@ Foam::IOobject::IOobject
     rOpt_(ro),
     wOpt_(wo),
     registerObject_(registerObject),
+    globalObject_(false),
     objState_(GOOD)
 {
     if (objectRegistry::debug)
@@ -149,7 +215,8 @@ Foam::IOobject::IOobject
     const objectRegistry& registry,
     readOption ro,
     writeOption wo,
-    bool registerObject
+    bool registerObject,
+    bool globalObject
 )
 :
     name_(name),
@@ -161,6 +228,7 @@ Foam::IOobject::IOobject
     rOpt_(ro),
     wOpt_(wo),
     registerObject_(registerObject),
+    globalObject_(globalObject),
     objState_(GOOD)
 {
     if (objectRegistry::debug)
@@ -179,7 +247,8 @@ Foam::IOobject::IOobject
     const objectRegistry& registry,
     readOption ro,
     writeOption wo,
-    bool registerObject
+    bool registerObject,
+    bool globalObject
 )
 :
     name_(),
@@ -191,6 +260,7 @@ Foam::IOobject::IOobject
     rOpt_(ro),
     wOpt_(wo),
     registerObject_(registerObject),
+    globalObject_(globalObject),
     objState_(GOOD)
 {
     if (!fileNameComponents(path, instance_, local_, name_))
@@ -208,6 +278,46 @@ Foam::IOobject::IOobject
             << endl;
     }
 }
+
+
+Foam::IOobject::IOobject
+(
+    const IOobject& io,
+    const objectRegistry& registry
+)
+:
+    name_(io.name_),
+    headerClassName_(io.headerClassName_),
+    note_(io.note_),
+    instance_(io.instance_),
+    local_(io.local_),
+    db_(registry),
+    rOpt_(io.rOpt_),
+    wOpt_(io.wOpt_),
+    registerObject_(io.registerObject_),
+    globalObject_(io.globalObject_),
+    objState_(io.objState_)
+{}
+
+
+Foam::IOobject::IOobject
+(
+    const IOobject& io,
+    const word& name
+)
+:
+    name_(name),
+    headerClassName_(io.headerClassName_),
+    note_(io.note_),
+    instance_(io.instance_),
+    local_(io.local_),
+    db_(io.db_),
+    rOpt_(io.rOpt_),
+    wOpt_(io.wOpt_),
+    registerObject_(io.registerObject_),
+    globalObject_(io.globalObject_),
+    objState_(io.objState_)
+{}
 
 
 // * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * * //
@@ -296,11 +406,12 @@ Foam::fileName Foam::IOobject::path
 }
 
 
-Foam::fileName Foam::IOobject::filePath() const
+Foam::fileName Foam::IOobject::localFilePath() const
 {
     if (instance().isAbsolute())
     {
         fileName objectPath = instance()/name();
+
         if (isFile(objectPath))
         {
             return objectPath;
@@ -321,25 +432,6 @@ Foam::fileName Foam::IOobject::filePath() const
         }
         else
         {
-            if
-            (
-                time().processorCase()
-             && (
-                    instance() == time().system()
-                 || instance() == time().constant()
-                )
-            )
-            {
-                fileName parentObjectPath =
-                    rootPath()/time().globalCaseName()
-                   /instance()/db_.dbDir()/local()/name();
-
-                if (isFile(parentObjectPath))
-                {
-                    return parentObjectPath;
-                }
-            }
-
             if (!isDir(path))
             {
                 word newInstancePath = time().findInstancePath
@@ -363,6 +455,111 @@ Foam::fileName Foam::IOobject::filePath() const
             }
         }
 
+        return fileName::null;
+    }
+}
+
+
+Foam::fileName Foam::IOobject::globalFilePath() const
+{
+    if (instance().isAbsolute())
+    {
+        fileName objectPath = instance()/name();
+
+        if (isFile(objectPath))
+        {
+            if (objectRegistry::debug)
+            {
+                Pout<< "globalFilePath : returning absolute:" << objectPath
+                    << endl;
+            }
+            return objectPath;
+        }
+        else
+        {
+            if (objectRegistry::debug)
+            {
+                Pout<< "globalFilePath : absolute not found:" << objectPath
+                    << endl;
+            }
+            return fileName::null;
+        }
+    }
+    else
+    {
+        fileName path = this->path();
+        fileName objectPath = path/name();
+
+        if (isFile(objectPath))
+        {
+            if (objectRegistry::debug)
+            {
+                Pout<< "globalFilePath : returning time:" << objectPath << endl;
+            }
+            return objectPath;
+        }
+        else
+        {
+            if
+            (
+                time().processorCase()
+             && (
+                    instance() == time().system()
+                 || instance() == time().constant()
+                )
+            )
+            {
+                // Constant & system can come from global case
+
+                fileName parentObjectPath =
+                    rootPath()/time().globalCaseName()
+                   /instance()/db_.dbDir()/local()/name();
+
+                if (isFile(parentObjectPath))
+                {
+                    if (objectRegistry::debug)
+                    {
+                        Pout<< "globalFilePath : returning parent:"
+                            << parentObjectPath << endl;
+                    }
+                    return parentObjectPath;
+                }
+            }
+
+            // Check for approximately same time
+            if (!isDir(path))
+            {
+                word newInstancePath = time().findInstancePath
+                (
+                    instant(instance())
+                );
+
+                if (newInstancePath.size())
+                {
+                    fileName fName
+                    (
+                        rootPath()/caseName()
+                       /newInstancePath/db_.dbDir()/local()/name()
+                    );
+
+                    if (isFile(fName))
+                    {
+                        if (objectRegistry::debug)
+                        {
+                            Pout<< "globalFilePath : returning similar time:"
+                                << fName << endl;
+                        }
+
+                        return fName;
+                    }
+                }
+            }
+        }
+
+        if (objectRegistry::debug)
+        {
+            Pout<< "globalFilePath : time not found:" << objectPath << endl;
+        }
         return fileName::null;
     }
 }
@@ -397,46 +594,6 @@ Foam::Istream* Foam::IOobject::objectStream(const fileName& fName)
 }
 
 
-bool Foam::IOobject::headerOk()
-{
-    bool ok = true;
-
-    Istream* isPtr = objectStream();
-
-    // If the stream has failed return
-    if (!isPtr)
-    {
-        if (objectRegistry::debug)
-        {
-            InfoInFunction
-                << "File " << objectPath() << " could not be opened"
-                << endl;
-        }
-
-        ok = false;
-    }
-    else
-    {
-        // Try reading header
-        if (!readHeader(*isPtr))
-        {
-            if (objectRegistry::debug)
-            {
-                IOWarningInFunction((*isPtr))
-                    << "Failed to read header of file " << objectPath()
-                    << endl;
-            }
-
-            ok = false;
-        }
-    }
-
-    delete isPtr;
-
-    return ok;
-}
-
-
 void Foam::IOobject::setBad(const string& s)
 {
     if (objState_ != GOOD)
@@ -465,6 +622,7 @@ void Foam::IOobject::operator=(const IOobject& io)
     local_ = io.local_;
     rOpt_ = io.rOpt_;
     wOpt_ = io.wOpt_;
+    globalObject_ = io.globalObject_;
     objState_ = io.objState_;
 }
 

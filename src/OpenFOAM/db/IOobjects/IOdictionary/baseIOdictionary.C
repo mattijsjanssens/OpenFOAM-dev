@@ -23,66 +23,78 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "IOdictionary.H"
+#include "baseIOdictionary.H"
 #include "objectRegistry.H"
 #include "Pstream.H"
 #include "Time.H"
 
-// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-Foam::IOdictionary::IOdictionary(const IOobject& io)
-:
-    baseIOdictionary(io)
+namespace Foam
 {
-    readHeaderOk(IOstream::ASCII, typeName);
+defineTypeNameAndDebug(baseIOdictionary, 0);
 
-    // For if MUST_READ_IF_MODIFIED
-    addWatch();
+bool baseIOdictionary::writeDictionaries
+(
+    debug::infoSwitch("writeDictionaries", 0)
+);
 }
 
 
-Foam::IOdictionary::IOdictionary
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+Foam::baseIOdictionary::baseIOdictionary(const IOobject& io)
+:
+    regIOobject(io)
+{
+    dictionary::name() = IOobject::objectPath();
+}
+
+
+Foam::baseIOdictionary::baseIOdictionary
 (
     const IOobject& io,
     const dictionary& dict
 )
 :
-    baseIOdictionary(io, dict)
+    regIOobject(io)
 {
-    if (!readHeaderOk(IOstream::ASCII, typeName))
-    {
-        dictionary::operator=(dict);
-    }
-
-    // For if MUST_READ_IF_MODIFIED
-    addWatch();
+    dictionary::name() = IOobject::objectPath();
 }
 
 
-Foam::IOdictionary::IOdictionary
+Foam::baseIOdictionary::baseIOdictionary
 (
     const IOobject& io,
     Istream& is
 )
 :
-    baseIOdictionary(io, is)
+    regIOobject(io)
 {
-    // Note that we do construct the dictionary null and read in
-    // afterwards
-    // so that if there is some fancy massaging due to a
-    // functionEntry in
-    // the dictionary at least the type information is already complete.
-    is  >> *this;
-
-    // For if MUST_READ_IF_MODIFIED
-    addWatch();
+    dictionary::name() = IOobject::objectPath();
 }
 
 
 // * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * * //
 
-Foam::IOdictionary::~IOdictionary()
+Foam::baseIOdictionary::~baseIOdictionary()
 {}
+
+
+// * * * * * * * * * * * * * * * Members Functions * * * * * * * * * * * * * //
+
+const Foam::word& Foam::baseIOdictionary::name() const
+{
+    return regIOobject::name();
+}
+
+
+// * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
+
+void Foam::baseIOdictionary::operator=(const baseIOdictionary& rhs)
+{
+    dictionary::operator=(rhs);
+}
 
 
 // ************************************************************************* //

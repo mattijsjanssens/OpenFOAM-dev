@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2015-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,22 +22,21 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::IOMap
+    Foam::GlobalIOField
 
 Description
-    A Map of objects of type \<T\> with automated input and output.
-    Is a global object; i.e. can be read from undecomposed case.
+    IOField with global data (so optionally read from master)
 
 SourceFiles
-    IOMap.C
+    GlobalIOField.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef IOMap_H
-#define IOMap_H
+#ifndef GlobalIOField_H
+#define GlobalIOField_H
 
-#include "Map.H"
 #include "regIOobject.H"
+#include "Field.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -45,44 +44,41 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class IOMap Declaration
+                           Class GlobalIOField Declaration
 \*---------------------------------------------------------------------------*/
 
-template<class T>
-class IOMap
+template<class Type>
+class GlobalIOField
 :
     public regIOobject,
-    public Map<T>
+    public Field<Type>
 {
 
 public:
 
-    //- Runtime type information
-    TypeName("Map");
+    TypeName("Field");
 
 
     // Constructors
 
         //- Construct from IOobject
-        IOMap(const IOobject&);
+        GlobalIOField(const IOobject&);
 
-        //- Construct from IOobject and size of Map
-        IOMap(const IOobject&, const label);
+        //- Construct from IOobject and size (does not set values)
+        GlobalIOField(const IOobject&, const label size);
 
-        //- Construct from IOobject and a Map
-        IOMap(const IOobject&, const Map<T>&);
+        //- Construct from components
+        GlobalIOField(const IOobject&, const Field<Type>&);
 
-        //- Construct by transferring the Map contents
-        IOMap(const IOobject&, const Xfer<Map<T>>&);
+        //- Construct by transferring the Field contents
+        GlobalIOField(const IOobject&, const Xfer<Field<Type>>&);
 
 
     //- Destructor
-    virtual ~IOMap();
+    virtual ~GlobalIOField();
 
 
     // Member functions
-
-        bool writeData(Ostream&) const;
 
         //- Is object global
         virtual bool global() const
@@ -97,13 +93,18 @@ public:
             return globalFilePath();
         }
 
+        //- ReadData function required for regIOobject read operation
+        virtual bool readData(Istream&);
+
+        //- WriteData function required for regIOobject write operation
+        bool writeData(Ostream&) const;
+
+
     // Member operators
 
-        //- Assignment of other IOMap's entries to this IOMap
-        void operator=(const IOMap<T>&);
+        void operator=(const GlobalIOField<Type>&);
 
-        //- Assignment of other Map's entries to this IOMap
-        void operator=(const Map<T>&);
+        void operator=(const Field<Type>&);
 };
 
 
@@ -114,7 +115,7 @@ public:
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #ifdef NoRepository
-    #include "IOMap.C"
+#   include "GlobalIOField.C"
 #endif
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
