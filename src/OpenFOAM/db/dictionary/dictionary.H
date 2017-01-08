@@ -161,6 +161,15 @@ class dictionary
 
    // Private Member Functions
 
+        //- Find and return an entry data stream pointer if present
+        //  otherwise return nullptr. Allows scoping using '.'
+        const entry* lookupScopedSubEntryPtr
+        (
+            const word&,
+            bool recursive,
+            bool patternMatch
+        ) const;
+
         //- Search patterns table for exact match or regular expression match
         bool findInPatterns
         (
@@ -283,7 +292,7 @@ public:
             ) const;
 
             //- Find and return an entry data stream pointer if present
-            //  otherwise return NULL.
+            //  otherwise return nullptr.
             //  If recursive, search parent dictionaries.
             //  If patternMatch, use regular expressions
             const entry* lookupEntryPtr
@@ -294,7 +303,7 @@ public:
             ) const;
 
             //- Find and return an entry data stream pointer for manipulation
-            //  if present otherwise return NULL.
+            //  if present otherwise return nullptr.
             //  If recursive, search parent dictionaries.
             //  If patternMatch, use regular expressions.
             entry* lookupEntryPtr
@@ -364,7 +373,8 @@ public:
             ) const;
 
             //- Find and return an entry data stream pointer if present
-            //  otherwise return NULL. Allows scoping using '.'
+            //  otherwise return nullptr. Allows scoping using '.'.
+            //  Special handling for ':' at start of keyword and '..'.
             const entry* lookupScopedEntryPtr
             (
                 const word&,
@@ -376,8 +386,12 @@ public:
             bool isDict(const word&) const;
 
             //- Find and return a sub-dictionary pointer if present
-            //  otherwise return NULL.
+            //  otherwise return nullptr.
             const dictionary* subDictPtr(const word&) const;
+
+            //- Find and return a sub-dictionary pointer if present
+            //  otherwise return nullptr.
+            dictionary* subDictPtr(const word&);
 
             //- Find and return a sub-dictionary
             const dictionary& subDict(const word&) const;

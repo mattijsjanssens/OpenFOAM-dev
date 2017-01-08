@@ -25,7 +25,6 @@ License
 
 #include "volFields.H"
 #include "surfaceFields.H"
-#include "mappedPatchBase.H"
 #include "turbulentFluidThermoModel.H"
 #include "mapDistribute.H"
 
@@ -53,7 +52,7 @@ thermalBaffle1DFvPatchScalarField
     thickness_(p.size()),
     Qs_(p.size()),
     solidDict_(),
-    solidPtr_(NULL),
+    solidPtr_(nullptr),
     QrPrevious_(p.size()),
     QrRelaxation_(1),
     QrName_("undefined-Qr")
@@ -298,6 +297,8 @@ void thermalBaffle1DFvPatchScalarField<solidType>::autoMap
     const fvPatchFieldMapper& m
 )
 {
+    mappedPatchBase::clearOut();
+
     mixedFvPatchScalarField::autoMap(m);
 
     if (this->owner())

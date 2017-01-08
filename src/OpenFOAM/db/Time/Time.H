@@ -59,6 +59,7 @@ SourceFiles
 
 namespace Foam
 {
+
 // Forward declaration of classes
 class argList;
 
@@ -85,6 +86,7 @@ class Time
 
         //- The controlDict
         IOdictionary controlDict_;
+
 
 public:
 
@@ -372,7 +374,7 @@ public:
                 const word& constantName = "constant"
             );
 
-            //- Write time dictionary to the <time>/uniform directory
+            //- Write time dictionary to the \<time\>/uniform directory
             virtual bool writeTimeDict() const;
 
             //- Write using given format, version and compression

@@ -27,8 +27,7 @@ Class
 Group grpFieldFunctionObjects
 
 Description
-    This function object linearly interpolates volume fields to generate
-    surface fields
+    Linearly interpolates volume fields to generate surface fields.
 
     Fields are stored
     - every time step the field is updated with new values
@@ -43,13 +42,13 @@ Description
     surfaceInterpolate1
     {
         type        surfaceInterpolate;
-        libs ("libfieldFunctionObjects.so");
+        libs        ("libfieldFunctionObjects.so");
         ...
         fields      ((p pNear)(U UNear));
     }
     \endverbatim
 
-    \heading Function object usage
+Usage
     \table
         Property | Description               | Required    | Default value
         type     | type name: nearWallFields | yes         |
@@ -57,7 +56,7 @@ Description
     \endtable
 
 
-SeeAlso
+See also
     Foam::functionObjects::fvMeshFunctionObject
     Foam::functionObjects::timeControl
 

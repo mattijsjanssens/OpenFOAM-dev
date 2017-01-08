@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -32,12 +32,19 @@ namespace Foam
     defineTypeNameAndDebug(combustionModel, 0);
 }
 
+const Foam::word Foam::combustionModel::combustionPropertiesName
+(
+    "combustionProperties"
+);
+
+
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 Foam::combustionModel::combustionModel
 (
     const word& modelType,
     const fvMesh& mesh,
+    const word& combustionProperties,
     const word& phaseName
 )
 :
@@ -45,7 +52,7 @@ Foam::combustionModel::combustionModel
     (
         IOobject
         (
-            IOobject::groupName("combustionProperties", phaseName),
+            IOobject::groupName(combustionProperties, phaseName),
             mesh.time().constant(),
             mesh,
             IOobject::MUST_READ_IF_MODIFIED,
@@ -74,7 +81,6 @@ Foam::combustionModel::~combustionModel()
 
 // * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
 
-
 bool Foam::combustionModel::read()
 {
     if (regIOobject::read())
@@ -87,27 +93,6 @@ bool Foam::combustionModel::read()
     {
         return false;
     }
-}
-
-
-Foam::tmp<Foam::volScalarField> Foam::combustionModel::Sh() const
-{
-    return tmp<Foam::volScalarField>
-    (
-        new volScalarField
-        (
-            IOobject
-            (
-                IOobject::groupName("Sh", phaseName_),
-                mesh_.time().timeName(),
-                mesh_,
-                IOobject::NO_READ,
-                IOobject::NO_WRITE
-            ),
-            mesh_,
-            dimensionedScalar("zero", dimEnergy/dimVolume/dimTime, 0.0)
-        )
-    );
 }
 
 

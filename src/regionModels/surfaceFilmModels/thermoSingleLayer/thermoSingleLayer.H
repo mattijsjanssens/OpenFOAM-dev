@@ -65,8 +65,6 @@ class thermoSingleLayer
 :
     public kinematicSingleLayer
 {
-private:
-
     // Private member functions
 
         //- Disallow default bitwise copy construct
@@ -389,16 +387,16 @@ public:
             // Mapped into primary region
 
                 //- Return total mass source - Eulerian phase only
-                virtual tmp<DimensionedField<scalar, volMesh>> Srho() const;
+                virtual tmp<volScalarField::Internal> Srho() const;
 
                 //- Return mass source for specie i - Eulerian phase only
-                virtual tmp<DimensionedField<scalar, volMesh>> Srho
+                virtual tmp<volScalarField::Internal> Srho
                 (
                     const label i
                 ) const;
 
                 //- Return enthalpy source - Eulerian phase only
-                virtual tmp<DimensionedField<scalar, volMesh>> Sh() const;
+                virtual tmp<volScalarField::Internal> Sh() const;
 
 
        // I-O

@@ -42,7 +42,7 @@ namespace functionObjects
 }
 
 
-// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
+// * * * * * * * * * * * * Protected Member Functions  * * * * * * * * * * * //
 
 void Foam::functionObjects::nearWallFields::calcAddressing()
 {
@@ -60,7 +60,12 @@ void Foam::functionObjects::nearWallFields::calcAddressing()
     DebugInFunction << "nPatchFaces: " << globalWalls.size() << endl;
 
     // Construct cloud
-    Cloud<findCellParticle> cloud(mesh_, IDLList<findCellParticle>());
+    Cloud<findCellParticle> cloud
+    (
+        mesh_,
+        cloud::defaultName,
+        IDLList<findCellParticle>()
+    );
 
     // Add particles to track to sample locations
     nPatchFaces = 0;
@@ -354,8 +359,6 @@ bool Foam::functionObjects::nearWallFields::write()
     {
         vtf_[i].write();
     }
-
-    Log << endl;
 
     return true;
 }

@@ -37,6 +37,7 @@ $(ints)/lists/labelListIOList.C
 primitives/Scalar/doubleScalar/doubleScalar.C
 primitives/Scalar/floatScalar/floatScalar.C
 primitives/Scalar/scalar/scalar.C
+primitives/Scalar/scalar/invIncGamma.C
 primitives/Scalar/lists/scalarList.C
 primitives/Scalar/lists/scalarIOList.C
 primitives/Scalar/lists/scalarListIOList.C
@@ -181,6 +182,10 @@ dictionaryEntry = $(dictionary)/dictionaryEntry
 $(dictionaryEntry)/dictionaryEntry.C
 $(dictionaryEntry)/dictionaryEntryIO.C
 
+dictionaryListEntry = $(dictionary)/dictionaryListEntry
+$(dictionaryListEntry)/dictionaryListEntry.C
+$(dictionaryListEntry)/dictionaryListEntryIO.C
+
 functionEntries = $(dictionary)/functionEntries
 $(functionEntries)/calcEntry/calcEntry.C
 $(functionEntries)/codeStream/codeStream.C
@@ -222,7 +227,9 @@ $(dll)/codedBase/codedBase.C
 db/functionObjects/functionObject/functionObject.C
 db/functionObjects/functionObjectList/functionObjectList.C
 db/functionObjects/writeFile/writeFile.C
-db/functionObjects/writeFiles/writeFiles.C
+db/functionObjects/logFiles/logFiles.C
+db/functionObjects/writeObjectsBase/writeObjectsBase.C
+db/functionObjects/writeLocalObjects/writeLocalObjects.C
 db/functionObjects/timeControl/timeControl.C
 db/functionObjects/timeControl/timeControlFunctionObject.C
 db/functionObjects/regionFunctionObject/regionFunctionObject.C
@@ -271,6 +278,7 @@ $(lduMatrix)/solvers/diagonalSolver/diagonalSolver.C
 $(lduMatrix)/solvers/smoothSolver/smoothSolver.C
 $(lduMatrix)/solvers/PCG/PCG.C
 $(lduMatrix)/solvers/PBiCG/PBiCG.C
+$(lduMatrix)/solvers/PBiCGStab/PBiCGStab.C
 
 $(lduMatrix)/smoothers/GaussSeidel/GaussSeidelSmoother.C
 $(lduMatrix)/smoothers/symGaussSeidel/symGaussSeidelSmoother.C

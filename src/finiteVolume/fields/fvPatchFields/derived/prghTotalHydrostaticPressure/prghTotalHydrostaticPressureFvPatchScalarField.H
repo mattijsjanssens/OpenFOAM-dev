@@ -45,8 +45,7 @@ Description
         g       | Acceleration due to gravity [m/s^2]
     \endtable
 
-    \heading Patch usage
-
+Usage
     \table
         Property     | Description             | Required    | Default value
         U            | Velocity field name     | no          | U
@@ -58,14 +57,14 @@ Description
 
     Example of the boundary condition specification:
     \verbatim
-    myPatch
+    <patchName>
     {
         type            prghTotalHydrostaticPressure;
         value           uniform 0;
     }
     \endverbatim
 
-SeeAlso
+See also
     Foam::fixedValueFvPatchScalarField
     Foam::prghTotalPressureFvPatchScalarField
 

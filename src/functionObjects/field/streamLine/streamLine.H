@@ -28,17 +28,18 @@ Group
     grpFieldFunctionObjects
 
 Description
-    This function object generates streamline data by sampling a set of
-    user-specified fields along a particle track, transported by a
-    user-specified velocity field.
+    Generates streamline data by sampling a set of user-specified fields along a
+    particle track, transported by a user-specified velocity field.
 
     Example of function object specification:
     \verbatim
     streamLine1
     {
         type            streamLine;
-        libs ("libfieldFunctionObjects.so");
-        ...
+        libs            ("libfieldFunctionObjects.so");
+
+        writeControl    writeTime;
+
         setFormat       vtk;
         trackForward    yes;
         fields
@@ -62,7 +63,7 @@ Description
     }
     \endverbatim
 
-    \heading Function object usage
+Usage
     \table
         Property     | Description             | Required    | Default value
         type         | Type name: streamLine   | yes         |
@@ -76,7 +77,6 @@ Description
         seedSampleSet| Seeding method (see below)| yes       |
     \endtable
 
-    \linebreak
     Where \c seedSampleSet is typically one of
     \plaintable
         uniform | uniform particle seeding
@@ -88,7 +88,7 @@ Note
     When specifying the track resolution, the \c trackLength OR \c nSubCycle
     option should be used
 
-SeeAlso
+See also
     Foam::functionObject
     Foam::functionObjects::timeControl
     Foam::sampledSet
@@ -102,7 +102,7 @@ SourceFiles
 #ifndef functionObjects_streamLine_H
 #define functionObjects_streamLine_H
 
-#include "functionObject.H"
+#include "fvMeshFunctionObject.H"
 #include "volFieldsFwd.H"
 #include "DynamicList.H"
 #include "scalarList.H"
@@ -116,7 +116,6 @@ namespace Foam
 {
 
 // Forward declaration of classes
-class objectRegistry;
 class meshSearch;
 class sampledSet;
 
@@ -129,12 +128,9 @@ namespace functionObjects
 
 class streamLine
 :
-    public functionObject
+    public fvMeshFunctionObject
 {
     // Private data
-
-        //- Database this class is registered to
-        const objectRegistry& obr_;
 
         //- Input dictionary
         dictionary dict_;

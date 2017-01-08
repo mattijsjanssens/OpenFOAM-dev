@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -33,10 +33,11 @@ Foam::combustionModels::PaSR<Type>::PaSR
 (
     const word& modelType,
     const fvMesh& mesh,
+    const word& combustionProperties,
     const word& phaseName
 )
 :
-    laminar<Type>(modelType, mesh, phaseName),
+    laminar<Type>(modelType, mesh, combustionProperties, phaseName),
     Cmix_(readScalar(this->coeffs().lookup("Cmix"))),
     turbulentReaction_(this->coeffs().lookup("turbulentReaction")),
     kappa_
@@ -115,29 +116,14 @@ Foam::combustionModels::PaSR<Type>::R(volScalarField& Y) const
 
 template<class Type>
 Foam::tmp<Foam::volScalarField>
-Foam::combustionModels::PaSR<Type>::dQ() const
+Foam::combustionModels::PaSR<Type>::Qdot() const
 {
     return tmp<volScalarField>
     (
         new volScalarField
         (
             IOobject::groupName("PaSR:dQ", this->phaseName_),
-            kappa_*laminar<Type>::dQ()
-        )
-    );
-}
-
-
-template<class Type>
-Foam::tmp<Foam::volScalarField>
-Foam::combustionModels::PaSR<Type>::Sh() const
-{
-    return tmp<volScalarField>
-    (
-        new volScalarField
-        (
-            IOobject::groupName("PaSR:Sh", this->phaseName_),
-            kappa_*laminar<Type>::Sh()
+            kappa_*laminar<Type>::Qdot()
         )
     );
 }

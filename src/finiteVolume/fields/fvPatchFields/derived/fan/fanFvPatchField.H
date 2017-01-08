@@ -34,8 +34,7 @@ Description
     The jump is specified as a \c Function1 type, to enable the use of, e.g.
     contant, polynomial, table values.
 
-    \heading Patch usage
-
+Usage
     \table
         Property     | Description             | Required    | Default value
         patchType    | underlying patch type should be \c cyclic| yes |
@@ -46,7 +45,7 @@ Description
 
     Example of the boundary condition specification:
     \verbatim
-    myPatch
+    <patchName>
     {
         type            fan;
         patchType       cyclic;
@@ -69,7 +68,7 @@ Description
 Note
      The underlying \c patchType should be set to \c cyclic
 
-SeeAlso
+See also
     Foam::Function1Types
 
 SourceFiles

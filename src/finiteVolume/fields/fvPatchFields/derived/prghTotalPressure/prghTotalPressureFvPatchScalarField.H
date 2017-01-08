@@ -33,6 +33,9 @@ Description
 
         \f[
             p_rgh = p - \rho g.(h - hRef)
+        \f]
+
+        \f[
             p = p0 - 0.5 \rho |U|^2
         \f]
 
@@ -47,8 +50,7 @@ Description
         g       | Acceleration due to gravity [m/s^2]
     \endtable
 
-    \heading Patch usage
-
+Usage
     \table
         Property     | Description             | Required    | Default value
         U            | Velocity field name     | no          | U
@@ -59,14 +61,14 @@ Description
 
     Example of the boundary condition specification:
     \verbatim
-    myPatch
+    <patchName>
     {
         type            prghTotalPressure;
         p0              uniform 0;
     }
     \endverbatim
 
-SeeAlso
+See also
     Foam::fixedValueFvPatchScalarField
 
 SourceFiles

@@ -43,7 +43,7 @@ export WM_PROJECT_VERSION=dev
 # Please set to the appropriate path if the default is not correct.
 #
 [ $BASH_SOURCE ] && \
-export FOAM_INST_DIR=${BASH_SOURCE%/*/*/*} || \
+export FOAM_INST_DIR=$(cd $(dirname $BASH_SOURCE)/../.. && pwd -P) || \
 export FOAM_INST_DIR=$HOME/$WM_PROJECT
 # export FOAM_INST_DIR=~$WM_PROJECT
 # export FOAM_INST_DIR=/opt/$WM_PROJECT
@@ -61,7 +61,7 @@ export FOAM_INST_DIR=$HOME/$WM_PROJECT
 export WM_COMPILER_TYPE=system
 
 #- Compiler:
-#    WM_COMPILER = Gcc | Gcc45 | Gcc46 | Gcc47 | Gcc48 | Gcc49| Clang | Icc
+#    WM_COMPILER = Gcc | Gcc48 ... Gcc62 | Clang | Icc
 export WM_COMPILER=Gcc
 unset WM_COMPILER_ARCH WM_COMPILER_LIB_ARCH
 
@@ -85,7 +85,7 @@ export WM_COMPILE_OPTION=Opt
 
 #- MPI implementation:
 #    WM_MPLIB = SYSTEMOPENMPI | OPENMPI | SYSTEMMPI | MPICH | MPICH-GM | HPMPI
-#               | MPI | QSMPI | SGIMPI
+#               | MPI | FJMPI | QSMPI | SGIMPI | INTELMPI
 export WM_MPLIB=SYSTEMOPENMPI
 
 #- Operating System:
@@ -104,7 +104,8 @@ export FOAM_SIGFPE=
 ################################################################################
 
 # The old dirs to be cleaned from the environment variables
-foamOldDirs="$WM_PROJECT_DIR $WM_THIRD_PARTY_DIR $HOME/$WM_PROJECT/$USER \
+foamOldDirs="$WM_PROJECT_DIR $WM_THIRD_PARTY_DIR \
+    $HOME/$WM_PROJECT/$USER $FOAM_USER_APPBIN $FOAM_USER_LIBBIN \
     $WM_PROJECT_SITE $FOAM_SITE_APPBIN $FOAM_SITE_LIBBIN"
 
 # Location of installation

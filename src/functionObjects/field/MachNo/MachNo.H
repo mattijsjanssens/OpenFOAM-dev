@@ -28,10 +28,9 @@ Group
     grpFieldFunctionObjects
 
 Description
-    This function object calculates and writes the Mach number as a
-    volScalarField.
+    Calculates and writes the Mach number as a volScalarField.
 
-SeeAlso
+See also
     Foam::functionObjects::fieldExpression
     Foam::functionObjects::fvMeshFunctionObject
 

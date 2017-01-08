@@ -6,7 +6,8 @@ EXE_INC = \
     -I$(LIB_SRC)/transportModels/compressible/lnInclude \
     -I$(LIB_SRC)/thermophysicalModels/basic/lnInclude \
     -I$(LIB_SRC)/TurbulenceModels/compressible/lnInclude \
-    -I$(LIB_SRC)/finiteVolume/lnInclude
+    -I$(LIB_SRC)/finiteVolume/lnInclude \
+    -I$(LIB_SRC)/meshTools/lnInclude
 
 EXE_LIBS = \
     -lbarotropicCompressibilityModel \
@@ -16,9 +17,7 @@ EXE_LIBS = \
     -lcombustionModels \
     -lcompressibleTransportModels \
     -lcompressibleTurbulenceModels \
-    -lconformalVoronoiMesh \
     -lconversion \
-    -lcv2DMesh \
     -ldecompose \
     -ldecompositionMethods \
     -ldistributed \
@@ -31,18 +30,15 @@ EXE_LIBS = \
     -ldynamicMesh \
     -ledgeMesh \
     -lengine \
-    -lextrude2DMesh \
     -lextrudeModel \
     -lfieldFunctionObjects \
     -lfileFormats \
     -lfiniteVolume \
     -lfluidThermophysicalModels \
-    -lfoamToVTK \
     -lforces \
     -lfvMotionSolvers \
     -lfvOptions \
     -lgenericPatchFields \
-    -lhelpTypes \
     -limmiscibleIncompressibleTwoPhaseMixture \
     -lincompressibleTransportModels \
     -lincompressibleTurbulenceModels \
@@ -56,7 +52,6 @@ EXE_LIBS = \
     -lliquidMixtureProperties \
     -lliquidProperties \
     -lmeshTools \
-    -lmetisDecomp \
     -lmolecularMeasurements \
     -lmolecule \
     -lODE \
@@ -69,7 +64,6 @@ EXE_LIBS = \
     -lrandomProcesses \
     -lreactingEulerianInterfacialCompositionModels \
     -lreactingEulerianInterfacialModels \
-    -lreactingMultiphaseSystem \
     -lreactingPhaseSystem \
     -lreactingTwoPhaseSystem \
     -lreactionThermophysicalModels \
@@ -85,7 +79,6 @@ EXE_LIBS = \
     -lscotchDecomp \
     -lsixDoFRigidBodyMotion \
     -lSLGThermo \
-    -lSloanRenumber \
     -lsnappyHexMesh \
     -lsolidChemistryModel \
     -lsolidMixtureProperties \
@@ -98,7 +91,6 @@ EXE_LIBS = \
     -lsurfaceFilmDerivedFvPatchFields \
     -lsurfaceFilmModels \
     -lsurfMesh \
-    -ltabulatedWallFunctions \
     -lthermalBaffleModels \
     -lthermophysicalFunctions \
     -ltopoChangerFvMesh \
@@ -108,5 +100,4 @@ EXE_LIBS = \
     -ltwoPhaseMixtureThermo \
     -ltwoPhaseProperties \
     -ltwoPhaseReactingTurbulenceModels \
-    -luserd-foam \
     -lutilityFunctionObjects
