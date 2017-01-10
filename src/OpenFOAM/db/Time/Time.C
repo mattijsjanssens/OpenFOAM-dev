@@ -26,6 +26,7 @@ License
 #include "Time.H"
 #include "PstreamReduceOps.H"
 #include "argList.H"
+#include "IOdictionary.H"
 
 #include <sstream>
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -105,7 +105,14 @@ bool Foam::GeometricField<Type, PatchField, GeoMesh>::readIfPresent()
             << " suggests that a read constructor for field " << this->name()
             << " would be more appropriate." << endl;
     }
-    else if (this->readOpt() == IOobject::READ_IF_PRESENT && this->headerOk())
+    else if
+    (
+        this->readOpt() == IOobject::READ_IF_PRESENT
+     && this->template typeHeaderOk<GeometricField<Type, PatchField, GeoMesh>>
+        (
+            true
+        )
+    )
     {
         readFields();
 
@@ -142,7 +149,13 @@ bool Foam::GeometricField<Type, PatchField, GeoMesh>::readOldTimeIfPresent()
         this->registerObject()
     );
 
-    if (field0.headerOk())
+    if
+    (
+        field0.template typeHeaderOk<GeometricField<Type, PatchField, GeoMesh>>
+        (
+            true
+        )
+    )
     {
         if (debug)
         {

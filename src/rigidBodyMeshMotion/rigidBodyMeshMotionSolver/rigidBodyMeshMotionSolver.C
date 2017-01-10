@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2016-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -80,7 +80,7 @@ Foam::rigidBodyMeshMotionSolver::rigidBodyMeshMotionSolver
             mesh.time().timeName(),
             "uniform",
             mesh
-        ).headerOk()
+        ).typeHeaderOk<IOdictionary>(true)
       ? IOdictionary
         (
             IOobject

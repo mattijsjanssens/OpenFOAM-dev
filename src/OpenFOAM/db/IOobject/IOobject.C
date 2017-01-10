@@ -565,12 +565,6 @@ Foam::fileName Foam::IOobject::globalFilePath() const
 }
 
 
-Foam::Istream* Foam::IOobject::objectStream()
-{
-    return objectStream(filePath());
-}
-
-
 Foam::Istream* Foam::IOobject::objectStream(const fileName& fName)
 {
     if (fName.size())

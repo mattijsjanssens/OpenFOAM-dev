@@ -90,10 +90,10 @@ class triSurfaceMesh
     // Private Member Functions
 
         //- Return fileName to load IOobject from
-        static fileName checkFile(const IOobject& io);
+        static fileName checkFile(const regIOobject& io);
 
         //- Return fileName to load IOobject from. Optional override of fileName
-        static fileName checkFile(const IOobject&, const dictionary&);
+        static fileName checkFile(const regIOobject&, const dictionary&);
 
         //- Helper function for isSurfaceClosed
         static bool addFaceToEdge

@@ -243,7 +243,7 @@ Foam::Istream& Foam::regIOobject::readStream()
             }
         }
 
-        if (!(isPtr_ = objectStream(objPath)))
+        if (!(isPtr_ = IOobject::objectStream(objPath)))
         {
             FatalIOError
             (

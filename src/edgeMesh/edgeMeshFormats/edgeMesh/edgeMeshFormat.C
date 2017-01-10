@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -75,15 +75,16 @@ bool Foam::fileFormats::edgeMeshFormat::read
         false
     );
 
-    if (!io.headerOk())
+    if (!io.typeHeaderOk<featureEdgeMesh>(false))
     {
         FatalErrorInFunction
             << "Cannot read file " << filename
             << exit(FatalError);
     }
 
+    const fileName fName(typeFilePath<featureEdgeMesh>(io));
 
-    autoPtr<IFstream> isPtr(new IFstream(io.filePath()));
+    autoPtr<IFstream> isPtr(new IFstream(fName));
     bool ok = false;
     if (isPtr().good())
     {

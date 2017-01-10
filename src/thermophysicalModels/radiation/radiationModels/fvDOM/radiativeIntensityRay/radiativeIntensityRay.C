@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -151,7 +151,7 @@ Foam::radiation::radiativeIntensityRay::radiativeIntensityRay
         );
 
         // Check if field exists and can be read
-        if (IHeader.headerOk())
+        if (IHeader.typeHeaderOk<volScalarField>(true))
         {
             ILambda_.set
             (

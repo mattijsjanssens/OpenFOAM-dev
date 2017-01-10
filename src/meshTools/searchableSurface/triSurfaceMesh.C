@@ -41,7 +41,7 @@ namespace Foam
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-Foam::fileName Foam::triSurfaceMesh::checkFile(const IOobject& io)
+Foam::fileName Foam::triSurfaceMesh::checkFile(const regIOobject& io)
 {
     const fileName fName(io.filePath());
     if (fName.empty())
@@ -57,7 +57,7 @@ Foam::fileName Foam::triSurfaceMesh::checkFile(const IOobject& io)
 
 Foam::fileName Foam::triSurfaceMesh::checkFile
 (
-    const IOobject& io,
+    const regIOobject& io,
     const dictionary& dict
 )
 {
