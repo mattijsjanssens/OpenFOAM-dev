@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -149,7 +149,7 @@ void MapVolFields
                 IOobject::MUST_READ
             );
 
-            if (targetIO.headerOk())
+            if (targetIO.typeHeaderOk<fieldType>(true))
             {
                 Info<< "    interpolating onto existing field "
                     << fieldName << endl;

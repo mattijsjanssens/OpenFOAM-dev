@@ -133,8 +133,6 @@ public:
 
         static float fileModificationSkew;
 
-        static fileCheckTypes fileModificationChecking;
-
 
     // Constructors
 
