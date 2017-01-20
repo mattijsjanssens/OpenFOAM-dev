@@ -584,22 +584,25 @@ void Foam::argList::parse
         }
     }
 
+    // Trigger default file operations
+    (void)Foam::fileHandler();
+    // See if override with argList
+    HashTable<string>::const_iterator iter = options_.find("fileHandler");
+    if (iter != options_.end())
+    {
+        autoPtr<fileOperation> handler(fileOperation::New(iter()));
+        Foam::fileHandler(handler);
+    }
+
     // Case is a single processor run unless it is running parallel
     int nProcs = 1;
 
     // Roots if running distributed
     fileNameList roots;
 
-
     // If this actually is a parallel run
     if (parRunControl_.parRun())
     {
-//         autoPtr<fileOperation> masterPtr
-//         (
-//             new fileOperations::masterCollatingFileOperation()
-//         );
-//         Foam::fileHandler(masterPtr);
-
         // For the master
         if (Pstream::master())
         {

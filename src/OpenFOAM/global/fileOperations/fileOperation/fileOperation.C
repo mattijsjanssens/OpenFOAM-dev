@@ -37,10 +37,10 @@ namespace Foam
     defineTypeNameAndDebug(fileOperation, 0);
     defineRunTimeSelectionTable(fileOperation, word);
 
-    class addArgsOptions
+    class addArgs
     {
         public:
-        addArgsOptions()
+        addArgs()
         {
             argList::addOption
             (
@@ -51,7 +51,7 @@ namespace Foam
         }
     };
 
-    addArgsOptions intObj;
+    addArgs dummyInitArgs;
 }
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
