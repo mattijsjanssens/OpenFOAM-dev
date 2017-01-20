@@ -27,6 +27,7 @@ License
 #include "Time.H"
 #include "polyMesh.H"
 #include "registerSwitch.H"
+#include "fileOperation.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -63,8 +64,7 @@ Foam::regIOobject::regIOobject(const IOobject& io, const bool isTime)
         isTime
       ? 0
       : db().getEvent()
-    ),
-    isPtr_(nullptr)
+    )
 {
     // Register with objectRegistry if requested
     if (registerObject())
@@ -80,8 +80,7 @@ Foam::regIOobject::regIOobject(const regIOobject& rio)
     registered_(false),
     ownedByRegistry_(false),
     watchIndices_(rio.watchIndices_),
-    eventNo_(db().getEvent()),
-    isPtr_(nullptr)
+    eventNo_(db().getEvent())
 {
     // Do not register copy with objectRegistry
 }
@@ -93,8 +92,7 @@ Foam::regIOobject::regIOobject(const regIOobject& rio, bool registerCopy)
     registered_(false),
     ownedByRegistry_(false),
     watchIndices_(),
-    eventNo_(db().getEvent()),
-    isPtr_(nullptr)
+    eventNo_(db().getEvent())
 {
     if (registerCopy && rio.registered_)
     {
@@ -115,8 +113,7 @@ Foam::regIOobject::regIOobject
     registered_(false),
     ownedByRegistry_(false),
     watchIndices_(),
-    eventNo_(db().getEvent()),
-    isPtr_(nullptr)
+    eventNo_(db().getEvent())
 {
     if (registerCopy)
     {
@@ -135,8 +132,7 @@ Foam::regIOobject::regIOobject
     registered_(false),
     ownedByRegistry_(false),
     watchIndices_(),
-    eventNo_(db().getEvent()),
-    isPtr_(nullptr)
+    eventNo_(db().getEvent())
 {
     if (registerObject())
     {
@@ -155,12 +151,6 @@ Foam::regIOobject::~regIOobject()
             << " of type " << type()
             << " in directory " << path()
             << endl;
-    }
-
-    if (isPtr_)
-    {
-        delete isPtr_;
-        isPtr_ = nullptr;
     }
 
     // Check out of objectRegistry if not owned by the registry
@@ -430,25 +420,28 @@ Foam::fileName Foam::regIOobject::filePath() const
 }
 
 
-Foam::Istream* Foam::regIOobject::objectStream()
-{
-    return IOobject::objectStream(filePath());
-}
+// Foam::autoPtr<Foam::Istream> Foam::regIOobject::objectStream()
+// {
+//     //return IOobject::objectStream(filePath());
+//     return fileHandler().objectStream(filePath());
+// }
 
 
 bool Foam::regIOobject::headerOk()
 {
+    // Note: Should be consistent with IOobject::typeHeaderOk(false)
+
     bool ok = true;
 
-    Istream* isPtr = objectStream();
+    //autoPtr<Istream> isPtr = objectStream();
+    autoPtr<Istream> isPtr(fileHandler().objectStream(filePath()));
 
     // If the stream has failed return
-    if (!isPtr)
+    if (!isPtr.valid())
     {
         if (objectRegistry::debug)
         {
-            Info
-                << "regIOobject::headerOk() : "
+            InfoInFunction
                 << "file " << objectPath() << " could not be opened"
                 << endl;
         }
@@ -458,11 +451,11 @@ bool Foam::regIOobject::headerOk()
     else
     {
         // Try reading header
-        if (!readHeader(*isPtr))
+        if (!readHeader(isPtr()))
         {
             if (objectRegistry::debug)
             {
-                IOWarningIn("regIOobject::headerOk()", (*isPtr))
+                IOWarningInFunction(isPtr())
                     << "failed to read header of file " << objectPath()
                     << endl;
             }
@@ -471,19 +464,14 @@ bool Foam::regIOobject::headerOk()
         }
     }
 
-    delete isPtr;
-
     return ok;
 }
 
 
 void Foam::regIOobject::operator=(const IOobject& io)
 {
-    if (isPtr_)
-    {
-        delete isPtr_;
-        isPtr_ = nullptr;
-    }
+    // Close any file
+    isPtr_.clear();
 
     // Check out of objectRegistry
     checkOut();

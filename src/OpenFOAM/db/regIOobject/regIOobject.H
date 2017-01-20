@@ -82,9 +82,9 @@ public:
         );
 protected:
 
-        //- Construct and return an IFstream for the object.
-        //  The results is nullPtr if the stream construction failed
-        Istream* objectStream();
+        ////- Construct and return an IFstream for the object.
+        ////  The results is nullPtr if the stream construction failed
+        //autoPtr<Istream> objectStream();
 
         //- To flag master-only reading of objects
         static bool masterOnlyReading;
@@ -107,7 +107,7 @@ private:
         label eventNo_;
 
         //- Istream for reading
-        Istream* isPtr_;
+        autoPtr<Istream> isPtr_;
 
 
     // Private Member Functions

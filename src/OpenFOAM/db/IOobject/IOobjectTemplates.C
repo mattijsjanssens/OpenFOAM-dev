@@ -24,6 +24,7 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "IOobject.H"
+#include "fileOperation.H"
 #include "Istream.H"
 
 #include "IOstreams.H"
@@ -48,15 +49,17 @@ bool Foam::IOobject::typeHeaderOk(const bool checkType)
     // Determine local status
     if (!masterOnly || Pstream::master())
     {
-        Istream* isPtr = objectStream(typeFilePath<Type>(*this));
+        const fileOperation& fp = Foam::fileHandler();
+
+        autoPtr<Istream> isPtr =
+            fp.objectStream(typeFilePath<Type>(*this));
 
         // If the stream has failed return
-        if (!isPtr)
+        if (!isPtr.valid())
         {
             if (IOobject::debug)
             {
-                Info
-                    << "IOobject::typeHeaderOk() : "
+                InfoInFunction
                     << "file " << objectPath() << " could not be opened"
                     << endl;
             }
@@ -66,11 +69,11 @@ bool Foam::IOobject::typeHeaderOk(const bool checkType)
         else
         {
             // Try reading header
-            if (readHeader(*isPtr))
+            if (readHeader(isPtr()))
             {
                 if (checkType && headerClassName_ != Type::typeName)
                 {
-                    IOWarningIn("IOobject::typeHeaderOk()", (*isPtr))
+                    IOWarningInFunction(isPtr())
                         << "unexpected class name " << headerClassName_
                         << " expected " << Type::typeName << endl;
 
@@ -81,7 +84,7 @@ bool Foam::IOobject::typeHeaderOk(const bool checkType)
             {
                 if (IOobject::debug)
                 {
-                    IOWarningIn("IOobject::typeHeaderOk()", (*isPtr))
+                    IOWarningInFunction(isPtr())
                         << "failed to read header of file " << objectPath()
                         << endl;
                 }
@@ -89,8 +92,6 @@ bool Foam::IOobject::typeHeaderOk(const bool checkType)
                 ok = false;
             }
         }
-
-        delete isPtr;
     }
 
     // If masterOnly make sure all processors know about it
@@ -108,7 +109,7 @@ void Foam::IOobject::warnNoRereading() const
 {
     if (readOpt() == IOobject::MUST_READ_IF_MODIFIED)
     {
-        WarningIn("IOobject::warnNoRereading()")
+        WarningInFunction
             << Type::typeName << ' ' << name()
             << " constructed with IOobject::MUST_READ_IF_MODIFIED"
             " but " << Type::typeName

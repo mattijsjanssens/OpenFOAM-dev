@@ -28,6 +28,7 @@ License
 #include "Time.H"
 #include "Pstream.H"
 #include "HashSet.H"
+#include "fileOperation.H"
 
 // * * * * * * * * * * * * Protected Member Functions  * * * * * * * * * * * //
 
@@ -206,7 +207,7 @@ Foam::Istream& Foam::regIOobject::readStream()
     }
 
     // Construct object stream and read header if not already constructed
-    if (!isPtr_)
+    if (!isPtr_.valid())
     {
 
         fileName objPath;
@@ -243,27 +244,28 @@ Foam::Istream& Foam::regIOobject::readStream()
             }
         }
 
-        if (!(isPtr_ = IOobject::objectStream(objPath)))
-        {
-            FatalIOError
-            (
-                "regIOobject::readStream()",
-                __FILE__,
-                __LINE__,
-                objPath,
-                0
-            )   << "cannot open file"
-                << exit(FatalIOError);
-        }
-        else if (!readHeader(*isPtr_))
-        {
-            FatalIOErrorInFunction(*isPtr_)
-                << "problem while reading header for object " << name()
-                << exit(FatalIOError);
-        }
+//        if (!(isPtr_ = IOobject::objectStream(objPath)))
+//        {
+//            FatalIOError
+//            (
+//                "regIOobject::readStream()",
+//                __FILE__,
+//                __LINE__,
+//                objPath,
+//                0
+//            )   << "cannot open file"
+//                << exit(FatalIOError);
+//        }
+//        else if (!readHeader(*isPtr_))
+//        {
+//            FatalIOErrorInFunction(*isPtr_)
+//                << "problem while reading header for object " << name()
+//                << exit(FatalIOError);
+//        }
+        isPtr_ = fileHandler().readStream(*this, objPath);
     }
 
-    return *isPtr_;
+    return isPtr_();
 }
 
 
@@ -279,7 +281,7 @@ Foam::Istream& Foam::regIOobject::readStream(const word& expectName)
     }
 
     // Construct IFstream if not already constructed
-    if (!isPtr_)
+    if (!isPtr_.valid())
     {
         readStream();
 
@@ -293,7 +295,7 @@ Foam::Istream& Foam::regIOobject::readStream(const word& expectName)
          && headerClassName() != "dictionary"
         )
         {
-            FatalIOErrorInFunction(*isPtr_)
+            FatalIOErrorInFunction(isPtr_())
                 << "unexpected class name " << headerClassName()
                 << " expected " << expectName << endl
                 << "    while reading object " << name()
@@ -301,7 +303,7 @@ Foam::Istream& Foam::regIOobject::readStream(const word& expectName)
         }
     }
 
-    return *isPtr_;
+    return isPtr_();
 }
 
 
@@ -314,11 +316,7 @@ void Foam::regIOobject::close()
             << endl;
     }
 
-    if (isPtr_)
-    {
-        delete isPtr_;
-        isPtr_ = nullptr;
-    }
+    isPtr_.clear();
 }
 
 

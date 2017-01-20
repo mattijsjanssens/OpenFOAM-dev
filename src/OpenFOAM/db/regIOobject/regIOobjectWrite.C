@@ -113,33 +113,34 @@ bool Foam::regIOobject::writeObject
 
     if (Pstream::master() || !masterOnly)
     {
-        if (mkDir(path()))
-        {
-            // Try opening an OFstream for object
-            OFstream os(objectPath(), fmt, ver, cmp);
-
-            // If any of these fail, return (leave error handling to Ostream
-            // class)
-            if (!os.good())
-            {
-                return false;
-            }
-
-            if (!writeHeader(os))
-            {
-                return false;
-            }
-
-            // Write the data to the Ostream
-            if (!writeData(os))
-            {
-                return false;
-            }
-
-            writeEndDivider(os);
-
-            osGood = os.good();
-        }
+        //if (mkDir(path()))
+        //{
+        //    // Try opening an OFstream for object
+        //    OFstream os(objectPath(), fmt, ver, cmp);
+        //
+        //    // If any of these fail, return (leave error handling to Ostream
+        //    // class)
+        //    if (!os.good())
+        //    {
+        //        return false;
+        //    }
+        //
+        //    if (!writeHeader(os))
+        //    {
+        //        return false;
+        //    }
+        //
+        //    // Write the data to the Ostream
+        //    if (!writeData(os))
+        //    {
+        //        return false;
+        //    }
+        //
+        //    writeEndDivider(os);
+        //
+        //    osGood = os.good();
+        //}
+        osGood = fileHandler().writeObject(*this, fmt, ver, cmp);
     }
     else
     {
