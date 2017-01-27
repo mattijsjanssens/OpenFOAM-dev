@@ -23,15 +23,17 @@
 #     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Script
-#     patchIntegrate
+#     stressComponents
 #
 # Description
-#     Script to suggest using the new "postProcess" utility.
+#     Script to suggest using the new "-postProcess" solver option.
 #
 #------------------------------------------------------------------------------
 Script=${0##*/}
 
-echo $Script "has been superseded by the postProcess utility:"
-echo "    postProcess -func '"$Script"(name=inlet,p)'"
+echo $Script "has been superseded by the -postProcess solver option:"
+echo "<solverName> -funcs '(R components(turbulenceProperties:R))'"
+echo "e.g."
+echo "simpleFoam -postProcess -funcs '(R components(turbulenceProperties:R))'"
 
 #------------------------------------------------------------------------------

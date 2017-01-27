@@ -248,27 +248,19 @@ bool Foam::phaseModel::read(const dictionary& phaseProperties)
 }
 
 
-void Foam::phaseModel::correctInflowFlux(surfaceScalarField& alphaPhi) const
+void Foam::phaseModel::correctInflowOutflow(surfaceScalarField& alphaPhi) const
 {
     surfaceScalarField::Boundary& alphaPhiBf = alphaPhi.boundaryFieldRef();
+    const volScalarField::Boundary& alphaBf = boundaryField();
+    const surfaceScalarField::Boundary& phiBf = phi().boundaryField();
 
-    // Ensure that the flux at inflow BCs is preserved
     forAll(alphaPhiBf, patchi)
     {
         fvsPatchScalarField& alphaPhip = alphaPhiBf[patchi];
 
         if (!alphaPhip.coupled())
         {
-            const scalarField& phip = phi().boundaryField()[patchi];
-            const scalarField& alphap = boundaryField()[patchi];
-
-            forAll(alphaPhip, facei)
-            {
-                if (phip[facei] < SMALL)
-                {
-                    alphaPhip[facei] = alphap[facei]*phip[facei];
-                }
-            }
+            alphaPhip = phiBf[patchi]*alphaBf[patchi];
         }
     }
 }

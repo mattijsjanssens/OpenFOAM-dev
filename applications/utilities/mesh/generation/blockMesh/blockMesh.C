@@ -76,6 +76,11 @@ int main(int argc, char *argv[])
         "blockTopology",
         "write block edges and centres as .obj files"
     );
+    argList::addBoolOption
+    (
+        "noClean",
+        "keep the existing files in the polyMesh"
+    );
     argList::addOption
     (
         "dict",
@@ -154,6 +159,30 @@ int main(int argc, char *argv[])
     else
     {
         dictPath = runTime.system()/regionPath/dictName;
+    }
+
+    if (!args.optionFound("noClean"))
+    {
+        fileName polyMeshPath
+        (
+            runTime.path()/runTime.constant()/regionPath/polyMesh::meshSubDir
+        );
+
+        if (exists(polyMeshPath))
+        {
+            if (exists(polyMeshPath/dictName))
+            {
+                Info<< "Not deleting polyMesh directory " << nl
+                    << "    " << polyMeshPath << nl
+                    << "    because it contains " << dictName << endl;
+            }
+            else
+            {
+                Info<< "Deleting polyMesh directory" << nl
+                    << "    " << polyMeshPath << endl;
+                rmDir(polyMeshPath);
+            }
+        }
     }
 
     IOobject meshDictIO
