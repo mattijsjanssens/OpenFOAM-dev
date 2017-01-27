@@ -293,22 +293,25 @@ Foam::fileName Foam::fileOperations::localFileOperation::filePath
 }
 
 
-Foam::autoPtr<Foam::Istream>
-Foam::fileOperations::localFileOperation::objectStream
+bool Foam::fileOperations::localFileOperation::readHeader
 (
-   const fileName& fName
+    IOobject& io,
+    const fileName& fName
 ) const
 {
-   if (fName.size())
-   {
-       autoPtr<Istream> isPtr = NewIFstream(fName);
+    if (fName.empty())
+    {
+        return false;
+    }
 
-       if (isPtr->good())
-       {
-           return isPtr;
-       }
-   }
-   return autoPtr<Istream>(nullptr);
+    autoPtr<Istream> isPtr(NewIFstream(fName));
+
+    if (!isPtr.valid() || !isPtr->good())
+    {
+        return false;
+    }
+
+    return io.readHeader(isPtr());
 }
 
 

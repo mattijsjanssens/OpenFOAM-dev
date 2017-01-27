@@ -58,9 +58,31 @@ Type Foam::fileOperations::masterFileOperation::masterOp
                 }
             }
         }
-        Pstream::scatterList(result);
 
-        return result[Pstream::myProcNo()];
+        // TBD: more efficient scatter
+        PstreamBuffers pBufs(UPstream::nonBlocking);
+        if (Pstream::master())
+        {
+            for (label proci = 1; proci < Pstream::nProcs(); proci++)
+            {
+                UOPstream os(proci, pBufs);
+                os << result[proci];
+            }
+        }
+        pBufs.finishedSends();
+
+        Type myResult; 
+
+        if (Pstream::master())
+        {
+            myResult = result[Pstream::myProcNo()];
+        }
+        else
+        {
+            UIPstream is(Pstream::masterNo(), pBufs);
+            is >> myResult;
+        }
+        return myResult;
     }
     else
     {
@@ -104,9 +126,31 @@ Type Foam::fileOperations::masterFileOperation::masterOp
                 }
             }
         }
-        Pstream::scatterList(result);
 
-        return result[Pstream::myProcNo()];
+        // TBD: more efficient scatter
+        PstreamBuffers pBufs(UPstream::nonBlocking);
+        if (Pstream::master())
+        {
+            for (label proci = 1; proci < Pstream::nProcs(); proci++)
+            {
+                UOPstream os(proci, pBufs);
+                os << result[proci];
+            }
+        }
+        pBufs.finishedSends();
+
+        Type myResult; 
+
+        if (Pstream::master())
+        {
+            myResult = result[Pstream::myProcNo()];
+        }
+        else
+        {
+            UIPstream is(Pstream::masterNo(), pBufs);
+            is >> myResult;
+        }
+        return myResult;
     }
     else
     {

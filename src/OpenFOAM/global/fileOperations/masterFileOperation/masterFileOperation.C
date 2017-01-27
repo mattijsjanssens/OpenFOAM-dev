@@ -101,28 +101,52 @@ Foam::fileName Foam::fileOperations::masterFileOperation::filePath
                 }
             }
 
-            if (!Foam::isDir(path))
+//- The big problem with findInstance is that it itself needs file
+//  access through the fileHandler. Since this routine is only called on the
+//  master we'll get a deadlock.
+//            if (!Foam::isDir(path))
+//            {
+//                newInstancePath = io.time().findInstancePath
+//                (
+//                    instant(io.instance())
+//                );
+//
+//                if (newInstancePath.size())
+//                {
+//                    fileName fName
+//                    (
+//                        io.rootPath()/io.caseName()
+//                       /newInstancePath/io.db().dbDir()/io.local()/io.name()
+//                    );
+//
+//                    if (Foam::isFile(fName))
+//                    {
+//                        searchType = fileOperation::FINDINSTANCE;
+//                        return fName;
+//                    }
+//                }
+//            }
+
+            // Try constant & local
             {
-                newInstancePath = io.time().findInstancePath
+                newInstancePath = io.time().constant();
+                fileName fName
                 (
-                    instant(io.instance())
+                    io.rootPath()
+                   /io.caseName()
+                   /newInstancePath
+                   /io.db().dbDir()
+                   /io.local()
+                   /io.name()
                 );
 
-                if (newInstancePath.size())
+                if (Foam::isFile(fName))
                 {
-                    fileName fName
-                    (
-                        io.rootPath()/io.caseName()
-                       /newInstancePath/io.db().dbDir()/io.local()/io.name()
-                    );
-
-                    if (Foam::isFile(fName))
-                    {
-                        searchType = fileOperation::FINDINSTANCE;
-                        return fName;
-                    }
+                    searchType = fileOperation::FINDINSTANCE;
+                    return fName;
                 }
             }
+
         }
 
         return fileName::null;
@@ -445,6 +469,11 @@ Foam::fileName Foam::fileOperations::masterFileOperation::filePath
     const IOobject& io
 ) const
 {
+    if (debug)
+    {
+        Pout<< FUNCTION_NAME << " : objectPath:" << io.objectPath() << endl;
+    }
+
     fileName objPath;
     pathType searchType = fileOperation::NOTFOUND;
     word newInstancePath;
@@ -455,6 +484,7 @@ Foam::fileName Foam::fileOperations::masterFileOperation::filePath
     label masterType(searchType);
     Pstream::scatter(masterType);
     searchType = pathType(masterType);
+
     if
     (
         searchType == fileOperation::FINDINSTANCE
@@ -471,26 +501,53 @@ Foam::fileName Foam::fileOperations::masterFileOperation::filePath
     {
         objPath = objectPath(io, searchType, newInstancePath);
     }
+
+    if (debug)
+    {
+        Pout<< FUNCTION_NAME
+            << " : Returning from file searching:" << endl
+            << "    objectPath:" << io.objectPath() << endl
+            << "    filePath  :" << objPath << endl << endl;
+    }
     return objPath;
 }
 
 
-Foam::autoPtr<Foam::Istream>
-Foam::fileOperations::masterFileOperation::objectStream
+bool Foam::fileOperations::masterFileOperation::readHeader
 (
-   const fileName& fName
+    IOobject& io,
+    const fileName& fName
 ) const
 {
-   if (fName.size())
-   {
-       autoPtr<Istream> isPtr = NewIFstream(fName);
+    bool ok = false;
 
-       if (isPtr->good())
-       {
-           return isPtr;
-       }
-   }
-   return autoPtr<Istream>(nullptr);
+    if (debug)
+    {
+        Pout<< FUNCTION_NAME << " : fName:" << fName << endl;
+    }
+
+    if (Pstream::master())
+    {
+        if (!fName.empty() && Foam::isFile(fName))
+        {
+            IFstream is(fName);
+
+            if (is.good() && io.readHeader(is))
+            {
+                ok = true;
+            }
+        }
+    }
+    Pstream::scatter(ok);
+    Pstream::scatter(io.headerClassName());
+    Pstream::scatter(io.note());
+
+    if (debug)
+    {
+        Pout<< FUNCTION_NAME << " : ok:" << ok
+            << " class:" << io.headerClassName() << endl;
+    }
+    return ok;
 }
 
 
@@ -536,9 +593,9 @@ Foam::fileOperations::masterFileOperation::readStream
         // Read slave files
         for (label proci = 1; proci < Pstream::nProcs(); proci++)
         {
-            if (IFstream::debug)
+            if (debug)
             {
-                Pout<< "For processor " << proci
+                Pout<< FUNCTION_NAME << " : For processor " << proci
                     << " opening " << filePaths[proci] << endl;
             }
 
@@ -548,9 +605,9 @@ Foam::fileOperations::masterFileOperation::readStream
             std::streamoff count = is.tellg();
             is.seekg(0, ios_base::beg);
 
-            if (IFstream::debug)
+            if (debug)
             {
-                Pout<< "From " << filePaths[proci]
+                Pout<< FUNCTION_NAME << " : From " << filePaths[proci]
                     <<  " reading " << label(count) << " bytes" << endl;
             }
             List<char> buf(static_cast<label>(count));
@@ -573,9 +630,10 @@ Foam::fileOperations::masterFileOperation::readStream
         string buf(recvSizes[Pstream::masterNo()], '\0');
         is.read(&buf[0], recvSizes[Pstream::masterNo()]);
 
-        if (IFstream::debug)
+        if (debug)
         {
-            Pout<< "Done reading " << buf.size() << " bytes" << endl;
+            Pout<< FUNCTION_NAME
+                << " : Done reading " << buf.size() << " bytes" << endl;
         }
         isPtr.reset(new IStringStream(buf));
 
@@ -659,9 +717,10 @@ Foam::fileOperations::masterFileOperation::NewIFstream
 
             if (uniform)
             {
-                if (IFstream::debug)
+                if (debug)
                 {
-                    Pout<< "Opening global file " << filePath << endl;
+                    Pout<< FUNCTION_NAME
+                        << " : Opening global file " << filePath << endl;
                 }
 
                 // get length of file:
@@ -669,9 +728,10 @@ Foam::fileOperations::masterFileOperation::NewIFstream
 
                 std::ifstream is(filePath);
 
-                if (IFstream::debug)
+                if (debug)
                 {
-                    Pout<< "From " << filePath
+                    Pout<< FUNCTION_NAME
+                        << " : From " << filePath
                         <<  " reading " << label(count) << " bytes" << endl;
                 }
                 List<char> buf(static_cast<label>(count));
@@ -687,9 +747,9 @@ Foam::fileOperations::masterFileOperation::NewIFstream
             {
                 for (label proci = 1; proci < Pstream::nProcs(); proci++)
                 {
-                    if (IFstream::debug)
+                    if (debug)
                     {
-                        Pout<< "For processor " << proci
+                        Pout<< FUNCTION_NAME << " : For processor " << proci
                             << " opening " << filePaths[proci] << endl;
                     }
 
@@ -697,9 +757,9 @@ Foam::fileOperations::masterFileOperation::NewIFstream
 
                     std::ifstream is(filePaths[proci]);
 
-                    if (IFstream::debug)
+                    if (debug)
                     {
-                        Pout<< "From " << filePaths[proci]
+                        Pout<< FUNCTION_NAME << " : From " << filePaths[proci]
                             <<  " reading " << label(count) << " bytes" << endl;
                     }
                     List<char> buf(static_cast<label>(count));
@@ -725,9 +785,9 @@ Foam::fileOperations::masterFileOperation::NewIFstream
         }
         else
         {
-            if (IFstream::debug)
+            if (debug)
             {
-                Pout<< "Reading " << filePath
+                Pout<< FUNCTION_NAME << " : Reading " << filePath
                     << " from processor " << Pstream::masterNo()
                     << endl;
             }
@@ -736,9 +796,10 @@ Foam::fileOperations::masterFileOperation::NewIFstream
             string buf(recvSizes[Pstream::masterNo()], '\0');
             is.read(&buf[0], recvSizes[Pstream::masterNo()]);
 
-            if (IFstream::debug)
+            if (debug)
             {
-                Pout<< "Done reading " << buf.size() << " bytes" << endl;
+                Pout<< FUNCTION_NAME << " : Done reading " << buf.size()
+                    << " bytes" << endl;
             }
 
             // Note: IPstream is not an IStream so use a IStringStream to

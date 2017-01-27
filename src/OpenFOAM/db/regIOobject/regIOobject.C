@@ -433,34 +433,57 @@ bool Foam::regIOobject::headerOk()
 
     bool ok = true;
 
-    //autoPtr<Istream> isPtr = objectStream();
-    autoPtr<Istream> isPtr(fileHandler().objectStream(filePath()));
+//    //autoPtr<Istream> isPtr = objectStream();
+//    autoPtr<Istream> isPtr(fileHandler().objectStream(filePath()));
+//
+//    // If the stream has failed return
+//    if (!isPtr.valid())
+//    {
+//        if (objectRegistry::debug)
+//        {
+//            InfoInFunction
+//                << "file " << objectPath() << " could not be opened"
+//                << endl;
+//        }
+//
+//        ok = false;
+//    }
+//    else
+//    {
+//        // Try reading header
+//        if (!readHeader(isPtr()))
+//        {
+//            if (objectRegistry::debug)
+//            {
+//                IOWarningInFunction(isPtr())
+//                    << "failed to read header of file " << objectPath()
+//                    << endl;
+//            }
+//
+//            ok = false;
+//        }
+//    }
+    fileName fName(filePath());
 
-    // If the stream has failed return
-    if (!isPtr.valid())
+    if (fName.empty())
     {
-        if (objectRegistry::debug)
+        if (IOobject::debug)
         {
             InfoInFunction
                 << "file " << objectPath() << " could not be opened"
                 << endl;
         }
-
         ok = false;
     }
     else
     {
-        // Try reading header
-        if (!readHeader(isPtr()))
-        {
-            if (objectRegistry::debug)
-            {
-                IOWarningInFunction(isPtr())
-                    << "failed to read header of file " << objectPath()
-                    << endl;
-            }
+        ok = Foam::fileHandler().readHeader(*this, fName);
 
-            ok = false;
+        if (!ok && IOobject::debug)
+        {
+            IOWarningInFunction(fName)
+                << "failed to read header of file " << objectPath()
+                << endl;
         }
     }
 

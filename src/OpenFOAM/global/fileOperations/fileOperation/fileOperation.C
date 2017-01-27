@@ -37,10 +37,10 @@ namespace Foam
     defineTypeNameAndDebug(fileOperation, 0);
     defineRunTimeSelectionTable(fileOperation, word);
 
-    class addArgs
+    class addArgsOptions
     {
         public:
-        addArgs()
+        addArgsOptions()
         {
             argList::addOption
             (
@@ -51,7 +51,7 @@ namespace Foam
         }
     };
 
-    addArgs dummyInitArgs;
+    addArgsOptions intObj;
 }
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
@@ -91,6 +91,12 @@ Foam::fileOperation::~fileOperation()
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+Foam::fileName Foam::fileOperation::objectPath(const IOobject& io) const
+{
+    return io.objectPath();
+}
+
 
 bool Foam::fileOperation::writeObject
 (
@@ -155,8 +161,11 @@ const Foam::fileOperation& Foam::fileHandler()
             handler = fileOperations::localFileOperation::typeName;
         }
 
-        cout<< "fileHandler() : Inserting fileOperation of type "
-            << handler << std::endl;
+        if (Pstream::master())
+        {
+            cout<< "fileHandler() : Inserting fileOperation of type "
+                << handler << std::endl;
+        }
         fileOperation::fileHandlerPtr_ = fileOperation::New(handler);
     }
     return fileOperation::fileHandlerPtr_();
@@ -167,15 +176,21 @@ void Foam::fileHandler(autoPtr<fileOperation>& newHandlerPtr)
 {
     if (fileOperation::fileHandlerPtr_.valid())
     {
-        cout<< "fileHandler() : Deleting fileOperation of type "
-            << fileOperation::fileHandlerPtr_().type() << std::endl;
+        if (Pstream::master())
+        {
+            cout<< "fileHandler() : Deleting fileOperation of type "
+                << fileOperation::fileHandlerPtr_().type() << std::endl;
+        }
     }
     fileOperation::fileHandlerPtr_.clear();
 
     if (newHandlerPtr.valid())
     {
-        cout<< "fileHandler() : Inserting fileOperation of type "
-            << newHandlerPtr().type() << std::endl;
+        if (Pstream::master())
+        {
+            cout<< "fileHandler() : Inserting fileOperation of type "
+                << newHandlerPtr().type() << std::endl;
+        }
         fileOperation::fileHandlerPtr_ = newHandlerPtr;
     }
 }

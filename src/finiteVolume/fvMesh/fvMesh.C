@@ -269,7 +269,7 @@ Foam::fvMesh::fvMesh(const IOobject& io)
 
     // Check the existence of the cell volumes and read if present
     // and set the storage of V00
-    if (isFile(time().timePath()/"V0"))
+    if (fileHandler().isFile(time().timePath()/"V0"))
     {
         V0Ptr_ = new DimensionedField<scalar, volMesh>
         (
@@ -290,7 +290,7 @@ Foam::fvMesh::fvMesh(const IOobject& io)
 
     // Check the existence of the mesh fluxes, read if present and set the
     // mesh to be moving
-    if (isFile(time().timePath()/"meshPhi"))
+    if (fileHandler().isFile(time().timePath()/"meshPhi"))
     {
         phiPtr_ = new surfaceScalarField
         (

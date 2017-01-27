@@ -45,17 +45,55 @@ bool Foam::IOobject::typeHeaderOk(const bool checkType)
          || IOobject::fileModificationChecking == inotifyMaster
         );
 
+    const fileOperation& fp = Foam::fileHandler();
 
     // Determine local status
     if (!masterOnly || Pstream::master())
     {
-        const fileOperation& fp = Foam::fileHandler();
+//        autoPtr<Istream> isPtr =
+//            fp.objectStream(typeFilePath<Type>(*this));
+//
+//        // If the stream has failed return
+//        if (!isPtr.valid())
+//        {
+//            if (IOobject::debug)
+//            {
+//                InfoInFunction
+//                    << "file " << objectPath() << " could not be opened"
+//                    << endl;
+//            }
+//
+//            ok = false;
+//        }
+//        else
+//        {
+//            // Try reading header
+//            if (readHeader(isPtr()))
+//            {
+//                if (checkType && headerClassName_ != Type::typeName)
+//                {
+//                    IOWarningInFunction(isPtr())
+//                        << "unexpected class name " << headerClassName_
+//                        << " expected " << Type::typeName << endl;
+//
+//                    ok = false;
+//                }
+//            }
+//            else
+//            {
+//                if (IOobject::debug)
+//                {
+//                    IOWarningInFunction(isPtr())
+//                        << "failed to read header of file " << objectPath()
+//                        << endl;
+//                }
+//
+//                ok = false;
+//            }
+//        }
 
-        autoPtr<Istream> isPtr =
-            fp.objectStream(typeFilePath<Type>(*this));
-
-        // If the stream has failed return
-        if (!isPtr.valid())
+        fileName fName(typeFilePath<Type>(*this));
+        if (fName.empty())
         {
             if (IOobject::debug)
             {
@@ -63,31 +101,17 @@ bool Foam::IOobject::typeHeaderOk(const bool checkType)
                     << "file " << objectPath() << " could not be opened"
                     << endl;
             }
-
             ok = false;
         }
         else
         {
-            // Try reading header
-            if (readHeader(isPtr()))
+            ok = fp.readHeader(*this, fName);
+            if (ok && checkType && headerClassName_ != Type::typeName)
             {
-                if (checkType && headerClassName_ != Type::typeName)
-                {
-                    IOWarningInFunction(isPtr())
-                        << "unexpected class name " << headerClassName_
-                        << " expected " << Type::typeName << endl;
-
-                    ok = false;
-                }
-            }
-            else
-            {
-                if (IOobject::debug)
-                {
-                    IOWarningInFunction(isPtr())
-                        << "failed to read header of file " << objectPath()
-                        << endl;
-                }
+                WarningInFunction
+                    << "unexpected class name " << headerClassName_
+                    << " expected " << Type::typeName
+                    << " when reading " << fName << endl;
 
                 ok = false;
             }

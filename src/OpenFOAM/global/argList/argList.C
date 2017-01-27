@@ -34,7 +34,6 @@ License
 #include "regIOobject.H"
 #include "dynamicCode.H"
 #include "fileOperation.H"
-#include "masterCollatingFileOperation.H"
 
 #include <cctype>
 
@@ -584,14 +583,17 @@ void Foam::argList::parse
         }
     }
 
-    // Trigger default file operations
-    (void)Foam::fileHandler();
     // See if override with argList
     HashTable<string>::const_iterator iter = options_.find("fileHandler");
     if (iter != options_.end())
     {
         autoPtr<fileOperation> handler(fileOperation::New(iter()));
         Foam::fileHandler(handler);
+    }
+    else
+    {
+        // Trigger default
+        (void)Foam::fileHandler();
     }
 
     // Case is a single processor run unless it is running parallel
@@ -1236,7 +1238,7 @@ bool Foam::argList::check(bool checkArgs, bool checkOpts) const
 
 bool Foam::argList::checkRootCase() const
 {
-    if (!isDir(rootPath()))
+    if (!fileHandler().isDir(rootPath()))
     {
         FatalError
             << executable_
@@ -1246,7 +1248,7 @@ bool Foam::argList::checkRootCase() const
         return false;
     }
 
-    if (!isDir(path()) && Pstream::master())
+    if (Pstream::master() && !isDir(path()))
     {
         // Allow slaves on non-existing processor directories, created later
         FatalError
