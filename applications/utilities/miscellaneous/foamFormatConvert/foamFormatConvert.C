@@ -138,8 +138,6 @@ bool writeZones(const word& name, const fileName& meshDir, Time& runTime)
 }
 
 
-
-
 int main(int argc, char *argv[])
 {
     timeSelector::addOptions();
@@ -195,6 +193,9 @@ int main(int argc, char *argv[])
         writeMeshObject<labelIOList>("neighbour", meshDir, runTime);
         writeMeshObject<faceCompactIOList>("faces", meshDir, runTime);
         writeMeshObject<pointIOField>("points", meshDir, runTime);
+        // Write boundary in ascii. This is only needed for fileHandler to
+        // kick in. Should not give problems since always writing ascii.
+        writeZones("boundary", meshDir, runTime);
         writeMeshObject<labelIOList>("pointProcAddressing", meshDir, runTime);
         writeMeshObject<labelIOList>("faceProcAddressing", meshDir, runTime);
         writeMeshObject<labelIOList>("cellProcAddressing", meshDir, runTime);
@@ -253,11 +254,7 @@ int main(int argc, char *argv[])
                 Info<< "        Reading " << headerClassName
                     << " : " << iter()->name() << endl;
 
-                fieldDictionary fDict
-                (
-                    *iter(),
-                    headerClassName
-                );
+                fieldDictionary fDict(*iter(), headerClassName);
 
                 Info<< "        Writing " << iter()->name() << endl;
                 fDict.regIOobject::write();

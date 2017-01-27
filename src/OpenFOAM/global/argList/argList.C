@@ -1251,12 +1251,13 @@ bool Foam::argList::checkRootCase() const
     if (Pstream::master() && !isDir(path()))
     {
         // Allow slaves on non-existing processor directories, created later
-        FatalError
+        //FatalError
+        Warning
             << executable_
             << ": cannot open case directory " << path()
             << endl;
 
-        return false;
+        //return false;
     }
 
     return true;

@@ -50,7 +50,7 @@ Foam::IOobjectList::IOobjectList
 {
     word newInstance = instance;
 
-    if (!isDir(db.path(instance)))
+    if (!fileHandler().isDir(db.path(instance)))
     {
         newInstance = db.time().findInstancePath(instant(instance));
 

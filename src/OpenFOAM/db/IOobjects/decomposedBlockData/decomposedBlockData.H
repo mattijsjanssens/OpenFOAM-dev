@@ -120,6 +120,9 @@ public:
 
     // Helpers
 
+        //- Read header. Call only on master.
+        static bool readMasterHeader(IOobject&, Istream&);
+
         //- Read data into *this. Istream is only valid on master.
         static bool readBlocks
         (

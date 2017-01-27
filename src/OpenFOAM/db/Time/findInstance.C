@@ -69,7 +69,7 @@ Foam::word Foam::Time::findInstance
             )
         )
         {
-            //if (debug)
+            if (debug)
             {
                 //InfoInFunction
                 Pout<< "findInstance : "
@@ -117,7 +117,7 @@ Foam::word Foam::Time::findInstance
             )
         )
         {
-            //if (debug)
+            if (debug)
             {
                 //InfoInFunction
                 Pout<< "findInstance : "
@@ -132,7 +132,7 @@ Foam::word Foam::Time::findInstance
         // Check if hit minimum instance
         if (ts[instanceI].name() == stopInstance)
         {
-            //if (debug)
+            if (debug)
             {
                 //InfoInFunction
                 Pout<< "findInstance : "
@@ -191,7 +191,7 @@ Foam::word Foam::Time::findInstance
         )
     )
     {
-        //if (debug)
+        if (debug)
         {
             //InfoInFunction
             Pout<< "findInstance : "

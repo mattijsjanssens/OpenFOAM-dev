@@ -127,25 +127,25 @@ Foam::fileName Foam::fileOperations::masterFileOperation::filePath
 //                }
 //            }
 
-            // Try constant & local
-            {
-                newInstancePath = io.time().constant();
-                fileName fName
-                (
-                    io.rootPath()
-                   /io.caseName()
-                   /newInstancePath
-                   /io.db().dbDir()
-                   /io.local()
-                   /io.name()
-                );
-
-                if (Foam::isFile(fName))
-                {
-                    searchType = fileOperation::FINDINSTANCE;
-                    return fName;
-                }
-            }
+//             // Try constant & local
+//             {
+//                 newInstancePath = io.time().constant();
+//                 fileName fName
+//                 (
+//                     io.rootPath()
+//                    /io.caseName()
+//                    /newInstancePath
+//                    /io.db().dbDir()
+//                    /io.local()
+//                    /io.name()
+//                 );
+// 
+//                 if (Foam::isFile(fName))
+//                 {
+//                     searchType = fileOperation::FINDINSTANCE;
+//                     return fName;
+//                 }
+//             }
 
         }
 

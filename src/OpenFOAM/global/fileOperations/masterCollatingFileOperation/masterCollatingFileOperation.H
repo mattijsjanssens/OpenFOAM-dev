@@ -95,6 +95,9 @@ public:
                 const IOobject&
             ) const;
 
+            //- Read object header from supplied file
+            virtual bool readHeader(IOobject&, const fileName& fName) const;
+
             //- Reads header for regIOobject and returns an Istream
             //  to read the contents.
             virtual autoPtr<Istream> readStream

@@ -244,24 +244,6 @@ Foam::Istream& Foam::regIOobject::readStream()
             }
         }
 
-//        if (!(isPtr_ = IOobject::objectStream(objPath)))
-//        {
-//            FatalIOError
-//            (
-//                "regIOobject::readStream()",
-//                __FILE__,
-//                __LINE__,
-//                objPath,
-//                0
-//            )   << "cannot open file"
-//                << exit(FatalIOError);
-//        }
-//        else if (!readHeader(*isPtr_))
-//        {
-//            FatalIOErrorInFunction(*isPtr_)
-//                << "problem while reading header for object " << name()
-//                << exit(FatalIOError);
-//        }
         isPtr_ = fileHandler().readStream(*this, objPath);
     }
 

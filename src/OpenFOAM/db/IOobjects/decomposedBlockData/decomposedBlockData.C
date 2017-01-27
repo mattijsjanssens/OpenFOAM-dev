@@ -24,13 +24,13 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "decomposedBlockData.H"
-#include "Pstream.H"
 #include "IOstreams.H"
 #include "OPstream.H"
 #include "IPstream.H"
 #include "PstreamBuffers.H"
 #include "OFstream.H"
 #include "IFstream.H"
+#include "IStringStream.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -157,6 +157,46 @@ Foam::decomposedBlockData::~decomposedBlockData()
 
 
 // * * * * * * * * * * * * * * * Members Functions * * * * * * * * * * * * * //
+
+bool Foam::decomposedBlockData::readMasterHeader(IOobject& io, Istream& is)
+{
+    // Master-only reading of header
+    is.fatalCheck("read(Istream&)");
+    token firstToken(is);
+    is.fatalCheck("read(Istream&) : " "reading first token");
+
+    if (firstToken.isLabel())
+    {
+        // Read size of list
+        label s = firstToken.labelToken();
+
+        if (s != UPstream::nProcs())
+        {
+            FatalIOErrorInFunction(is)
+                << "size " << s
+                << " differs from the number of processors "
+                << UPstream::nProcs() << exit(FatalIOError);
+        }
+
+        // Read beginning of contents
+        char delimiter = is.readBeginList("List");
+
+        if (s)
+        {
+            if (delimiter == token::BEGIN_LIST)
+            {
+                List<char> data(is);
+                is.fatalCheck("read(Istream&) : reading entry");
+                string buf(data.begin(), data.size());
+                IStringStream str(buf);
+
+                return io.readHeader(str);
+            }
+        }
+    }
+    return false;
+}
+
 
 bool Foam::decomposedBlockData::readBlocks
 (
