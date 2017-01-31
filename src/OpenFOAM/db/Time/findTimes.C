@@ -29,8 +29,6 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "Time.H"
-#include "OSspecific.H"
-#include "IStringStream.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -40,69 +38,8 @@ Foam::instantList Foam::Time::findTimes
     const word& constantName
 )
 {
-    if (debug)
-    {
-        InfoInFunction << "Finding times in directory " << directory << endl;
-    }
-
-    // Read directory entries into a list
-    fileNameList dirEntries
-    (
-        fileHandler().readDir
-        (
-            directory,
-            fileName::DIRECTORY
-        )
-    );
-
-    // Initialise instant list
-    instantList Times(dirEntries.size() + 1);
-    label nTimes = 0;
-
-    // Check for "constant"
-    bool haveConstant = false;
-    forAll(dirEntries, i)
-    {
-        if (dirEntries[i] == constantName)
-        {
-            Times[nTimes].value() = 0;
-            Times[nTimes].name() = dirEntries[i];
-            nTimes++;
-            haveConstant = true;
-            break;
-        }
-    }
-
-    // Read and parse all the entries in the directory
-    forAll(dirEntries, i)
-    {
-        IStringStream timeStream(dirEntries[i]);
-        token timeToken(timeStream);
-
-        if (timeToken.isNumber() && timeStream.eof())
-        {
-            Times[nTimes].value() = timeToken.number();
-            Times[nTimes].name() = dirEntries[i];
-            nTimes++;
-        }
-    }
-
-    // Reset the length of the times list
-    Times.setSize(nTimes);
-
-    if (haveConstant)
-    {
-        if (nTimes > 2)
-        {
-            std::sort(&Times[1], Times.end(), instant::less());
-        }
-    }
-    else if (nTimes > 1)
-    {
-        std::sort(&Times[0], Times.end(), instant::less());
-    }
-
-    return Times;
+    return fileHandler().findTimes(directory, constantName);
 }
+
 
 // ************************************************************************* //

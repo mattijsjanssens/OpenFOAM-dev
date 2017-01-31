@@ -33,6 +33,9 @@ Class
 #include "Ostream.H"
 #include "autoPtr.H"
 #include "fileNameList.H"
+#include "instantList.H"
+#include "fileMonitor.H"
+#include "labelList.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -48,6 +51,22 @@ class regIOobject;
 
 class fileOperation
 {
+protected:
+
+    // Protected data
+
+        //- file-change monitor for all registered files
+        mutable autoPtr<fileMonitor> monitorPtr_;
+
+
+   // Protected Member Functions
+
+        fileMonitor& monitor() const;
+
+
+        //- Sort directory entries according to time value
+        static instantList sortTimes(const fileNameList&, const word&);
+
 
 public:
 
@@ -237,6 +256,48 @@ public:
                 IOstream::versionNumber version=IOstream::currentVersion,
                 IOstream::compressionType compression=IOstream::UNCOMPRESSED
             ) const = 0;
+
+
+        // File modification checking
+
+            //- Add watching of a file. Returns handle
+            virtual label addWatch(const fileName&) const;
+
+            //- Remove watch on a file (using handle)
+            virtual bool removeWatch(const label) const;
+
+            //- Find index (or -1) of file in list of handles
+            virtual label findWatch
+            (
+                const labelList& watchIndices,
+                const fileName&
+            ) const;
+
+            //- Helper: add watches for list of regIOobjects
+            virtual void addWatches(regIOobject&, const fileNameList&) const;
+
+            //- Get name of file being watched (using handle)
+            virtual const fileName& getFile(const label) const;
+
+            //- Update state of all files
+            virtual void updateStates
+            (
+                const bool masterOnly,
+                const bool syncPar
+            ) const;
+
+            //- Get current state of file (using handle)
+            virtual fileMonitor::fileState getState(const label) const;
+
+            //- Set current state of file (using handle) to unmodified
+            virtual void setUnmodified(const label) const;
+
+
+        // Other
+
+            //- Get sorted list of times
+            virtual instantList findTimes(const fileName&, const word&)
+            const = 0;
 };
 
 

@@ -51,7 +51,6 @@ SourceFiles
 #include "typeInfo.H"
 #include "dlLibraryTable.H"
 #include "functionObjectList.H"
-#include "fileMonitor.H"
 #include "sigWriteNow.H"
 #include "sigStopAtWriteNow.H"
 
@@ -76,9 +75,6 @@ class Time
     public TimeState
 {
     // Private data
-
-        //- file-change monitor for all registered files
-        mutable autoPtr<fileMonitor> monitorPtr_;
 
         //- Any loaded dynamic libraries. Make sure to construct before
         //  reading controlDict.
@@ -322,36 +318,8 @@ public:
             //- Read control dictionary, update controls and time
             virtual bool read();
 
-            // Automatic rereading
-
-                //- Read the objects that have been modified
-                void readModifiedObjects();
-
-                //- Helper: add watches for list of files
-                void addWatches(regIOobject&, const fileNameList&) const;
-
-                //- Find index (or -1) of file in list of handles
-                label findWatch
-                (
-                    const labelList& watchIndices,
-                    const fileName&
-                ) const;
-
-                //- Add watching of a file. Returns handle
-                label addTimeWatch(const fileName&) const;
-
-                //- Remove watch on a file (using handle)
-                bool removeWatch(const label) const;
-
-                //- Get name of file being watched (using handle)
-                const fileName& getFile(const label) const;
-
-                //- Get current state of file (using handle)
-                fileMonitor::fileState getState(const label) const;
-
-                //- Set current state of file (using handle) to unmodified
-                void setUnmodified(const label) const;
-
+            //- Read the objects that have been modified
+            void readModifiedObjects();
 
             //- Return the location of "dir" containing the file "name".
             //  (eg, used in reading mesh data)

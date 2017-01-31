@@ -694,6 +694,38 @@ bool Foam::fileOperations::masterFileOperation::writeObject
 }
 
 
+Foam::instantList Foam::fileOperations::masterFileOperation::findTimes
+(
+    const fileName& directory,
+    const word& constantName
+) const
+{
+    if (debug)
+    {
+        InfoInFunction << "Finding times in directory " << directory << endl;
+    }
+
+    instantList times;
+
+    if (Pstream::master())
+    {
+        // Read directory entries into a list
+        fileNameList dirEntries
+        (
+            Foam::readDir
+            (
+                directory,
+                fileName::DIRECTORY
+            )
+        );
+
+        times = sortTimes(dirEntries, constantName);
+    }
+    Pstream::scatter(times);
+    return times;
+}
+
+
 Foam::autoPtr<Foam::Istream>
 Foam::fileOperations::masterFileOperation::NewIFstream
 (
@@ -826,6 +858,16 @@ Foam::fileOperations::masterFileOperation::NewOFstream
 ) const
 {
     return autoPtr<Ostream>(new masterOFstream(pathName, fmt, ver, cmp));
+}
+
+
+void Foam::fileOperations::masterFileOperation::updateStates
+(
+    const bool masterOnly,
+    const bool syncPar
+) const
+{
+    monitor().updateStates(true, Pstream::parRun());
 }
 
 

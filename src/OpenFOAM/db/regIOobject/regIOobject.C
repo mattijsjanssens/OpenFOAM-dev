@@ -208,7 +208,7 @@ bool Foam::regIOobject::checkOut()
 
         forAllReverse(watchIndices_, i)
         {
-            time().removeWatch(watchIndices_[i]);
+            fileHandler().removeWatch(watchIndices_[i]);
         }
         watchIndices_.clear();
         return db().checkOut(*this);
@@ -229,12 +229,12 @@ Foam::label Foam::regIOobject::addWatch(const fileName& f)
      && time().runTimeModifiable()
     )
     {
-        index = time().findWatch(watchIndices_, f);
+        index = fileHandler().findWatch(watchIndices_, f);
 
         if (index == -1)
         {
             index = watchIndices_.size();
-            watchIndices_.append(time().addTimeWatch(f));
+            watchIndices_.append(fileHandler().addWatch(f));
         }
     }
     return index;
@@ -258,7 +258,7 @@ void Foam::regIOobject::addWatch()
             f = objectPath();
         }
 
-        label index = time().findWatch(watchIndices_, f);
+        label index = fileHandler().findWatch(watchIndices_, f);
         if (index != -1)
         {
             FatalErrorIn("regIOobject::addWatch()")
@@ -285,7 +285,7 @@ void Foam::regIOobject::addWatch()
                 watchFiles.setSize(watchIndices_.size());
                 forAll(watchIndices_, i)
                 {
-                    watchFiles[i] = time().getFile(watchIndices_[i]);
+                    watchFiles[i] = fileHandler().getFile(watchIndices_[i]);
                 }
             }
             Pstream::scatter(watchFiles);
@@ -295,18 +295,18 @@ void Foam::regIOobject::addWatch()
                 // unregister current ones
                 forAllReverse(watchIndices_, i)
                 {
-                    time().removeWatch(watchIndices_[i]);
+                    fileHandler().removeWatch(watchIndices_[i]);
                 }
 
                 watchIndices_.clear();
                 forAll(watchFiles, i)
                 {
-                    watchIndices_.append(time().addTimeWatch(watchFiles[i]));
+                    watchIndices_.append(fileHandler().addWatch(watchFiles[i]));
                 }
             }
         }
 
-        addWatch(f);
+        fileHandler().addWatch(f);
     }
 }
 

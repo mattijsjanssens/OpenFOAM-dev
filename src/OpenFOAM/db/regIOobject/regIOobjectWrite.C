@@ -157,7 +157,7 @@ bool Foam::regIOobject::writeObject
     // i.e. lastModified_ is already set
     if (watchIndices_.size())
     {
-        time().setUnmodified(watchIndices_.last());
+        fileHandler().setUnmodified(watchIndices_.last());
     }
 
     return osGood;

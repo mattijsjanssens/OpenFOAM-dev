@@ -353,6 +353,31 @@ Foam::fileOperations::localFileOperation::readStream
 }
 
 
+Foam::instantList Foam::fileOperations::localFileOperation::findTimes
+(
+    const fileName& directory,
+    const word& constantName
+) const
+{
+    if (debug)
+    {
+        InfoInFunction << "Finding times in directory " << directory << endl;
+    }
+
+    // Read directory entries into a list
+    fileNameList dirEntries
+    (
+        readDir
+        (
+            directory,
+            fileName::DIRECTORY
+        )
+    );
+
+    return sortTimes(dirEntries, constantName);
+}
+
+
 Foam::autoPtr<Foam::Istream>
 Foam::fileOperations::localFileOperation::NewIFstream
 (

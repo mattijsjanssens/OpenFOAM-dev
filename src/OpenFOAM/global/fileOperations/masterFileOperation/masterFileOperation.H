@@ -410,10 +410,24 @@ public:
                 IOstream::compressionType compression=IOstream::UNCOMPRESSED
             ) const;
 
+
+        // File modification checking
+
+            //- Update state of all files
+            virtual void updateStates
+            (
+                const bool masterOnly,
+                const bool syncPar
+            ) const;
+
+
         // Other
 
             //- Same file?
             static bool uniformFile(const fileNameList&);
+
+            //- Get sorted list of times
+            virtual instantList findTimes(const fileName&, const word&) const;
 
             //- root+casename with any 'processorXXX' replaced by 'processsors'
             static fileName processorsCasePath(const IOobject&);

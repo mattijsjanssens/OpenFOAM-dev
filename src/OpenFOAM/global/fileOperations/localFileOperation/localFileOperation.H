@@ -183,6 +183,12 @@ public:
                 IOstream::versionNumber version=IOstream::currentVersion,
                 IOstream::compressionType compression=IOstream::UNCOMPRESSED
             ) const;
+
+
+        // Other
+
+            //- Get sorted list of times
+            virtual instantList findTimes(const fileName&, const word&) const;
 };
 
 

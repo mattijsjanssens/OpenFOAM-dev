@@ -336,13 +336,24 @@ bool Foam::fileOperations::masterCollatingFileOperation::writeObject
     IOstream::compressionType cmp
 ) const
 {
+    const Time& tm = io.time();
+    const fileName& inst = io.instance();
+
     autoPtr<Ostream> osPtr;
     if
     (
-        io.global()
-     || io.instance().isAbsolute()
+        (
+            io.global()
+         && (
+                inst == tm.system()
+             || inst == tm.caseSystem()
+             || inst == tm.constant()
+             || inst == tm.caseConstant()
+            )
+        )
+     || inst.isAbsolute()
      || !Pstream::parRun()
-     || !io.time().processorCase()
+     || !tm.processorCase()
     )
     {
         mkDir(io.path());
@@ -360,7 +371,7 @@ bool Foam::fileOperations::masterCollatingFileOperation::writeObject
     else
     {
         // Construct the equivalent processors/ directory
-        fileName path(processorsPath(io, io.instance()));
+        fileName path(processorsPath(io, inst));
 
         if (debug)
         {
@@ -406,6 +417,91 @@ bool Foam::fileOperations::masterCollatingFileOperation::writeObject
     IOobject::writeEndDivider(os);
 
     return true;
+}
+
+
+Foam::instantList Foam::fileOperations::masterCollatingFileOperation::findTimes
+(
+    const fileName& directory,
+    const word& constantName
+) const
+{
+    if (debug)
+    {
+        Pout<< FUNCTION_NAME
+            << " : Finding times in directory " << directory << endl;
+    }
+
+    instantList times;
+
+    if (Pstream::master())
+    {
+        // Read directory entries into a list
+        fileNameList dirEntries
+        (
+            Foam::readDir
+            (
+                directory,
+                fileName::DIRECTORY
+            )
+        );
+
+        times = sortTimes(dirEntries, constantName);
+
+        // Check if directory is processorXXX
+        word caseName(directory.name());
+
+        std::string::size_type pos = caseName.find("processor");
+        if (pos == 0)
+        {
+            fileName processorsDir(directory.path()/"processors");
+
+            fileNameList extraEntries
+            (
+                Foam::readDir
+                (
+                    processorsDir,
+                    fileName::DIRECTORY
+                )
+            );
+
+            instantList extraTimes = sortTimes(extraEntries, constantName);
+
+            label sz = times.size();
+            times.setSize(sz+extraTimes.size());
+            forAll(extraTimes, i)
+            {
+                times[sz++] = extraTimes[i];
+            }
+
+            // Sort
+            if (times.size() > 2 && times[0].name() == constantName)
+            {
+                std::sort(&times[1], times.end(), instant::less());
+            }
+            else if (times.size() > 1)
+            {
+                std::sort(&times[0], times.end(), instant::less());
+            }
+
+            // Filter out duplicates
+            label newI = 0;
+            for (label i = 1; i < times.size(); i++)
+            {
+                if (times[i].value() != times[i-1].value())
+                {
+                    if (newI != i)
+                    {
+                        times[newI++] = times[i];
+                    }
+                }
+            }
+
+            times.setSize(newI);
+        }
+    }
+    Pstream::scatter(times);
+    return times;
 }
 
 

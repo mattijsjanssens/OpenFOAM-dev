@@ -357,7 +357,7 @@ void Foam::Time::readDict()
     {
         forAllReverse(controlDict_.watchIndices(), i)
         {
-            removeWatch(controlDict_.watchIndices()[i]);
+            fileHandler().removeWatch(controlDict_.watchIndices()[i]);
         }
         controlDict_.watchIndices().clear();
     }
@@ -376,7 +376,7 @@ bool Foam::Time::read()
             // already updated all the watchIndices via the addWatch but
             // controlDict_ is an unwatchedIOdictionary so will only have
             // stored the dependencies as files.
-             addWatches(controlDict_, controlDict_.files());
+            fileHandler().addWatches(controlDict_, controlDict_.files());
         }
         controlDict_.files().clear();
 
@@ -397,7 +397,7 @@ void Foam::Time::readModifiedObjects()
         // valid filePath).
         // Note: requires same ordering in objectRegistries on different
         // processors!
-        monitorPtr_().updateStates
+        fileHandler().updateStates
         (
             (
                 regIOobject::fileModificationChecking == inotifyMaster
@@ -421,7 +421,7 @@ void Foam::Time::readModifiedObjects()
                 // controlDict_ is an unwatchedIOdictionary so will only have
                 // stored the dependencies as files.
 
-                addWatches(controlDict_, controlDict_.files());
+                fileHandler().addWatches(controlDict_, controlDict_.files());
             }
             controlDict_.files().clear();
         }

@@ -214,7 +214,7 @@ Foam::Istream& Foam::regIOobject::readStream()
         if (watchIndices_.size())
         {
             // File is being watched. Read exact file that is being watched.
-            objPath = time().getFile(watchIndices_.last());
+            objPath = fileHandler().getFile(watchIndices_.last());
         }
         else
         {
@@ -257,8 +257,8 @@ Foam::Istream& Foam::regIOobject::readStream(const word& expectName)
     {
         Pout<< "regIOobject::readStream(const word&) : "
             << "reading object " << name()
-            << " of type " << type()
-            << " from file " << objectPath()
+            //<< " of type " << type()
+            //<< " from file " << objectPath()
             << endl;
     }
 
@@ -322,11 +322,11 @@ bool Foam::regIOobject::read()
         oldWatchFiles.setSize(watchIndices_.size());
         forAll(watchIndices_, i)
         {
-            oldWatchFiles[i] = time().getFile(watchIndices_[i]);
+            oldWatchFiles[i] = fileHandler().getFile(watchIndices_[i]);
         }
         forAllReverse(watchIndices_, i)
         {
-            time().removeWatch(watchIndices_[i]);
+            fileHandler().removeWatch(watchIndices_[i]);
         }
         watchIndices_.clear();
     }
@@ -356,7 +356,7 @@ bool Foam::regIOobject::modified() const
 {
     forAllReverse(watchIndices_, i)
     {
-        if (time().getState(watchIndices_[i]) != fileMonitor::UNMODIFIED)
+        if (fileHandler().getState(watchIndices_[i]) != fileMonitor::UNMODIFIED)
         {
             return true;
         }
@@ -373,7 +373,7 @@ bool Foam::regIOobject::readIfModified()
     label modified = -1;
     forAllReverse(watchIndices_, i)
     {
-        if (time().getState(watchIndices_[i]) != fileMonitor::UNMODIFIED)
+        if (fileHandler().getState(watchIndices_[i]) != fileMonitor::UNMODIFIED)
         {
             modified = watchIndices_[i];
             break;
@@ -382,7 +382,7 @@ bool Foam::regIOobject::readIfModified()
 
     if (modified != -1)
     {
-        const fileName& fName = time().getFile(watchIndices_.last());
+        const fileName& fName = fileHandler().getFile(watchIndices_.last());
 
         if (modified == watchIndices_.last())
         {
@@ -395,7 +395,8 @@ bool Foam::regIOobject::readIfModified()
             Info<< "regIOobject::readIfModified() : " << nl
                 << "    Re-reading object " << name()
                 << " from file " << fName
-                << " because of modified file " << time().getFile(modified)
+                << " because of modified file "
+                << fileHandler().getFile(modified)
                 << endl;
         }
 

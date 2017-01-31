@@ -185,6 +185,7 @@ void Foam::Time::setControls()
         int oldPrecision = precision_;
         int requiredPrecision = -1;
         bool found = false;
+        word oldTime(timeName());
         for
         (
             precision_ = maxPrecision_;
@@ -194,6 +195,13 @@ void Foam::Time::setControls()
         {
             // Update the time formatting
             setTime(startTime_, 0);
+
+            word newTime(timeName());
+            if (newTime == oldTime)
+            {
+                break;
+            }
+            oldTime = newTime;
 
             // Check the existence of the time directory with the new format
             found = fileHandler().exists(timePath(), false);
@@ -388,17 +396,8 @@ Foam::Time::Time
     // Time objects not registered so do like objectRegistry::checkIn ourselves.
     if (runTimeModifiable_)
     {
-        monitorPtr_.reset
-        (
-            new fileMonitor
-            (
-                regIOobject::fileModificationChecking == inotify
-             || regIOobject::fileModificationChecking == inotifyMaster
-            )
-        );
-
         // Monitor all files that controlDict depends on
-        addWatches(controlDict_, controlDict_.files());
+        fileHandler().addWatches(controlDict_, controlDict_.files());
     }
 
     // Clear dependent files
@@ -479,17 +478,8 @@ Foam::Time::Time
     // Time objects not registered so do like objectRegistry::checkIn ourselves.
     if (runTimeModifiable_)
     {
-        monitorPtr_.reset
-        (
-            new fileMonitor
-            (
-                regIOobject::fileModificationChecking == inotify
-             || regIOobject::fileModificationChecking == inotifyMaster
-            )
-        );
-
         // Monitor all files that controlDict depends on
-        addWatches(controlDict_, controlDict_.files());
+        fileHandler().addWatches(controlDict_, controlDict_.files());
     }
 
     // Clear dependent files since not needed
@@ -569,17 +559,8 @@ Foam::Time::Time
     // Time objects not registered so do like objectRegistry::checkIn ourselves.
     if (runTimeModifiable_)
     {
-        monitorPtr_.reset
-        (
-            new fileMonitor
-            (
-                regIOobject::fileModificationChecking == inotify
-             || regIOobject::fileModificationChecking == inotifyMaster
-            )
-        );
-
         // Monitor all files that controlDict depends on
-        addWatches(controlDict_, controlDict_.files());
+        fileHandler().addWatches(controlDict_, controlDict_.files());
     }
 
     // Clear dependent files since not needed
@@ -650,7 +631,7 @@ Foam::Time::~Time()
 {
     forAllReverse(controlDict_.watchIndices(), i)
     {
-        removeWatch(controlDict_.watchIndices()[i]);
+        fileHandler().removeWatch(controlDict_.watchIndices()[i]);
     }
 
     // Destroy function objects first
@@ -659,89 +640,6 @@ Foam::Time::~Time()
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-
-void Foam::Time::addWatches(regIOobject& rio, const fileNameList& files) const
-{
-    const labelList& watchIndices = rio.watchIndices();
-
-    DynamicList<label> newWatchIndices;
-    labelHashSet removedWatches(watchIndices);
-
-    forAll(files, i)
-    {
-        const fileName& f = files[i];
-        label index = findWatch(watchIndices, f);
-
-        if (index == -1)
-        {
-            newWatchIndices.append(addTimeWatch(f));
-        }
-        else
-        {
-            // Existing watch
-            newWatchIndices.append(watchIndices[index]);
-            removedWatches.erase(index);
-        }
-    }
-
-    // Remove any unused watches
-    forAllConstIter(labelHashSet, removedWatches, iter)
-    {
-        removeWatch(watchIndices[iter.key()]);
-    }
-
-    rio.watchIndices() = newWatchIndices;
-}
-
-
-Foam::label Foam::Time::findWatch
-(
-    const labelList& watchIndices,
-    const fileName& fName
-) const
-{
-    forAll(watchIndices, i)
-    {
-        if (getFile(watchIndices[i]) == fName)
-        {
-            return i;
-        }
-    }
-    return -1;
-}
-
-
-Foam::label Foam::Time::addTimeWatch(const fileName& fName) const
-{
-    return monitorPtr_().addWatch(fName);
-}
-
-
-bool Foam::Time::removeWatch(const label watchIndex) const
-{
-    return monitorPtr_().removeWatch(watchIndex);
-}
-
-const Foam::fileName& Foam::Time::getFile(const label watchIndex) const
-{
-    return monitorPtr_().getFile(watchIndex);
-}
-
-
-Foam::fileMonitor::fileState Foam::Time::getState
-(
-    const label watchFd
-) const
-{
-    return monitorPtr_().getState(watchFd);
-}
-
-
-void Foam::Time::setUnmodified(const label watchFd) const
-{
-    monitorPtr_().setUnmodified(watchFd);
-}
-
 
 Foam::word Foam::Time::timeName(const scalar t, const int precision)
 {
