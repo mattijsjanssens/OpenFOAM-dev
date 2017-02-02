@@ -63,12 +63,14 @@ Foam::masterOFstream::masterOFstream
     const fileName& pathName,
     streamFormat format,
     versionNumber version,
-    compressionType compression
+    compressionType compression,
+    const bool valid
 )
 :
     OStringStream(format, version),
     pathName_(pathName),
-    compression_(compression)
+    compression_(compression),
+    valid_(valid)
 {}
 
 
@@ -146,15 +148,18 @@ Foam::masterOFstream::~masterOFstream()
 
                 is.read(buf.begin(), buf.size());
 
-                const fileName& fName = filePaths[proci];
-
-                autoPtr<Ostream> osPtr(open(fName));
-                osPtr().writeQuoted(string(buf.begin(), buf.size()), false);
-                if (!osPtr().good())
+                if (valid_)
                 {
-                    FatalIOErrorInFunction(osPtr())
-                        << "Failed writing to " << fName
-                        << exit(FatalIOError);
+                    const fileName& fName = filePaths[proci];
+
+                    autoPtr<Ostream> osPtr(open(fName));
+                    osPtr().writeQuoted(string(buf.begin(), buf.size()), false);
+                    if (!osPtr().good())
+                    {
+                        FatalIOErrorInFunction(osPtr())
+                            << "Failed writing to " << fName
+                            << exit(FatalIOError);
+                    }
                 }
             }
         }

@@ -113,7 +113,8 @@ public:
                 const regIOobject&,
                 IOstream::streamFormat format=IOstream::ASCII,
                 IOstream::versionNumber version=IOstream::currentVersion,
-                IOstream::compressionType compression=IOstream::UNCOMPRESSED
+                IOstream::compressionType compression=IOstream::UNCOMPRESSED,
+                const bool valid = true
             ) const;
 
 

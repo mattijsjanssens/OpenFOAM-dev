@@ -57,6 +57,9 @@ class masterOFstream
 
         const IOstream::compressionType compression_;
 
+        //- Should file be written
+        const bool valid_;
+
 
     // Private Member Functions
 
@@ -74,18 +77,13 @@ public:
             const fileName& pathname,
             streamFormat format=ASCII,
             versionNumber version=currentVersion,
-            compressionType compression=UNCOMPRESSED
+            compressionType compression=UNCOMPRESSED,
+            const bool valid = true
         );
 
 
     //- Destructor
     ~masterOFstream();
-
-
-        // Print
-
-            //- Print description to Ostream
-//            void print(Ostream&) const;
 };
 
 

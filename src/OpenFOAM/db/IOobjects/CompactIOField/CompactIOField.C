@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -160,7 +160,8 @@ bool Foam::CompactIOField<T, BaseType>::writeObject
 (
     IOstream::streamFormat fmt,
     IOstream::versionNumber ver,
-    IOstream::compressionType cmp
+    IOstream::compressionType cmp,
+    const bool valid
 ) const
 {
     if (fmt == IOstream::ASCII)
@@ -170,7 +171,7 @@ bool Foam::CompactIOField<T, BaseType>::writeObject
 
         const_cast<word&>(typeName) = IOField<T>::typeName;
 
-        bool good = regIOobject::writeObject(fmt, ver, cmp);
+        bool good = regIOobject::writeObject(fmt, ver, cmp, valid);
 
         // Change type back
         const_cast<word&>(typeName) = oldTypeName;
@@ -179,7 +180,7 @@ bool Foam::CompactIOField<T, BaseType>::writeObject
     }
     else
     {
-        return regIOobject::writeObject(fmt, ver, cmp);
+        return regIOobject::writeObject(fmt, ver, cmp, valid);
     }
 }
 

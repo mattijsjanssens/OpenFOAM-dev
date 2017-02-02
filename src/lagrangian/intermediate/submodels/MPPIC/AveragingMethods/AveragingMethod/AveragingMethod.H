@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2013-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -161,7 +161,7 @@ public:
         virtual bool writeData(Ostream&) const;
 
         //- Write using setting from DB
-        virtual bool write() const;
+        virtual bool write(const bool valid = true) const;
 
         //- Return an internal field of the average
         virtual tmp<Field<Type>> primitiveField() const = 0;

@@ -394,7 +394,8 @@ Foam::fileOperations::localFileOperation::NewOFstream
     const fileName& pathName,
     IOstream::streamFormat fmt,
     IOstream::versionNumber ver,
-    IOstream::compressionType cmp
+    IOstream::compressionType cmp,
+    const bool valid
 ) const
 {
     return autoPtr<Ostream>(new OFstream(pathName, fmt, ver, cmp));

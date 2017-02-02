@@ -114,7 +114,8 @@ public:
         (
             IOstream::streamFormat,
             IOstream::versionNumber,
-            IOstream::compressionType
+            IOstream::compressionType,
+            const bool valid
         ) const;
 
 

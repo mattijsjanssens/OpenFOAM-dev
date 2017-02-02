@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -167,7 +167,7 @@ void Foam::KinematicParcel<ParcelType>::writeFields(const CloudType& c)
 {
     ParcelType::writeFields(c);
 
-    label np =  c.size();
+    label np = c.size();
 
     IOField<label> active(c.fieldIOobject("active", IOobject::NO_READ), np);
     IOField<label> typeId(c.fieldIOobject("typeId", IOobject::NO_READ), np);

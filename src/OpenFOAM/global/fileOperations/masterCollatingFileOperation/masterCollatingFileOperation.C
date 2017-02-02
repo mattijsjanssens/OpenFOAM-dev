@@ -333,28 +333,15 @@ bool Foam::fileOperations::masterCollatingFileOperation::writeObject
     const regIOobject& io,
     IOstream::streamFormat fmt,
     IOstream::versionNumber ver,
-    IOstream::compressionType cmp
+    IOstream::compressionType cmp,
+    const bool valid
 ) const
 {
     const Time& tm = io.time();
     const fileName& inst = io.instance();
 
     autoPtr<Ostream> osPtr;
-    if
-    (
-        (
-            io.global()
-         && (
-                inst == tm.system()
-             || inst == tm.caseSystem()
-             || inst == tm.constant()
-             || inst == tm.caseConstant()
-            )
-        )
-     || inst.isAbsolute()
-     || !Pstream::parRun()
-     || !tm.processorCase()
-    )
+    if (inst.isAbsolute() || !Pstream::parRun() || !tm.processorCase())
     {
         mkDir(io.path());
         fileName pathName(io.objectPath());
@@ -366,7 +353,7 @@ bool Foam::fileOperations::masterCollatingFileOperation::writeObject
                 << " falling back to master-only output to " << io.path()
                 << endl;
         }
-        osPtr.reset(new masterOFstream(pathName, fmt, ver, cmp));
+        osPtr.reset(new masterOFstream(pathName, fmt, ver, cmp, valid));
     }
     else
     {
@@ -383,17 +370,30 @@ bool Foam::fileOperations::masterCollatingFileOperation::writeObject
         mkDir(path);
         fileName pathName(path/io.name());
 
-        osPtr.reset
-        (
-            new masterCollatingOFstream
+        if (io.global())
+        {
+            if (debug)
+            {
+                Pout<< FUNCTION_NAME << " : For object : " << io.name()
+                    << " falling back to master-only output to " << io.path()
+                    << endl;
+            }
+            osPtr.reset(new masterOFstream(pathName, fmt, ver, cmp, valid));
+        }
+        else
+        {
+            osPtr.reset
             (
-                pathName,
-                UPstream::scheduled,
-                fmt,
-                ver
-                //cmp
-            )
-        );
+                new masterCollatingOFstream
+                (
+                    pathName,
+                    UPstream::scheduled,
+                    fmt,
+                    ver
+                    //cmp
+                )
+            );
+        }
     }
     Ostream& os = osPtr();
 

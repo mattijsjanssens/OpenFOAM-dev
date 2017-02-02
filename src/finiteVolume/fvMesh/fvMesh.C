@@ -860,22 +860,23 @@ bool Foam::fvMesh::writeObject
 (
     IOstream::streamFormat fmt,
     IOstream::versionNumber ver,
-    IOstream::compressionType cmp
+    IOstream::compressionType cmp,
+    const bool valid
 ) const
 {
     bool ok = true;
     if (phiPtr_)
     {
-        ok = phiPtr_->write();
+        ok = phiPtr_->write(valid);
     }
 
-    return ok && polyMesh::writeObject(fmt, ver, cmp);
+    return ok && polyMesh::writeObject(fmt, ver, cmp, valid);
 }
 
 
-bool Foam::fvMesh::write() const
+bool Foam::fvMesh::write(const bool valid) const
 {
-    return polyMesh::write();
+    return polyMesh::write(valid);
 }
 
 

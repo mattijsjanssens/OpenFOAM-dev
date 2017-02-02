@@ -653,7 +653,8 @@ bool Foam::fileOperations::masterFileOperation::writeObject
     const regIOobject& io,
     IOstream::streamFormat fmt,
     IOstream::versionNumber ver,
-    IOstream::compressionType cmp
+    IOstream::compressionType cmp,
+    const bool valid
 ) const
 {
     mkDir(io.path());
@@ -666,7 +667,8 @@ bool Foam::fileOperations::masterFileOperation::writeObject
             pathName,
             fmt,
             ver,
-            cmp
+            cmp,
+            valid
         )
     );
     Ostream& os = osPtr();
@@ -854,10 +856,11 @@ Foam::fileOperations::masterFileOperation::NewOFstream
     const fileName& pathName,
     IOstream::streamFormat fmt,
     IOstream::versionNumber ver,
-    IOstream::compressionType cmp
+    IOstream::compressionType cmp,
+    const bool valid
 ) const
 {
-    return autoPtr<Ostream>(new masterOFstream(pathName, fmt, ver, cmp));
+    return autoPtr<Ostream>(new masterOFstream(pathName, fmt, ver, cmp, valid));
 }
 
 

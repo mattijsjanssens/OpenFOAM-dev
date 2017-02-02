@@ -236,13 +236,16 @@ public:
 
             //- Writes a regIOobject (so header, contents and divider).
             //  Returns success state. Default action is to write to
-            //  the objectPath using writeData.
+            //  the objectPath using writeData. If !valid the
+            //  file does not need to be written (this is used e.g. to
+            //  suppress empty local lagrangian data)
             virtual bool writeObject
             (
                 const regIOobject&,
                 IOstream::streamFormat format=IOstream::ASCII,
                 IOstream::versionNumber version=IOstream::currentVersion,
-                IOstream::compressionType compression=IOstream::UNCOMPRESSED
+                IOstream::compressionType compression=IOstream::UNCOMPRESSED,
+                const bool valid = true
             ) const;
 
             //- Generate an Istream that reads a file
@@ -254,7 +257,8 @@ public:
                 const fileName& pathname,
                 IOstream::streamFormat format=IOstream::ASCII,
                 IOstream::versionNumber version=IOstream::currentVersion,
-                IOstream::compressionType compression=IOstream::UNCOMPRESSED
+                IOstream::compressionType compression=IOstream::UNCOMPRESSED,
+                const bool valid = true
             ) const = 0;
 
 

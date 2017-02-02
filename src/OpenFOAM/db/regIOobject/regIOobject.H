@@ -295,11 +295,12 @@ public:
             (
                 IOstream::streamFormat,
                 IOstream::versionNumber,
-                IOstream::compressionType
+                IOstream::compressionType,
+                const bool valid
             ) const;
 
             //- Write using setting from DB
-            virtual bool write() const;
+            virtual bool write(const bool valid = true) const;
 
 
         // Other

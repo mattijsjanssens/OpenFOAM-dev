@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -355,7 +355,7 @@ void Foam::ReactingCloud<CloudType>::info()
 template<class CloudType>
 void Foam::ReactingCloud<CloudType>::writeFields() const
 {
-    if (this->size())
+//    if (this->size())
     {
         CloudType::particleType::writeFields(*this, this->composition());
     }

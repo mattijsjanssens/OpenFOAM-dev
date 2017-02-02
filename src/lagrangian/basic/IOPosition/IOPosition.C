@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -48,16 +48,16 @@ Foam::IOPosition<CloudType>::IOPosition(const CloudType& c)
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class CloudType>
-bool Foam::IOPosition<CloudType>::write() const
+bool Foam::IOPosition<CloudType>::write(const bool valid) const
 {
-    if (cloud_.size())
+//    if (cloud_.size())
     {
-        return regIOobject::write();
+        return regIOobject::write(cloud_.size());
     }
-    else
-    {
-        return true;
-    }
+//    else
+//    {
+//        return true;
+//    }
 }
 
 

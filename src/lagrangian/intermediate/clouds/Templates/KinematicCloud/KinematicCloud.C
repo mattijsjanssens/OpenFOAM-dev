@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -239,7 +239,8 @@ void Foam::KinematicCloud<CloudType>::postEvolve()
         (
             IOstream::ASCII,
             IOstream::currentVersion,
-            this->db().time().writeCompression()
+            this->db().time().writeCompression(),
+            true
         );
     }
 }

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -315,6 +315,8 @@ int main(int argc, char *argv[])
 
 
             Info<< "writing surfMesh as obj = oldSurfIn.obj" << endl;
+
+            using Foam::surfMesh;
             surfIn.write("oldSurfIn.obj");
 
 
@@ -368,7 +370,7 @@ int main(int argc, char *argv[])
             surfOut.write();
 
             // write directly
-            surfOut.write("someName.ofs");
+            surfOut.surfMesh::write("someName.ofs");
 
 #if 1
             const surfZoneList& zones = surfOut.surfZones();

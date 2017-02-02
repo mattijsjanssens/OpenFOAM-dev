@@ -37,7 +37,8 @@ bool Foam::regIOobject::writeObject
 (
     IOstream::streamFormat fmt,
     IOstream::versionNumber ver,
-    IOstream::compressionType cmp
+    IOstream::compressionType cmp,
+    const bool valid
 ) const
 {
     if (!good())
@@ -140,7 +141,7 @@ bool Foam::regIOobject::writeObject
         //
         //    osGood = os.good();
         //}
-        osGood = fileHandler().writeObject(*this, fmt, ver, cmp);
+        osGood = fileHandler().writeObject(*this, fmt, ver, cmp, valid);
     }
     else
     {
@@ -164,13 +165,14 @@ bool Foam::regIOobject::writeObject
 }
 
 
-bool Foam::regIOobject::write() const
+bool Foam::regIOobject::write(const bool valid) const
 {
     return writeObject
     (
         time().writeFormat(),
         IOstream::currentVersion,
-        time().writeCompression()
+        time().writeCompression(),
+        valid
     );
 }
 

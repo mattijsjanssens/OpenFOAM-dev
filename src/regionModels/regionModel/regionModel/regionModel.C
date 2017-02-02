@@ -533,7 +533,8 @@ void Foam::regionModels::regionModel::evolve()
             (
                 IOstream::ASCII,
                 IOstream::currentVersion,
-                time_.writeCompression()
+                time_.writeCompression(),
+                true
             );
         }
     }

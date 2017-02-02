@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -181,7 +181,7 @@ void Foam::ReactingParcel<ParcelType>::writeFields
 
     const label np = c.size();
 
-    if (np > 0)
+//    if (np > 0)
     {
         IOField<scalar> mass0(c.fieldIOobject("mass0", IOobject::NO_READ), np);
 
@@ -191,7 +191,7 @@ void Foam::ReactingParcel<ParcelType>::writeFields
             const ReactingParcel<ParcelType>& p = iter();
             mass0[i++] = p.mass0_;
         }
-        mass0.write();
+        mass0.write(np > 0);
 
         // Write the composition fractions
         const wordList& phaseTypes = compModel.phaseTypes();
@@ -224,7 +224,7 @@ void Foam::ReactingParcel<ParcelType>::writeFields
                 Y[i++] = p.Y()[j];
             }
 
-            Y.write();
+            Y.write(np > 0);
         }
     }
 }

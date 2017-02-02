@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -187,7 +187,7 @@ void Foam::CollidingParcel<ParcelType>::writeFields(const CloudType& c)
 {
     ParcelType::writeFields(c);
 
-    label np =  c.size();
+    label np = c.size();
 
     IOField<vector> f(c.fieldIOobject("f", IOobject::NO_READ), np);
     IOField<vector> angularMomentum

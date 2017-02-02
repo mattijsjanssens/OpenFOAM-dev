@@ -177,7 +177,8 @@ bool Foam::CompactIOList<T, BaseType>::writeObject
 (
     IOstream::streamFormat fmt,
     IOstream::versionNumber ver,
-    IOstream::compressionType cmp
+    IOstream::compressionType cmp,
+    const bool valid
 ) const
 {
     if (fmt == IOstream::ASCII)
@@ -187,7 +188,7 @@ bool Foam::CompactIOList<T, BaseType>::writeObject
 
         const_cast<word&>(typeName) = IOList<T>::typeName;
 
-        bool good = regIOobject::writeObject(fmt, ver, cmp);
+        bool good = regIOobject::writeObject(fmt, ver, cmp, valid);
 
         // Change type back
         const_cast<word&>(typeName) = oldTypeName;
@@ -206,7 +207,7 @@ bool Foam::CompactIOList<T, BaseType>::writeObject
 
         const_cast<word&>(typeName) = IOList<T>::typeName;
 
-        bool good = regIOobject::writeObject(IOstream::ASCII, ver, cmp);
+        bool good = regIOobject::writeObject(IOstream::ASCII, ver, cmp, valid);
 
         // Change type back
         const_cast<word&>(typeName) = oldTypeName;
@@ -215,7 +216,7 @@ bool Foam::CompactIOList<T, BaseType>::writeObject
     }
     else
     {
-        return regIOobject::writeObject(fmt, ver, cmp);
+        return regIOobject::writeObject(fmt, ver, cmp, valid);
     }
 }
 

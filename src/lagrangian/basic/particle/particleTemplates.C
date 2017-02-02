@@ -158,11 +158,11 @@ void Foam::particle::readFields(CloudType& c)
 template<class CloudType>
 void Foam::particle::writeFields(const CloudType& c)
 {
+    label np =  c.size();
+
     // Write the cloud position file
     IOPosition<CloudType> ioP(c);
-    ioP.write();
-
-    label np =  c.size();
+    ioP.write(np > 0);
 
     IOField<label> origProc
     (
@@ -179,8 +179,8 @@ void Foam::particle::writeFields(const CloudType& c)
         i++;
     }
 
-    origProc.write();
-    origId.write();
+    origProc.write(np > 0);
+    origId.write(np > 0);
 }
 
 

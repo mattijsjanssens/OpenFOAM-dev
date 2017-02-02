@@ -130,7 +130,8 @@ bool writeZones(const word& name, const fileName& meshDir, Time& runTime)
         (
             IOstream::ASCII,
             IOstream::currentVersion,
-            runTime.writeCompression()
+            runTime.writeCompression(),
+            true
         );
     }
 
