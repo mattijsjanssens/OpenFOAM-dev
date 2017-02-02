@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -372,6 +372,8 @@ int main(int argc, char *argv[])
             {
                 Info<< "Removing " << nProcs
                     << " existing processor directories" << endl;
+
+                rmDir(runTime.path()/word("processors"));
 
                 // remove existing processor dirs
                 // reverse order to avoid gaps if someone interrupts the process

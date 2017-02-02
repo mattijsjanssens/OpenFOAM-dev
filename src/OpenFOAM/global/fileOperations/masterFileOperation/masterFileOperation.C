@@ -861,13 +861,150 @@ Foam::fileOperations::masterFileOperation::NewOFstream
 }
 
 
+Foam::label Foam::fileOperations::masterFileOperation::addWatch
+(
+    const fileName& fName
+) const
+{
+    label watchFd;
+    if (Pstream::master())
+    {
+        watchFd = monitor().addWatch(fName);
+    }
+    Pstream::scatter(watchFd);
+    return watchFd;
+}
+
+
+bool Foam::fileOperations::masterFileOperation::removeWatch
+(
+    const label watchIndex
+) const
+{
+    bool ok;
+    if (Pstream::master())
+    {
+        ok = monitor().removeWatch(watchIndex);
+    }
+    Pstream::scatter(ok);
+    return ok;
+}
+
+
+Foam::label Foam::fileOperations::masterFileOperation::findWatch
+(
+    const labelList& watchIndices,
+    const fileName& fName
+) const
+{
+    label index = -1;
+
+    if (Pstream::master())
+    {
+        forAll(watchIndices, i)
+        {
+            if (monitor().getFile(watchIndices[i]) == fName)
+            {
+                index = i;
+                break;
+            }
+        }
+    }
+    Pstream::scatter(index);
+    return index;
+}
+
+
+void Foam::fileOperations::masterFileOperation::addWatches
+(
+    regIOobject& rio,
+    const fileNameList& files
+) const
+{
+    const labelList& watchIndices = rio.watchIndices();
+
+    DynamicList<label> newWatchIndices;
+    labelHashSet removedWatches(watchIndices);
+
+    forAll(files, i)
+    {
+        const fileName& f = files[i];
+        label index = findWatch(watchIndices, f);
+
+        if (index == -1)
+        {
+            newWatchIndices.append(addWatch(f));
+        }
+        else
+        {
+            // Existing watch
+            newWatchIndices.append(watchIndices[index]);
+            removedWatches.erase(index);
+        }
+    }
+
+    // Remove any unused watches
+    forAllConstIter(labelHashSet, removedWatches, iter)
+    {
+        removeWatch(watchIndices[iter.key()]);
+    }
+
+    rio.watchIndices() = newWatchIndices;
+}
+
+
+const Foam::fileName Foam::fileOperations::masterFileOperation::getFile
+(
+    const label watchIndex
+) const
+{
+    fileName fName;
+    if (Pstream::master())
+    {
+        fName = monitor().getFile(watchIndex);
+    }
+    Pstream::scatter(fName);
+    return fName;
+}
+
+
 void Foam::fileOperations::masterFileOperation::updateStates
 (
     const bool masterOnly,
     const bool syncPar
 ) const
 {
-    monitor().updateStates(true, Pstream::parRun());
+    if (Pstream::master())
+    {
+        monitor().updateStates(true, false);
+    }
+}
+
+
+Foam::fileMonitor::fileState Foam::fileOperations::masterFileOperation::getState
+(
+    const label watchFd
+) const
+{
+    unsigned int state = fileMonitor::UNMODIFIED;
+    if (Pstream::master())
+    {
+        state = monitor().getState(watchFd);
+    }
+    Pstream::scatter(state);
+    return fileMonitor::fileState(state);
+}
+
+
+void Foam::fileOperations::masterFileOperation::setUnmodified
+(
+    const label watchFd
+) const
+{
+    if (Pstream::master())
+    {
+        monitor().setUnmodified(watchFd);
+    }
 }
 
 

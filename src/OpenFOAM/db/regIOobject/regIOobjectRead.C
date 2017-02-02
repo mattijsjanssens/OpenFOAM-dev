@@ -382,7 +382,7 @@ bool Foam::regIOobject::readIfModified()
 
     if (modified != -1)
     {
-        const fileName& fName = fileHandler().getFile(watchIndices_.last());
+        const fileName fName = fileHandler().getFile(watchIndices_.last());
 
         if (modified == watchIndices_.last())
         {

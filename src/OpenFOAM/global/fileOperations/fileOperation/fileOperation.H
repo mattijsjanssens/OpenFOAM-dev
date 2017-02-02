@@ -277,7 +277,7 @@ public:
             virtual void addWatches(regIOobject&, const fileNameList&) const;
 
             //- Get name of file being watched (using handle)
-            virtual const fileName& getFile(const label) const;
+            virtual const fileName getFile(const label) const;
 
             //- Update state of all files
             virtual void updateStates

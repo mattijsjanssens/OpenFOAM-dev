@@ -413,12 +413,37 @@ public:
 
         // File modification checking
 
+            //- Add watching of a file. Returns handle
+            virtual label addWatch(const fileName&) const;
+
+            //- Remove watch on a file (using handle)
+            virtual bool removeWatch(const label) const;
+
+            //- Find index (or -1) of file in list of handles
+            virtual label findWatch
+            (
+                const labelList& watchIndices,
+                const fileName&
+            ) const;
+
+            //- Helper: add watches for list of regIOobjects
+            virtual void addWatches(regIOobject&, const fileNameList&) const;
+
+            //- Get name of file being watched (using handle)
+            virtual const fileName getFile(const label) const;
+
             //- Update state of all files
             virtual void updateStates
             (
                 const bool masterOnly,
                 const bool syncPar
             ) const;
+
+            //- Get current state of file (using handle)
+            virtual fileMonitor::fileState getState(const label) const;
+
+            //- Set current state of file (using handle) to unmodified
+            virtual void setUnmodified(const label) const;
 
 
         // Other

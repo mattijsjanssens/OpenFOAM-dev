@@ -295,7 +295,7 @@ void Foam::fileOperation::addWatches
 }
 
 
-const Foam::fileName& Foam::fileOperation::getFile(const label watchIndex) const
+const Foam::fileName Foam::fileOperation::getFile(const label watchIndex) const
 {
     return monitor().getFile(watchIndex);
 }

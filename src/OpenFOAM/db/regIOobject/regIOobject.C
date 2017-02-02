@@ -420,49 +420,12 @@ Foam::fileName Foam::regIOobject::filePath() const
 }
 
 
-// Foam::autoPtr<Foam::Istream> Foam::regIOobject::objectStream()
-// {
-//     //return IOobject::objectStream(filePath());
-//     return fileHandler().objectStream(filePath());
-// }
-
-
 bool Foam::regIOobject::headerOk()
 {
     // Note: Should be consistent with IOobject::typeHeaderOk(false)
 
     bool ok = true;
 
-//    //autoPtr<Istream> isPtr = objectStream();
-//    autoPtr<Istream> isPtr(fileHandler().objectStream(filePath()));
-//
-//    // If the stream has failed return
-//    if (!isPtr.valid())
-//    {
-//        if (objectRegistry::debug)
-//        {
-//            InfoInFunction
-//                << "file " << objectPath() << " could not be opened"
-//                << endl;
-//        }
-//
-//        ok = false;
-//    }
-//    else
-//    {
-//        // Try reading header
-//        if (!readHeader(isPtr()))
-//        {
-//            if (objectRegistry::debug)
-//            {
-//                IOWarningInFunction(isPtr())
-//                    << "failed to read header of file " << objectPath()
-//                    << endl;
-//            }
-//
-//            ok = false;
-//        }
-//    }
     fileName fName(filePath());
 
     if (fName.empty())
