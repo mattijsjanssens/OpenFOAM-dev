@@ -204,16 +204,18 @@ void Foam::KinematicParcel<ParcelType>::writeFields(const CloudType& c)
         i++;
     }
 
-    active.write();
-    typeId.write();
-    nParticle.write();
-    d.write();
-    dTarget.write();
-    U.write();
-    rho.write();
-    age.write();
-    tTurb.write();
-    UTurb.write();
+    const bool valid = np > 0;
+
+    active.write(valid);
+    typeId.write(valid);
+    nParticle.write(valid);
+    d.write(valid);
+    dTarget.write(valid);
+    U.write(valid);
+    rho.write(valid);
+    age.write(valid);
+    tTurb.write(valid);
+    UTurb.write(valid);
 }
 
 

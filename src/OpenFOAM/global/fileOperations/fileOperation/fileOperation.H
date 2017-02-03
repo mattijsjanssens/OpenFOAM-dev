@@ -44,6 +44,7 @@ namespace Foam
 
 class IOobject;
 class regIOobject;
+class objectRegistry;
 
 /*---------------------------------------------------------------------------*\
                          Class fileOperation Declaration
@@ -217,6 +218,15 @@ public:
             (
                 const bool checkGlobal,
                 const IOobject&
+            ) const = 0;
+
+            //- Search directory for objects. Used in IOobjectList.
+            virtual fileNameList readObjects
+            (
+                const objectRegistry& db,
+                const fileName& instance,
+                const fileName& local,
+                word& newInstance
             ) const = 0;
 
             //- Read object header from supplied file

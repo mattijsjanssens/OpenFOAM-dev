@@ -28,6 +28,7 @@ License
 #include "OSspecific.H"
 #include "PstreamBuffers.H"
 #include "masterFileOperation.H"
+#include "boolList.H"
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
@@ -94,7 +95,7 @@ Foam::masterOFstream::~masterOFstream()
 
         if (uniform)
         {
-            if (Pstream::master())
+            if (Pstream::master() && valid_)
             {
                 const fileName& fName = filePaths[0];
                 autoPtr<Ostream> osPtr(open(fName));
@@ -107,6 +108,9 @@ Foam::masterOFstream::~masterOFstream()
             }
             return;
         }
+        boolList valid(Pstream::nProcs());
+        valid[Pstream::myProcNo()] = valid_;
+        Pstream::gatherList(valid);
 
 
         // Different files
@@ -129,12 +133,16 @@ Foam::masterOFstream::~masterOFstream()
             {
                 const fileName& fName = filePaths[Pstream::myProcNo()];
 
-                autoPtr<Ostream> osPtr(open(fName));
-                osPtr().writeQuoted(str(), false);
-                if (!osPtr().good())
+                if (valid[Pstream::myProcNo()])
                 {
-                    FatalIOErrorInFunction(osPtr())
-                        << "Failed writing to " << fName << exit(FatalIOError);
+                    autoPtr<Ostream> osPtr(open(fName));
+                    osPtr().writeQuoted(str(), false);
+                    if (!osPtr().good())
+                    {
+                        FatalIOErrorInFunction(osPtr())
+                            << "Failed writing to " << fName
+                            << exit(FatalIOError);
+                    }
                 }
             }
 
@@ -145,7 +153,7 @@ Foam::masterOFstream::~masterOFstream()
 
                 is.read(buf.begin(), buf.size());
 
-                if (valid_)
+                if (valid[proci])
                 {
                     const fileName& fName = filePaths[proci];
 

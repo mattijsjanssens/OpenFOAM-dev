@@ -260,17 +260,19 @@ void Foam::CollidingParcel<ParcelType>::writeFields(const CloudType& c)
         i++;
     }
 
-    f.write();
-    angularMomentum.write();
-    torque.write();
+    const bool valid = (np > 0);
 
-    collisionRecordsPairAccessed.write();
-    collisionRecordsPairOrigProcOfOther.write();
-    collisionRecordsPairOrigIdOfOther.write();
-    collisionRecordsPairData.write();
-    collisionRecordsWallAccessed.write();
-    collisionRecordsWallPRel.write();
-    collisionRecordsWallData.write();
+    f.write(valid);
+    angularMomentum.write(valid);
+    torque.write(valid);
+
+    collisionRecordsPairAccessed.write(valid);
+    collisionRecordsPairOrigProcOfOther.write(valid);
+    collisionRecordsPairOrigIdOfOther.write(valid);
+    collisionRecordsPairData.write(valid);
+    collisionRecordsWallAccessed.write(valid);
+    collisionRecordsWallPRel.write(valid);
+    collisionRecordsWallData.write(valid);
 }
 
 

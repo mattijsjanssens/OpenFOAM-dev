@@ -514,6 +514,63 @@ Foam::fileName Foam::fileOperations::masterFileOperation::filePath
 }
 
 
+Foam::fileNameList Foam::fileOperations::masterFileOperation::readObjects
+(
+    const objectRegistry& db,
+    const fileName& instance,
+    const fileName& local,
+    word& newInstance
+) const
+{
+    fileNameList objectNames;
+
+//     if (Pstream::master())
+//     {
+//         if (Foam::isDir(db.path(instance)))
+//         {
+//             newInstance = instance;
+//             objectNames = Foam::readDir
+//             (
+//                 db.path(newInstance, db.dbDir()/local),
+//                 fileName::FILE
+//             );
+//         }
+//         else
+//         {
+//             // Read directory entries into a list
+//             fileNameList dirEntries
+//             (
+//                 Foam::readDir
+//                 (
+//                     directory,
+//                     fileName::DIRECTORY
+//                 )
+//             );
+//
+//             instantList timeDirs =
+//                  sortTimes(dirEntries, db.time().constant());
+//
+//
+// XXXXX
+//             // Find similar time
+//             newInstance = db.time().findInstancePath(instant(instance));
+//             if (!newInstance.empty())
+//             {
+//                 objectNames = readDir
+//                 (
+//                     db.path(newInstance, db.dbDir()/local),
+//                     fileName::FILE
+//                 );
+//             }
+//         }
+//     }
+//
+//     Pstream::scatter(objectNames);
+
+    return objectNames;
+}
+
+
 bool Foam::fileOperations::masterFileOperation::readHeader
 (
     IOobject& io,
@@ -658,8 +715,13 @@ bool Foam::fileOperations::masterFileOperation::writeObject
     const bool valid
 ) const
 {
-    mkDir(io.path());
     fileName pathName(io.objectPath());
+
+    if (debug)
+    {
+        Pout<< FUNCTION_NAME << " : io:" << pathName
+            << " valid:" << valid << endl;
+    }
 
     autoPtr<Ostream> osPtr
     (
@@ -705,7 +767,8 @@ Foam::instantList Foam::fileOperations::masterFileOperation::findTimes
 {
     if (debug)
     {
-        InfoInFunction << "Finding times in directory " << directory << endl;
+        Pout<< FUNCTION_NAME
+            << "Finding times in directory " << directory << endl;
     }
 
     instantList times;

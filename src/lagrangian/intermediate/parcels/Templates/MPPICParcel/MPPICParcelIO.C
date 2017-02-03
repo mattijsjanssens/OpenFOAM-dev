@@ -122,7 +122,7 @@ void Foam::MPPICParcel<ParcelType>::writeFields(const CloudType& c)
         i++;
     }
 
-    UCorrect.write();
+    UCorrect.write(np > 0);
 }
 
 

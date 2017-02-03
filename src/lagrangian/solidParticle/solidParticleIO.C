@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -109,8 +109,8 @@ void Foam::solidParticle::writeFields(const Cloud<solidParticle>& c)
         i++;
     }
 
-    d.write();
-    U.write();
+    d.write(np > 0);
+    U.write(np > 0);
 }
 
 

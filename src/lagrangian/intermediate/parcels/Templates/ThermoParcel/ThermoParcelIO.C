@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -128,8 +128,8 @@ void Foam::ThermoParcel<ParcelType>::writeFields(const CloudType& c)
         i++;
     }
 
-    T.write();
-    Cp.write();
+    T.write(np > 0);
+    Cp.write(np > 0);
 }
 
 

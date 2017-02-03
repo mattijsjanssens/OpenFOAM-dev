@@ -377,6 +377,15 @@ public:
                 const IOobject&
             ) const;
 
+            //- Search directory for objects. Used in IOobjectList.
+            virtual fileNameList readObjects
+            (
+                const objectRegistry& db,
+                const fileName& instance,
+                const fileName& local,
+                word& newInstance
+            ) const;
+
             //- Read object header from supplied file
             virtual bool readHeader(IOobject&, const fileName& fName) const;
 

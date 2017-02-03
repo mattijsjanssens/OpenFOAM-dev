@@ -28,6 +28,7 @@ License
 #include "IFstream.H"
 #include "OFstream.H"
 #include "addToRunTimeSelectionTable.H"
+#include "masterFileOperation.H"
 
 /* * * * * * * * * * * * * * * Static Member Data  * * * * * * * * * * * * * */
 
@@ -39,6 +40,26 @@ namespace fileOperations
     addToRunTimeSelectionTable(fileOperation, localFileOperation, word);
 }
 }
+
+
+// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
+
+// bool Foam::fileOperations::localFileOperation::processorCase
+// (
+//     const fileName& path,
+//     fileName& processorsPath
+// )
+// {
+//     std::string::size_type pos = directory.name().find("processor");
+//     if (pos == 0)
+//     {
+//         processorsPath = directory.path()/"processors";
+//         return true;
+//     }
+//     {
+//         return false;
+//     }
+// }
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
@@ -218,6 +239,13 @@ Foam::fileName Foam::fileOperations::localFileOperation::filePath
     const IOobject& io
 ) const
 {
+    if (debug)
+    {
+        Pout<< FUNCTION_NAME << " : io:" << io.objectPath()
+            << " checkGlobal:" << checkGlobal
+            << " processorCase:" << io.time().processorCase() << endl;
+    }
+
     if (io.instance().isAbsolute())
     {
         fileName objectPath = io.instance()/io.name();
@@ -264,6 +292,26 @@ Foam::fileName Foam::fileOperations::localFileOperation::filePath
                 }
             }
 
+            // Check if parallel "procesors" directory
+            if (io.time().processorCase())
+            {
+                fileName path =
+                    fileOperations::masterFileOperation::processorsPath
+                    (
+                        io,
+                        io.instance()
+                    );
+                fileName objectPath = path/io.name();
+
+DebugVar(objectPath);
+
+                if (Foam::isFile(objectPath))
+                {
+                    return objectPath;
+                }
+            }
+
+
             // Check for approximately same time
             if (!Foam::isDir(path))
             {
@@ -290,6 +338,59 @@ Foam::fileName Foam::fileOperations::localFileOperation::filePath
 
         return fileName::null;
     }
+}
+
+
+Foam::fileNameList Foam::fileOperations::localFileOperation::readObjects
+(
+    const objectRegistry& db,
+    const fileName& instance,
+    const fileName& local,
+    word& newInstance
+) const
+{
+    if (debug)
+    {
+        Pout<< FUNCTION_NAME
+            << " db:" << db.objectPath()
+            << " instance:" << instance << endl;
+    }
+
+
+    fileNameList objectNames;
+    if (isDir(db.path(instance)))
+    {
+        newInstance = instance;
+        objectNames = readDir
+        (
+            db.path(newInstance, db.dbDir()/local),
+            fileName::FILE
+        );
+    }
+    else
+    {
+        // Find similar time
+        newInstance = db.time().findInstancePath(instant(instance));
+        if (!newInstance.empty())
+        {
+            objectNames = readDir
+            (
+                db.path(newInstance, db.dbDir()/local),
+                fileName::FILE
+            );
+        }
+    }
+
+
+    if (debug)
+    {
+        Pout<< FUNCTION_NAME
+            << " newInstance:" << newInstance
+            << " objectNames:" << objectNames << endl;
+    }
+
+
+    return objectNames;
 }
 
 
@@ -374,7 +475,67 @@ Foam::instantList Foam::fileOperations::localFileOperation::findTimes
         )
     );
 
-    return sortTimes(dirEntries, constantName);
+    instantList times = sortTimes(dirEntries, constantName);
+
+    // Check if directory is processorXXX
+    word caseName(directory.name());
+
+    std::string::size_type pos = caseName.find("processor");
+    if (pos == 0)
+    {
+        fileName processorsDir(directory.path()/"processors");
+
+        fileNameList extraEntries
+        (
+            Foam::readDir
+            (
+                processorsDir,
+                fileName::DIRECTORY
+            )
+        );
+
+        instantList extraTimes = sortTimes(extraEntries, constantName);
+
+        label sz = times.size();
+        times.setSize(sz+extraTimes.size());
+        forAll(extraTimes, i)
+        {
+            times[sz++] = extraTimes[i];
+        }
+
+        // Sort
+        if (times.size() > 2 && times[0].name() == constantName)
+        {
+            std::sort(&times[1], times.end(), instant::less());
+        }
+        else if (times.size() > 1)
+        {
+            std::sort(&times[0], times.end(), instant::less());
+        }
+
+        // Filter out duplicates
+        label newI = 0;
+        for (label i = 1; i < times.size(); i++)
+        {
+            if (times[i].value() != times[i-1].value())
+            {
+                if (newI != i)
+                {
+                    times[newI++] = times[i];
+                }
+            }
+        }
+
+        times.setSize(newI);
+    }
+
+    if (debug)
+    {
+        Pout<< FUNCTION_NAME << " : times:" << times << endl;
+    }
+
+
+    return times;
 }
 
 

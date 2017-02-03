@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -258,19 +258,21 @@ void Foam::SprayParcel<ParcelType>::writeFields
         i++;
     }
 
-    d0.write();
-    position0.write();
-    sigma.write();
-    mu.write();
-    liquidCore.write();
-    KHindex.write();
-    y.write();
-    yDot.write();
-    tc.write();
-    ms.write();
-    injector.write();
-    tMom.write();
-    user.write();
+    const bool valid = np > 0;
+
+    d0.write(valid);
+    position0.write(valid);
+    sigma.write(valid);
+    mu.write(valid);
+    liquidCore.write(valid);
+    KHindex.write(valid);
+    y.write(valid);
+    yDot.write(valid);
+    tc.write(valid);
+    ms.write(valid);
+    injector.write(valid);
+    tMom.write(valid);
+    user.write(valid);
 }
 
 

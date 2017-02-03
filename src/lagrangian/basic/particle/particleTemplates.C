@@ -158,7 +158,7 @@ void Foam::particle::readFields(CloudType& c)
 template<class CloudType>
 void Foam::particle::writeFields(const CloudType& c)
 {
-    label np =  c.size();
+    label np = c.size();
 
     // Write the cloud position file
     IOPosition<CloudType> ioP(c);

@@ -669,29 +669,43 @@ Foam::word Foam::Time::findInstancePath
     const instant& t
 ) const
 {
-    // Read directory entries into a list
-    fileNameList dirEntries
-    (
-        fileHandler().readDir(directory, fileName::DIRECTORY)
-    );
+//     // Read directory entries into a list
+//     fileNameList dirEntries
+//     (
+//         fileHandler().readDir(directory, fileName::DIRECTORY)
+//     );
+//
+//     forAll(dirEntries, i)
+//     {
+//         scalar timeValue;
+//         if (readScalar(dirEntries[i].c_str(), timeValue)
+//             && t.equal(timeValue))
+//         {
+//             return dirEntries[i];
+//         }
+//     }
+//
+//     if (t.equal(0.0))
+//     {
+//         const word& constantName = constant();
+//
+//         // Looking for 0 or constant. 0 already checked above.
+//         if (fileHandler().isDir(directory/constantName))
+//         {
+//             return constantName;
+//         }
+//     }
 
-    forAll(dirEntries, i)
+    instantList timeDirs = findTimes(path(), constant());
+    // Note:
+    // - times will include constant (with value 0) so search in reverse
+    //   direction to make sure we find 0 instead of constant first
+    // - list is sorted so could use binary search
+    forAllReverse(timeDirs, i)
     {
-        scalar timeValue;
-        if (readScalar(dirEntries[i].c_str(), timeValue) && t.equal(timeValue))
+        if (t.equal(timeDirs[i].value()))
         {
-            return dirEntries[i];
-        }
-    }
-
-    if (t.equal(0.0))
-    {
-        const word& constantName = constant();
-
-        // Looking for 0 or constant. 0 already checked above.
-        if (isDir(directory/constantName))
-        {
-            return constantName;
+            return timeDirs[i].name();
         }
     }
 

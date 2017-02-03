@@ -48,24 +48,39 @@ Foam::IOobjectList::IOobjectList
 :
     HashPtrTable<IOobject>()
 {
-    word newInstance = instance;
+DebugVar(instance);
+DebugVar(db.path(instance));
 
-    if (!fileHandler().isDir(db.path(instance)))
-    {
-        newInstance = db.time().findInstancePath(instant(instance));
+//     word newInstance = instance;
+//
+//     if (!fileHandler().isDir(db.path(instance)))
+//     {
+//         newInstance = db.time().findInstancePath(instant(instance));
+//
+//         if (newInstance.empty())
+//         {
+//             return;
+//         }
+//     }
+//
+// DebugVar(db.path(newInstance, db.dbDir()/local));
+//
+//     // Create a list of file names in this directory
+//     fileNameList ObjectNames = fileHandler().readDir
+//     (
+//         db.path(newInstance, db.dbDir()/local),
+//         fileName::FILE
+//     );
 
-        if (newInstance.empty())
-        {
-            return;
-        }
-    }
-
-    // Create a list of file names in this directory
-    fileNameList ObjectNames = fileHandler().readDir
+    word newInstance;
+    fileNameList ObjectNames = fileHandler().readObjects
     (
-        db.path(newInstance, db.dbDir()/local),
-        fileName::FILE
+        db,
+        instance,
+        local,
+        newInstance
     );
+
 
     forAll(ObjectNames, i)
     {
