@@ -374,8 +374,8 @@ bool Foam::fileOperations::masterCollatingFileOperation::writeObject
         {
             if (debug)
             {
-                Pout<< FUNCTION_NAME << " : For object : " << io.name()
-                    << " falling back to master-only output to " << io.path()
+                Pout<< FUNCTION_NAME << " : For global object : " << io.name()
+                    << " falling back to master-only output to " << pathName
                     << endl;
             }
             osPtr.reset(new masterOFstream(pathName, fmt, ver, cmp, valid));

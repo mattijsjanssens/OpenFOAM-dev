@@ -27,6 +27,7 @@ License
 #include "OFstream.H"
 #include "OSspecific.H"
 #include "PstreamBuffers.H"
+#include "masterFileOperation.H"
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
@@ -84,23 +85,18 @@ Foam::masterOFstream::~masterOFstream()
         filePaths[Pstream::myProcNo()] = pathName_;
         Pstream::gatherList(filePaths);
 
-        if (Pstream::master())
+        bool uniform = fileOperations::masterFileOperation::uniformFile
+        (
+            filePaths
+        );
+
+        Pstream::scatter(uniform);
+
+        if (uniform)
         {
-            bool uniform = true;
-            const fileName& object0 = filePaths[0];
-            for (label proci = 1; proci < Pstream::nProcs(); proci++)
+            if (Pstream::master())
             {
-                if (filePaths[proci] != object0)
-                {
-                    uniform = false;
-                    break;
-                }
-            }
-
-
-            if (uniform)
-            {
-                const fileName& fName = object0;
+                const fileName& fName = filePaths[0];
                 autoPtr<Ostream> osPtr(open(fName));
                 osPtr().writeQuoted(str(), false);
                 if (!osPtr().good())
@@ -108,9 +104,10 @@ Foam::masterOFstream::~masterOFstream()
                     FatalIOErrorInFunction(osPtr())
                         << "Failed writing to " << fName << exit(FatalIOError);
                 }
-                return;
             }
+            return;
         }
+
 
         // Different files
         PstreamBuffers pBufs(Pstream::nonBlocking);

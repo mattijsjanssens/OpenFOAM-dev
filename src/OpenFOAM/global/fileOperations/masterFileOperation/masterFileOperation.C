@@ -471,7 +471,8 @@ Foam::fileName Foam::fileOperations::masterFileOperation::filePath
 {
     if (debug)
     {
-        Pout<< FUNCTION_NAME << " : objectPath:" << io.objectPath() << endl;
+        Pout<< FUNCTION_NAME << " : objectPath:" << io.objectPath()
+            << " checkGlobal:" << checkGlobal << endl;
     }
 
     fileName objPath;
