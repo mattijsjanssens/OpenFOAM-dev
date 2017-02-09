@@ -48,9 +48,9 @@ Foam::IOobjectList::IOobjectList
 :
     HashPtrTable<IOobject>()
 {
-DebugVar(instance);
-DebugVar(db.path(instance));
-
+//DebugVar(instance);
+//DebugVar(db.path(instance));
+//
 //     word newInstance = instance;
 //
 //     if (!fileHandler().isDir(db.path(instance)))
@@ -84,6 +84,9 @@ DebugVar(db.path(instance));
 
     forAll(ObjectNames, i)
     {
+//DebugVar(ObjectNames[i]);
+//DebugVar(newInstance);
+
         IOobject* objectPtr = new IOobject
         (
             ObjectNames[i],
@@ -98,6 +101,9 @@ DebugVar(db.path(instance));
         // Use object with local scope
         if (objectPtr->typeHeaderOk<IOList<label>>(false))
         {
+Pout<< "** read object:" << objectPtr->objectPath() << endl;
+
+
             insert(ObjectNames[i], objectPtr);
         }
         else

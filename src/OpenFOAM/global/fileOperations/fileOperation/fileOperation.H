@@ -310,8 +310,7 @@ public:
         // Other
 
             //- Get sorted list of times
-            virtual instantList findTimes(const fileName&, const word&)
-            const = 0;
+            virtual instantList findTimes(const fileName&, const word&) const;
 };
 
 

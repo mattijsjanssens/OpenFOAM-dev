@@ -75,11 +75,11 @@ public:
             const UPstream::commsTypes = UPstream::scheduled
         );
 
-        //- Construct given an IOobject and List<char>
+        //- Construct given an IOobject and for READ_IF_MODIFIED a List<char>
         decomposedBlockData
         (
             const IOobject&,
-            const List<char>&,
+            const UList<char>&,
             const UPstream::commsTypes = UPstream::scheduled
         );
 
@@ -123,6 +123,14 @@ public:
 
         //- Read header. Call only on master.
         static bool readMasterHeader(IOobject&, Istream&);
+
+        //- Read selected block (non-seeking)
+        static bool readBlock
+        (
+            const label blocki,
+            Istream& is,
+            List<char>& data
+        );
 
         //- Read data into *this. Istream is only valid on master.
         static bool readBlocks

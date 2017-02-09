@@ -28,6 +28,7 @@ License
 #include "regIOobject.H"
 #include "argList.H"
 #include "HashSet.H"
+#include "masterFileOperation.H"
 
 /* * * * * * * * * * * * * * * Static Member Data  * * * * * * * * * * * * * */
 
@@ -328,6 +329,96 @@ Foam::fileMonitor::fileState Foam::fileOperation::getState
 void Foam::fileOperation::setUnmodified(const label watchFd) const
 {
     monitor().setUnmodified(watchFd);
+}
+
+
+Foam::instantList Foam::fileOperation::findTimes
+(
+    const fileName& directory,
+    const word& constantName
+) const
+{
+    if (debug)
+    {
+        Pout<< FUNCTION_NAME
+            << " : Finding times in directory " << directory << endl;
+    }
+
+    // Read directory entries into a list
+    fileNameList dirEntries
+    (
+        Foam::readDir
+        (
+            directory,
+            fileName::DIRECTORY
+        )
+    );
+
+    instantList times = sortTimes(dirEntries, constantName);
+
+    // Check if directory is processorXXX
+    fileName procsDir
+    (
+        fileOperations::masterFileOperation::processorsPath
+        (
+            directory
+        )
+    );
+
+    if (!procsDir.empty())
+    {
+        fileNameList extraEntries
+        (
+            Foam::readDir
+            (
+                procsDir,
+                fileName::DIRECTORY
+            )
+        );
+
+        instantList extraTimes = sortTimes(extraEntries, constantName);
+
+        label sz = times.size();
+        times.setSize(sz+extraTimes.size());
+        forAll(extraTimes, i)
+        {
+            times[sz++] = extraTimes[i];
+        }
+
+        // Sort
+        if (times.size() > 1)
+        {
+            label starti = 0;
+            if (times[0].name() == constantName)
+            {
+                starti = 1;
+            }
+            std::sort(&times[starti], times.end(), instant::less());
+
+            // Filter out duplicates
+            label newi = starti+1;
+            for (label i = newi; i < times.size(); i++)
+            {
+                if (times[i].value() != times[i-1].value())
+                {
+                    if (newi != i)
+                    {
+                        times[newi] = times[i];
+                    }
+                    newi++;
+                }
+            }
+
+            times.setSize(newi);
+        }
+    }
+
+    if (debug)
+    {
+        Pout<< FUNCTION_NAME
+            << " : Found times:" << times << endl;
+    }
+    return times;
 }
 
 

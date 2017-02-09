@@ -180,6 +180,60 @@ Foam::fileName Foam::fileOperations::masterFileOperation::processorsPath
 }
 
 
+Foam::fileName Foam::fileOperations::masterFileOperation::processorsPath
+(
+    const fileName& dir
+)
+{
+    // Check if directory is processorXXX
+    word caseName(dir.name());
+
+    std::string::size_type pos = caseName.find("processor");
+    if (pos == 0)
+    {
+        return dir.path()/"processors";
+    }
+    else
+    {
+        return fileName::null;
+    }
+}
+
+
+Foam::label Foam::fileOperations::masterFileOperation::splitProcessorPath
+(
+    const fileName& objectPath,
+    fileName& path,
+    fileName& local
+)
+{
+    std::string::size_type pos = objectPath.find("/processor");
+    if (pos == string::npos)
+    {
+        return -1;
+    }
+
+    path = objectPath.substr(0, pos);
+
+    local = objectPath.substr(pos+10);
+
+    pos = local.find('/');
+
+    if (pos == string::npos)
+    {
+        return -1;
+    }
+    string procName(local.substr(0, pos));
+    label proci;
+    if (read(procName.c_str(), proci))
+    {
+        local = local.substr(pos+1);
+        return proci;
+    }
+    return -1;
+}
+
+
 Foam::fileName Foam::fileOperations::masterFileOperation::objectPath
 (
     const IOobject& io,
@@ -768,26 +822,22 @@ Foam::instantList Foam::fileOperations::masterFileOperation::findTimes
     if (debug)
     {
         Pout<< FUNCTION_NAME
-            << "Finding times in directory " << directory << endl;
+            << " : Finding times in directory " << directory << endl;
     }
 
     instantList times;
 
     if (Pstream::master())
     {
-        // Read directory entries into a list
-        fileNameList dirEntries
-        (
-            Foam::readDir
-            (
-                directory,
-                fileName::DIRECTORY
-            )
-        );
-
-        times = sortTimes(dirEntries, constantName);
+        times = fileOperation::findTimes(directory, constantName);
     }
     Pstream::scatter(times);
+
+    if (debug)
+    {
+        Pout<< FUNCTION_NAME
+            << " : Found times:" << times << endl;
+    }
     return times;
 }
 

@@ -79,7 +79,7 @@ Foam::decomposedBlockData::decomposedBlockData
 Foam::decomposedBlockData::decomposedBlockData
 (
     const IOobject& io,
-    const List<char>& list,
+    const UList<char>& list,
     const UPstream::commsTypes commsType
 )
 :
@@ -172,10 +172,13 @@ bool Foam::decomposedBlockData::readMasterHeader(IOobject& io, Istream& is)
 
         if (s != UPstream::nProcs())
         {
-            FatalIOErrorInFunction(is)
+            //FatalIOErrorInFunction(is)
+            IOWarningInFunction(is)
                 << "size " << s
                 << " differs from the number of processors "
-                << UPstream::nProcs() << exit(FatalIOError);
+                << UPstream::nProcs()
+                //<< exit(FatalIOError);
+                << endl;
         }
 
         // Read beginning of contents
@@ -195,6 +198,83 @@ bool Foam::decomposedBlockData::readMasterHeader(IOobject& io, Istream& is)
         }
     }
     return false;
+}
+
+
+bool Foam::decomposedBlockData::readBlock
+(
+    const label blocki,
+    Istream& is,
+    List<char>& data
+)
+{
+    bool ok = false;
+
+    is.fatalCheck("read(Istream&)");
+    token firstToken(is);
+    is.fatalCheck("read(Istream&) : " "reading first token");
+
+Pout<< "firstToken:" << firstToken.info() << endl;
+
+
+    if (firstToken.isLabel())
+    {
+        // Read size of list
+        label s = firstToken.labelToken();
+
+Pout<< "s:" << s << endl;
+
+        // Read beginning of contents
+        char delimiter = is.readBeginList("List");
+
+        if (s)
+        {
+            if (delimiter == token::BEGIN_LIST)
+            {
+                for (label i = 0; i < blocki+1; i++)
+                {
+                    // Read data, override old data
+
+DebugVar(i);
+DebugVar(is.info());
+
+                    is >> data;
+
+DebugVar(data.size());
+DebugVar(data);
+
+                    is.fatalCheck
+                    (
+                        "read(Istream&) : "
+                        "reading entry"
+                    );
+                }
+            }
+            else
+            {
+                FatalIOErrorInFunction
+                (
+                    is
+                )   << "incorrect delimiter, expected (, found "
+                    << delimiter
+                    << exit(FatalIOError);
+            }
+        }
+
+        // Read end of contents
+        is.readEndList("List");
+
+        ok = is.good();
+    }
+    else
+    {
+        FatalIOErrorInFunction
+        (
+            is
+        )   << "incorrect first token, expected <int>, found "
+            << firstToken.info() << exit(FatalIOError);
+    }
+    return ok;
 }
 
 
@@ -521,7 +601,7 @@ bool Foam::decomposedBlockData::writeObject
       {
           // Note: always write binary. These are strings so readable
           //       anyway. They have already be tokenised on the sending side.
-          osPtr.reset(new OFstream(objectPath(), IOstream::BINARY));
+          osPtr.reset(new OFstream(objectPath(), IOstream::BINARY, ver, cmp));
           writeHeader(osPtr());
       }
       List<std::streamoff> start;

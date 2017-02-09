@@ -29,6 +29,7 @@ License
 #include "OFstream.H"
 #include "addToRunTimeSelectionTable.H"
 #include "masterFileOperation.H"
+#include "decomposedBlockData.H"
 
 /* * * * * * * * * * * * * * * Static Member Data  * * * * * * * * * * * * * */
 
@@ -351,33 +352,50 @@ Foam::fileNameList Foam::fileOperations::localFileOperation::readObjects
 {
     if (debug)
     {
-        Pout<< FUNCTION_NAME
+        Pout<< "localFileOperation::readObjects :"
             << " db:" << db.objectPath()
             << " instance:" << instance << endl;
     }
 
+    fileName timePath(db.path(instance));
+    fileName path(db.path(instance, db.dbDir()/local));
+
+Pout<< "timePath:" << timePath << endl;
+Pout<< "db.path(instance):" << db.path(instance) << endl;
 
     fileNameList objectNames;
-    if (isDir(db.path(instance)))
+    if (isDir(timePath))
     {
         newInstance = instance;
-        objectNames = readDir
-        (
-            db.path(newInstance, db.dbDir()/local),
-            fileName::FILE
-        );
+        objectNames = readDir(path, fileName::FILE);
     }
     else
     {
-        // Find similar time
-        newInstance = db.time().findInstancePath(instant(instance));
-        if (!newInstance.empty())
+        // Get processors equivalent of timePath
+
+        fileName prefix;
+        fileName postfix;
+        label proci = fileOperations::masterFileOperation::splitProcessorPath
+        (
+            timePath,
+            prefix,
+            postfix
+        );
+        fileName procsPath(prefix/"processors"/postfix);
+
+        if (proci != -1 && isDir(procsPath))
         {
-            objectNames = readDir
-            (
-                db.path(newInstance, db.dbDir()/local),
-                fileName::FILE
-            );
+            newInstance = instance;
+            objectNames = readDir(procsPath/local, fileName::FILE);
+        }
+        else
+        {
+            // Find similar time
+            fileName newInst = db.time().findInstancePath(instant(instance));
+            if (!newInst.empty())
+            {
+                return readObjects(db, newInst, local, newInstance);
+            }
         }
     }
 
@@ -388,7 +406,6 @@ Foam::fileNameList Foam::fileOperations::localFileOperation::readObjects
             << " newInstance:" << newInstance
             << " objectNames:" << objectNames << endl;
     }
-
 
     return objectNames;
 }
@@ -412,7 +429,15 @@ bool Foam::fileOperations::localFileOperation::readHeader
         return false;
     }
 
-    return io.readHeader(isPtr());
+    bool ok = io.readHeader(isPtr());
+
+    if (io.headerClassName() == decomposedBlockData::typeName)
+    {
+        // Read the header inside the container (master data)
+        ok = decomposedBlockData::readMasterHeader(io, isPtr());
+    }
+
+    return ok;
 }
 
 
@@ -450,92 +475,53 @@ Foam::fileOperations::localFileOperation::readStream
             << exit(FatalIOError);
     }
 
-    return isPtr;
-}
-
-
-Foam::instantList Foam::fileOperations::localFileOperation::findTimes
-(
-    const fileName& directory,
-    const word& constantName
-) const
-{
-    if (debug)
+    if (io.headerClassName() != decomposedBlockData::typeName)
     {
-        InfoInFunction << "Finding times in directory " << directory << endl;
+        return isPtr;
     }
-
-    // Read directory entries into a list
-    fileNameList dirEntries
-    (
-        readDir
-        (
-            directory,
-            fileName::DIRECTORY
-        )
-    );
-
-    instantList times = sortTimes(dirEntries, constantName);
-
-    // Check if directory is processorXXX
-    word caseName(directory.name());
-
-    std::string::size_type pos = caseName.find("processor");
-    if (pos == 0)
+    else
     {
-        fileName processorsDir(directory.path()/"processors");
-
-        fileNameList extraEntries
+        // Analyse the objectpath to find out the processor we're trying
+        // to access
+        fileName path;
+        fileName local;
+        label proci = fileOperations::masterFileOperation::splitProcessorPath
         (
-            Foam::readDir
-            (
-                processorsDir,
-                fileName::DIRECTORY
-            )
+            io.objectPath(),
+            path,
+            local
         );
 
-        instantList extraTimes = sortTimes(extraEntries, constantName);
+        DebugVar(io.objectPath());
+        DebugVar(fName);
+        DebugVar(proci);
 
-        label sz = times.size();
-        times.setSize(sz+extraTimes.size());
-        forAll(extraTimes, i)
+        if (proci == -1)
         {
-            times[sz++] = extraTimes[i];
+            FatalIOErrorInFunction(isPtr())
+                << "Could not detect processor number"
+                << " from objectPath:" << io.objectPath()
+                << exit(FatalIOError);
         }
 
-        // Sort
-        if (times.size() > 2 && times[0].name() == constantName)
-        {
-            std::sort(&times[1], times.end(), instant::less());
-        }
-        else if (times.size() > 1)
-        {
-            std::sort(&times[0], times.end(), instant::less());
-        }
+        DebugVar(isPtr().info());
 
-        // Filter out duplicates
-        label newI = 0;
-        for (label i = 1; i < times.size(); i++)
-        {
-            if (times[i].value() != times[i-1].value())
-            {
-                if (newI != i)
-                {
-                    times[newI++] = times[i];
-                }
-            }
-        }
+        // Read my data
+        List<char> data;
+        decomposedBlockData::readBlock(proci, isPtr(), data);
+        // TBD: remove extra copying
+        string buf(data.begin(), data.size());
+        autoPtr<Istream> realIsPtr(new IStringStream(buf));
 
-        times.setSize(newI);
+        // Read header
+        if (!io.readHeader(realIsPtr()))
+        {
+            FatalIOErrorInFunction(realIsPtr())
+                << "problem while reading header for object " << io.name()
+                << exit(FatalIOError);
+        }
+        return realIsPtr;
     }
-
-    if (debug)
-    {
-        Pout<< FUNCTION_NAME << " : times:" << times << endl;
-    }
-
-
-    return times;
 }
 
 

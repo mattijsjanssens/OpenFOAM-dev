@@ -471,6 +471,20 @@ public:
             //- Like io.path with provided instance and any 'processorXXX'
             //  replaced by 'processsors'
             static fileName processorsPath(const IOobject&, const word&);
+
+            //- Operating on fileName: replace processorXXX with processors
+            static fileName processorsPath(const fileName&);
+
+            //- Split fileName into part before processor and part after.
+            //  Returns -1 or processor number. Use with care.
+            //  - path/"processor" + Foam::name(proci)/local reconstructs input
+            //  - path/"processors"/local reconstructs processors equivalence
+            static label splitProcessorPath
+            (
+                const fileName&,
+                fileName& path,
+                fileName& local
+            );
 };
 
 
