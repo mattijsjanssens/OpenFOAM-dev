@@ -28,6 +28,7 @@ License
 #include "simpleObjectRegistry.H"
 #include "dimensionedConstants.H"
 #include "IOdictionary.H"
+#include "fileOperation.H"
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
@@ -366,6 +367,17 @@ void Foam::Time::readDict()
 
     controlDict_.readIfPresent("graphFormat", graphFormat_);
     controlDict_.readIfPresent("runTimeModifiable", runTimeModifiable_);
+
+
+    if (controlDict_.found("fileHandler"))
+    {
+        autoPtr<fileOperation> handler
+        (
+            fileOperation::New(controlDict_["fileHandler"])
+        );
+        Foam::fileHandler(handler);
+    }
+
 
     if (!runTimeModifiable_ && controlDict_.watchIndices().size())
     {

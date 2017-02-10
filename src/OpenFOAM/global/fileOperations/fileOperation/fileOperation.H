@@ -227,7 +227,7 @@ public:
                 const fileName& instance,
                 const fileName& local,
                 word& newInstance
-            ) const = 0;
+            ) const;
 
             //- Read object header from supplied file
             virtual bool readHeader

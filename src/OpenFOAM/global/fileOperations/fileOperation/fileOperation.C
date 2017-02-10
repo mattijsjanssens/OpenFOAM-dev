@@ -29,6 +29,7 @@ License
 #include "argList.H"
 #include "HashSet.H"
 #include "masterFileOperation.H"
+#include "objectRegistry.H"
 
 /* * * * * * * * * * * * * * * Static Member Data  * * * * * * * * * * * * * */
 
@@ -189,9 +190,9 @@ bool Foam::fileOperation::writeObject
 {
     if (valid)
     {
-        mkDir(io.path());
-
         fileName pathName(io.objectPath());
+
+        mkDir(pathName.path());
 
         autoPtr<Ostream> osPtr
         (
@@ -422,6 +423,55 @@ Foam::instantList Foam::fileOperation::findTimes
 }
 
 
+Foam::fileNameList Foam::fileOperation::readObjects
+(
+    const objectRegistry& db,
+    const fileName& instance,
+    const fileName& local,
+    word& newInstance
+) const
+{
+    if (debug)
+    {
+        Pout<< "fileOperation::readObjects :"
+            << " db:" << db.objectPath()
+            << " instance:" << instance << endl;
+    }
+
+    fileName timePath(db.path(instance));
+    fileName path(db.path(instance, db.dbDir()/local));
+
+    newInstance = word::null;
+    fileNameList objectNames;
+    if (Foam::isDir(timePath))
+    {
+        newInstance = instance;
+        objectNames = Foam::readDir(path, fileName::FILE);
+    }
+    else
+    {
+        // Get processors equivalent of timePath
+
+        fileName prefix;
+        fileName postfix;
+        label proci = fileOperations::masterFileOperation::splitProcessorPath
+        (
+            timePath,
+            prefix,
+            postfix
+        );
+        fileName procsPath(prefix/"processors"/postfix);
+
+        if (proci != -1 && Foam::isDir(procsPath))
+        {
+            newInstance = instance;
+            objectNames = Foam::readDir(procsPath/local, fileName::FILE);
+        }
+    }
+    return objectNames;
+}
+
+
 const Foam::fileOperation& Foam::fileHandler()
 {
     if (!fileOperation::fileHandlerPtr_.valid())
@@ -447,6 +497,16 @@ void Foam::fileHandler(autoPtr<fileOperation>& newHandlerPtr)
 {
     if (fileOperation::fileHandlerPtr_.valid())
     {
+        if
+        (
+            newHandlerPtr.valid()
+         && newHandlerPtr->type() == fileOperation::fileHandlerPtr_->type()
+        )
+        {
+            return;
+        }
+
+
         if (Pstream::master())
         {
             cout<< "fileHandler() : Deleting fileOperation of type "

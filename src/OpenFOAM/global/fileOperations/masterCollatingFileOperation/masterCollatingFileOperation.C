@@ -31,6 +31,7 @@ License
 #include "masterOFstream.H"
 #include "masterCollatingOFstream.H"
 #include "decomposedBlockData.H"
+#include "OFstream.H"
 
 /* * * * * * * * * * * * * * * Static Member Data  * * * * * * * * * * * * * */
 
@@ -46,95 +47,6 @@ namespace fileOperations
         word
     );
 }
-}
-
-
-// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
-
-Foam::fileName Foam::fileOperations::masterCollatingFileOperation::filePath
-(
-    const bool checkGlobal,
-    const IOobject& io,
-    pathType& searchType,
-    word& newInstancePath
-)
-{
-    if (!io.time().processorCase())
-    {
-        return masterFileOperation::filePath
-        (
-            checkGlobal,
-            io,
-            searchType,
-            newInstancePath
-        );
-    }
-
-
-    newInstancePath = word::null;
-
-    if (io.instance().isAbsolute())
-    {
-        fileName objectPath = io.instance()/io.name();
-        if (Foam::isFile(objectPath))
-        {
-            searchType = fileOperation::ABSOLUTE;
-            return objectPath;
-        }
-        else
-        {
-            searchType = fileOperation::NOTFOUND;
-            return fileName::null;
-        }
-    }
-    else
-    {
-        // 1. Check processors/
-        fileName path = processorsPath(io, io.instance());
-        fileName objectPath = path/io.name();
-        if (Foam::isFile(objectPath))
-        {
-            searchType = fileOperation::PROCESSORSOBJECT;
-            return objectPath;
-        }
-        else
-        {
-            // 2. Check local
-            fileName localObjectPath = io.path()/io.name();
-
-            if (Foam::isFile(localObjectPath))
-            {
-                searchType = fileOperation::OBJECT;
-                return localObjectPath;
-            }
-        }
-
-
-
-        // Any global checks
-        if
-        (
-            checkGlobal
-         && io.time().processorCase()
-         && (
-                io.instance() == io.time().system()
-             || io.instance() == io.time().constant()
-            )
-        )
-        {
-            fileName parentObjectPath =
-                io.rootPath()/io.time().globalCaseName()
-               /io.instance()/io.db().dbDir()/io.local()/io.name();
-
-            if (Foam::isFile(parentObjectPath))
-            {
-                searchType = fileOperation::PARENTOBJECT;
-                return parentObjectPath;
-            }
-        }
-
-        return fileName::null;
-    }
 }
 
 
@@ -171,163 +83,6 @@ Foam::fileName Foam::fileOperations::masterCollatingFileOperation::objectPath
 }
 
 
-Foam::fileName Foam::fileOperations::masterCollatingFileOperation::filePath
-(
-    const bool checkGlobal,
-    const IOobject& io
-) const
-{
-    fileName objPath;
-    pathType searchType = fileOperation::NOTFOUND;
-    word newInstancePath;
-    if (Pstream::master())
-    {
-        objPath = filePath(checkGlobal, io, searchType, newInstancePath);
-    }
-    label masterType(searchType);
-    Pstream::scatter(masterType);
-    searchType = pathType(masterType);
-
-    if
-    (
-        searchType == fileOperation::FINDINSTANCE
-     || searchType == fileOperation::PROCESSORSFINDINSTANCE
-    )
-    {
-        Pstream::scatter(newInstancePath);
-    }
-
-    if (!Pstream::master())
-    {
-        objPath = masterFileOperation::objectPath
-        (
-            io,
-            searchType,
-            newInstancePath
-        );
-    }
-    return objPath;
-}
-
-
-bool Foam::fileOperations::masterCollatingFileOperation::readHeader
-(
-    IOobject& io,
-    const fileName& fName
-) const
-{
-    bool ok = false;
-
-    if (debug)
-    {
-        Pout<< FUNCTION_NAME << " : fName:" << fName << endl;
-    }
-
-    if (Pstream::master())
-    {
-        if (!fName.empty() && Foam::isFile(fName))
-        {
-            IFstream is(fName);
-
-            if (is.good())
-            {
-                ok = io.readHeader(is);
-
-                if (io.headerClassName() == decomposedBlockData::typeName)
-                {
-                    // Read the header inside the container (master data)
-                    ok = decomposedBlockData::readMasterHeader(io, is);
-                }
-            }
-        }
-    }
-    Pstream::scatter(ok);
-    Pstream::scatter(io.headerClassName());
-    Pstream::scatter(io.note());
-
-    if (debug)
-    {
-        Pout<< FUNCTION_NAME << " : ok:" << ok
-            << " class:" << io.headerClassName() << endl;
-    }
-    return ok;
-}
-
-
-Foam::autoPtr<Foam::Istream>
-Foam::fileOperations::masterCollatingFileOperation::readStream
-(
-    regIOobject& io,
-    const fileName& fName
-) const
-{
-    if (!fName.size())
-    {
-        FatalErrorInFunction
-            << "empty file name" << exit(FatalError);
-    }
-
-    autoPtr<Istream> isPtr;
-    bool valid = true;
-    if (UPstream::master())
-    {
-        isPtr.reset(new IFstream(fName));
-
-        // Read header data (on copy)
-        IOobject headerIO(io);
-        headerIO.readHeader(isPtr());
-        if (headerIO.headerClassName() != decomposedBlockData::typeName)
-        {
-            valid = false;
-            isPtr.clear();
-        }
-    }
-
-    Pstream::scatter(valid);
-
-    if (!valid)
-    {
-        // Fall back
-
-        if (debug)
-        {
-            Pout<< FUNCTION_NAME
-                << " : For object : " << io.name()
-                << " falling back to master-only reading from " << fName
-                << endl;
-        }
-
-        return masterFileOperation::readStream(io, fName);
-    }
-
-
-
-    if (debug)
-    {
-        Pout<< FUNCTION_NAME
-            << " : for object : " << io.name()
-            << " starting collating input from " << fName << endl;
-    }
-
-    // Read my data
-    List<char> data;
-    decomposedBlockData::readBlocks(isPtr, data, UPstream::scheduled);
-    // TBD: remove extra copying
-    string buf(data.begin(), data.size());
-    autoPtr<Istream> realIsPtr(new IStringStream(buf));
-
-    // Read header
-    if (!io.readHeader(realIsPtr()))
-    {
-        FatalIOErrorInFunction(realIsPtr())
-            << "problem while reading header for object " << io.name()
-            << exit(FatalIOError);
-    }
-
-    return realIsPtr;
-}
-
-
 bool Foam::fileOperations::masterCollatingFileOperation::writeObject
 (
     const regIOobject& io,
@@ -341,14 +96,14 @@ bool Foam::fileOperations::masterCollatingFileOperation::writeObject
     const fileName& inst = io.instance();
 
     autoPtr<Ostream> osPtr;
-    if (inst.isAbsolute() || !Pstream::parRun() || !tm.processorCase())
+    if (inst.isAbsolute() || !tm.processorCase())
     {
         mkDir(io.path());
         fileName pathName(io.objectPath());
 
         if (debug)
         {
-            Pout<< FUNCTION_NAME
+            Pout<< "writeObject:"
                 << " : For object : " << io.name()
                 << " falling back to master-only output to " << io.path()
                 << endl;
@@ -360,13 +115,6 @@ bool Foam::fileOperations::masterCollatingFileOperation::writeObject
         // Construct the equivalent processors/ directory
         fileName path(processorsPath(io, inst));
 
-        if (debug)
-        {
-            Pout<< FUNCTION_NAME
-                << " : For object : " << io.name()
-                << " starting collating output to " << path << endl;
-        }
-
         mkDir(path);
         fileName pathName(path/io.name());
 
@@ -374,7 +122,7 @@ bool Foam::fileOperations::masterCollatingFileOperation::writeObject
         {
             if (debug)
             {
-                Pout<< FUNCTION_NAME << " : For global object : " << io.name()
+                Pout<< "writeObject:" << " : For global object : " << io.name()
                     << " falling back to master-only output to " << pathName
                     << endl;
             }
@@ -382,17 +130,114 @@ bool Foam::fileOperations::masterCollatingFileOperation::writeObject
         }
         else
         {
-            osPtr.reset
-            (
-                new masterCollatingOFstream
+            if (!Pstream::parRun())
+            {
+                // Special path for e.g. decomposePar. Append to
+                // processors/ file
+
+                fileName prefix;
+                fileName postfix;
+                label proci = splitProcessorPath
+                (
+                    io.objectPath(),
+                    prefix,
+                    postfix
+                );
+
+                if (debug)
+                {
+                    Pout<< "writeObject:" << " : For local object : "
+                        << io.name()
+                        << " appending processor " << proci
+                        << " data to " << pathName << endl;
+                }
+
+                if (proci == -1)
+                {
+                    FatalErrorInFunction
+                        << "Not a valid processor path " << pathName
+                        << exit(FatalError);
+                }
+
+
+                string buf;
+                {
+                    OStringStream os(fmt, ver);
+                    if (!io.writeHeader(os))
+                    {
+                        return false;
+                    }
+
+                    // Write the data to the Ostream
+                    if (!io.writeData(os))
+                    {
+                        return false;
+                    }
+
+                    IOobject::writeEndDivider(os);
+
+                    buf = os.str();
+                }
+
+                OFstream os
                 (
                     pathName,
-                    UPstream::scheduled,
-                    fmt,
-                    ver
-                    //cmp
-                )
-            );
+                    IOstream::BINARY,
+                    ver,
+                    cmp,        // compression_  ??
+                    proci > 0   // append
+                );
+
+                if (!os.good())
+                {
+                    FatalIOErrorInFunction(os)
+                        << "Cannot open for appending"
+                        << exit(FatalIOError);
+                }
+
+                if (proci == 0)
+                {
+                    IOobject::writeBanner(os)
+                        << "FoamFile\n{\n"
+                        << "    version     " << os.version() << ";\n"
+                        << "    format      " << os.format() << ";\n"
+                        << "    class       " << decomposedBlockData::typeName
+                        << ";\n"
+                        << "    location    " << pathName << ";\n"
+                        << "    object      " << pathName.name() << ";\n"
+                        << "}" << nl;
+                    IOobject::writeDivider(os) << nl;
+                }
+                UList<char> slice
+                (
+                    const_cast<char*>(buf.data()),
+                    label(buf.size())
+                );
+                os << nl << slice;
+
+                return os.good();
+            }
+            else
+            {
+                if (debug)
+                {
+                    Pout<< "writeObject:"
+                        << " : For object : " << io.name()
+                        << " starting collating output to " << path << endl;
+                }
+
+                osPtr.reset
+                (
+                    new masterCollatingOFstream
+                    (
+                        pathName,
+                        UPstream::scheduled,
+                        fmt,
+                        ver,
+                        cmp
+                    )
+                );
+            }
         }
     }
     Ostream& os = osPtr();

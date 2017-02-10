@@ -57,14 +57,6 @@ class masterCollatingFileOperation
 :
     public masterFileOperation
 {
-protected:
-
-    // Protected classes
-
-        //- Search for filePath; return info on how was found
-        static fileName filePath(const bool, const IOobject&, pathType&, word&);
-
-
 public:
 
         //- Runtime type information
@@ -87,24 +79,6 @@ public:
 
             //- Generate disk file name for object. Opposite of filePath.
             virtual fileName objectPath(const IOobject& io) const;
-
-            //- Search for an object. checkGlobal : also check undecomposed case
-            virtual fileName filePath
-            (
-                const bool checkGlobal,
-                const IOobject&
-            ) const;
-
-            //- Read object header from supplied file
-            virtual bool readHeader(IOobject&, const fileName& fName) const;
-
-            //- Reads header for regIOobject and returns an Istream
-            //  to read the contents.
-            virtual autoPtr<Istream> readStream
-            (
-                regIOobject&,
-                const fileName&
-            ) const;
 
             //- Writes a regIOobject (so header, contents and divider).
             //  Returns success state.

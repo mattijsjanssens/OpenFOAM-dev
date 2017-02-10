@@ -27,8 +27,10 @@ License
 #include "addToRunTimeSelectionTable.H"
 #include "Pstream.H"
 #include "Time.H"
+#include "instant.H"
 #include "IFstream.H"
 #include "masterOFstream.H"
+#include "decomposedBlockData.H"
 
 /* * * * * * * * * * * * * * * Static Member Data  * * * * * * * * * * * * * */
 
@@ -70,83 +72,48 @@ Foam::fileName Foam::fileOperations::masterFileOperation::filePath
     }
     else
     {
-        fileName path = io.path();
+        // 1. Check processors/
+        fileName path = processorsPath(io, io.instance());
         fileName objectPath = path/io.name();
-
         if (Foam::isFile(objectPath))
         {
-            searchType = fileOperation::OBJECT;
+            searchType = fileOperation::PROCESSORSOBJECT;
             return objectPath;
         }
         else
         {
-            if
-            (
-                checkGlobal
-             && io.time().processorCase()
-             && (
-                    io.instance() == io.time().system()
-                 || io.instance() == io.time().constant()
-                )
-            )
+            // 2. Check local
+            fileName localObjectPath = io.path()/io.name();
+
+            if (Foam::isFile(localObjectPath))
             {
-                fileName parentObjectPath =
-                    io.rootPath()/io.time().globalCaseName()
-                   /io.instance()/io.db().dbDir()/io.local()/io.name();
-
-                if (Foam::isFile(parentObjectPath))
-                {
-                    searchType = fileOperation::PARENTOBJECT;
-                    return parentObjectPath;
-                }
+                searchType = fileOperation::OBJECT;
+                return localObjectPath;
             }
+        }
 
-//- The big problem with findInstance is that it itself needs file
-//  access through the fileHandler. Since this routine is only called on the
-//  master we'll get a deadlock.
-//            if (!Foam::isDir(path))
-//            {
-//                newInstancePath = io.time().findInstancePath
-//                (
-//                    instant(io.instance())
-//                );
-//
-//                if (newInstancePath.size())
-//                {
-//                    fileName fName
-//                    (
-//                        io.rootPath()/io.caseName()
-//                       /newInstancePath/io.db().dbDir()/io.local()/io.name()
-//                    );
-//
-//                    if (Foam::isFile(fName))
-//                    {
-//                        searchType = fileOperation::FINDINSTANCE;
-//                        return fName;
-//                    }
-//                }
-//            }
 
-//             // Try constant & local
-//             {
-//                 newInstancePath = io.time().constant();
-//                 fileName fName
-//                 (
-//                     io.rootPath()
-//                    /io.caseName()
-//                    /newInstancePath
-//                    /io.db().dbDir()
-//                    /io.local()
-//                    /io.name()
-//                 );
-// 
-//                 if (Foam::isFile(fName))
-//                 {
-//                     searchType = fileOperation::FINDINSTANCE;
-//                     return fName;
-//                 }
-//             }
 
+        // Any global checks
+        if
+        (
+            checkGlobal
+         && io.time().processorCase()
+         && (
+                io.instance() == io.time().system()
+             || io.instance() == io.time().constant()
+            )
+        )
+        {
+            fileName parentObjectPath =
+                io.rootPath()/io.time().globalCaseName()
+               /io.instance()/io.db().dbDir()/io.local()/io.name();
+
+            if (Foam::isFile(parentObjectPath))
+            {
+                searchType = fileOperation::PARENTOBJECT;
+                return parentObjectPath;
+            }
         }
 
         return fileName::null;
@@ -525,7 +492,8 @@ Foam::fileName Foam::fileOperations::masterFileOperation::filePath
 {
     if (debug)
     {
-        Pout<< FUNCTION_NAME << " : objectPath:" << io.objectPath()
+        Pout<< "masterFileOperation::filePath :"
+            << " objectPath:" << io.objectPath()
             << " checkGlobal:" << checkGlobal << endl;
     }
 
@@ -546,9 +514,6 @@ Foam::fileName Foam::fileOperations::masterFileOperation::filePath
      || searchType == fileOperation::PROCESSORSFINDINSTANCE
     )
     {
-        // Note: PROCESSORSFINDINSTANCE should never appear since our filePath
-        // does not know about it
-
         Pstream::scatter(newInstancePath);
     }
 
@@ -559,8 +524,8 @@ Foam::fileName Foam::fileOperations::masterFileOperation::filePath
 
     if (debug)
     {
-        Pout<< FUNCTION_NAME
-            << " : Returning from file searching:" << endl
+        Pout<< "masterFileOperation::filePath :"
+            << " Returning from file searching:" << endl
             << "    objectPath:" << io.objectPath() << endl
             << "    filePath  :" << objPath << endl << endl;
     }
@@ -576,50 +541,70 @@ Foam::fileNameList Foam::fileOperations::masterFileOperation::readObjects
     word& newInstance
 ) const
 {
-    fileNameList objectNames;
+    if (debug)
+    {
+        Pout<< "masterFileOperation::readObjects :"
+            << " db:" << db.objectPath()
+            << " instance:" << instance << endl;
+    }
 
-//     if (Pstream::master())
-//     {
-//         if (Foam::isDir(db.path(instance)))
-//         {
-//             newInstance = instance;
-//             objectNames = Foam::readDir
-//             (
-//                 db.path(newInstance, db.dbDir()/local),
-//                 fileName::FILE
-//             );
-//         }
-//         else
-//         {
-//             // Read directory entries into a list
-//             fileNameList dirEntries
-//             (
-//                 Foam::readDir
-//                 (
-//                     directory,
-//                     fileName::DIRECTORY
-//                 )
-//             );
-//
-//             instantList timeDirs =
-//                  sortTimes(dirEntries, db.time().constant());
-//
-//
-// XXXXX
-//             // Find similar time
-//             newInstance = db.time().findInstancePath(instant(instance));
-//             if (!newInstance.empty())
-//             {
-//                 objectNames = readDir
-//                 (
-//                     db.path(newInstance, db.dbDir()/local),
-//                     fileName::FILE
-//                 );
-//             }
-//         }
-//     }
-//
-//     Pstream::scatter(objectNames);
+    fileNameList objectNames;
+    newInstance = word::null;
+
+    if (Pstream::master())
+    {
+        //- Use non-time searching version
+        objectNames = fileOperation::readObjects
+        (
+            db,
+            instance,
+            local,
+            newInstance
+        );
+
+        if (newInstance.empty())
+        {
+            // Find similar time
+
+            // Copy of Time::findInstancePath. We want to avoid the
+            // parallel call to findTimes. Alternative is to have
+            // version of findInstancePath that takes instantList ...
+            const instantList timeDirs
+            (
+                fileOperation::findTimes
+                (
+                    db.time().path(),
+                    db.time().constant()
+                )
+            );
+
+            const instant t(instance);
+            forAllReverse(timeDirs, i)
+            {
+                if (t.equal(timeDirs[i].value()))
+                {
+                    objectNames = fileOperation::readObjects
+                    (
+                        db,
+                        timeDirs[i].name(),     // newly found time
+                        local,
+                        newInstance
+                    );
+                    break;
+                }
+            }
+        }
+    }
+
+    Pstream::scatter(newInstance);
+    Pstream::scatter(objectNames);
+
+    if (debug)
+    {
+        Pout<< "masterFileOperation::readObjects :"
+            << " newInstance:" << newInstance
+            << " objectNames:" << objectNames << endl;
+    }
 
     return objectNames;
 }
@@ -635,7 +620,7 @@ bool Foam::fileOperations::masterFileOperation::readHeader
 
     if (debug)
     {
-        Pout<< FUNCTION_NAME << " : fName:" << fName << endl;
+        Pout<< "masterFileOperation::readHeader:" << " fName:" << fName << endl;
     }
 
     if (Pstream::master())
@@ -644,9 +629,15 @@ bool Foam::fileOperations::masterFileOperation::readHeader
         {
             IFstream is(fName);
 
-            if (is.good() && io.readHeader(is))
+            if (is.good())
             {
-                ok = true;
+                ok = io.readHeader(is);
+
+                if (io.headerClassName() == decomposedBlockData::typeName)
+                {
+                    // Read the header inside the container (master data)
+                    ok = decomposedBlockData::readMasterHeader(io, is);
+                }
             }
         }
     }
@@ -656,7 +647,7 @@ bool Foam::fileOperations::masterFileOperation::readHeader
 
     if (debug)
     {
-        Pout<< FUNCTION_NAME << " : ok:" << ok
+        Pout<< "masterFileOperation::readHeader:" << " ok:" << ok
             << " class:" << io.headerClassName() << endl;
     }
     return ok;
@@ -676,87 +667,172 @@ Foam::fileOperations::masterFileOperation::readStream
             << "empty file name" << exit(FatalError);
     }
 
-    fileNameList filePaths(Pstream::nProcs());
-    filePaths[Pstream::myProcNo()] = fName;
-    Pstream::gatherList(filePaths);
-
-    PstreamBuffers pBufs(Pstream::nonBlocking);
-
     autoPtr<Istream> isPtr;
-
-    if (Pstream::master())
+    bool isCollated = false;
+    if (UPstream::master())
     {
-        //const bool uniform = uniformFile(filePaths);
+        isPtr.reset(new IFstream(fName));
 
-        autoPtr<IFstream> ifsPtr(new IFstream(fName));
-        IFstream& is = ifsPtr();
-
-        // Read header
-        if (!io.readHeader(is))
+        // Read header data (on copy)
+        IOobject headerIO(io);
+        headerIO.readHeader(isPtr());
+        if (headerIO.headerClassName() == decomposedBlockData::typeName)
         {
-            FatalIOErrorInFunction(is)
-                << "problem while reading header for object " << io.name()
-                << exit(FatalIOError);
+            isCollated = true;
         }
-
-        // Open master (steal from ifsPtr)
-        isPtr.reset(ifsPtr.ptr());
-
-        // Read slave files
-        for (label proci = 1; proci < Pstream::nProcs(); proci++)
+        else
         {
-            if (debug)
-            {
-                Pout<< FUNCTION_NAME << " : For processor " << proci
-                    << " opening " << filePaths[proci] << endl;
-            }
-
-            std::ifstream is(filePaths[proci]);
-            // Get length of file
-            is.seekg(0, ios_base::end);
-            std::streamoff count = is.tellg();
-            is.seekg(0, ios_base::beg);
-
-            if (debug)
-            {
-                Pout<< FUNCTION_NAME << " : From " << filePaths[proci]
-                    <<  " reading " << label(count) << " bytes" << endl;
-            }
-            List<char> buf(static_cast<label>(count));
-            is.read(buf.begin(), count);
-
-            UOPstream os(proci, pBufs);
-            os.write(buf.begin(), count);
+            // Close file. Reopened below.
+            isPtr.clear();
         }
     }
 
-    labelList recvSizes;
-    pBufs.finishedSends(recvSizes);
+    Pstream::scatter(isCollated);
 
-    // isPtr will be valid on master. Else the information is in the
-    // PstreamBuffers
-
-    if (!isPtr.valid())
+    if (isCollated)
     {
-        UIPstream is(Pstream::masterNo(), pBufs);
-        string buf(recvSizes[Pstream::masterNo()], '\0');
-        is.read(&buf[0], recvSizes[Pstream::masterNo()]);
-
         if (debug)
         {
-            Pout<< FUNCTION_NAME
-                << " : Done reading " << buf.size() << " bytes" << endl;
+            Pout<< "masterFileOperation::readHeader:"
+                << " for object : " << io.name()
+                << " starting collating input from " << fName << endl;
         }
-        isPtr.reset(new IStringStream(buf));
 
-        if (!io.readHeader(isPtr()))
+        List<char> data;
+        if (!Pstream::parRun())
         {
-            FatalIOErrorInFunction(isPtr())
+            // Analyse the objectpath to find out the processor we're trying
+            // to access
+            fileName path;
+            fileName local;
+            label proci =
+                fileOperations::masterFileOperation::splitProcessorPath
+                (
+                    io.objectPath(),
+                    path,
+                    local
+                );
+
+            if (proci == -1)
+            {
+                FatalIOErrorInFunction(isPtr())
+                    << "Could not detect processor number"
+                    << " from objectPath:" << io.objectPath()
+                    << exit(FatalIOError);
+            }
+            decomposedBlockData::readBlock(proci, isPtr(), data);
+        }
+        else
+        {
+            // Read my data
+            decomposedBlockData::readBlocks(isPtr, data, UPstream::scheduled);
+        }
+
+        // TBD: remove extra copying
+        string buf(data.begin(), data.size());
+        autoPtr<Istream> realIsPtr(new IStringStream(buf));
+
+        // Read header
+        if (!io.readHeader(realIsPtr()))
+        {
+            FatalIOErrorInFunction(realIsPtr())
                 << "problem while reading header for object " << io.name()
                 << exit(FatalIOError);
         }
+
+        return realIsPtr;
     }
-    return isPtr;
+    else
+    {
+        if (debug)
+        {
+            Pout<< "masterFileOperation::readHeader:"
+                << " for object : " << io.name()
+                << " starting separated input from " << fName << endl;
+        }
+
+        fileNameList filePaths(Pstream::nProcs());
+        filePaths[Pstream::myProcNo()] = fName;
+        Pstream::gatherList(filePaths);
+
+        PstreamBuffers pBufs(Pstream::nonBlocking);
+
+        if (Pstream::master())
+        {
+            //const bool uniform = uniformFile(filePaths);
+
+            autoPtr<IFstream> ifsPtr(new IFstream(fName));
+            IFstream& is = ifsPtr();
+
+            // Read header
+            if (!io.readHeader(is))
+            {
+                FatalIOErrorInFunction(is)
+                    << "problem while reading header for object " << io.name()
+                    << exit(FatalIOError);
+            }
+
+            // Open master (steal from ifsPtr)
+            isPtr.reset(ifsPtr.ptr());
+
+            // Read slave files
+            for (label proci = 1; proci < Pstream::nProcs(); proci++)
+            {
+                if (debug)
+                {
+                    Pout<< "masterFileOperation::readHeader:"
+                        << " For processor " << proci
+                        << " opening " << filePaths[proci] << endl;
+                }
+
+                std::ifstream is(filePaths[proci]);
+                // Get length of file
+                is.seekg(0, ios_base::end);
+                std::streamoff count = is.tellg();
+                is.seekg(0, ios_base::beg);
+
+                if (debug)
+                {
+                    Pout<< "masterFileOperation::readHeader:"
+                        << " From " << filePaths[proci]
+                        <<  " reading " << label(count) << " bytes" << endl;
+                }
+                List<char> buf(static_cast<label>(count));
+                is.read(buf.begin(), count);
+
+                UOPstream os(proci, pBufs);
+                os.write(buf.begin(), count);
+            }
+        }
+
+        labelList recvSizes;
+        pBufs.finishedSends(recvSizes);
+
+        // isPtr will be valid on master. Else the information is in the
+        // PstreamBuffers
+
+        if (!isPtr.valid())
+        {
+            UIPstream is(Pstream::masterNo(), pBufs);
+            string buf(recvSizes[Pstream::masterNo()], '\0');
+            is.read(&buf[0], recvSizes[Pstream::masterNo()]);
+
+            if (debug)
+            {
+                Pout<< "masterFileOperation::readHeader:"
+                    << " Done reading " << buf.size() << " bytes" << endl;
+            }
+            isPtr.reset(new IStringStream(buf));
+
+            if (!io.readHeader(isPtr()))
+            {
+                FatalIOErrorInFunction(isPtr())
+                    << "problem while reading header for object " << io.name()
+                    << exit(FatalIOError);
+            }
+        }
+        return isPtr;
+    }
 }
 
 
@@ -773,7 +849,7 @@ bool Foam::fileOperations::masterFileOperation::writeObject
 
     if (debug)
     {
-        Pout<< FUNCTION_NAME << " : io:" << pathName
+        Pout<< "masterFileOperation::readHeader:" << " io:" << pathName
             << " valid:" << valid << endl;
     }
 
@@ -821,8 +897,8 @@ Foam::instantList Foam::fileOperations::masterFileOperation::findTimes
 {
     if (debug)
     {
-        Pout<< FUNCTION_NAME
-            << " : Finding times in directory " << directory << endl;
+        Pout<< "masterFileOperation::readHeader:"
+            << " Finding times in directory " << directory << endl;
     }
 
     instantList times;
@@ -835,8 +911,8 @@ Foam::instantList Foam::fileOperations::masterFileOperation::findTimes
 
     if (debug)
     {
-        Pout<< FUNCTION_NAME
-            << " : Found times:" << times << endl;
+        Pout<< "masterFileOperation::readHeader:"
+            << " Found times:" << times << endl;
     }
     return times;
 }
@@ -867,8 +943,8 @@ Foam::fileOperations::masterFileOperation::NewIFstream
             {
                 if (debug)
                 {
-                    Pout<< FUNCTION_NAME
-                        << " : Opening global file " << filePath << endl;
+                    Pout<< "masterFileOperation::readHeader:"
+                        << " Opening global file " << filePath << endl;
                 }
 
                 // get length of file:
@@ -878,8 +954,8 @@ Foam::fileOperations::masterFileOperation::NewIFstream
 
                 if (debug)
                 {
-                    Pout<< FUNCTION_NAME
-                        << " : From " << filePath
+                    Pout<< "masterFileOperation::readHeader:"
+                        << " From " << filePath
                         <<  " reading " << label(count) << " bytes" << endl;
                 }
                 List<char> buf(static_cast<label>(count));
@@ -897,7 +973,8 @@ Foam::fileOperations::masterFileOperation::NewIFstream
                 {
                     if (debug)
                     {
-                        Pout<< FUNCTION_NAME << " : For processor " << proci
+                        Pout<< "masterFileOperation::readHeader:"
+                            << " For processor " << proci
                             << " opening " << filePaths[proci] << endl;
                     }
 
@@ -907,7 +984,8 @@ Foam::fileOperations::masterFileOperation::NewIFstream
 
                     if (debug)
                     {
-                        Pout<< FUNCTION_NAME << " : From " << filePaths[proci]
+                        Pout<< "masterFileOperation::readHeader:"
+                            << " From " << filePaths[proci]
                             <<  " reading " << label(count) << " bytes" << endl;
                     }
                     List<char> buf(static_cast<label>(count));
@@ -935,9 +1013,9 @@ Foam::fileOperations::masterFileOperation::NewIFstream
         {
             if (debug)
             {
-                Pout<< FUNCTION_NAME << " : Reading " << filePath
-                    << " from processor " << Pstream::masterNo()
-                    << endl;
+                Pout<< "masterFileOperation::readHeader:"
+                    << " Reading " << filePath
+                    << " from processor " << Pstream::masterNo() << endl;
             }
 
             UIPstream is(Pstream::masterNo(), pBufs);
@@ -946,8 +1024,8 @@ Foam::fileOperations::masterFileOperation::NewIFstream
 
             if (debug)
             {
-                Pout<< FUNCTION_NAME << " : Done reading " << buf.size()
-                    << " bytes" << endl;
+                Pout<< "masterFileOperation::readHeader:"
+                    << " Done reading " << buf.size() << " bytes" << endl;
             }
 
             // Note: IPstream is not an IStream so use a IStringStream to

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -40,7 +40,8 @@ namespace Foam
 Foam::OFstreamAllocator::OFstreamAllocator
 (
     const fileName& pathname,
-    IOstream::compressionType compression
+    IOstream::compressionType compression,
+    const bool append
 )
 :
     ofPtr_(nullptr)
@@ -52,6 +53,11 @@ Foam::OFstreamAllocator::OFstreamAllocator
             InfoInFunction << "Cannot open null file " << endl;
         }
     }
+    ofstream::openmode mode(ofstream::out);
+    if (append)
+    {
+        mode |= ofstream::app;
+    }
 
     if (compression == IOstream::COMPRESSED)
     {
@@ -61,7 +67,7 @@ Foam::OFstreamAllocator::OFstreamAllocator
             rm(pathname);
         }
 
-        ofPtr_ = new ogzstream((pathname + ".gz").c_str());
+        ofPtr_ = new ogzstream((pathname + ".gz").c_str(), mode);
     }
     else
     {
@@ -71,7 +77,7 @@ Foam::OFstreamAllocator::OFstreamAllocator
             rm(pathname + ".gz");
         }
 
-        ofPtr_ = new ofstream(pathname.c_str());
+        ofPtr_ = new ofstream(pathname.c_str(), mode);
     }
 }
 
@@ -89,10 +95,11 @@ Foam::OFstream::OFstream
     const fileName& pathname,
     streamFormat format,
     versionNumber version,
-    compressionType compression
+    compressionType compression,
+    const bool append
 )
 :
-    OFstreamAllocator(pathname, compression),
+    OFstreamAllocator(pathname, compression, append),
     OSstream(*ofPtr_, "OFstream.sinkFile_", format, version, compression),
     pathname_(pathname)
 {

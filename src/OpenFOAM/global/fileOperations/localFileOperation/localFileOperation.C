@@ -43,26 +43,6 @@ namespace fileOperations
 }
 
 
-// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
-
-// bool Foam::fileOperations::localFileOperation::processorCase
-// (
-//     const fileName& path,
-//     fileName& processorsPath
-// )
-// {
-//     std::string::size_type pos = directory.name().find("processor");
-//     if (pos == 0)
-//     {
-//         processorsPath = directory.path()/"processors";
-//         return true;
-//     }
-//     {
-//         return false;
-//     }
-// }
-
-
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 Foam::fileOperations::localFileOperation::localFileOperation()
@@ -304,8 +284,6 @@ Foam::fileName Foam::fileOperations::localFileOperation::filePath
                     );
                 fileName objectPath = path/io.name();
 
-DebugVar(objectPath);
-
                 if (Foam::isFile(objectPath))
                 {
                     return objectPath;
@@ -357,52 +335,32 @@ Foam::fileNameList Foam::fileOperations::localFileOperation::readObjects
             << " instance:" << instance << endl;
     }
 
-    fileName timePath(db.path(instance));
-    fileName path(db.path(instance, db.dbDir()/local));
+    //- Use non-time searching version
+    fileNameList objectNames
+    (
+        fileOperation::readObjects(db, instance, local, newInstance)
+    );
 
-Pout<< "timePath:" << timePath << endl;
-Pout<< "db.path(instance):" << db.path(instance) << endl;
-
-    fileNameList objectNames;
-    if (isDir(timePath))
+    if (newInstance.empty())
     {
-        newInstance = instance;
-        objectNames = readDir(path, fileName::FILE);
-    }
-    else
-    {
-        // Get processors equivalent of timePath
-
-        fileName prefix;
-        fileName postfix;
-        label proci = fileOperations::masterFileOperation::splitProcessorPath
-        (
-            timePath,
-            prefix,
-            postfix
-        );
-        fileName procsPath(prefix/"processors"/postfix);
-
-        if (proci != -1 && isDir(procsPath))
+        // Find similar time
+        fileName newInst = db.time().findInstancePath(instant(instance));
+        if (!newInst.empty() && newInst != instance)
         {
-            newInstance = instance;
-            objectNames = readDir(procsPath/local, fileName::FILE);
-        }
-        else
-        {
-            // Find similar time
-            fileName newInst = db.time().findInstancePath(instant(instance));
-            if (!newInst.empty())
-            {
-                return readObjects(db, newInst, local, newInstance);
-            }
+            // Try with new time
+            objectNames = fileOperation::readObjects
+            (
+                db,
+                newInst,
+                local,
+                newInstance
+            );
         }
     }
-
 
     if (debug)
     {
-        Pout<< FUNCTION_NAME
+        Pout<< "localFileOperation::readObjects :"
             << " newInstance:" << newInstance
             << " objectNames:" << objectNames << endl;
     }
@@ -492,10 +450,6 @@ Foam::fileOperations::localFileOperation::readStream
             local
         );
 
-        DebugVar(io.objectPath());
-        DebugVar(fName);
-        DebugVar(proci);
-
         if (proci == -1)
         {
             FatalIOErrorInFunction(isPtr())
@@ -503,8 +457,6 @@ Foam::fileOperations::localFileOperation::readStream
                 << " from objectPath:" << io.objectPath()
                 << exit(FatalIOError);
         }
-
-        DebugVar(isPtr().info());
 
         // Read my data
         List<char> data;

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -308,9 +308,6 @@ bool Foam::domainDecomposition::writeDecomposition(const bool decomposeSets)
         (
             time().caseName()/fileName(word("processor") + Foam::name(proci))
         );
-
-        // make the processor directory
-        mkDir(time().rootPath()/processorCasePath);
 
         // create a database
         Time processorDb

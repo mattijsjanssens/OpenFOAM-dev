@@ -57,9 +57,9 @@ Foam::decomposedBlockData::decomposedBlockData
     if (io.readOpt() == IOobject::MUST_READ_IF_MODIFIED)
     {
         WarningInFunction
-            << "IOList " << name()
+            << "decomposedBlockData " << name()
             << " constructed with IOobject::MUST_READ_IF_MODIFIED"
-            " but IOList does not support automatic rereading."
+            " but decomposedBlockData does not support automatic rereading."
             << endl;
     }
     if
@@ -128,9 +128,9 @@ Foam::decomposedBlockData::decomposedBlockData
     if (io.readOpt() == IOobject::MUST_READ_IF_MODIFIED)
     {
         WarningInFunction
-            << "IOList " << name()
+            << "decomposedBlockData " << name()
             << " constructed with IOobject::MUST_READ_IF_MODIFIED"
-            " but IOList does not support automatic rereading."
+            " but decomposedBlockData does not support automatic rereading."
             << endl;
     }
 
@@ -162,31 +162,31 @@ bool Foam::decomposedBlockData::readMasterHeader(IOobject& io, Istream& is)
 {
     // Master-only reading of header
     is.fatalCheck("read(Istream&)");
-    token firstToken(is);
-    is.fatalCheck("read(Istream&) : " "reading first token");
+//    token firstToken(is);
+//    is.fatalCheck("read(Istream&) : " "reading first token");
+//
+//    if (firstToken.isLabel())
+//    {
+//         // Read size of list
+//         label s = firstToken.labelToken();
+//
+//         if (s != UPstream::nProcs())
+//         {
+//             //FatalIOErrorInFunction(is)
+//             IOWarningInFunction(is)
+//                 << "size " << s
+//                 << " differs from the number of processors "
+//                 << UPstream::nProcs()
+//                 //<< exit(FatalIOError);
+//                 << endl;
+//         }
+//
+//        // Read beginning of contents
+//        char delimiter = is.readBeginList("List");
 
-    if (firstToken.isLabel())
-    {
-        // Read size of list
-        label s = firstToken.labelToken();
-
-        if (s != UPstream::nProcs())
+//        if (s)
         {
-            //FatalIOErrorInFunction(is)
-            IOWarningInFunction(is)
-                << "size " << s
-                << " differs from the number of processors "
-                << UPstream::nProcs()
-                //<< exit(FatalIOError);
-                << endl;
-        }
-
-        // Read beginning of contents
-        char delimiter = is.readBeginList("List");
-
-        if (s)
-        {
-            if (delimiter == token::BEGIN_LIST)
+//            if (delimiter == token::BEGIN_LIST)
             {
                 List<char> data(is);
                 is.fatalCheck("read(Istream&) : reading entry");
@@ -196,7 +196,7 @@ bool Foam::decomposedBlockData::readMasterHeader(IOobject& io, Istream& is)
                 return io.readHeader(str);
             }
         }
-    }
+//    }
     return false;
 }
 
@@ -211,69 +211,49 @@ bool Foam::decomposedBlockData::readBlock
     bool ok = false;
 
     is.fatalCheck("read(Istream&)");
-    token firstToken(is);
-    is.fatalCheck("read(Istream&) : " "reading first token");
+//    token firstToken(is);
+//    is.fatalCheck("read(Istream&) : " "reading first token");
+/
+//    if (firstToken.isLabel())
+//    {
+//        // Read size of list
+//        label s = firstToken.labelToken();
 
-Pout<< "firstToken:" << firstToken.info() << endl;
+//        // Read beginning of contents
+//        char delimiter = is.readBeginList("List");
 
-
-    if (firstToken.isLabel())
-    {
-        // Read size of list
-        label s = firstToken.labelToken();
-
-Pout<< "s:" << s << endl;
-
-        // Read beginning of contents
-        char delimiter = is.readBeginList("List");
-
-        if (s)
+//        if (s)
         {
-            if (delimiter == token::BEGIN_LIST)
+//            if (delimiter == token::BEGIN_LIST)
             {
                 for (label i = 0; i < blocki+1; i++)
                 {
                     // Read data, override old data
-
-DebugVar(i);
-DebugVar(is.info());
-
                     is >> data;
-
-DebugVar(data.size());
-DebugVar(data);
-
-                    is.fatalCheck
-                    (
-                        "read(Istream&) : "
-                        "reading entry"
-                    );
+                    is.fatalCheck("read(Istream&) : reading entry");
                 }
             }
-            else
-            {
-                FatalIOErrorInFunction
-                (
-                    is
-                )   << "incorrect delimiter, expected (, found "
-                    << delimiter
-                    << exit(FatalIOError);
-            }
+//            else
+//            {
+//                FatalIOErrorInFunction
+//                (
+//                    is
+//                )   << "incorrect delimiter, expected (, found "
+//                    << delimiter
+//                    << exit(FatalIOError);
+//            }
         }
 
-        // Read end of contents
-        is.readEndList("List");
-
         ok = is.good();
-    }
-    else
-    {
-        FatalIOErrorInFunction
-        (
-            is
-        )   << "incorrect first token, expected <int>, found "
-            << firstToken.info() << exit(FatalIOError);
-    }
+//    }
+//    else
+//    {
+//        FatalIOErrorInFunction
+//        (
+//            is
+//        )   << "incorrect first token, expected <int>, found "
+//            << firstToken.info() << exit(FatalIOError);
+//    }
     return ok;
 }
 
@@ -293,78 +273,75 @@ bool Foam::decomposedBlockData::readBlocks
         {
             Istream& is = isPtr();
             is.fatalCheck("read(Istream&)");
-            token firstToken(is);
-            is.fatalCheck("read(Istream&) : " "reading first token");
-
-            if (firstToken.isLabel())
-            {
-                // Read size of list
-                label s = firstToken.labelToken();
-
-                if (s != UPstream::nProcs())
+//             token firstToken(is);
+//             is.fatalCheck("read(Istream&) : " "reading first token");
+//
+//             if (firstToken.isLabel())
+//             {
+//                 // Read size of list
+//                 label s = firstToken.labelToken();
+//
+//                 if (s != UPstream::nProcs())
+//                 {
+//                     FatalIOErrorInFunction
+//                     (
+//                         is
+//                     )   << "size " << s
+//                         << " differs from the number of processors "
+//                         << UPstream::nProcs() << exit(FatalIOError);
+//                 }
+//
+//                // Read beginning of contents
+//                char delimiter = is.readBeginList("List");
+/
+//                 if (s)
                 {
-                    FatalIOErrorInFunction
-                    (
-                        is
-                    )   << "size " << s
-                        << " differs from the number of processors "
-                        << UPstream::nProcs() << exit(FatalIOError);
-                }
-
-                // Read beginning of contents
-                char delimiter = is.readBeginList("List");
-
-                if (s)
-                {
-                    if (delimiter == token::BEGIN_LIST)
+//                    if (delimiter == token::BEGIN_LIST)
                     {
                         // Read master data
                         {
                             is >> data;
-                            is.fatalCheck
-                            (
-                                "read(Istream&) : "
-                                "reading entry"
-                            );
+                            is.fatalCheck("read(Istream&) : reading entry");
                         }
 
-                        for (label proci = 1; proci < s; proci++)
+                        for
+                        (
+                            label proci = 1;
+                            proci < UPstream::nProcs();
+                            proci++
+                        )
                         {
                             List<char> elems(is);
-                            is.fatalCheck
-                            (
-                                "read(Istream&) : "
-                                "reading entry"
-                            );
+                            is.fatalCheck("read(Istream&) : reading entry");
 
                             OPstream os(UPstream::scheduled, proci);
                             os << elems;
                         }
                     }
-                    else
-                    {
-                        FatalIOErrorInFunction
-                        (
-                            is
-                        )   << "incorrect delimiter, expected (, found "
-                            << delimiter
-                            << exit(FatalIOError);
-                    }
+//                    else
+//                    {
+//                        FatalIOErrorInFunction
+//                        (
+//                            is
+//                        )   << "incorrect delimiter, expected (, found "
+//                            << delimiter
+//                            << exit(FatalIOError);
+//                    }
                 }
 
-                // Read end of contents
-                is.readEndList("List");
+//                // Read end of contents
+//                is.readEndList("List");
 
                 ok = is.good();
-            }
-            else
-            {
-                FatalIOErrorInFunction
-                (
-                    is
-                )   << "incorrect first token, expected <int>, found "
-                    << firstToken.info() << exit(FatalIOError);
-            }
+//             }
+//             else
+//             {
+//                 FatalIOErrorInFunction
+//                 (
+//                     is
+//                 )   << "incorrect first token, expected <int>, found "
+//                     << firstToken.info() << exit(FatalIOError);
+//             }
         }
         else
         {
@@ -380,79 +357,75 @@ bool Foam::decomposedBlockData::readBlocks
         {
             Istream& is = isPtr();
             is.fatalCheck("read(Istream&)");
-            token firstToken(is);
-            is.fatalCheck("read(Istream&) : " "reading first token");
-
-            if (firstToken.isLabel())
-            {
-                // Read size of list
-                label s = firstToken.labelToken();
-
-                if (s != UPstream::nProcs())
-                {
-                    FatalIOErrorInFunction
-                    (
-                        is
-                    )   << "size " << s
-                        << " differs from the number of processors "
-                        << UPstream::nProcs() << exit(FatalIOError);
-                }
-
-                // Read beginning of contents
-                char delimiter = is.readBeginList("List");
-
-                if (s)
-                {
-                    if (delimiter == token::BEGIN_LIST)
+//             token firstToken(is);
+//             is.fatalCheck("read(Istream&) : " "reading first token");
+//
+//             if (firstToken.isLabel())
+//             {
+//                 // Read size of list
+//                 label s = firstToken.labelToken();
+//
+//                 if (s != UPstream::nProcs())
+//                 {
+//                     FatalIOErrorInFunction
+//                     (
+//                         is
+//                     )   << "size " << s
+//                         << " differs from the number of processors "
+//                         << UPstream::nProcs() << exit(FatalIOError);
+//                 }
+//
+// //                // Read beginning of contents
+// //                char delimiter = is.readBeginList("List");
+//
+//                 if (s)
+//                 {
+//                    if (delimiter == token::BEGIN_LIST)
                     {
                         // Read master data
                         {
                             is >> data;
-                            is.fatalCheck
-                            (
-                                "read(Istream&) : "
-                                "reading entry"
-                            );
+                            is.fatalCheck("read(Istream&) : reading entry");
                         }
 
-                        for (label proci = 1; proci < s; proci++)
+                        for
+                        (
+                            label proci = 1;
+                            proci < UPstream::nProcs();
+                            proci++
+                        )
                         {
                             List<char> elems(is);
-
-                            is.fatalCheck
-                            (
-                                "read(Istream&) : "
-                                "reading entry"
-                            );
+                            is.fatalCheck("read(Istream&) : reading entry");
 
                             UOPstream os(proci, pBufs);
                             os << elems;
                         }
                     }
-                    else
-                    {
-                        FatalIOErrorInFunction
-                        (
-                            is
-                        )   << "incorrect delimiter, expected (, found "
-                            << delimiter
-                            << exit(FatalIOError);
-                    }
-                }
-
-                // Read end of contents
-                is.readEndList("List");
-
-                ok = is.good();
-            }
-            else
-            {
-                FatalIOErrorInFunction
-                (
-                    is
-                )   << "incorrect first token, expected <int>, found "
-                    << firstToken.info() << exit(FatalIOError);
-            }
+//                    else
+//                    {
+//                        FatalIOErrorInFunction
+//                        (
+//                            is
+//                        )   << "incorrect delimiter, expected (, found "
+//                            << delimiter
+//                            << exit(FatalIOError);
+//                    }
+//                 }
+//
+// //                // Read end of contents
+// //                is.readEndList("List");
+//
+//                 ok = is.good();
+//             }
+//             else
+//             {
+//                 FatalIOErrorInFunction
+//                 (
+//                     is
+//                 )   << "incorrect first token, expected <int>, found "
+//                     << firstToken.info() << exit(FatalIOError);
+//             }
         }
 
         labelList recvSizes;
@@ -490,7 +463,8 @@ bool Foam::decomposedBlockData::writeBlocks
             OSstream& os = osPtr();
 
             // Write size and start delimiter
-            os << nl << UPstream::nProcs() << nl << token::BEGIN_LIST;
+            //os << nl << UPstream::nProcs() << nl;
+            // << token::BEGIN_LIST;
 
             // Write master data
             {
@@ -512,7 +486,7 @@ bool Foam::decomposedBlockData::writeBlocks
             }
 
             // Write end delimiter
-            os << nl << token::END_LIST << nl;
+            //os << nl << token::END_LIST << nl;
 
             ok = os.good();
         }
@@ -542,7 +516,8 @@ bool Foam::decomposedBlockData::writeBlocks
             OSstream& os = osPtr();
 
             // Write size and start delimiter
-            os << nl << UPstream::nProcs() << nl << token::BEGIN_LIST;
+            //os << nl << UPstream::nProcs() << nl;
+            // << token::BEGIN_LIST;
 
             // Write master data
             {
@@ -564,7 +539,7 @@ bool Foam::decomposedBlockData::writeBlocks
             }
 
             // Write end delimiter
-            os << nl << token::END_LIST << nl;
+            //os << nl << token::END_LIST << nl;
 
             ok = os.good();
         }

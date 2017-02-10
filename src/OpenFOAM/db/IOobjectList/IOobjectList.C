@@ -48,30 +48,6 @@ Foam::IOobjectList::IOobjectList
 :
     HashPtrTable<IOobject>()
 {
-//DebugVar(instance);
-//DebugVar(db.path(instance));
-//
-//     word newInstance = instance;
-//
-//     if (!fileHandler().isDir(db.path(instance)))
-//     {
-//         newInstance = db.time().findInstancePath(instant(instance));
-//
-//         if (newInstance.empty())
-//         {
-//             return;
-//         }
-//     }
-//
-// DebugVar(db.path(newInstance, db.dbDir()/local));
-//
-//     // Create a list of file names in this directory
-//     fileNameList ObjectNames = fileHandler().readDir
-//     (
-//         db.path(newInstance, db.dbDir()/local),
-//         fileName::FILE
-//     );
-
     word newInstance;
     fileNameList ObjectNames = fileHandler().readObjects
     (
@@ -84,9 +60,6 @@ Foam::IOobjectList::IOobjectList
 
     forAll(ObjectNames, i)
     {
-//DebugVar(ObjectNames[i]);
-//DebugVar(newInstance);
-
         IOobject* objectPtr = new IOobject
         (
             ObjectNames[i],
@@ -101,9 +74,6 @@ Foam::IOobjectList::IOobjectList
         // Use object with local scope
         if (objectPtr->typeHeaderOk<IOList<label>>(false))
         {
-Pout<< "** read object:" << objectPtr->objectPath() << endl;
-
-
             insert(ObjectNames[i], objectPtr);
         }
         else
