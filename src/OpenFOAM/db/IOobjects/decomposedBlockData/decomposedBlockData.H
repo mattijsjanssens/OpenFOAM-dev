@@ -149,6 +149,9 @@ public:
             const UList<char>&,
             const UPstream::commsTypes
         );
+
+        //- Detect number of blocks in a file
+        static label numBlocks(const fileName&);
 };
 
 

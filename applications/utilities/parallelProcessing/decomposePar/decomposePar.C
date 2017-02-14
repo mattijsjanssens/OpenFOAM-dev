@@ -151,21 +151,25 @@ void decomposeUniform
     // Any uniform data to copy/link?
     const fileName uniformDir(regionDir/"uniform");
 
-    if (isDir(runTime.timePath()/uniformDir))
+    if (fileHandler().isDir(runTime.timePath()/uniformDir))
     {
         Info<< "Detected additional non-decomposed files in "
             << runTime.timePath()/uniformDir
             << endl;
 
-        const fileName timePath = processorDb.timePath();
+        const fileName timePath =
+            fileHandler().filePath(processorDb.timePath());
 
         if (copyUniform || mesh.distributed())
         {
-            cp
-            (
-                runTime.timePath()/uniformDir,
-                timePath/uniformDir
-            );
+            if (!fileHandler().exists(timePath/uniformDir))
+            {
+                fileHandler().cp
+                (
+                    runTime.timePath()/uniformDir,
+                    timePath/uniformDir
+                );
+            }
         }
         else
         {
@@ -179,11 +183,15 @@ void decomposeUniform
 
             fileName currentDir(cwd());
             chDir(timePath);
-            ln
-            (
-                parentPath/runTime.timeName()/uniformDir,
-                uniformDir
-            );
+
+            if (!fileHandler().exists(uniformDir))
+            {
+                fileHandler().ln
+                (
+                    parentPath/runTime.timeName()/uniformDir,
+                    uniformDir
+                );
+            }
             chDir(currentDir);
         }
     }
@@ -303,24 +311,10 @@ int main(int argc, char *argv[])
         Info<< "\n\nDecomposing mesh " << regionName << nl << endl;
 
 
-        // determine the existing processor count directly
-        label nProcs = 0;
-        while
-        (
-            isDir
-            (
-                runTime.path()
-              / (word("processor") + name(nProcs))
-              / runTime.constant()
-              / regionDir
-              / polyMesh::meshSubDir
-            )
-        )
-        {
-            ++nProcs;
-        }
+        // Determine the existing processor count directly
+        label nProcs = fileHandler().nProcs(runTime.path(), regionDir);
 
-        // get requested numberOfSubdomains. Note: have no mesh yet so
+        // Get requested numberOfSubdomains. Note: have no mesh yet so
         // cannot use decompositionModel::New
         const label nDomains = readLabel
         (
@@ -373,7 +367,7 @@ int main(int argc, char *argv[])
                 Info<< "Removing " << nProcs
                     << " existing processor directories" << endl;
 
-                rmDir(runTime.path()/word("processors"));
+                fileHandler().rmDir(runTime.path()/word("processors"));
 
                 // remove existing processor dirs
                 // reverse order to avoid gaps if someone interrupts the process
@@ -384,7 +378,7 @@ int main(int argc, char *argv[])
                         runTime.path()/(word("processor") + name(proci))
                     );
 
-                    rmDir(procDir);
+                    fileHandler().rmDir(procDir);
                 }
 
                 procDirsProblem = false;
@@ -570,7 +564,11 @@ int main(int argc, char *argv[])
 
             fileNameList cloudDirs
             (
-                readDir(runTime.timePath()/cloud::prefix, fileName::DIRECTORY)
+                fileHandler().readDir
+                (
+                    runTime.timePath()/cloud::prefix,
+                    fileName::DIRECTORY
+                )
             );
 
             // Particles

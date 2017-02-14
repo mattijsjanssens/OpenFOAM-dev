@@ -73,14 +73,16 @@ Foam::fileName Foam::fileOperations::masterFileOperation::filePath
     else
     {
         // 1. Check processors/
-        fileName path = processorsPath(io, io.instance());
-        fileName objectPath = path/io.name();
-        if (Foam::isFile(objectPath))
+        if (io.time().processorCase())
         {
-            searchType = fileOperation::PROCESSORSOBJECT;
-            return objectPath;
+            fileName path = processorsPath(io, io.instance());
+            fileName objectPath = path/io.name();
+            if (Foam::isFile(objectPath))
+            {
+                searchType = fileOperation::PROCESSORSOBJECT;
+                return objectPath;
+            }
         }
-        else
         {
             // 2. Check local
             fileName localObjectPath = io.path()/io.name();
@@ -676,6 +678,7 @@ Foam::fileOperations::masterFileOperation::readStream
         // Read header data (on copy)
         IOobject headerIO(io);
         headerIO.readHeader(isPtr());
+
         if (headerIO.headerClassName() == decomposedBlockData::typeName)
         {
             isCollated = true;

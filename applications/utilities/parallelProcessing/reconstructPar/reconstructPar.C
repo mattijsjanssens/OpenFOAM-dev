@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -174,12 +174,8 @@ int main(int argc, char *argv[])
     const bool allRegions = args.optionFound("allRegions");
 
 
-    // determine the processor count directly
-    label nProcs = 0;
-    while (isDir(args.path()/(word("processor") + name(nProcs))))
-    {
-        ++nProcs;
-    }
+    // Determine the processor count
+    label nProcs = fileHandler().nProcs(args.path());
 
     if (!nProcs)
     {
@@ -550,16 +546,25 @@ int main(int argc, char *argv[])
 
                 forAll(databases, proci)
                 {
-                    fileNameList cloudDirs
+                    fileName lagrangianDir
                     (
-                        readDir
+                        fileHandler().filePath
                         (
                             databases[proci].timePath()
                           / regionDir
-                          / cloud::prefix,
-                            fileName::DIRECTORY
+                          / cloud::prefix
                         )
                     );
+
+                    fileNameList cloudDirs;
+                    if (!lagrangianDir.empty())
+                    {
+                        cloudDirs = fileHandler().readDir
+                        (
+                            lagrangianDir,
+                            fileName::DIRECTORY
+                        );
+                    }
 
                     forAll(cloudDirs, i)
                     {
@@ -995,12 +1000,15 @@ int main(int argc, char *argv[])
             {
                 fileName uniformDir0
                 (
-                    databases[0].timePath()/regionDir/"uniform"
+                    fileHandler().filePath
+                    (
+                        databases[0].timePath()/regionDir/"uniform"
+                    )
                 );
 
-                if (isDir(uniformDir0))
+                if (!uniformDir0.empty() && fileHandler().isDir(uniformDir0))
                 {
-                    cp(uniformDir0, runTime.timePath()/regionDir);
+                    fileHandler().cp(uniformDir0, runTime.timePath()/regionDir);
                 }
             }
 
@@ -1010,12 +1018,15 @@ int main(int argc, char *argv[])
             {
                 fileName uniformDir0
                 (
-                    databases[0].timePath()/"uniform"
+                    fileHandler().filePath
+                    (
+                        databases[0].timePath()/"uniform"
+                    )
                 );
 
-                if (isDir(uniformDir0))
+                if (!uniformDir0.empty() && fileHandler().isDir(uniformDir0))
                 {
-                    cp(uniformDir0, runTime.timePath());
+                    fileHandler().cp(uniformDir0, runTime.timePath());
                 }
             }
         }

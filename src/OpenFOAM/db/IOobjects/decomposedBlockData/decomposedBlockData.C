@@ -31,6 +31,7 @@ License
 #include "OFstream.H"
 #include "IFstream.H"
 #include "IStringStream.H"
+#include "dictionary.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -213,7 +214,7 @@ bool Foam::decomposedBlockData::readBlock
     is.fatalCheck("read(Istream&)");
 //    token firstToken(is);
 //    is.fatalCheck("read(Istream&) : " "reading first token");
-/
+//
 //    if (firstToken.isLabel())
 //    {
 //        // Read size of list
@@ -293,7 +294,7 @@ bool Foam::decomposedBlockData::readBlocks
 //
 //                // Read beginning of contents
 //                char delimiter = is.readBeginList("List");
-/
+//
 //                 if (s)
                 {
 //                    if (delimiter == token::BEGIN_LIST)
@@ -581,6 +582,51 @@ bool Foam::decomposedBlockData::writeObject
       }
       List<std::streamoff> start;
       return writeBlocks(osPtr, start, *this, commsType_);
+}
+
+
+Foam::label Foam::decomposedBlockData::numBlocks(const fileName& fName)
+{
+    label nBlocks = 0;
+
+    IFstream is(fName);
+    is.fatalCheck("decomposedBlockData::numBlocks(const fileName&)");
+
+    if (!is.good())
+    {
+        return nBlocks;
+    }
+
+    // Skip header
+    token firstToken(is);
+
+    if
+    (
+        is.good()
+     && firstToken.isWord()
+     && firstToken.wordToken() == "FoamFile"
+    )
+    {
+        dictionary headerDict(is);
+        is.version(headerDict.lookup("version"));
+        is.format(headerDict.lookup("format"));
+    }
+
+    List<char> data;
+    while (is.good())
+    {
+        token sizeToken(is);
+        if (!sizeToken.isLabel())
+        {
+            return nBlocks;
+        }
+        is.putBack(sizeToken);
+
+        is >> data;
+        nBlocks++;
+    }
+
+    return nBlocks;
 }
 
 

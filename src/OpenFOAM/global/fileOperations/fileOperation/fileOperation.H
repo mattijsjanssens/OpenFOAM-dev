@@ -45,6 +45,7 @@ namespace Foam
 class IOobject;
 class regIOobject;
 class objectRegistry;
+class Time;
 
 /*---------------------------------------------------------------------------*\
                          Class fileOperation Declaration
@@ -258,6 +259,13 @@ public:
                 const bool valid = true
             ) const;
 
+
+        // Filename (not IOobject) operations
+
+            //- Search for a file or directory. Use IOobject version in
+            //  preference
+            virtual fileName filePath(const fileName&) const;
+
             //- Generate an Istream that reads a file
             virtual autoPtr<Istream> NewIFstream(const fileName&) const = 0;
 
@@ -309,8 +317,20 @@ public:
 
         // Other
 
+            //- Get number of processor directories/results. Used for e.g.
+            //  reconstructPar, argList checking
+            virtual label nProcs
+            (
+                const fileName& dir,
+                const fileName& local = ""
+            ) const;
+
             //- Get sorted list of times
             virtual instantList findTimes(const fileName&, const word&) const;
+
+            //- Callback for time change
+            virtual void setTime(const Time&) const
+            {}
 };
 
 

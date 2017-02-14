@@ -30,6 +30,8 @@ License
 #include "HashSet.H"
 #include "masterFileOperation.H"
 #include "objectRegistry.H"
+#include "decomposedBlockData.H"
+#include "polyMesh.H"
 
 /* * * * * * * * * * * * * * * Static Member Data  * * * * * * * * * * * * * */
 
@@ -232,6 +234,35 @@ bool Foam::fileOperation::writeObject
         IOobject::writeEndDivider(os);
     }
     return true;
+}
+
+
+Foam::fileName Foam::fileOperation::filePath(const fileName& fName) const
+{
+    fileName path;
+    fileName local;
+    label proci = fileOperations::masterFileOperation::splitProcessorPath
+    (
+        fName,
+        path,
+        local
+    );
+
+    fileName procsName(path/"processors"/local);
+
+    // Give preference to processors variant
+    if (proci != -1 && exists(procsName))
+    {
+        return procsName;
+    }
+    else if (exists(fName))
+    {
+        return fName;
+    }
+    else
+    {
+        return fileName::null;
+    }
 }
 
 
@@ -469,6 +500,56 @@ Foam::fileNameList Foam::fileOperation::readObjects
         }
     }
     return objectNames;
+}
+
+
+Foam::label Foam::fileOperation::nProcs
+(
+    const fileName& dir,
+    const fileName& local
+) const
+{
+    if (Foam::isDir(dir/"processors"))
+    {
+        fileName pointsFile
+        (
+            dir
+           /"processors"
+           /"constant"
+           /local
+           /polyMesh::meshSubDir
+           /"points"
+        );
+
+        if (Foam::isFile(pointsFile))
+        {
+            return decomposedBlockData::numBlocks(pointsFile);
+        }
+        else
+        {
+            WarningInFunction << "Cannot read file " << pointsFile
+                << " to determine the number of decompositions."
+                << " Falling back to looking for processor.*" << endl;
+        }
+    }
+
+    label nProcs = 0;
+    while
+    (
+        isDir
+        (
+            dir
+           /(word("processor") + name(nProcs))
+           /"constant"
+           /local
+           /polyMesh::meshSubDir
+        )
+    )
+    {
+        ++nProcs;
+    }
+
+    return nProcs;
 }
 
 

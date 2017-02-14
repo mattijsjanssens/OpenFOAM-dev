@@ -879,6 +879,7 @@ void Foam::Time::setTime(const Time& t)
     value() = t.value();
     dimensionedScalar::name() = t.dimensionedScalar::name();
     timeIndex_ = t.timeIndex_;
+    fileHandler().setTime(*this);
 }
 
 
@@ -905,6 +906,7 @@ void Foam::Time::setTime(const instant& inst, const label newIndex)
     timeDict.readIfPresent("deltaT", deltaT_);
     timeDict.readIfPresent("deltaT0", deltaT0_);
     timeDict.readIfPresent("index", timeIndex_);
+    fileHandler().setTime(*this);
 }
 
 
@@ -919,6 +921,7 @@ void Foam::Time::setTime(const scalar newTime, const label newIndex)
     value() = newTime;
     dimensionedScalar::name() = timeName(timeToUserTime(newTime));
     timeIndex_ = newIndex;
+    fileHandler().setTime(*this);
 }
 
 
