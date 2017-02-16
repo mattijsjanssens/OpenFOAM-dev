@@ -105,14 +105,19 @@ void Foam::ReactingParcel<ParcelType>::readFields
     const CompositionType& compModel
 )
 {
-    if (!c.size())
-    {
-        return;
-    }
+//    if (!c.size())
+//    {
+//        return;
+//    }
+    bool valid = c.size();
 
     ParcelType::readFields(c);
 
-    IOField<scalar> mass0(c.fieldIOobject("mass0", IOobject::MUST_READ));
+    IOField<scalar> mass0
+    (
+        c.fieldIOobject("mass0", IOobject::MUST_READ),
+        valid
+    );
     c.checkFieldIOobject(c, mass0);
 
     label i = 0;
@@ -148,7 +153,8 @@ void Foam::ReactingParcel<ParcelType>::readFields
             (
                 "Y" + phaseTypes[j] + stateLabels[j],
                  IOobject::MUST_READ
-            )
+            ),
+            valid
         );
 
         label i = 0;

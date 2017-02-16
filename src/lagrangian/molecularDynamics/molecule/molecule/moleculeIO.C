@@ -93,38 +93,44 @@ Foam::molecule::molecule
 
 void Foam::molecule::readFields(Cloud<molecule>& mC)
 {
-    if (!mC.size())
-    {
-        return;
-    }
+//    if (!mC.size())
+//    {
+//        return;
+//    }
+    bool valid = mC.size();
 
     particle::readFields(mC);
 
-    IOField<tensor> Q(mC.fieldIOobject("Q", IOobject::MUST_READ));
+    IOField<tensor> Q(mC.fieldIOobject("Q", IOobject::MUST_READ), valid);
     mC.checkFieldIOobject(mC, Q);
 
-    IOField<vector> v(mC.fieldIOobject("v", IOobject::MUST_READ));
+    IOField<vector> v(mC.fieldIOobject("v", IOobject::MUST_READ), valid);
     mC.checkFieldIOobject(mC, v);
 
-    IOField<vector> a(mC.fieldIOobject("a", IOobject::MUST_READ));
+    IOField<vector> a(mC.fieldIOobject("a", IOobject::MUST_READ), valid);
     mC.checkFieldIOobject(mC, a);
 
-    IOField<vector> pi(mC.fieldIOobject("pi", IOobject::MUST_READ));
+    IOField<vector> pi(mC.fieldIOobject("pi", IOobject::MUST_READ), valid);
     mC.checkFieldIOobject(mC, pi);
 
-    IOField<vector> tau(mC.fieldIOobject("tau", IOobject::MUST_READ));
+    IOField<vector> tau(mC.fieldIOobject("tau", IOobject::MUST_READ), valid);
     mC.checkFieldIOobject(mC, tau);
 
     IOField<vector> specialPosition
     (
-        mC.fieldIOobject("specialPosition", IOobject::MUST_READ)
+        mC.fieldIOobject("specialPosition", IOobject::MUST_READ),
+        valid
     );
     mC.checkFieldIOobject(mC, specialPosition);
 
-    IOField<label> special(mC.fieldIOobject("special", IOobject::MUST_READ));
+    IOField<label> special
+    (
+        mC.fieldIOobject("special", IOobject::MUST_READ),
+        valid
+    );
     mC.checkFieldIOobject(mC, special);
 
-    IOField<label> id(mC.fieldIOobject("id", IOobject::MUST_READ));
+    IOField<label> id(mC.fieldIOobject("id", IOobject::MUST_READ), valid);
     mC.checkFieldIOobject(mC, id);
 
     label i = 0;

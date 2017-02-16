@@ -78,20 +78,25 @@ Foam::DSMCParcel<ParcelType>::DSMCParcel
 template<class ParcelType>
 void Foam::DSMCParcel<ParcelType>::readFields(Cloud<DSMCParcel<ParcelType>>& c)
 {
-    if (!c.size())
-    {
-        return;
-    }
+//    if (!c.size())
+//    {
+//        return;
+//    }
+    bool valid = c.size();
 
     ParcelType::readFields(c);
 
-    IOField<vector> U(c.fieldIOobject("U", IOobject::MUST_READ));
+    IOField<vector> U(c.fieldIOobject("U", IOobject::MUST_READ), valid);
     c.checkFieldIOobject(c, U);
 
-    IOField<scalar> Ei(c.fieldIOobject("Ei", IOobject::MUST_READ));
+    IOField<scalar> Ei(c.fieldIOobject("Ei", IOobject::MUST_READ), valid);
     c.checkFieldIOobject(c, Ei);
 
-    IOField<label> typeId(c.fieldIOobject("typeId", IOobject::MUST_READ));
+    IOField<label> typeId
+    (
+        c.fieldIOobject("typeId", IOobject::MUST_READ),
+        valid
+    );
     c.checkFieldIOobject(c, typeId);
 
     label i = 0;

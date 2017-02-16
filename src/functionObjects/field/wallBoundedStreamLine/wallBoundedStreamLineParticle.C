@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -346,22 +346,25 @@ void Foam::wallBoundedStreamLineParticle::readFields
     Cloud<wallBoundedStreamLineParticle>& c
 )
 {
-    if (!c.size())
-    {
-        return;
-    }
+//    if (!c.size())
+//    {
+//        return;
+//    }
+    bool valid = c.size();
 
     wallBoundedParticle::readFields(c);
 
     IOField<label> lifeTime
     (
-        c.fieldIOobject("lifeTime", IOobject::MUST_READ)
+        c.fieldIOobject("lifeTime", IOobject::MUST_READ),
+        valid
     );
     c.checkFieldIOobject(c, lifeTime);
 
     vectorFieldIOField sampledPositions
     (
-        c.fieldIOobject("sampledPositions", IOobject::MUST_READ)
+        c.fieldIOobject("sampledPositions", IOobject::MUST_READ),
+        valid
     );
     c.checkFieldIOobject(c, sampledPositions);
 
@@ -382,7 +385,7 @@ void Foam::wallBoundedStreamLineParticle::writeFields
 {
     wallBoundedParticle::writeFields(c);
 
-    label np =  c.size();
+    label np = c.size();
 
     IOField<label> lifeTime
     (
@@ -403,8 +406,8 @@ void Foam::wallBoundedStreamLineParticle::writeFields
         i++;
     }
 
-    lifeTime.write();
-    sampledPositions.write();
+    lifeTime.write(np > 0);
+    sampledPositions.write(np > 0);
 }
 
 

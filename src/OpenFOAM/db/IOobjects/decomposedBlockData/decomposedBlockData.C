@@ -515,7 +515,6 @@ bool Foam::decomposedBlockData::writeBlocks
             start.setSize(UPstream::nProcs());
 
             OSstream& os = osPtr();
-
             // Write size and start delimiter
             //os << nl << UPstream::nProcs() << nl;
             // << token::BEGIN_LIST;
@@ -526,10 +525,11 @@ bool Foam::decomposedBlockData::writeBlocks
                 start[UPstream::masterNo()] = os.stdStream().tellp();
                 os << data;
             }
+
             // Write slaves
             for (label proci = 1; proci < UPstream::nProcs(); proci++)
             {
-                UIPstream is(UPstream::masterNo(), pBufs);
+                UIPstream is(proci, pBufs);
                 List<char> elems(is);
 
                 is.fatalCheck("write(Istream&) : reading entry");

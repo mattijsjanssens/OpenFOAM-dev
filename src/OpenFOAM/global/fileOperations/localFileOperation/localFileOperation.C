@@ -30,6 +30,7 @@ License
 #include "addToRunTimeSelectionTable.H"
 #include "masterFileOperation.H"
 #include "decomposedBlockData.H"
+#include "dummyIstream.H"
 
 /* * * * * * * * * * * * * * * Static Member Data  * * * * * * * * * * * * * */
 
@@ -377,6 +378,13 @@ bool Foam::fileOperations::localFileOperation::readHeader
 {
     if (fName.empty())
     {
+        if (IOobject::debug)
+        {
+            InfoInFunction
+                << "file " << io.objectPath() << " could not be opened"
+                << endl;
+        }
+
         return false;
     }
 
@@ -403,16 +411,25 @@ Foam::autoPtr<Foam::Istream>
 Foam::fileOperations::localFileOperation::readStream
 (
     regIOobject& io,
-    const fileName& fName
+    const fileName& fName,
+    const bool valid
 ) const
 {
+    autoPtr<Istream> isPtr;
+
+    if (!valid)
+    {
+        isPtr = autoPtr<Istream>(new dummyIstream());
+        return isPtr;
+    }
+
     if (!fName.size())
     {
         FatalErrorInFunction
             << "empty file name" << exit(FatalError);
     }
 
-    autoPtr<Istream> isPtr = NewIFstream(fName);
+    isPtr = NewIFstream(fName);
 
     if (!isPtr.valid() || !isPtr->good())
     {
@@ -475,6 +492,31 @@ Foam::fileOperations::localFileOperation::readStream
         return realIsPtr;
     }
 }
+
+
+//void Foam::fileOperations::localFileOperation::read
+//(
+//    regIOobject& io,
+//    const bool procValid
+//) const
+//{
+//    if
+//    (
+//        (
+//            io.readOpt() == IOobject::MUST_READ
+//         || io.readOpt() == IOobject::MUST_READ_IF_MODIFIED
+//        )
+//     || (io.readOpt() == IOobject::READ_IF_PRESENT && headerOk())
+//    )
+//    {
+//        Istream& is = readStream(typeName);
+//        if (procValid)
+//        {
+//            is >> *this;
+//        }
+//        close();
+//    }
+//}
 
 
 Foam::autoPtr<Foam::Istream>

@@ -81,17 +81,18 @@ template<class ParcelType>
 template<class CloudType>
 void Foam::ThermoParcel<ParcelType>::readFields(CloudType& c)
 {
-    if (!c.size())
-    {
-        return;
-    }
+//    if (!c.size())
+//    {
+//        return;
+//    }
+    bool valid = c.size();
 
     ParcelType::readFields(c);
 
-    IOField<scalar> T(c.fieldIOobject("T", IOobject::MUST_READ));
+    IOField<scalar> T(c.fieldIOobject("T", IOobject::MUST_READ), valid);
     c.checkFieldIOobject(c, T);
 
-    IOField<scalar> Cp(c.fieldIOobject("Cp", IOobject::MUST_READ));
+    IOField<scalar> Cp(c.fieldIOobject("Cp", IOobject::MUST_READ), valid);
     c.checkFieldIOobject(c, Cp);
 
 

@@ -29,30 +29,33 @@ License
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
 template<class T, class BaseType>
-void Foam::CompactIOField<T, BaseType>::readFromStream()
+void Foam::CompactIOField<T, BaseType>::readFromStream(const bool valid)
 {
-    Istream& is = readStream(word::null);
+    Istream& is = readStream(word::null, valid);
 
-    if (headerClassName() == IOField<T>::typeName)
+    if (valid)
     {
-        is >> static_cast<Field<T>&>(*this);
-        close();
-    }
-    else if (headerClassName() == typeName)
-    {
-        is >> *this;
-        close();
-    }
-    else
-    {
-        FatalIOErrorInFunction
-        (
-            is
-        )   << "unexpected class name " << headerClassName()
-            << " expected " << typeName << " or " << IOField<T>::typeName
-            << endl
-            << "    while reading object " << name()
-            << exit(FatalIOError);
+        if (headerClassName() == IOField<T>::typeName)
+        {
+            is >> static_cast<Field<T>&>(*this);
+            close();
+        }
+        else if (headerClassName() == typeName)
+        {
+            is >> *this;
+            close();
+        }
+        else
+        {
+            FatalIOErrorInFunction
+            (
+                is
+            )   << "unexpected class name " << headerClassName()
+                << " expected " << typeName << " or " << IOField<T>::typeName
+                << endl
+                << "    while reading object " << name()
+                << exit(FatalIOError);
+        }
     }
 }
 
@@ -71,6 +74,27 @@ Foam::CompactIOField<T, BaseType>::CompactIOField(const IOobject& io)
     )
     {
         readFromStream();
+    }
+}
+
+
+template<class T, class BaseType>
+Foam::CompactIOField<T, BaseType>::CompactIOField
+(
+    const IOobject& io,
+    const bool valid
+)
+:
+    regIOobject(io)
+{
+    if (io.readOpt() == IOobject::MUST_READ)
+    {
+        readFromStream(valid);
+    }
+    else if (io.readOpt() == IOobject::READ_IF_PRESENT)
+    {
+        bool haveFile = headerOk();
+        readFromStream(valid && haveFile);
     }
 }
 

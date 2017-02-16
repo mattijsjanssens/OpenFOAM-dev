@@ -77,14 +77,19 @@ template<class ParcelType>
 template<class CloudType>
 void Foam::MPPICParcel<ParcelType>::readFields(CloudType& c)
 {
-    if (!c.size())
-    {
-        return;
-    }
+//    if (!c.size())
+//    {
+//        return;
+//    }
+    bool valid = c.size();
 
     ParcelType::readFields(c);
 
-    IOField<vector> UCorrect(c.fieldIOobject("UCorrect", IOobject::MUST_READ));
+    IOField<vector> UCorrect
+    (
+        c.fieldIOobject("UCorrect", IOobject::MUST_READ),
+        valid
+    );
     c.checkFieldIOobject(c, UCorrect);
 
     label i = 0;

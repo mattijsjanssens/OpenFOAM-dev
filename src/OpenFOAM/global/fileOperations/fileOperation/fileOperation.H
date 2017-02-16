@@ -231,19 +231,21 @@ public:
             ) const;
 
             //- Read object header from supplied file
-            virtual bool readHeader
-            (
-                IOobject&,
-                const fileName& fName
-            ) const = 0;
+            virtual bool readHeader(IOobject&, const fileName&) const = 0;
 
             //- Reads header for regIOobject and returns an Istream
             //  to read the contents.
             virtual autoPtr<Istream> readStream
             (
                 regIOobject&,
-                const fileName&
+                const fileName&,
+                const bool valid = true
             ) const = 0;
+
+//            //- Read object (if procValid) according to readOpt flag using
+//            //  headerOk&readStream. procValid = false is used to keep all
+//            //  calls synchronious.
+//            virtual void read(regIOobject&, const bool procValid) const = 0;
 
             //- Writes a regIOobject (so header, contents and divider).
             //  Returns success state. Default action is to write to

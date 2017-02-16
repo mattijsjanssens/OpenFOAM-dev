@@ -86,28 +86,35 @@ template<class ParcelType>
 template<class CloudType>
 void Foam::CollidingParcel<ParcelType>::readFields(CloudType& c)
 {
-    if (!c.size())
-    {
-        return;
-    }
+//    if (!c.size())
+//    {
+//        return;
+//    }
+    bool valid = c.size();
 
     ParcelType::readFields(c);
 
-    IOField<vector> f(c.fieldIOobject("f", IOobject::MUST_READ));
+    IOField<vector> f(c.fieldIOobject("f", IOobject::MUST_READ), valid);
     c.checkFieldIOobject(c, f);
 
     IOField<vector> angularMomentum
     (
-        c.fieldIOobject("angularMomentum", IOobject::MUST_READ)
+        c.fieldIOobject("angularMomentum", IOobject::MUST_READ),
+        valid
     );
     c.checkFieldIOobject(c, angularMomentum);
 
-    IOField<vector> torque(c.fieldIOobject("torque", IOobject::MUST_READ));
+    IOField<vector> torque
+    (
+        c.fieldIOobject("torque", IOobject::MUST_READ),
+        valid
+    );
     c.checkFieldIOobject(c, torque);
 
     labelFieldCompactIOField collisionRecordsPairAccessed
     (
-        c.fieldIOobject("collisionRecordsPairAccessed", IOobject::MUST_READ)
+        c.fieldIOobject("collisionRecordsPairAccessed", IOobject::MUST_READ),
+        valid
     );
     c.checkFieldFieldIOobject(c, collisionRecordsPairAccessed);
 
@@ -117,7 +124,8 @@ void Foam::CollidingParcel<ParcelType>::readFields(CloudType& c)
         (
             "collisionRecordsPairOrigProcOfOther",
             IOobject::MUST_READ
-        )
+        ),
+        valid
     );
     c.checkFieldFieldIOobject(c, collisionRecordsPairOrigProcOfOther);
 
@@ -127,31 +135,36 @@ void Foam::CollidingParcel<ParcelType>::readFields(CloudType& c)
         (
             "collisionRecordsPairOrigIdOfOther",
             IOobject::MUST_READ
-        )
+        ),
+        valid
     );
     c.checkFieldFieldIOobject(c, collisionRecordsPairOrigProcOfOther);
 
     pairDataFieldCompactIOField collisionRecordsPairData
     (
-        c.fieldIOobject("collisionRecordsPairData", IOobject::MUST_READ)
+        c.fieldIOobject("collisionRecordsPairData", IOobject::MUST_READ),
+        valid
     );
     c.checkFieldFieldIOobject(c, collisionRecordsPairData);
 
     labelFieldCompactIOField collisionRecordsWallAccessed
     (
-        c.fieldIOobject("collisionRecordsWallAccessed", IOobject::MUST_READ)
+        c.fieldIOobject("collisionRecordsWallAccessed", IOobject::MUST_READ),
+        valid
     );
     c.checkFieldFieldIOobject(c, collisionRecordsWallAccessed);
 
     vectorFieldCompactIOField collisionRecordsWallPRel
     (
-        c.fieldIOobject("collisionRecordsWallPRel", IOobject::MUST_READ)
+        c.fieldIOobject("collisionRecordsWallPRel", IOobject::MUST_READ),
+        valid
     );
     c.checkFieldFieldIOobject(c, collisionRecordsWallPRel);
 
     wallDataFieldCompactIOField collisionRecordsWallData
     (
-        c.fieldIOobject("collisionRecordsWallData", IOobject::MUST_READ)
+        c.fieldIOobject("collisionRecordsWallData", IOobject::MUST_READ),
+        valid
     );
     c.checkFieldFieldIOobject(c, collisionRecordsWallData);
 

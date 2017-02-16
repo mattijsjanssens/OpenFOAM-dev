@@ -113,7 +113,7 @@ private:
     // Private Member Functions
 
         //- Return Istream
-        Istream& readStream();
+        Istream& readStream(const bool valid = true);
 
         //- Dissallow assignment
         void operator=(const regIOobject&);
@@ -253,7 +253,7 @@ public:
             bool headerOk();
 
             //- Return Istream and check object type against that given
-            Istream& readStream(const word&);
+            Istream& readStream(const word&, const bool valid = true);
 
             //- Close Istream
             void close();

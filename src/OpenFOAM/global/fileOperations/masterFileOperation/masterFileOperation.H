@@ -272,6 +272,13 @@ public:
         TypeName("masterFileOperation");
 
 
+    // Static data
+
+        //- Max size of parallel communications. Switches from non-blocking
+        //  to scheduled when reading/writing files.
+        static label maxCommsSize;
+
+
     // Constructors
 
         //- Construct null
@@ -387,15 +394,21 @@ public:
             ) const;
 
             //- Read object header from supplied file
-            virtual bool readHeader(IOobject&, const fileName& fName) const;
+            virtual bool readHeader(IOobject&, const fileName&) const;
 
             //- Reads header for regIOobject and returns an Istream
             //  to read the contents.
             virtual autoPtr<Istream> readStream
             (
                 regIOobject&,
-                const fileName&
+                const fileName&,
+                const bool valid = true
             ) const;
+
+//            //- Read object (if procValid) according to readOpt flag using
+//            //  headerOk&readStream. procValid = false is used to keep all
+//            //  calls synchronious.
+//            virtual void read(regIOobject&, const bool procValid) const;
 
             //- Writes a regIOobject (so header, contents and divider).
             //  Returns success state.

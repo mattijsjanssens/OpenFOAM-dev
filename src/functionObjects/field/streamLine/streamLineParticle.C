@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -414,28 +414,32 @@ void Foam::streamLineParticle::hitPatch
 
 void Foam::streamLineParticle::readFields(Cloud<streamLineParticle>& c)
 {
-    if (!c.size())
-    {
-        return;
-    }
+//    if (!c.size())
+//    {
+//        return;
+//    }
+    bool valid = c.size();
 
     particle::readFields(c);
 
     IOField<label> lifeTime
     (
-        c.fieldIOobject("lifeTime", IOobject::MUST_READ)
+        c.fieldIOobject("lifeTime", IOobject::MUST_READ),
+        valid
     );
     c.checkFieldIOobject(c, lifeTime);
 
     vectorFieldIOField sampledPositions
     (
-        c.fieldIOobject("sampledPositions", IOobject::MUST_READ)
+        c.fieldIOobject("sampledPositions", IOobject::MUST_READ),
+        valid
     );
     c.checkFieldIOobject(c, sampledPositions);
 
 //    vectorFieldIOField sampleVelocity
 //    (
-//        c.fieldIOobject("sampleVelocity", IOobject::MUST_READ)
+//        c.fieldIOobject("sampleVelocity", IOobject::MUST_READ),
+//        valid
 //    );
 //    c.checkFieldIOobject(c, sampleVelocity);
 
@@ -454,7 +458,7 @@ void Foam::streamLineParticle::writeFields(const Cloud<streamLineParticle>& c)
 {
     particle::writeFields(c);
 
-    label np =  c.size();
+    label np = c.size();
 
     IOField<label> lifeTime
     (
@@ -481,9 +485,9 @@ void Foam::streamLineParticle::writeFields(const Cloud<streamLineParticle>& c)
         i++;
     }
 
-    lifeTime.write();
-    sampledPositions.write();
-//    sampleVelocity.write();
+    lifeTime.write(np > 0);
+    sampledPositions.write(np > 0);
+//    sampleVelocity.write(np > 0);
 }
 
 

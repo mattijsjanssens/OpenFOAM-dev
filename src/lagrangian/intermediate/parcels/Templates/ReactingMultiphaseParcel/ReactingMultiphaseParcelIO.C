@@ -108,10 +108,11 @@ void Foam::ReactingMultiphaseParcel<ParcelType>::readFields
     const CompositionType& compModel
 )
 {
-    if (!c.size())
-    {
-        return;
-    }
+//    if (!c.size())
+//    {
+//        return;
+//    }
+    bool valid = c.size();
 
     ParcelType::readFields(c, compModel);
 
@@ -142,7 +143,8 @@ void Foam::ReactingMultiphaseParcel<ParcelType>::readFields
             (
                 "Y" + gasNames[j] + stateLabels[idGas],
                 IOobject::MUST_READ
-            )
+            ),
+            valid
         );
 
         label i = 0;
@@ -166,7 +168,8 @@ void Foam::ReactingMultiphaseParcel<ParcelType>::readFields
             (
                 "Y" + liquidNames[j] + stateLabels[idLiquid],
                  IOobject::MUST_READ
-            )
+            ),
+            valid
         );
 
         label i = 0;
@@ -190,7 +193,8 @@ void Foam::ReactingMultiphaseParcel<ParcelType>::readFields
             (
                 "Y" + solidNames[j] + stateLabels[idSolid],
                 IOobject::MUST_READ
-            )
+            ),
+            valid
         );
 
         label i = 0;

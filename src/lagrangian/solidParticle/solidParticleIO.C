@@ -65,17 +65,18 @@ Foam::solidParticle::solidParticle
 
 void Foam::solidParticle::readFields(Cloud<solidParticle>& c)
 {
-    if (!c.size())
-    {
-        return;
-    }
+//    if (!c.size())
+//    {
+//        return;
+//    }
+    bool valid = c.size();
 
     particle::readFields(c);
 
-    IOField<scalar> d(c.fieldIOobject("d", IOobject::MUST_READ));
+    IOField<scalar> d(c.fieldIOobject("d", IOobject::MUST_READ), valid);
     c.checkFieldIOobject(c, d);
 
-    IOField<vector> U(c.fieldIOobject("U", IOobject::MUST_READ));
+    IOField<vector> U(c.fieldIOobject("U", IOobject::MUST_READ), valid);
     c.checkFieldIOobject(c, U);
 
     label i = 0;

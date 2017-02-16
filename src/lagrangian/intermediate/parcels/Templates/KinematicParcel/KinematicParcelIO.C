@@ -101,42 +101,82 @@ template<class ParcelType>
 template<class CloudType>
 void Foam::KinematicParcel<ParcelType>::readFields(CloudType& c)
 {
-    if (!c.size())
-    {
-        return;
-    }
+//    if (!c.size())
+//    {
+//        return;
+//    }
+    bool valid = c.size();
 
     ParcelType::readFields(c);
 
-    IOField<label> active(c.fieldIOobject("active", IOobject::MUST_READ));
+    IOField<label> active
+    (
+        c.fieldIOobject("active", IOobject::MUST_READ),
+        valid
+    );
     c.checkFieldIOobject(c, active);
 
-    IOField<label> typeId(c.fieldIOobject("typeId", IOobject::MUST_READ));
+    IOField<label> typeId
+    (
+        c.fieldIOobject("typeId", IOobject::MUST_READ),
+        valid
+    );
     c.checkFieldIOobject(c, typeId);
 
-    IOField<scalar>
-        nParticle(c.fieldIOobject("nParticle", IOobject::MUST_READ));
+    IOField<scalar> nParticle
+    (
+        c.fieldIOobject("nParticle", IOobject::MUST_READ),
+        valid
+    );
     c.checkFieldIOobject(c, nParticle);
 
-    IOField<scalar> d(c.fieldIOobject("d", IOobject::MUST_READ));
+    IOField<scalar> d
+    (
+        c.fieldIOobject("d", IOobject::MUST_READ),
+        valid
+    );
     c.checkFieldIOobject(c, d);
 
-    IOField<scalar> dTarget(c.fieldIOobject("dTarget", IOobject::MUST_READ));
+    IOField<scalar> dTarget
+    (
+        c.fieldIOobject("dTarget", IOobject::MUST_READ),
+        valid
+    );
     c.checkFieldIOobject(c, dTarget);
 
-    IOField<vector> U(c.fieldIOobject("U", IOobject::MUST_READ));
+    IOField<vector> U
+    (
+        c.fieldIOobject("U", IOobject::MUST_READ),
+        valid
+    );
     c.checkFieldIOobject(c, U);
 
-    IOField<scalar> rho(c.fieldIOobject("rho", IOobject::MUST_READ));
+    IOField<scalar> rho
+    (
+        c.fieldIOobject("rho", IOobject::MUST_READ),
+        valid
+    );
     c.checkFieldIOobject(c, rho);
 
-    IOField<scalar> age(c.fieldIOobject("age", IOobject::MUST_READ));
+    IOField<scalar> age
+    (
+        c.fieldIOobject("age", IOobject::MUST_READ),
+        valid
+    );
     c.checkFieldIOobject(c, age);
 
-    IOField<scalar> tTurb(c.fieldIOobject("tTurb", IOobject::MUST_READ));
+    IOField<scalar> tTurb
+    (
+        c.fieldIOobject("tTurb", IOobject::MUST_READ),
+        valid
+    );
     c.checkFieldIOobject(c, tTurb);
 
-    IOField<vector> UTurb(c.fieldIOobject("UTurb", IOobject::MUST_READ));
+    IOField<vector> UTurb
+    (
+        c.fieldIOobject("UTurb", IOobject::MUST_READ),
+        valid
+    );
     c.checkFieldIOobject(c, UTurb);
 
     label i = 0;

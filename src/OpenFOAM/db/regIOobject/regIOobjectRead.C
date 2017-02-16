@@ -188,7 +188,7 @@ bool Foam::regIOobject::readHeaderOk
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-Foam::Istream& Foam::regIOobject::readStream()
+Foam::Istream& Foam::regIOobject::readStream(const bool valid)
 {
     if (IFstream::debug)
     {
@@ -209,8 +209,12 @@ Foam::Istream& Foam::regIOobject::readStream()
     // Construct object stream and read header if not already constructed
     if (!isPtr_.valid())
     {
-
         fileName objPath;
+//        if (!valid)
+//        {
+//            // File not used locally. Make up some name.
+//            objPath = fileHandler().objectPath(*this);
+//        }
         if (watchIndices_.size())
         {
             // File is being watched. Read exact file that is being watched.
@@ -230,28 +234,32 @@ Foam::Istream& Foam::regIOobject::readStream()
                     << endl;
             }
 
-            if (!objPath.size())
-            {
-                FatalIOError
-                (
-                    "regIOobject::readStream()",
-                    __FILE__,
-                    __LINE__,
-                    objectPath(),
-                    0
-                )   << "cannot find file"
-                    << exit(FatalIOError);
-            }
+//            if (!objPath.size())
+//            {
+//                FatalIOError
+//                (
+//                    "regIOobject::readStream()",
+//                    __FILE__,
+//                    __LINE__,
+//                    objectPath(),
+//                    0
+//                )   << "cannot find file"
+//                    << exit(FatalIOError);
+//            }
         }
 
-        isPtr_ = fileHandler().readStream(*this, objPath);
+        isPtr_ = fileHandler().readStream(*this, objPath, valid);
     }
 
     return isPtr_();
 }
 
 
-Foam::Istream& Foam::regIOobject::readStream(const word& expectName)
+Foam::Istream& Foam::regIOobject::readStream
+(
+    const word& expectName,
+    const bool valid
+)
 {
     if (IFstream::debug)
     {
@@ -265,14 +273,15 @@ Foam::Istream& Foam::regIOobject::readStream(const word& expectName)
     // Construct IFstream if not already constructed
     if (!isPtr_.valid())
     {
-        readStream();
+        readStream(valid);
 
         // Check the className of the regIOobject
         // dictionary is an allowable name in case the actual class
         // instantiated is a dictionary
         if
         (
-            expectName.size()
+            valid
+         && expectName.size()
          && headerClassName() != expectName
          && headerClassName() != "dictionary"
         )

@@ -93,17 +93,17 @@ bool Foam::IOobject::typeHeaderOk(const bool checkType)
 //        }
 
         fileName fName(typeFilePath<Type>(*this));
-        if (fName.empty())
-        {
-            if (IOobject::debug)
-            {
-                InfoInFunction
-                    << "file " << objectPath() << " could not be opened"
-                    << endl;
-            }
-            ok = false;
-        }
-        else
+//        if (fName.empty())
+//        {
+//            if (IOobject::debug)
+//            {
+//                InfoInFunction
+//                    << "file " << objectPath() << " could not be opened"
+//                    << endl;
+//            }
+//            ok = false;
+//        }
+//        else
         {
             ok = fp.readHeader(*this, fName);
             if (ok && checkType && headerClassName_ != Type::typeName)

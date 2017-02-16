@@ -118,56 +118,91 @@ void Foam::SprayParcel<ParcelType>::readFields
     const CompositionType& compModel
 )
 {
-    if (!c.size())
-    {
-        return;
-    }
+//    if (!c.size())
+//    {
+//        return;
+//    }
+    bool valid = c.size();
 
     ParcelType::readFields(c, compModel);
 
-    IOField<scalar> d0(c.fieldIOobject("d0", IOobject::MUST_READ));
+    IOField<scalar> d0(c.fieldIOobject("d0", IOobject::MUST_READ), valid);
     c.checkFieldIOobject(c, d0);
 
     IOField<vector> position0
     (
-        c.fieldIOobject("position0", IOobject::MUST_READ)
+        c.fieldIOobject("position0", IOobject::MUST_READ),
+        valid
     );
     c.checkFieldIOobject(c, position0);
 
-    IOField<scalar> sigma(c.fieldIOobject("sigma", IOobject::MUST_READ));
+    IOField<scalar> sigma(c.fieldIOobject("sigma", IOobject::MUST_READ), valid);
     c.checkFieldIOobject(c, sigma);
 
-    IOField<scalar> mu(c.fieldIOobject("mu", IOobject::MUST_READ));
+    IOField<scalar> mu(c.fieldIOobject("mu", IOobject::MUST_READ), valid);
     c.checkFieldIOobject(c, mu);
 
-    IOField<scalar> liquidCore(c.fieldIOobject
+    IOField<scalar> liquidCore
     (
-        "liquidCore", IOobject::MUST_READ)
+        c.fieldIOobject("liquidCore", IOobject::MUST_READ),
+        valid
     );
     c.checkFieldIOobject(c, liquidCore);
 
-    IOField<scalar> KHindex(c.fieldIOobject("KHindex", IOobject::MUST_READ));
+    IOField<scalar> KHindex
+    (
+        c.fieldIOobject("KHindex", IOobject::MUST_READ),
+        valid
+    );
     c.checkFieldIOobject(c, KHindex);
 
-    IOField<scalar> y(c.fieldIOobject("y", IOobject::MUST_READ));
+    IOField<scalar> y
+    (
+        c.fieldIOobject("y", IOobject::MUST_READ),
+        valid
+    );
     c.checkFieldIOobject(c, y);
 
-    IOField<scalar> yDot(c.fieldIOobject("yDot", IOobject::MUST_READ));
+    IOField<scalar> yDot
+    (
+        c.fieldIOobject("yDot", IOobject::MUST_READ),
+        valid
+    );
     c.checkFieldIOobject(c, yDot);
 
-    IOField<scalar> tc(c.fieldIOobject("tc", IOobject::MUST_READ));
+    IOField<scalar> tc
+    (
+        c.fieldIOobject("tc", IOobject::MUST_READ),
+        valid
+    );
     c.checkFieldIOobject(c, tc);
 
-    IOField<scalar> ms(c.fieldIOobject("ms", IOobject::MUST_READ));
+    IOField<scalar> ms
+    (
+        c.fieldIOobject("ms", IOobject::MUST_READ),
+        valid
+    );
     c.checkFieldIOobject(c, ms);
 
-    IOField<scalar> injector(c.fieldIOobject("injector", IOobject::MUST_READ));
+    IOField<scalar> injector
+    (
+        c.fieldIOobject("injector", IOobject::MUST_READ),
+        valid
+    );
     c.checkFieldIOobject(c, injector);
 
-    IOField<scalar> tMom(c.fieldIOobject("tMom", IOobject::MUST_READ));
+    IOField<scalar> tMom
+    (
+        c.fieldIOobject("tMom", IOobject::MUST_READ),
+        valid
+    );
     c.checkFieldIOobject(c, tMom);
 
-    IOField<scalar> user(c.fieldIOobject("user", IOobject::MUST_READ));
+    IOField<scalar> user
+    (
+        c.fieldIOobject("user", IOobject::MUST_READ),
+        valid
+    );
     c.checkFieldIOobject(c, user);
 
     label i = 0;

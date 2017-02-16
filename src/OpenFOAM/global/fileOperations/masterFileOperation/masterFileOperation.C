@@ -31,6 +31,7 @@ License
 #include "IFstream.H"
 #include "masterOFstream.H"
 #include "decomposedBlockData.H"
+#include "registerSwitch.H"
 
 /* * * * * * * * * * * * * * * Static Member Data  * * * * * * * * * * * * * */
 
@@ -40,6 +41,12 @@ namespace fileOperations
 {
     defineTypeNameAndDebug(masterFileOperation, 0);
     addToRunTimeSelectionTable(fileOperation, masterFileOperation, word);
+
+    label masterFileOperation::maxCommsSize
+    (
+        Foam::debug::optimisationSwitch("maxCommsSize", 1000000000)
+    );
+    registerOptSwitch("maxCommsSize", label, masterFileOperation::maxCommsSize);
 }
 }
 
@@ -622,7 +629,9 @@ bool Foam::fileOperations::masterFileOperation::readHeader
 
     if (debug)
     {
-        Pout<< "masterFileOperation::readHeader:" << " fName:" << fName << endl;
+        Pout<< "masterFileOperation::readHeader:" << endl
+            << "    objectPath:" << io.objectPath() << endl
+            << "    fName     :" << fName << endl;
     }
 
     if (Pstream::master())
@@ -660,9 +669,17 @@ Foam::autoPtr<Foam::Istream>
 Foam::fileOperations::masterFileOperation::readStream
 (
     regIOobject& io,
-    const fileName& fName
+    const fileName& fName,
+    const bool valid
 ) const
 {
+    if (debug)
+    {
+        Pout<< "masterFileOperation::readStream:"
+            << " object : " << io.name()
+            << " fName : " << fName << endl;
+    }
+
     if (!fName.size())
     {
         FatalErrorInFunction
@@ -675,15 +692,19 @@ Foam::fileOperations::masterFileOperation::readStream
     {
         isPtr.reset(new IFstream(fName));
 
-        // Read header data (on copy)
-        IOobject headerIO(io);
-        headerIO.readHeader(isPtr());
-
-        if (headerIO.headerClassName() == decomposedBlockData::typeName)
+        if (isPtr().good())
         {
-            isCollated = true;
+            // Read header data (on copy)
+            IOobject headerIO(io);
+            headerIO.readHeader(isPtr());
+
+            if (headerIO.headerClassName() == decomposedBlockData::typeName)
+            {
+                isCollated = true;
+            }
         }
-        else
+
+        if (!isCollated)
         {
             // Close file. Reopened below.
             isPtr.clear();
@@ -696,7 +717,7 @@ Foam::fileOperations::masterFileOperation::readStream
     {
         if (debug)
         {
-            Pout<< "masterFileOperation::readHeader:"
+            Pout<< "masterFileOperation::readStream:"
                 << " for object : " << io.name()
                 << " starting collating input from " << fName << endl;
         }
@@ -727,8 +748,20 @@ Foam::fileOperations::masterFileOperation::readStream
         }
         else
         {
+            // Get size of file (on master, scatter to slaves)
+            off_t sz = fileSize(fName);
+
             // Read my data
-            decomposedBlockData::readBlocks(isPtr, data, UPstream::scheduled);
+            decomposedBlockData::readBlocks
+            (
+                isPtr,
+                data,
+                (
+                    sz > maxCommsSize
+                  ? UPstream::scheduled
+                  : UPstream::nonBlocking
+                )
+            );
         }
 
         // TBD: remove extra copying
@@ -749,7 +782,7 @@ Foam::fileOperations::masterFileOperation::readStream
     {
         if (debug)
         {
-            Pout<< "masterFileOperation::readHeader:"
+            Pout<< "masterFileOperation::readStream:"
                 << " for object : " << io.name()
                 << " starting separated input from " << fName << endl;
         }
@@ -783,7 +816,7 @@ Foam::fileOperations::masterFileOperation::readStream
             {
                 if (debug)
                 {
-                    Pout<< "masterFileOperation::readHeader:"
+                    Pout<< "masterFileOperation::readStream:"
                         << " For processor " << proci
                         << " opening " << filePaths[proci] << endl;
                 }
@@ -796,7 +829,7 @@ Foam::fileOperations::masterFileOperation::readStream
 
                 if (debug)
                 {
-                    Pout<< "masterFileOperation::readHeader:"
+                    Pout<< "masterFileOperation::readStream:"
                         << " From " << filePaths[proci]
                         <<  " reading " << label(count) << " bytes" << endl;
                 }
@@ -822,7 +855,7 @@ Foam::fileOperations::masterFileOperation::readStream
 
             if (debug)
             {
-                Pout<< "masterFileOperation::readHeader:"
+                Pout<< "masterFileOperation::readStream:"
                     << " Done reading " << buf.size() << " bytes" << endl;
             }
             isPtr.reset(new IStringStream(buf));
@@ -837,6 +870,39 @@ Foam::fileOperations::masterFileOperation::readStream
         return isPtr;
     }
 }
+
+
+//void Foam::fileOperations::masterFileOperation::read
+//(
+//    regIOobject& io,
+//    const bool procValid
+//) const
+//{
+//    if
+//    (
+//        io.readOpt() == IOobject::MUST_READ
+//     || io.readOpt() == IOobject::MUST_READ_IF_MODIFIED
+//    )
+//    {
+//        Istream& is = readStream(typeName);
+//        if (procValid)
+//        {
+//            readStream(typeName) >> *this;
+//        }
+//        close();
+//    }
+//    else if (io.readOpt() == IOobject::READ_IF_PRESENT)
+//    {
+//        bool haveFile = headerOk();
+//        Istream& is = readStream(typeName);
+//
+//        if (procValid && haveFile)
+//        {
+//            readStream(typeName) >> *this;
+//        }
+//        close();
+//    }
+//}
 
 
 bool Foam::fileOperations::masterFileOperation::writeObject

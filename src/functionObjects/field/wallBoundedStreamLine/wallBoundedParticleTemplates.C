@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -497,21 +497,24 @@ void Foam::wallBoundedParticle::hitPatch
 template<class CloudType>
 void Foam::wallBoundedParticle::readFields(CloudType& c)
 {
-    if (!c.size())
-    {
-        return;
-    }
+//    if (!c.size())
+//    {
+//        return;
+//    }
+    bool valid = c.size();
 
     particle::readFields(c);
 
     IOField<label> meshEdgeStart
     (
-        c.fieldIOobject("meshEdgeStart", IOobject::MUST_READ)
+        c.fieldIOobject("meshEdgeStart", IOobject::MUST_READ),
+        valid
     );
 
     IOField<label> diagEdge
     (
-        c.fieldIOobject("diagEdge_", IOobject::MUST_READ)
+        c.fieldIOobject("diagEdge_", IOobject::MUST_READ),
+        valid
     );
     c.checkFieldIOobject(c, diagEdge);
 
@@ -530,7 +533,7 @@ void Foam::wallBoundedParticle::writeFields(const CloudType& c)
 {
     particle::writeFields(c);
 
-    label np =  c.size();
+    label np = c.size();
 
     IOField<label> meshEdgeStart
     (
@@ -551,8 +554,8 @@ void Foam::wallBoundedParticle::writeFields(const CloudType& c)
         i++;
     }
 
-    meshEdgeStart.write();
-    diagEdge.write();
+    meshEdgeStart.write(np > 0);
+    diagEdge.write(np > 0);
 }
 
 

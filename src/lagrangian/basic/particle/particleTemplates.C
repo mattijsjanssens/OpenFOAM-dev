@@ -128,29 +128,33 @@ void Foam::particle::correctAfterParallelTransfer
 template<class CloudType>
 void Foam::particle::readFields(CloudType& c)
 {
-    if (!c.size())
-    {
-        return;
-    }
+//    if (!c.size())
+//    {
+//        return;
+//    }
+    bool valid = c.size();
 
     IOobject procIO(c.fieldIOobject("origProcId", IOobject::MUST_READ));
 
-    if (procIO.typeHeaderOk<IOField<label>>(true))
+    bool haveFile = procIO.typeHeaderOk<IOField<label>>(true);
+
+    IOField<label> origProcId(procIO, valid & haveFile);
+    c.checkFieldIOobject(c, origProcId);
+    IOField<label> origId
+    (
+        c.fieldIOobject("origId", IOobject::MUST_READ),
+        valid & haveFile
+    );
+    c.checkFieldIOobject(c, origId);
+
+    label i = 0;
+    forAllIter(typename CloudType, c, iter)
     {
-        IOField<label> origProcId(procIO);
-        c.checkFieldIOobject(c, origProcId);
-        IOField<label> origId(c.fieldIOobject("origId", IOobject::MUST_READ));
-        c.checkFieldIOobject(c, origId);
+        particle& p = iter();
 
-        label i = 0;
-        forAllIter(typename CloudType, c, iter)
-        {
-            particle& p = iter();
-
-            p.origProc_ = origProcId[i];
-            p.origId_ = origId[i];
-            i++;
-        }
+        p.origProc_ = origProcId[i];
+        p.origId_ = origId[i];
+        i++;
     }
 }
 

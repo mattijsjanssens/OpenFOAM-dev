@@ -75,7 +75,7 @@ class CompactIOField
     // Private Member Functions
 
         //- Read according to header type
-        void readFromStream();
+        void readFromStream(const bool valid = true);
 
 public:
 
@@ -87,6 +87,9 @@ public:
 
         //- Construct from IOobject
         CompactIOField(const IOobject&);
+
+        //- Construct from IOobject; does local processor require reading?
+        CompactIOField(const IOobject&, const bool valid);
 
         //- Construct from IOobject and size
         CompactIOField(const IOobject&, const label);
