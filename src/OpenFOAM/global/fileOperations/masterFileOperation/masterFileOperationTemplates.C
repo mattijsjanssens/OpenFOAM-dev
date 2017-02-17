@@ -29,6 +29,39 @@ License
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
+template<class Type>
+Type Foam::fileOperations::masterFileOperation::scatterList
+(
+    const UList<Type>& masterLst
+) const
+{
+    // TBD: more efficient scatter
+    PstreamBuffers pBufs(UPstream::nonBlocking);
+    if (Pstream::master())
+    {
+        for (label proci = 1; proci < Pstream::nProcs(); proci++)
+        {
+            UOPstream os(proci, pBufs);
+            os << masterLst[proci];
+        }
+    }
+    pBufs.finishedSends();
+
+    Type myResult;
+
+    if (Pstream::master())
+    {
+        myResult = masterLst[Pstream::myProcNo()];
+    }
+    else
+    {
+        UIPstream is(Pstream::masterNo(), pBufs);
+        is >> myResult;
+    }
+    return myResult;
+}
+
+
 template<class Type, class fileOp>
 Type Foam::fileOperations::masterFileOperation::masterOp
 (
@@ -59,30 +92,7 @@ Type Foam::fileOperations::masterFileOperation::masterOp
             }
         }
 
-        // TBD: more efficient scatter
-        PstreamBuffers pBufs(UPstream::nonBlocking);
-        if (Pstream::master())
-        {
-            for (label proci = 1; proci < Pstream::nProcs(); proci++)
-            {
-                UOPstream os(proci, pBufs);
-                os << result[proci];
-            }
-        }
-        pBufs.finishedSends();
-
-        Type myResult; 
-
-        if (Pstream::master())
-        {
-            myResult = result[Pstream::myProcNo()];
-        }
-        else
-        {
-            UIPstream is(Pstream::masterNo(), pBufs);
-            is >> myResult;
-        }
-        return myResult;
+        return scatterList(result);
     }
     else
     {
@@ -127,30 +137,7 @@ Type Foam::fileOperations::masterFileOperation::masterOp
             }
         }
 
-        // TBD: more efficient scatter
-        PstreamBuffers pBufs(UPstream::nonBlocking);
-        if (Pstream::master())
-        {
-            for (label proci = 1; proci < Pstream::nProcs(); proci++)
-            {
-                UOPstream os(proci, pBufs);
-                os << result[proci];
-            }
-        }
-        pBufs.finishedSends();
-
-        Type myResult; 
-
-        if (Pstream::master())
-        {
-            myResult = result[Pstream::myProcNo()];
-        }
-        else
-        {
-            UIPstream is(Pstream::masterNo(), pBufs);
-            is >> myResult;
-        }
-        return myResult;
+        return scatterList(result);
     }
     else
     {

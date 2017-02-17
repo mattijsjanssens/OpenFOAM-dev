@@ -128,22 +128,18 @@ void Foam::particle::correctAfterParallelTransfer
 template<class CloudType>
 void Foam::particle::readFields(CloudType& c)
 {
-//    if (!c.size())
-//    {
-//        return;
-//    }
     bool valid = c.size();
 
     IOobject procIO(c.fieldIOobject("origProcId", IOobject::MUST_READ));
 
     bool haveFile = procIO.typeHeaderOk<IOField<label>>(true);
 
-    IOField<label> origProcId(procIO, valid & haveFile);
+    IOField<label> origProcId(procIO, valid && haveFile);
     c.checkFieldIOobject(c, origProcId);
     IOField<label> origId
     (
         c.fieldIOobject("origId", IOobject::MUST_READ),
-        valid & haveFile
+        valid && haveFile
     );
     c.checkFieldIOobject(c, origId);
 

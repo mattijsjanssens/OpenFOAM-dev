@@ -657,27 +657,72 @@ bool Foam::fileOperations::masterFileOperation::readHeader
             << "    fName     :" << fName << endl;
     }
 
-    if (Pstream::master())
+    fileNameList filePaths(Pstream::nProcs());
+    filePaths[Pstream::myProcNo()] = fName;
+    Pstream::gatherList(filePaths);
+
+    bool uniform = uniformFile(filePaths);
+    Pstream::scatter(uniform);
+
+    if (uniform)
     {
-        if (!fName.empty() && Foam::isFile(fName))
+        if (Pstream::master())
         {
-            IFstream is(fName);
-
-            if (is.good())
+            if (!fName.empty())
             {
-                ok = io.readHeader(is);
+                IFstream is(fName);
 
-                if (io.headerClassName() == decomposedBlockData::typeName)
+                if (is.good())
                 {
-                    // Read the header inside the container (master data)
-                    ok = decomposedBlockData::readMasterHeader(io, is);
+                    ok = io.readHeader(is);
+
+                    if (io.headerClassName() == decomposedBlockData::typeName)
+                    {
+                        // Read the header inside the container (master data)
+                        ok = decomposedBlockData::readMasterHeader(io, is);
+                    }
                 }
             }
         }
+        Pstream::scatter(ok);
+        Pstream::scatter(io.headerClassName());
+        Pstream::scatter(io.note());
     }
-    Pstream::scatter(ok);
-    Pstream::scatter(io.headerClassName());
-    Pstream::scatter(io.note());
+    else
+    {
+        boolList result(Pstream::nProcs(), false);
+        if (Pstream::master())
+        {
+            forAll(filePaths, proci)
+            {
+                if (!filePaths[proci].empty())
+                {
+                    IFstream is(filePaths[proci]);
+
+                    if (is.good())
+                    {
+                        result[proci] = io.readHeader(is);
+
+                        if
+                        (
+                            io.headerClassName()
+                         == decomposedBlockData::typeName
+                        )
+                        {
+                            FatalErrorInFunction
+                                << "Unexpected decomposedBlockData container"
+                                << " for processor " << proci
+                                << " file:" << filePaths[proci]
+                                << ". A decomposedBlockData container should"
+                                << " produce the same file name on all"
+                                << " processors" << exit(FatalError);
+                        }
+                    }
+                }
+            }
+        }
+        ok = scatterList(result);
+    }
 
     if (debug)
     {
@@ -700,7 +745,7 @@ Foam::fileOperations::masterFileOperation::readStream
     {
         Pout<< "masterFileOperation::readStream:"
             << " object : " << io.name()
-            << " fName : " << fName << endl;
+            << " fName : " << fName << " valid:" << valid << endl;
     }
 
 
@@ -829,18 +874,21 @@ Foam::fileOperations::masterFileOperation::readStream
 
             if (valid)
             {
-                autoPtr<IFstream> ifsPtr(new IFstream(fName));
-
-                // Read header
-                if (!io.readHeader(ifsPtr()))
+                if (!fName.empty())
                 {
-                    FatalIOErrorInFunction(ifsPtr())
-                        << "problem while reading header for object "
-                        << io.name() << exit(FatalIOError);
-                }
+                    autoPtr<IFstream> ifsPtr(new IFstream(fName));
 
-                // Open master (steal from ifsPtr)
-                isPtr.reset(ifsPtr.ptr());
+                    // Read header
+                    if (!io.readHeader(ifsPtr()))
+                    {
+                        FatalIOErrorInFunction(ifsPtr())
+                            << "problem while reading header for object "
+                            << io.name() << exit(FatalIOError);
+                    }
+
+                    // Open master (steal from ifsPtr)
+                    isPtr.reset(ifsPtr.ptr());
+                }
             }
 
             // Read slave files
@@ -853,7 +901,7 @@ Foam::fileOperations::masterFileOperation::readStream
                         << " opening " << filePaths[proci] << endl;
                 }
 
-                if (procValid[proci])
+                if (procValid[proci] && !filePaths[proci].empty())
                 {
                     std::ifstream is(filePaths[proci]);
                     // Get length of file
@@ -895,25 +943,35 @@ Foam::fileOperations::masterFileOperation::readStream
         }
         else
         {
-            UIPstream is(Pstream::masterNo(), pBufs);
-            string buf(recvSizes[Pstream::masterNo()], '\0');
-            is.read(&buf[0], recvSizes[Pstream::masterNo()]);
-
-            if (debug)
+            if (valid)
             {
-                Pout<< "masterFileOperation::readStream:"
-                    << " Done reading " << buf.size() << " bytes" << endl;
-            }
-            isPtr.reset(new IStringStream(buf));
+                UIPstream is(Pstream::masterNo(), pBufs);
+                string buf(recvSizes[Pstream::masterNo()], '\0');
+                if (recvSizes[Pstream::masterNo()] > 0)
+                {
+                    is.read(&buf[0], recvSizes[Pstream::masterNo()]);
+                }
 
-            if (!io.readHeader(isPtr()))
+                if (debug)
+                {
+                    Pout<< "masterFileOperation::readStream:"
+                        << " Done reading " << buf.size() << " bytes" << endl;
+                }
+                isPtr.reset(new IStringStream(buf));
+
+                if (!io.readHeader(isPtr()))
+                {
+                    FatalIOErrorInFunction(isPtr())
+                        << "problem while reading header for object "
+                        << io.name() << exit(FatalIOError);
+                }
+
+                return isPtr;
+            }
+            else
             {
-                FatalIOErrorInFunction(isPtr())
-                    << "problem while reading header for object " << io.name()
-                    << exit(FatalIOError);
+                return autoPtr<Istream>(new dummyIstream());
             }
-
-            return isPtr;
         }
     }
 }

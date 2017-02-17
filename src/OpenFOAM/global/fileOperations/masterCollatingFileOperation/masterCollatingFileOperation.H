@@ -60,7 +60,7 @@ class masterCollatingFileOperation
 public:
 
         //- Runtime type information
-        TypeName("masterCollatingFileOperation");
+        TypeName("collated");
 
 
     // Constructors

@@ -53,7 +53,7 @@ class localFileOperation
 public:
 
         //- Runtime type information
-        TypeName("localFileOperation");
+        TypeName("uncollated");
 
 
     // Constructors

@@ -49,25 +49,27 @@ void write(const IOobject& io, const label sz)
     fld.write(sz > 0);
 }
 
+
 void read(const IOobject& io, const label sz)
 {
     bool valid = (sz > 0);
-    Pout<< "valid:" << valid << endl;
+    Pout<< "    valid:" << valid << endl;
     IOField<label> fld(io, valid);
-    Pout<< "fld:" << fld << endl;
+    Pout<< "    wanted:" << sz << " actually read:" << fld.size() << endl;
+
     if (fld.size() != sz)
     {
-        FatalErrorInFunction << "sz:" << sz << " list:" << fld.size()
-            << exit(FatalError);
+        FatalErrorInFunction<< "io:" << io.objectPath() << exit(FatalError);
     }
 }
 
 
 void writeAndRead
 (
-    IOobject& io,
+    const IOobject& io,
     const label sz,
     const word& writeType,
+    const IOobject::readOption readOpt,
     const word& readType
 )
 {
@@ -82,18 +84,37 @@ void writeAndRead
     fileHandler().rm(fileHandler().filePath(io.objectPath()));
 
     // Write
-    io.readOpt() = IOobject::NO_READ;
+    Pout<< "Writing:" << fileHandler().objectPath(io) << endl;
     write(io, sz);
 
     autoPtr<fileOperation> readHandler(fileOperation::New(readType));
     fileHandler(readHandler);
 
     // Read
-    io.readOpt() = IOobject::MUST_READ;
-    read(io, sz);
+    IOobject readIO(io);
+    readIO.readOpt() = readOpt;
+    Pout<< "Reading:" << fileHandler().filePath(readIO.objectPath()) << endl;
+    read(readIO, sz);
 
     Pout<< "** Done writing:" << writeType
         << " Reading:" << readType << endl << endl << endl;
+}
+
+
+void readIfPresent
+(
+    IOobject& io,
+    const label sz,
+    const word& readType
+)
+{
+    autoPtr<fileOperation> readHandler(fileOperation::New(readType));
+    fileHandler(readHandler);
+
+    // Read
+    Pout<< "Reading:" << fileHandler().filePath(io.objectPath()) << endl;
+    io.readOpt() = IOobject::READ_IF_PRESENT;
+    read(io, sz);
 }
 
 
@@ -129,6 +150,16 @@ int main(int argc, char *argv[])
     Info<< "Found handlers:" << handlers << endl;
 
 
+/*
+    forAll(handlers, readi)
+    {
+        const word& readHandler = handlers[readi];
+
+        readIfPresent(io, sz, readHandler);
+    }
+*/
+
+
     forAll(handlers, writei)
     {
         const word& writeHandler = handlers[writei];
@@ -142,6 +173,7 @@ int main(int argc, char *argv[])
                 io,
                 sz,
                 writeHandler,
+                IOobject::READ_IF_PRESENT,
                 readHandler
             );
         }

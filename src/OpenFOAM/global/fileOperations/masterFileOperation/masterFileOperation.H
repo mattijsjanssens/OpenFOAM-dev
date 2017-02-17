@@ -252,6 +252,9 @@ protected:
 
     // Private Member Functions
 
+        template<class Type>
+        Type scatterList(const UList<Type>&) const;
+
         template<class Type, class fileOp>
         Type masterOp(const fileName&, const fileOp& fop) const;
 
@@ -278,7 +281,7 @@ protected:
 public:
 
         //- Runtime type information
-        TypeName("masterFileOperation");
+        TypeName("masterUncollated");
 
 
     // Static data
