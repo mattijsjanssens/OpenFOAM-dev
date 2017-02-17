@@ -55,25 +55,31 @@ void read(const IOobject& io, const label sz)
     Pout<< "valid:" << valid << endl;
     IOField<label> fld(io, valid);
     Pout<< "fld:" << fld << endl;
+    if (fld.size() != sz)
+    {
+        FatalErrorInFunction << "sz:" << sz << " list:" << fld.size()
+            << exit(FatalError);
+    }
 }
 
 
-void readAndWrite
+void writeAndRead
 (
     IOobject& io,
     const label sz,
-    const word& readType,
-    const word& writeType
+    const word& writeType,
+    const word& readType
 )
 {
-    Pout<< "** Reading:" << readType
-        << " Writing:" << writeType << endl;
+    Pout<< "** Writing:" << writeType
+        << " Reading:" << readType << endl;
 
     autoPtr<fileOperation> writeHandler(fileOperation::New(writeType));
     fileHandler(writeHandler);
 
     // Delete
-    rm(fileHandler().filePath(io.objectPath()));
+    Pout<< "Deleting:" << fileHandler().filePath(io.objectPath()) << endl;
+    fileHandler().rm(fileHandler().filePath(io.objectPath()));
 
     // Write
     io.readOpt() = IOobject::NO_READ;
@@ -86,8 +92,8 @@ void readAndWrite
     io.readOpt() = IOobject::MUST_READ;
     read(io, sz);
 
-    Pout<< "** Done reading:" << readType
-        << " Writing:" << writeType << endl << endl << endl;
+    Pout<< "** Done writing:" << writeType
+        << " Reading:" << readType << endl << endl << endl;
 }
 
 
@@ -115,21 +121,31 @@ int main(int argc, char *argv[])
         IOobject::NO_WRITE
     );
 
-    readAndWrite
+    wordList handlers
     (
-        io,
-        sz,
-        "localFileOperation",
-        "localFileOperation"
+        Foam::fileOperation::wordConstructorTablePtr_->sortedToc()
     );
 
-    readAndWrite
-    (
-        io,
-        sz,
-        "localFileOperation",
-        "masterFileOperation"
-    );
+    Info<< "Found handlers:" << handlers << endl;
+
+
+    forAll(handlers, writei)
+    {
+        const word& writeHandler = handlers[writei];
+
+        forAll(handlers, readi)
+        {
+            const word& readHandler = handlers[readi];
+
+            writeAndRead
+            (
+                io,
+                sz,
+                writeHandler,
+                readHandler
+            );
+        }
+    }
 
 
     Pout<< "End\n" << endl;

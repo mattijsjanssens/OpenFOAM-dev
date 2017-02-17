@@ -182,11 +182,6 @@ public:
                 const bool procValid = true
             ) const;
 
-//            //- Read object (if procValid) according to readOpt flag using
-//            //  headerOk&readStream. procValid = false is used to keep all
-//            //  calls synchronious.
-//            virtual void read(regIOobject&, const bool procValid) const;
-
             //- Generate an Istream that reads a file
             virtual autoPtr<Istream> NewIFstream(const fileName&) const;
 

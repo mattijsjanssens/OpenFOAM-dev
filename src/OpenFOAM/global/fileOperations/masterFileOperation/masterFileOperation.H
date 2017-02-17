@@ -223,6 +223,15 @@ protected:
             }
         };
 
+        class fileOrNullOp
+        {
+        public:
+            fileName operator()(const fileName& fName) const
+            {
+                return (Foam::isFile(fName) ? fName : fileName::null);
+            }
+        };
+
         class readDirOp
         {
             const fileName::Type type_;
@@ -404,11 +413,6 @@ public:
                 const fileName&,
                 const bool valid = true
             ) const;
-
-//            //- Read object (if procValid) according to readOpt flag using
-//            //  headerOk&readStream. procValid = false is used to keep all
-//            //  calls synchronious.
-//            virtual void read(regIOobject&, const bool procValid) const;
 
             //- Writes a regIOobject (so header, contents and divider).
             //  Returns success state.

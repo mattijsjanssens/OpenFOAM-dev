@@ -32,6 +32,7 @@ License
 #include "masterOFstream.H"
 #include "decomposedBlockData.H"
 #include "registerSwitch.H"
+#include "dummyIstream.H"
 
 /* * * * * * * * * * * * * * * Static Member Data  * * * * * * * * * * * * * */
 
@@ -82,8 +83,7 @@ Foam::fileName Foam::fileOperations::masterFileOperation::filePath
         // 1. Check processors/
         if (io.time().processorCase())
         {
-            fileName path = processorsPath(io, io.instance());
-            fileName objectPath = path/io.name();
+            fileName objectPath = processorsPath(io, io.instance())/io.name();
             if (Foam::isFile(objectPath))
             {
                 searchType = fileOperation::PROCESSORSOBJECT;
@@ -92,7 +92,7 @@ Foam::fileName Foam::fileOperations::masterFileOperation::filePath
         }
         {
             // 2. Check local
-            fileName localObjectPath = io.path()/io.name();
+            fileName localObjectPath = io.objectPath();
 
             if (Foam::isFile(localObjectPath))
             {
@@ -125,6 +125,7 @@ Foam::fileName Foam::fileOperations::masterFileOperation::filePath
             }
         }
 
+        searchType = fileOperation::NOTFOUND;
         return fileName::null;
     }
 }
@@ -506,29 +507,51 @@ Foam::fileName Foam::fileOperations::masterFileOperation::filePath
             << " checkGlobal:" << checkGlobal << endl;
     }
 
+    // Determine master filePath and scatter
+
     fileName objPath;
-    pathType searchType = fileOperation::NOTFOUND;
+    pathType searchType;
     word newInstancePath;
     if (Pstream::master())
     {
         objPath = filePath(checkGlobal, io, searchType, newInstancePath);
     }
-    label masterType(searchType);
-    Pstream::scatter(masterType);
-    searchType = pathType(masterType);
-
-    if
-    (
-        searchType == fileOperation::FINDINSTANCE
-     || searchType == fileOperation::PROCESSORSFINDINSTANCE
-    )
     {
-        Pstream::scatter(newInstancePath);
+        label masterType(searchType);
+        Pstream::scatter(masterType);
+        searchType = pathType(masterType);
     }
+    Pstream::scatter(newInstancePath);
 
-    if (!Pstream::master())
+
+    // Use the master type to determine if additional information is
+    // needed to construct the local equivalent
+    switch (searchType)
     {
-        objPath = objectPath(io, searchType, newInstancePath);
+        case fileOperation::ABSOLUTE:
+        case fileOperation::PROCESSORSOBJECT:
+        case fileOperation::PARENTOBJECT:
+        case fileOperation::FINDINSTANCE:
+        case fileOperation::PROCESSORSFINDINSTANCE:
+        {
+            // Construct equivalent local path
+            objPath = objectPath(io, searchType, newInstancePath);
+        }
+        break;
+
+        case fileOperation::OBJECT:
+        case fileOperation::NOTFOUND:
+        {
+            // Retest all processors separately since some processors might
+            // have the file and some not (e.g. lagrangian data)
+
+            objPath = masterOp<fileName, fileOrNullOp>
+            (
+                io.objectPath(),
+                fileOrNullOp()
+            );
+        }
+        break;
     }
 
     if (debug)
@@ -680,34 +703,38 @@ Foam::fileOperations::masterFileOperation::readStream
             << " fName : " << fName << endl;
     }
 
-    if (!fName.size())
-    {
-        FatalErrorInFunction
-            << "empty file name" << exit(FatalError);
-    }
 
     autoPtr<Istream> isPtr;
     bool isCollated = false;
     if (UPstream::master())
     {
-        isPtr.reset(new IFstream(fName));
-
-        if (isPtr().good())
+        if (!fName.empty())
         {
-            // Read header data (on copy)
-            IOobject headerIO(io);
-            headerIO.readHeader(isPtr());
+            // This can happen in lagrangian field reading some processors
+            // have no file to read from. This will only happen when using
+            // normal writing since then the fName for the valid processors is
+            // processorDDD/<instance>/.. . In case of collocated writing
+            // the fName is already rewritten to processors/.
 
-            if (headerIO.headerClassName() == decomposedBlockData::typeName)
+            isPtr.reset(new IFstream(fName));
+
+            if (isPtr().good())
             {
-                isCollated = true;
-            }
-        }
+                // Read header data (on copy)
+                IOobject headerIO(io);
+                headerIO.readHeader(isPtr());
 
-        if (!isCollated)
-        {
-            // Close file. Reopened below.
-            isPtr.clear();
+                if (headerIO.headerClassName() == decomposedBlockData::typeName)
+                {
+                    isCollated = true;
+                }
+            }
+
+            if (!isCollated)
+            {
+                // Close file. Reopened below.
+                isPtr.clear();
+            }
         }
     }
 
@@ -790,6 +817,9 @@ Foam::fileOperations::masterFileOperation::readStream
         fileNameList filePaths(Pstream::nProcs());
         filePaths[Pstream::myProcNo()] = fName;
         Pstream::gatherList(filePaths);
+        boolList procValid(Pstream::nProcs());
+        procValid[Pstream::myProcNo()] = valid;
+        Pstream::gatherList(procValid);
 
         PstreamBuffers pBufs(Pstream::nonBlocking);
 
@@ -797,19 +827,21 @@ Foam::fileOperations::masterFileOperation::readStream
         {
             //const bool uniform = uniformFile(filePaths);
 
-            autoPtr<IFstream> ifsPtr(new IFstream(fName));
-            IFstream& is = ifsPtr();
-
-            // Read header
-            if (!io.readHeader(is))
+            if (valid)
             {
-                FatalIOErrorInFunction(is)
-                    << "problem while reading header for object " << io.name()
-                    << exit(FatalIOError);
-            }
+                autoPtr<IFstream> ifsPtr(new IFstream(fName));
 
-            // Open master (steal from ifsPtr)
-            isPtr.reset(ifsPtr.ptr());
+                // Read header
+                if (!io.readHeader(ifsPtr()))
+                {
+                    FatalIOErrorInFunction(ifsPtr())
+                        << "problem while reading header for object "
+                        << io.name() << exit(FatalIOError);
+                }
+
+                // Open master (steal from ifsPtr)
+                isPtr.reset(ifsPtr.ptr());
+            }
 
             // Read slave files
             for (label proci = 1; proci < Pstream::nProcs(); proci++)
@@ -821,23 +853,26 @@ Foam::fileOperations::masterFileOperation::readStream
                         << " opening " << filePaths[proci] << endl;
                 }
 
-                std::ifstream is(filePaths[proci]);
-                // Get length of file
-                is.seekg(0, ios_base::end);
-                std::streamoff count = is.tellg();
-                is.seekg(0, ios_base::beg);
-
-                if (debug)
+                if (procValid[proci])
                 {
-                    Pout<< "masterFileOperation::readStream:"
-                        << " From " << filePaths[proci]
-                        <<  " reading " << label(count) << " bytes" << endl;
-                }
-                List<char> buf(static_cast<label>(count));
-                is.read(buf.begin(), count);
+                    std::ifstream is(filePaths[proci]);
+                    // Get length of file
+                    is.seekg(0, ios_base::end);
+                    std::streamoff count = is.tellg();
+                    is.seekg(0, ios_base::beg);
 
-                UOPstream os(proci, pBufs);
-                os.write(buf.begin(), count);
+                    if (debug)
+                    {
+                        Pout<< "masterFileOperation::readStream:"
+                            << " From " << filePaths[proci]
+                            <<  " reading " << label(count) << " bytes" << endl;
+                    }
+                    List<char> buf(static_cast<label>(count));
+                    is.read(buf.begin(), count);
+
+                    UOPstream os(proci, pBufs);
+                    os.write(buf.begin(), count);
+                }
             }
         }
 
@@ -847,7 +882,18 @@ Foam::fileOperations::masterFileOperation::readStream
         // isPtr will be valid on master. Else the information is in the
         // PstreamBuffers
 
-        if (!isPtr.valid())
+        if (Pstream::master())
+        {
+            if (!isPtr.valid())
+            {
+                return autoPtr<Istream>(new dummyIstream());
+            }
+            else
+            {
+                return isPtr;
+            }
+        }
+        else
         {
             UIPstream is(Pstream::masterNo(), pBufs);
             string buf(recvSizes[Pstream::masterNo()], '\0');
@@ -866,43 +912,11 @@ Foam::fileOperations::masterFileOperation::readStream
                     << "problem while reading header for object " << io.name()
                     << exit(FatalIOError);
             }
+
+            return isPtr;
         }
-        return isPtr;
     }
 }
-
-
-//void Foam::fileOperations::masterFileOperation::read
-//(
-//    regIOobject& io,
-//    const bool procValid
-//) const
-//{
-//    if
-//    (
-//        io.readOpt() == IOobject::MUST_READ
-//     || io.readOpt() == IOobject::MUST_READ_IF_MODIFIED
-//    )
-//    {
-//        Istream& is = readStream(typeName);
-//        if (procValid)
-//        {
-//            readStream(typeName) >> *this;
-//        }
-//        close();
-//    }
-//    else if (io.readOpt() == IOobject::READ_IF_PRESENT)
-//    {
-//        bool haveFile = headerOk();
-//        Istream& is = readStream(typeName);
-//
-//        if (procValid && haveFile)
-//        {
-//            readStream(typeName) >> *this;
-//        }
-//        close();
-//    }
-//}
 
 
 bool Foam::fileOperations::masterFileOperation::writeObject
@@ -918,7 +932,7 @@ bool Foam::fileOperations::masterFileOperation::writeObject
 
     if (debug)
     {
-        Pout<< "masterFileOperation::readHeader:" << " io:" << pathName
+        Pout<< "masterFileOperation::writeObject:" << " io:" << pathName
             << " valid:" << valid << endl;
     }
 
@@ -966,7 +980,7 @@ Foam::instantList Foam::fileOperations::masterFileOperation::findTimes
 {
     if (debug)
     {
-        Pout<< "masterFileOperation::readHeader:"
+        Pout<< "masterFileOperation::findTimes:"
             << " Finding times in directory " << directory << endl;
     }
 
@@ -980,7 +994,7 @@ Foam::instantList Foam::fileOperations::masterFileOperation::findTimes
 
     if (debug)
     {
-        Pout<< "masterFileOperation::readHeader:"
+        Pout<< "masterFileOperation::findTimes:"
             << " Found times:" << times << endl;
     }
     return times;
@@ -1012,7 +1026,7 @@ Foam::fileOperations::masterFileOperation::NewIFstream
             {
                 if (debug)
                 {
-                    Pout<< "masterFileOperation::readHeader:"
+                    Pout<< "masterFileOperation::NewIFstream:"
                         << " Opening global file " << filePath << endl;
                 }
 
@@ -1023,7 +1037,7 @@ Foam::fileOperations::masterFileOperation::NewIFstream
 
                 if (debug)
                 {
-                    Pout<< "masterFileOperation::readHeader:"
+                    Pout<< "masterFileOperation::NewIFstream:"
                         << " From " << filePath
                         <<  " reading " << label(count) << " bytes" << endl;
                 }
@@ -1042,7 +1056,7 @@ Foam::fileOperations::masterFileOperation::NewIFstream
                 {
                     if (debug)
                     {
-                        Pout<< "masterFileOperation::readHeader:"
+                        Pout<< "masterFileOperation::NewIFstream:"
                             << " For processor " << proci
                             << " opening " << filePaths[proci] << endl;
                     }
@@ -1053,7 +1067,7 @@ Foam::fileOperations::masterFileOperation::NewIFstream
 
                     if (debug)
                     {
-                        Pout<< "masterFileOperation::readHeader:"
+                        Pout<< "masterFileOperation::NewIFstream:"
                             << " From " << filePaths[proci]
                             <<  " reading " << label(count) << " bytes" << endl;
                     }
@@ -1082,7 +1096,7 @@ Foam::fileOperations::masterFileOperation::NewIFstream
         {
             if (debug)
             {
-                Pout<< "masterFileOperation::readHeader:"
+                Pout<< "masterFileOperation::NewIFstream:"
                     << " Reading " << filePath
                     << " from processor " << Pstream::masterNo() << endl;
             }
@@ -1093,7 +1107,7 @@ Foam::fileOperations::masterFileOperation::NewIFstream
 
             if (debug)
             {
-                Pout<< "masterFileOperation::readHeader:"
+                Pout<< "masterFileOperation::NewIFstream:"
                     << " Done reading " << buf.size() << " bytes" << endl;
             }
 

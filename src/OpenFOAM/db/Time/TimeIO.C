@@ -369,14 +369,6 @@ void Foam::Time::readDict()
     controlDict_.readIfPresent("runTimeModifiable", runTimeModifiable_);
 
 
-    if (controlDict_.found("fileHandler"))
-    {
-        autoPtr<fileOperation> handler
-        (
-            fileOperation::New(controlDict_["fileHandler"])
-        );
-        Foam::fileHandler(handler);
-    }
 
 
     if (!runTimeModifiable_ && controlDict_.watchIndices().size())
@@ -386,6 +378,26 @@ void Foam::Time::readDict()
             fileHandler().removeWatch(controlDict_.watchIndices()[i]);
         }
         controlDict_.watchIndices().clear();
+    }
+
+
+    word fileHandlerName;
+    if
+    (
+        controlDict_.readIfPresent("fileHandler", fileHandlerName)
+     && fileHandler().type() != fileHandlerName
+    )
+    {
+        // Remove the old watches since destroying the file
+        forAllReverse(controlDict_.watchIndices(), i)
+        {
+            fileHandler().removeWatch(controlDict_.watchIndices()[i]);
+        }
+        controlDict_.watchIndices().clear();
+
+        // Installing the new handler
+        autoPtr<fileOperation> handler(fileOperation::New(fileHandlerName));
+        Foam::fileHandler(handler);
     }
 }
 

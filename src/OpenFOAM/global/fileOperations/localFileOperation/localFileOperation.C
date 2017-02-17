@@ -223,9 +223,9 @@ Foam::fileName Foam::fileOperations::localFileOperation::filePath
 {
     if (debug)
     {
-        Pout<< FUNCTION_NAME << " : io:" << io.objectPath()
-            << " checkGlobal:" << checkGlobal
-            << " processorCase:" << io.time().processorCase() << endl;
+        Pout<< "localFileOperation::filePath :"
+            << " objectPath:" << io.objectPath()
+            << " checkGlobal:" << checkGlobal << endl;
     }
 
     if (io.instance().isAbsolute())
@@ -423,7 +423,7 @@ Foam::fileOperations::localFileOperation::readStream
         return isPtr;
     }
 
-    if (!fName.size())
+    if (fName.empty())
     {
         FatalErrorInFunction
             << "empty file name" << exit(FatalError);
@@ -470,7 +470,7 @@ Foam::fileOperations::localFileOperation::readStream
         if (proci == -1)
         {
             FatalIOErrorInFunction(isPtr())
-                << "Could not detect processor number"
+                << "could not detect processor number"
                 << " from objectPath:" << io.objectPath()
                 << exit(FatalIOError);
         }
@@ -485,38 +485,14 @@ Foam::fileOperations::localFileOperation::readStream
         // Read header
         if (!io.readHeader(realIsPtr()))
         {
-            FatalIOErrorInFunction(realIsPtr())
+            FatalIOErrorInFunction(isPtr())
                 << "problem while reading header for object " << io.name()
-                << exit(FatalIOError);
+                << " from " << decomposedBlockData::typeName
+                << " type file" << exit(FatalIOError);
         }
         return realIsPtr;
     }
 }
-
-
-//void Foam::fileOperations::localFileOperation::read
-//(
-//    regIOobject& io,
-//    const bool procValid
-//) const
-//{
-//    if
-//    (
-//        (
-//            io.readOpt() == IOobject::MUST_READ
-//         || io.readOpt() == IOobject::MUST_READ_IF_MODIFIED
-//        )
-//     || (io.readOpt() == IOobject::READ_IF_PRESENT && headerOk())
-//    )
-//    {
-//        Istream& is = readStream(typeName);
-//        if (procValid)
-//        {
-//            is >> *this;
-//        }
-//        close();
-//    }
-//}
 
 
 Foam::autoPtr<Foam::Istream>

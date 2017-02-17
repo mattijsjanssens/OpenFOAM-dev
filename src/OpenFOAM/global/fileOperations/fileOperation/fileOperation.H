@@ -242,11 +242,6 @@ public:
                 const bool valid = true
             ) const = 0;
 
-//            //- Read object (if procValid) according to readOpt flag using
-//            //  headerOk&readStream. procValid = false is used to keep all
-//            //  calls synchronious.
-//            virtual void read(regIOobject&, const bool procValid) const = 0;
-
             //- Writes a regIOobject (so header, contents and divider).
             //  Returns success state. Default action is to write to
             //  the objectPath using writeData. If !valid the
