@@ -595,6 +595,10 @@ void Foam::argList::parse
         // Trigger default
         (void)Foam::fileHandler();
     }
+    if (Pstream::master() && bannerEnabled)
+    {
+        Info<< "I/O    : " << fileHandler().type() << endl;
+    }
 
     // Case is a single processor run unless it is running parallel
     int nProcs = 1;

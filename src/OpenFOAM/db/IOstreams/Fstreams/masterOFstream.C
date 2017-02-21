@@ -27,7 +27,7 @@ License
 #include "OFstream.H"
 #include "OSspecific.H"
 #include "PstreamBuffers.H"
-#include "masterFileOperation.H"
+#include "masterUncollatedFileOperation.H"
 #include "boolList.H"
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
@@ -86,7 +86,8 @@ Foam::masterOFstream::~masterOFstream()
         filePaths[Pstream::myProcNo()] = pathName_;
         Pstream::gatherList(filePaths);
 
-        bool uniform = fileOperations::masterFileOperation::uniformFile
+        bool uniform = fileOperations::masterUncollatedFileOperation::
+        uniformFile
         (
             filePaths
         );

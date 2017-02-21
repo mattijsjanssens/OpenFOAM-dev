@@ -261,7 +261,7 @@ bool Foam::decomposedBlockData::readBlock
 
 bool Foam::decomposedBlockData::readBlocks
 (
-    autoPtr<Istream>& isPtr,
+    autoPtr<ISstream>& isPtr,
     List<char>& data,
     const UPstream::commsTypes commsType
 )
@@ -554,7 +554,7 @@ bool Foam::decomposedBlockData::writeBlocks
 
 bool Foam::decomposedBlockData::read()
 {
-    autoPtr<Istream> isPtr;
+    autoPtr<ISstream> isPtr;
     if (UPstream::master())
     {
         isPtr.reset(new IFstream(objectPath()));

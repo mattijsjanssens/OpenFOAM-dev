@@ -24,11 +24,11 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "fileOperation.H"
-#include "localFileOperation.H"
+#include "uncollatedFileOperation.H"
 #include "regIOobject.H"
 #include "argList.H"
 #include "HashSet.H"
-#include "masterFileOperation.H"
+#include "masterUncollatedFileOperation.H"
 #include "objectRegistry.H"
 #include "decomposedBlockData.H"
 #include "polyMesh.H"
@@ -57,6 +57,8 @@ namespace Foam
     };
 
     addArgsOptions intObj;
+
+    word fileOperation::processorsDir = "processors";
 }
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
@@ -241,14 +243,15 @@ Foam::fileName Foam::fileOperation::filePath(const fileName& fName) const
 {
     fileName path;
     fileName local;
-    label proci = fileOperations::masterFileOperation::splitProcessorPath
+    label proci = fileOperations::masterUncollatedFileOperation::
+    splitProcessorPath
     (
         fName,
         path,
         local
     );
 
-    fileName procsName(path/"processors"/local);
+    fileName procsName(path/processorsDir/local);
 
     // Give preference to processors variant
     if (proci != -1 && exists(procsName))
@@ -333,7 +336,7 @@ void Foam::fileOperation::addWatches
 }
 
 
-const Foam::fileName Foam::fileOperation::getFile(const label watchIndex) const
+Foam::fileName Foam::fileOperation::getFile(const label watchIndex) const
 {
     return monitor().getFile(watchIndex);
 }
@@ -391,7 +394,7 @@ Foam::instantList Foam::fileOperation::findTimes
     // Check if directory is processorXXX
     fileName procsDir
     (
-        fileOperations::masterFileOperation::processorsPath
+        fileOperations::masterUncollatedFileOperation::processorsPath
         (
             directory
         )
@@ -485,13 +488,14 @@ Foam::fileNameList Foam::fileOperation::readObjects
 
         fileName prefix;
         fileName postfix;
-        label proci = fileOperations::masterFileOperation::splitProcessorPath
+        label proci = fileOperations::masterUncollatedFileOperation::
+        splitProcessorPath
         (
             timePath,
             prefix,
             postfix
         );
-        fileName procsPath(prefix/"processors"/postfix);
+        fileName procsPath(prefix/processorsDir/postfix);
 
         if (proci != -1 && Foam::isDir(procsPath))
         {
@@ -509,12 +513,12 @@ Foam::label Foam::fileOperation::nProcs
     const fileName& local
 ) const
 {
-    if (Foam::isDir(dir/"processors"))
+    if (Foam::isDir(dir/processorsDir))
     {
         fileName pointsFile
         (
             dir
-           /"processors"
+           /processorsDir
            /"constant"
            /local
            /polyMesh::meshSubDir
@@ -558,16 +562,20 @@ const Foam::fileOperation& Foam::fileHandler()
     if (!fileOperation::fileHandlerPtr_.valid())
     {
         word handler(getEnv("FOAM_FILEHANDLER"));
-        if (!handler.size())
+
+        if (handler.size())
         {
-            handler = fileOperations::localFileOperation::typeName;
+            //if (Pstream::master())
+            //{
+            //    cout<< "fileHandler() : Inserting fileOperation of type "
+            //        << handler << std::endl;
+            //}
+        }
+        else
+        {
+            handler = fileOperations::uncollatedFileOperation::typeName;
         }
 
-        if (Pstream::master())
-        {
-            cout<< "fileHandler() : Inserting fileOperation of type "
-                << handler << std::endl;
-        }
         fileOperation::fileHandlerPtr_ = fileOperation::New(handler);
     }
     return fileOperation::fileHandlerPtr_();
@@ -586,23 +594,11 @@ void Foam::fileHandler(autoPtr<fileOperation>& newHandlerPtr)
         {
             return;
         }
-
-
-        if (Pstream::master())
-        {
-            cout<< "fileHandler() : Deleting fileOperation of type "
-                << fileOperation::fileHandlerPtr_().type() << std::endl;
-        }
     }
     fileOperation::fileHandlerPtr_.clear();
 
     if (newHandlerPtr.valid())
     {
-        if (Pstream::master())
-        {
-            cout<< "fileHandler() : Inserting fileOperation of type "
-                << newHandlerPtr().type() << std::endl;
-        }
         fileOperation::fileHandlerPtr_ = newHandlerPtr;
     }
 }

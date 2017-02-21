@@ -22,7 +22,7 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::fileOperations::masterFileOperation
+    Foam::fileOperations::masterUncollatedFileOperation
 
 Description
     fileOperations that performs all file operations on the master processor.
@@ -30,8 +30,8 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef fileOperations_masterFileOperation_H
-#define fileOperations_masterFileOperation_H
+#ifndef fileOperations_masterUncollatedFileOperation_H
+#define fileOperations_masterUncollatedFileOperation_H
 
 #include "fileOperation.H"
 #include "OSspecific.H"
@@ -44,10 +44,10 @@ namespace fileOperations
 {
 
 /*---------------------------------------------------------------------------*\
-                     Class masterFileOperation Declaration
+                     Class masterUncollatedFileOperation Declaration
 \*---------------------------------------------------------------------------*/
 
-class masterFileOperation
+class masterUncollatedFileOperation
 :
     public fileOperation
 {
@@ -288,17 +288,17 @@ public:
 
         //- Max size of parallel communications. Switches from non-blocking
         //  to scheduled when reading/writing files.
-        static label maxCommsSize;
+        static off_t maxBufferSize;
 
 
     // Constructors
 
         //- Construct null
-        masterFileOperation();
+        masterUncollatedFileOperation();
 
 
     //- Destructor
-    virtual ~masterFileOperation();
+    virtual ~masterUncollatedFileOperation();
 
 
     // Member Functions
@@ -408,9 +408,9 @@ public:
             //- Read object header from supplied file
             virtual bool readHeader(IOobject&, const fileName&) const;
 
-            //- Reads header for regIOobject and returns an Istream
+            //- Reads header for regIOobject and returns an ISstream
             //  to read the contents.
-            virtual autoPtr<Istream> readStream
+            virtual autoPtr<ISstream> readStream
             (
                 regIOobject&,
                 const fileName&,
@@ -428,8 +428,8 @@ public:
                 const bool valid = true
             ) const;
 
-            //- Generate an Istream that reads a file
-            virtual autoPtr<Istream> NewIFstream(const fileName&) const;
+            //- Generate an ISstream that reads a file
+            virtual autoPtr<ISstream> NewIFstream(const fileName&) const;
 
             //- Generate an Ostream that writes a file
             virtual autoPtr<Ostream> NewOFstream
@@ -461,7 +461,7 @@ public:
             virtual void addWatches(regIOobject&, const fileNameList&) const;
 
             //- Get name of file being watched (using handle)
-            virtual const fileName getFile(const label) const;
+            virtual fileName getFile(const label) const;
 
             //- Update state of all files
             virtual void updateStates
@@ -516,7 +516,7 @@ public:
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #ifdef NoRepository
-    #include "masterFileOperationTemplates.C"
+    #include "masterUncollatedFileOperationTemplates.C"
 #endif
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

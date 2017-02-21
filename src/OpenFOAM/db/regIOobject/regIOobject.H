@@ -107,7 +107,7 @@ private:
         label eventNo_;
 
         //- Istream for reading
-        autoPtr<Istream> isPtr_;
+        autoPtr<ISstream> isPtr_;
 
 
     // Private Member Functions

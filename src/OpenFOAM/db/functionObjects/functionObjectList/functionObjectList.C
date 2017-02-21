@@ -28,7 +28,7 @@ License
 #include "mapPolyMesh.H"
 #include "argList.H"
 #include "timeControlFunctionObject.H"
-#include "IFstream.H"
+//#include "IFstream.H"
 #include "dictionaryEntry.H"
 #include "stringOps.H"
 #include "Tuple2.H"
@@ -249,7 +249,10 @@ bool Foam::functionObjectList::readFunctionObject
     }
 
     // Read the functionObject dictionary
-    IFstream fileStream(path);
+    //IFstream fileStream(path);
+    autoPtr<ISstream> fileStreamPtr(fileHandler().NewIFstream(path));
+    ISstream& fileStream = fileStreamPtr();
+
     dictionary funcsDict(fileStream);
     dictionary* funcDictPtr = &funcsDict;
 

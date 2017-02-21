@@ -23,7 +23,7 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "masterFileOperation.H"
+#include "masterUncollatedFileOperation.H"
 #include "addToRunTimeSelectionTable.H"
 #include "Pstream.H"
 #include "Time.H"
@@ -32,7 +32,7 @@ License
 #include "masterOFstream.H"
 #include "decomposedBlockData.H"
 #include "registerSwitch.H"
-#include "dummyIstream.H"
+#include "dummyISstream.H"
 
 /* * * * * * * * * * * * * * * Static Member Data  * * * * * * * * * * * * * */
 
@@ -40,21 +40,31 @@ namespace Foam
 {
 namespace fileOperations
 {
-    defineTypeNameAndDebug(masterFileOperation, 0);
-    addToRunTimeSelectionTable(fileOperation, masterFileOperation, word);
-
-    label masterFileOperation::maxCommsSize
+    defineTypeNameAndDebug(masterUncollatedFileOperation, 0);
+    addToRunTimeSelectionTable
     (
-        Foam::debug::optimisationSwitch("maxCommsSize", 1000000000)
+        fileOperation,
+        masterUncollatedFileOperation,
+        word
     );
-    registerOptSwitch("maxCommsSize", label, masterFileOperation::maxCommsSize);
+
+    off_t masterUncollatedFileOperation::maxBufferSize
+    (
+        Foam::debug::optimisationSwitch("maxBufferSize", 1000000000)
+    );
+    registerOptSwitch
+    (
+        "maxBufferSize",
+        off_t,
+        masterUncollatedFileOperation::maxBufferSize
+    );
 }
 }
 
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-Foam::fileName Foam::fileOperations::masterFileOperation::filePath
+Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePath
 (
     const bool checkGlobal,
     const IOobject& io,
@@ -131,7 +141,8 @@ Foam::fileName Foam::fileOperations::masterFileOperation::filePath
 }
 
 
-Foam::fileName Foam::fileOperations::masterFileOperation::processorsCasePath
+Foam::fileName
+Foam::fileOperations::masterUncollatedFileOperation::processorsCasePath
 (
     const IOobject& io
 )
@@ -139,11 +150,12 @@ Foam::fileName Foam::fileOperations::masterFileOperation::processorsCasePath
     return
         io.rootPath()
        /io.time().globalCaseName()
-       /"processors";
+       /processorsDir;
 }
 
 
-Foam::fileName Foam::fileOperations::masterFileOperation::processorsPath
+Foam::fileName
+Foam::fileOperations::masterUncollatedFileOperation::processorsPath
 (
     const IOobject& io,
     const word& instance
@@ -157,7 +169,8 @@ Foam::fileName Foam::fileOperations::masterFileOperation::processorsPath
 }
 
 
-Foam::fileName Foam::fileOperations::masterFileOperation::processorsPath
+Foam::fileName
+Foam::fileOperations::masterUncollatedFileOperation::processorsPath
 (
     const fileName& dir
 )
@@ -168,7 +181,7 @@ Foam::fileName Foam::fileOperations::masterFileOperation::processorsPath
     std::string::size_type pos = caseName.find("processor");
     if (pos == 0)
     {
-        return dir.path()/"processors";
+        return dir.path()/processorsDir;
     }
     else
     {
@@ -177,7 +190,8 @@ Foam::fileName Foam::fileOperations::masterFileOperation::processorsPath
 }
 
 
-Foam::label Foam::fileOperations::masterFileOperation::splitProcessorPath
+Foam::label
+Foam::fileOperations::masterUncollatedFileOperation::splitProcessorPath
 (
     const fileName& objectPath,
     fileName& path,
@@ -211,7 +225,7 @@ Foam::label Foam::fileOperations::masterFileOperation::splitProcessorPath
 }
 
 
-Foam::fileName Foam::fileOperations::masterFileOperation::objectPath
+Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::objectPath
 (
     const IOobject& io,
     const pathType& searchType,
@@ -277,7 +291,7 @@ Foam::fileName Foam::fileOperations::masterFileOperation::objectPath
 }
 
 
-bool Foam::fileOperations::masterFileOperation::uniformFile
+bool Foam::fileOperations::masterUncollatedFileOperation::uniformFile
 (
     const fileNameList& filePaths
 )
@@ -297,7 +311,8 @@ bool Foam::fileOperations::masterFileOperation::uniformFile
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::fileOperations::masterFileOperation::masterFileOperation()
+Foam::fileOperations::masterUncollatedFileOperation::
+masterUncollatedFileOperation()
 {
     if (regIOobject::fileModificationChecking == regIOobject::timeStampMaster)
     {
@@ -320,13 +335,14 @@ Foam::fileOperations::masterFileOperation::masterFileOperation()
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-Foam::fileOperations::masterFileOperation::~masterFileOperation()
+Foam::fileOperations::masterUncollatedFileOperation::
+~masterUncollatedFileOperation()
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-bool Foam::fileOperations::masterFileOperation::mkDir
+bool Foam::fileOperations::masterUncollatedFileOperation::mkDir
 (
     const fileName& dir,
     mode_t mode
@@ -336,7 +352,7 @@ bool Foam::fileOperations::masterFileOperation::mkDir
 }
 
 
-bool Foam::fileOperations::masterFileOperation::chMod
+bool Foam::fileOperations::masterUncollatedFileOperation::chMod
 (
     const fileName& fName,
     mode_t mode
@@ -346,7 +362,7 @@ bool Foam::fileOperations::masterFileOperation::chMod
 }
 
 
-mode_t Foam::fileOperations::masterFileOperation::mode
+mode_t Foam::fileOperations::masterUncollatedFileOperation::mode
 (
     const fileName& fName
 ) const
@@ -355,7 +371,7 @@ mode_t Foam::fileOperations::masterFileOperation::mode
 }
 
 
-Foam::fileName::Type Foam::fileOperations::masterFileOperation::type
+Foam::fileName::Type Foam::fileOperations::masterUncollatedFileOperation::type
 (
     const fileName& fName
 ) const
@@ -364,7 +380,7 @@ Foam::fileName::Type Foam::fileOperations::masterFileOperation::type
 }
 
 
-bool Foam::fileOperations::masterFileOperation::exists
+bool Foam::fileOperations::masterUncollatedFileOperation::exists
 (
     const fileName& fName,
     const bool checkGzip
@@ -374,7 +390,7 @@ bool Foam::fileOperations::masterFileOperation::exists
 }
 
 
-bool Foam::fileOperations::masterFileOperation::isDir
+bool Foam::fileOperations::masterUncollatedFileOperation::isDir
 (
     const fileName& fName
 ) const
@@ -383,7 +399,7 @@ bool Foam::fileOperations::masterFileOperation::isDir
 }
 
 
-bool Foam::fileOperations::masterFileOperation::isFile
+bool Foam::fileOperations::masterUncollatedFileOperation::isFile
 (
     const fileName& fName,
     const bool checkGzip
@@ -393,7 +409,7 @@ bool Foam::fileOperations::masterFileOperation::isFile
 }
 
 
-off_t Foam::fileOperations::masterFileOperation::fileSize
+off_t Foam::fileOperations::masterUncollatedFileOperation::fileSize
 (
     const fileName& fName
 ) const
@@ -402,7 +418,7 @@ off_t Foam::fileOperations::masterFileOperation::fileSize
 }
 
 
-time_t Foam::fileOperations::masterFileOperation::lastModified
+time_t Foam::fileOperations::masterUncollatedFileOperation::lastModified
 (
     const fileName& fName
 ) const
@@ -411,7 +427,7 @@ time_t Foam::fileOperations::masterFileOperation::lastModified
 }
 
 
-double Foam::fileOperations::masterFileOperation::highResLastModified
+double Foam::fileOperations::masterUncollatedFileOperation::highResLastModified
 (
     const fileName& fName
 ) const
@@ -424,7 +440,7 @@ double Foam::fileOperations::masterFileOperation::highResLastModified
 }
 
 
-bool Foam::fileOperations::masterFileOperation::mvBak
+bool Foam::fileOperations::masterUncollatedFileOperation::mvBak
 (
     const fileName& fName,
     const std::string& ext
@@ -434,13 +450,16 @@ bool Foam::fileOperations::masterFileOperation::mvBak
 }
 
 
-bool Foam::fileOperations::masterFileOperation::rm(const fileName& fName) const
+bool Foam::fileOperations::masterUncollatedFileOperation::rm
+(
+    const fileName& fName
+) const
 {
     return masterOp<bool, rmOp>(fName, rmOp());
 }
 
 
-bool Foam::fileOperations::masterFileOperation::rmDir
+bool Foam::fileOperations::masterUncollatedFileOperation::rmDir
 (
     const fileName& dir
 ) const
@@ -449,7 +468,7 @@ bool Foam::fileOperations::masterFileOperation::rmDir
 }
 
 
-Foam::fileNameList Foam::fileOperations::masterFileOperation::readDir
+Foam::fileNameList Foam::fileOperations::masterUncollatedFileOperation::readDir
 (
     const fileName& dir,
     const fileName::Type type,
@@ -464,7 +483,7 @@ Foam::fileNameList Foam::fileOperations::masterFileOperation::readDir
 }
 
 
-bool Foam::fileOperations::masterFileOperation::cp
+bool Foam::fileOperations::masterUncollatedFileOperation::cp
 (
     const fileName& src,
     const fileName& dst
@@ -474,7 +493,7 @@ bool Foam::fileOperations::masterFileOperation::cp
 }
 
 
-bool Foam::fileOperations::masterFileOperation::ln
+bool Foam::fileOperations::masterUncollatedFileOperation::ln
 (
     const fileName& src,
     const fileName& dst
@@ -484,7 +503,7 @@ bool Foam::fileOperations::masterFileOperation::ln
 }
 
 
-bool Foam::fileOperations::masterFileOperation::mv
+bool Foam::fileOperations::masterUncollatedFileOperation::mv
 (
     const fileName& src,
     const fileName& dst
@@ -494,7 +513,7 @@ bool Foam::fileOperations::masterFileOperation::mv
 }
 
 
-Foam::fileName Foam::fileOperations::masterFileOperation::filePath
+Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePath
 (
     const bool checkGlobal,
     const IOobject& io
@@ -502,7 +521,7 @@ Foam::fileName Foam::fileOperations::masterFileOperation::filePath
 {
     if (debug)
     {
-        Pout<< "masterFileOperation::filePath :"
+        Pout<< "masterUncollatedFileOperation::filePath :"
             << " objectPath:" << io.objectPath()
             << " checkGlobal:" << checkGlobal << endl;
     }
@@ -556,7 +575,7 @@ Foam::fileName Foam::fileOperations::masterFileOperation::filePath
 
     if (debug)
     {
-        Pout<< "masterFileOperation::filePath :"
+        Pout<< "masterUncollatedFileOperation::filePath :"
             << " Returning from file searching:" << endl
             << "    objectPath:" << io.objectPath() << endl
             << "    filePath  :" << objPath << endl << endl;
@@ -565,7 +584,8 @@ Foam::fileName Foam::fileOperations::masterFileOperation::filePath
 }
 
 
-Foam::fileNameList Foam::fileOperations::masterFileOperation::readObjects
+Foam::fileNameList
+Foam::fileOperations::masterUncollatedFileOperation::readObjects
 (
     const objectRegistry& db,
     const fileName& instance,
@@ -575,7 +595,7 @@ Foam::fileNameList Foam::fileOperations::masterFileOperation::readObjects
 {
     if (debug)
     {
-        Pout<< "masterFileOperation::readObjects :"
+        Pout<< "masterUncollatedFileOperation::readObjects :"
             << " db:" << db.objectPath()
             << " instance:" << instance << endl;
     }
@@ -633,7 +653,7 @@ Foam::fileNameList Foam::fileOperations::masterFileOperation::readObjects
 
     if (debug)
     {
-        Pout<< "masterFileOperation::readObjects :"
+        Pout<< "masterUncollatedFileOperation::readObjects :"
             << " newInstance:" << newInstance
             << " objectNames:" << objectNames << endl;
     }
@@ -642,7 +662,7 @@ Foam::fileNameList Foam::fileOperations::masterFileOperation::readObjects
 }
 
 
-bool Foam::fileOperations::masterFileOperation::readHeader
+bool Foam::fileOperations::masterUncollatedFileOperation::readHeader
 (
     IOobject& io,
     const fileName& fName
@@ -652,7 +672,7 @@ bool Foam::fileOperations::masterFileOperation::readHeader
 
     if (debug)
     {
-        Pout<< "masterFileOperation::readHeader:" << endl
+        Pout<< "masterUncollatedFileOperation::readHeader:" << endl
             << "    objectPath:" << io.objectPath() << endl
             << "    fName     :" << fName << endl;
     }
@@ -691,6 +711,8 @@ bool Foam::fileOperations::masterFileOperation::readHeader
     else
     {
         boolList result(Pstream::nProcs(), false);
+        wordList headerClassName(Pstream::nProcs());
+        stringList note(Pstream::nProcs());
         if (Pstream::master())
         {
             forAll(filePaths, proci)
@@ -702,6 +724,8 @@ bool Foam::fileOperations::masterFileOperation::readHeader
                     if (is.good())
                     {
                         result[proci] = io.readHeader(is);
+                        headerClassName[proci] = io.headerClassName();
+                        note[proci] = io.note();
 
                         if
                         (
@@ -722,19 +746,21 @@ bool Foam::fileOperations::masterFileOperation::readHeader
             }
         }
         ok = scatterList(result);
+        io.headerClassName() = scatterList(headerClassName);
+        io.note() = scatterList(note);
     }
 
     if (debug)
     {
-        Pout<< "masterFileOperation::readHeader:" << " ok:" << ok
+        Pout<< "masterUncollatedFileOperation::readHeader:" << " ok:" << ok
             << " class:" << io.headerClassName() << endl;
     }
     return ok;
 }
 
 
-Foam::autoPtr<Foam::Istream>
-Foam::fileOperations::masterFileOperation::readStream
+Foam::autoPtr<Foam::ISstream>
+Foam::fileOperations::masterUncollatedFileOperation::readStream
 (
     regIOobject& io,
     const fileName& fName,
@@ -743,13 +769,13 @@ Foam::fileOperations::masterFileOperation::readStream
 {
     if (debug)
     {
-        Pout<< "masterFileOperation::readStream:"
+        Pout<< "masterUncollatedFileOperation::readStream:"
             << " object : " << io.name()
             << " fName : " << fName << " valid:" << valid << endl;
     }
 
 
-    autoPtr<Istream> isPtr;
+    autoPtr<ISstream> isPtr;
     bool isCollated = false;
     if (UPstream::master())
     {
@@ -789,7 +815,7 @@ Foam::fileOperations::masterFileOperation::readStream
     {
         if (debug)
         {
-            Pout<< "masterFileOperation::readStream:"
+            Pout<< "masterUncollatedFileOperation::readStream:"
                 << " for object : " << io.name()
                 << " starting collating input from " << fName << endl;
         }
@@ -801,13 +827,13 @@ Foam::fileOperations::masterFileOperation::readStream
             // to access
             fileName path;
             fileName local;
-            label proci =
-                fileOperations::masterFileOperation::splitProcessorPath
-                (
-                    io.objectPath(),
-                    path,
-                    local
-                );
+            label proci = fileOperations::masterUncollatedFileOperation::
+            splitProcessorPath
+            (
+                io.objectPath(),
+                path,
+                local
+            );
 
             if (proci == -1)
             {
@@ -829,7 +855,7 @@ Foam::fileOperations::masterFileOperation::readStream
                 isPtr,
                 data,
                 (
-                    sz > maxCommsSize
+                    sz > maxBufferSize
                   ? UPstream::scheduled
                   : UPstream::nonBlocking
                 )
@@ -838,7 +864,7 @@ Foam::fileOperations::masterFileOperation::readStream
 
         // TBD: remove extra copying
         string buf(data.begin(), data.size());
-        autoPtr<Istream> realIsPtr(new IStringStream(buf));
+        autoPtr<ISstream> realIsPtr(new IStringStream(buf));
 
         // Read header
         if (!io.readHeader(realIsPtr()))
@@ -854,7 +880,7 @@ Foam::fileOperations::masterFileOperation::readStream
     {
         if (debug)
         {
-            Pout<< "masterFileOperation::readStream:"
+            Pout<< "masterUncollatedFileOperation::readStream:"
                 << " for object : " << io.name()
                 << " starting separated input from " << fName << endl;
         }
@@ -896,7 +922,7 @@ Foam::fileOperations::masterFileOperation::readStream
             {
                 if (debug)
                 {
-                    Pout<< "masterFileOperation::readStream:"
+                    Pout<< "masterUncollatedFileOperation::readStream:"
                         << " For processor " << proci
                         << " opening " << filePaths[proci] << endl;
                 }
@@ -911,7 +937,7 @@ Foam::fileOperations::masterFileOperation::readStream
 
                     if (debug)
                     {
-                        Pout<< "masterFileOperation::readStream:"
+                        Pout<< "masterUncollatedFileOperation::readStream:"
                             << " From " << filePaths[proci]
                             <<  " reading " << label(count) << " bytes" << endl;
                     }
@@ -934,7 +960,7 @@ Foam::fileOperations::masterFileOperation::readStream
         {
             if (!isPtr.valid())
             {
-                return autoPtr<Istream>(new dummyIstream());
+                return autoPtr<ISstream>(new dummyISstream());
             }
             else
             {
@@ -954,7 +980,7 @@ Foam::fileOperations::masterFileOperation::readStream
 
                 if (debug)
                 {
-                    Pout<< "masterFileOperation::readStream:"
+                    Pout<< "masterUncollatedFileOperation::readStream:"
                         << " Done reading " << buf.size() << " bytes" << endl;
                 }
                 isPtr.reset(new IStringStream(buf));
@@ -970,14 +996,14 @@ Foam::fileOperations::masterFileOperation::readStream
             }
             else
             {
-                return autoPtr<Istream>(new dummyIstream());
+                return autoPtr<ISstream>(new dummyISstream());
             }
         }
     }
 }
 
 
-bool Foam::fileOperations::masterFileOperation::writeObject
+bool Foam::fileOperations::masterUncollatedFileOperation::writeObject
 (
     const regIOobject& io,
     IOstream::streamFormat fmt,
@@ -990,8 +1016,8 @@ bool Foam::fileOperations::masterFileOperation::writeObject
 
     if (debug)
     {
-        Pout<< "masterFileOperation::writeObject:" << " io:" << pathName
-            << " valid:" << valid << endl;
+        Pout<< "masterUncollatedFileOperation::writeObject:"
+            << " io:" << pathName << " valid:" << valid << endl;
     }
 
     autoPtr<Ostream> osPtr
@@ -1030,7 +1056,7 @@ bool Foam::fileOperations::masterFileOperation::writeObject
 }
 
 
-Foam::instantList Foam::fileOperations::masterFileOperation::findTimes
+Foam::instantList Foam::fileOperations::masterUncollatedFileOperation::findTimes
 (
     const fileName& directory,
     const word& constantName
@@ -1038,7 +1064,7 @@ Foam::instantList Foam::fileOperations::masterFileOperation::findTimes
 {
     if (debug)
     {
-        Pout<< "masterFileOperation::findTimes:"
+        Pout<< "masterUncollatedFileOperation::findTimes:"
             << " Finding times in directory " << directory << endl;
     }
 
@@ -1052,15 +1078,15 @@ Foam::instantList Foam::fileOperations::masterFileOperation::findTimes
 
     if (debug)
     {
-        Pout<< "masterFileOperation::findTimes:"
+        Pout<< "masterUncollatedFileOperation::findTimes:"
             << " Found times:" << times << endl;
     }
     return times;
 }
 
 
-Foam::autoPtr<Foam::Istream>
-Foam::fileOperations::masterFileOperation::NewIFstream
+Foam::autoPtr<Foam::ISstream>
+Foam::fileOperations::masterUncollatedFileOperation::NewIFstream
 (
     const fileName& filePath
 ) const
@@ -1084,7 +1110,7 @@ Foam::fileOperations::masterFileOperation::NewIFstream
             {
                 if (debug)
                 {
-                    Pout<< "masterFileOperation::NewIFstream:"
+                    Pout<< "masterUncollatedFileOperation::NewIFstream:"
                         << " Opening global file " << filePath << endl;
                 }
 
@@ -1095,7 +1121,7 @@ Foam::fileOperations::masterFileOperation::NewIFstream
 
                 if (debug)
                 {
-                    Pout<< "masterFileOperation::NewIFstream:"
+                    Pout<< "masterUncollatedFileOperation::NewIFstream:"
                         << " From " << filePath
                         <<  " reading " << label(count) << " bytes" << endl;
                 }
@@ -1114,7 +1140,7 @@ Foam::fileOperations::masterFileOperation::NewIFstream
                 {
                     if (debug)
                     {
-                        Pout<< "masterFileOperation::NewIFstream:"
+                        Pout<< "masterUncollatedFileOperation::NewIFstream:"
                             << " For processor " << proci
                             << " opening " << filePaths[proci] << endl;
                     }
@@ -1125,7 +1151,7 @@ Foam::fileOperations::masterFileOperation::NewIFstream
 
                     if (debug)
                     {
-                        Pout<< "masterFileOperation::NewIFstream:"
+                        Pout<< "masterUncollatedFileOperation::NewIFstream:"
                             << " From " << filePaths[proci]
                             <<  " reading " << label(count) << " bytes" << endl;
                     }
@@ -1145,7 +1171,7 @@ Foam::fileOperations::masterFileOperation::NewIFstream
         if (Pstream::master())
         {
             // Read myself
-            return autoPtr<Istream>
+            return autoPtr<ISstream>
             (
                 new IFstream(filePaths[Pstream::masterNo()])
             );
@@ -1154,7 +1180,7 @@ Foam::fileOperations::masterFileOperation::NewIFstream
         {
             if (debug)
             {
-                Pout<< "masterFileOperation::NewIFstream:"
+                Pout<< "masterUncollatedFileOperation::NewIFstream:"
                     << " Reading " << filePath
                     << " from processor " << Pstream::masterNo() << endl;
             }
@@ -1165,26 +1191,26 @@ Foam::fileOperations::masterFileOperation::NewIFstream
 
             if (debug)
             {
-                Pout<< "masterFileOperation::NewIFstream:"
+                Pout<< "masterUncollatedFileOperation::NewIFstream:"
                     << " Done reading " << buf.size() << " bytes" << endl;
             }
 
             // Note: IPstream is not an IStream so use a IStringStream to
             //       convert the buffer. Note that we construct with a string
             //       so it holds a copy of the buffer.
-            return autoPtr<Istream>(new IStringStream(buf));
+            return autoPtr<ISstream>(new IStringStream(buf));
         }
     }
     else
     {
         // Read myself
-        return autoPtr<Istream>(new IFstream(filePath));
+        return autoPtr<ISstream>(new IFstream(filePath));
     }
 }
 
 
 Foam::autoPtr<Foam::Ostream>
-Foam::fileOperations::masterFileOperation::NewOFstream
+Foam::fileOperations::masterUncollatedFileOperation::NewOFstream
 (
     const fileName& pathName,
     IOstream::streamFormat fmt,
@@ -1197,7 +1223,7 @@ Foam::fileOperations::masterFileOperation::NewOFstream
 }
 
 
-Foam::label Foam::fileOperations::masterFileOperation::addWatch
+Foam::label Foam::fileOperations::masterUncollatedFileOperation::addWatch
 (
     const fileName& fName
 ) const
@@ -1212,7 +1238,7 @@ Foam::label Foam::fileOperations::masterFileOperation::addWatch
 }
 
 
-bool Foam::fileOperations::masterFileOperation::removeWatch
+bool Foam::fileOperations::masterUncollatedFileOperation::removeWatch
 (
     const label watchIndex
 ) const
@@ -1227,7 +1253,7 @@ bool Foam::fileOperations::masterFileOperation::removeWatch
 }
 
 
-Foam::label Foam::fileOperations::masterFileOperation::findWatch
+Foam::label Foam::fileOperations::masterUncollatedFileOperation::findWatch
 (
     const labelList& watchIndices,
     const fileName& fName
@@ -1251,7 +1277,7 @@ Foam::label Foam::fileOperations::masterFileOperation::findWatch
 }
 
 
-void Foam::fileOperations::masterFileOperation::addWatches
+void Foam::fileOperations::masterUncollatedFileOperation::addWatches
 (
     regIOobject& rio,
     const fileNameList& files
@@ -1289,7 +1315,7 @@ void Foam::fileOperations::masterFileOperation::addWatches
 }
 
 
-const Foam::fileName Foam::fileOperations::masterFileOperation::getFile
+Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::getFile
 (
     const label watchIndex
 ) const
@@ -1304,7 +1330,7 @@ const Foam::fileName Foam::fileOperations::masterFileOperation::getFile
 }
 
 
-void Foam::fileOperations::masterFileOperation::updateStates
+void Foam::fileOperations::masterUncollatedFileOperation::updateStates
 (
     const bool masterOnly,
     const bool syncPar
@@ -1317,7 +1343,8 @@ void Foam::fileOperations::masterFileOperation::updateStates
 }
 
 
-Foam::fileMonitor::fileState Foam::fileOperations::masterFileOperation::getState
+Foam::fileMonitor::fileState
+Foam::fileOperations::masterUncollatedFileOperation::getState
 (
     const label watchFd
 ) const
@@ -1332,7 +1359,7 @@ Foam::fileMonitor::fileState Foam::fileOperations::masterFileOperation::getState
 }
 
 
-void Foam::fileOperations::masterFileOperation::setUnmodified
+void Foam::fileOperations::masterUncollatedFileOperation::setUnmodified
 (
     const label watchFd
 ) const

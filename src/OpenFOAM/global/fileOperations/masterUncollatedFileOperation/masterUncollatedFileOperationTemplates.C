@@ -23,14 +23,13 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "masterFileOperation.H"
 #include "Pstream.H"
 #include "IFstream.H"
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class Type>
-Type Foam::fileOperations::masterFileOperation::scatterList
+Type Foam::fileOperations::masterUncollatedFileOperation::scatterList
 (
     const UList<Type>& masterLst
 ) const
@@ -63,7 +62,7 @@ Type Foam::fileOperations::masterFileOperation::scatterList
 
 
 template<class Type, class fileOp>
-Type Foam::fileOperations::masterFileOperation::masterOp
+Type Foam::fileOperations::masterUncollatedFileOperation::masterOp
 (
     const fileName& fName,
     const fileOp& fop
@@ -71,7 +70,7 @@ Type Foam::fileOperations::masterFileOperation::masterOp
 {
     if (IFstream::debug)
     {
-        Pout<< "masterFileOperation : Operation on " << fName << endl;
+        Pout<< "masterUncollatedFileOperation : Operation on " << fName << endl;
     }
     if (Pstream::parRun())
     {
@@ -102,7 +101,7 @@ Type Foam::fileOperations::masterFileOperation::masterOp
 
 
 template<class Type, class fileOp>
-Type Foam::fileOperations::masterFileOperation::masterOp
+Type Foam::fileOperations::masterUncollatedFileOperation::masterOp
 (
     const fileName& src,
     const fileName& dest,
@@ -111,7 +110,7 @@ Type Foam::fileOperations::masterFileOperation::masterOp
 {
     if (IFstream::debug)
     {
-        Pout<< "masterFileOperation : Operation on src:" << src
+        Pout<< "masterUncollatedFileOperation : Operation on src:" << src
             << " dest:" << dest << endl;
     }
     if (Pstream::parRun())

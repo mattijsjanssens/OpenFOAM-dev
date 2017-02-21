@@ -389,15 +389,21 @@ void Foam::Time::readDict()
     )
     {
         // Remove the old watches since destroying the file
+        fileNameList oldWatchedFiles(controlDict_.watchIndices());
         forAllReverse(controlDict_.watchIndices(), i)
         {
-            fileHandler().removeWatch(controlDict_.watchIndices()[i]);
+            label watchi = controlDict_.watchIndices()[i];
+            oldWatchedFiles[i] = fileHandler().getFile(watchi);
+            fileHandler().removeWatch(watchi);
         }
         controlDict_.watchIndices().clear();
 
         // Installing the new handler
         autoPtr<fileOperation> handler(fileOperation::New(fileHandlerName));
         Foam::fileHandler(handler);
+
+        // Reinstall old watches
+        fileHandler().addWatches(controlDict_, oldWatchedFiles);
     }
 }
 

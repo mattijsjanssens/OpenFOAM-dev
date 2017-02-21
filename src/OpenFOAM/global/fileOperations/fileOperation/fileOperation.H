@@ -29,7 +29,7 @@ Class
 #ifndef fileOperation_H
 #define fileOperation_H
 
-#include "Istream.H"
+#include "ISstream.H"
 #include "Ostream.H"
 #include "autoPtr.H"
 #include "fileNameList.H"
@@ -71,6 +71,12 @@ protected:
 
 
 public:
+
+    // Static data
+
+        //- Return the processors directory name (usually "processors")
+        static word processorsDir;
+
 
     // Public data types
 
@@ -233,9 +239,9 @@ public:
             //- Read object header from supplied file
             virtual bool readHeader(IOobject&, const fileName&) const = 0;
 
-            //- Reads header for regIOobject and returns an Istream
+            //- Reads header for regIOobject and returns an ISstream
             //  to read the contents.
-            virtual autoPtr<Istream> readStream
+            virtual autoPtr<ISstream> readStream
             (
                 regIOobject&,
                 const fileName&,
@@ -263,8 +269,8 @@ public:
             //  preference
             virtual fileName filePath(const fileName&) const;
 
-            //- Generate an Istream that reads a file
-            virtual autoPtr<Istream> NewIFstream(const fileName&) const = 0;
+            //- Generate an ISstream that reads a file
+            virtual autoPtr<ISstream> NewIFstream(const fileName&) const = 0;
 
             //- Generate an Ostream that writes a file
             virtual autoPtr<Ostream> NewOFstream
@@ -296,7 +302,7 @@ public:
             virtual void addWatches(regIOobject&, const fileNameList&) const;
 
             //- Get name of file being watched (using handle)
-            virtual const fileName getFile(const label) const;
+            virtual fileName getFile(const label) const;
 
             //- Update state of all files
             virtual void updateStates

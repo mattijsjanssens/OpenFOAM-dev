@@ -7,9 +7,9 @@ global/etcFiles/etcFiles.C
 
 fileOps = global/fileOperations
 $(fileOps)/fileOperation/fileOperation.C
-$(fileOps)/localFileOperation/localFileOperation.C
-$(fileOps)/masterFileOperation/masterFileOperation.C
-$(fileOps)/masterCollatingFileOperation/masterCollatingFileOperation.C
+$(fileOps)/uncollatedFileOperation/uncollatedFileOperation.C
+$(fileOps)/masterUncollatedFileOperation/masterUncollatedFileOperation.C
+$(fileOps)/collatedFileOperation/collatedFileOperation.C
 
 bools = primitives/bools
 $(bools)/bool/bool.C

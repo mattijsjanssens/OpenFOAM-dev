@@ -22,25 +22,25 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::fileOperations::masterCollatingFileOperation
+    Foam::fileOperations::collatedFileOperation
 
 Description
-    Version of masterFileOperation that collates regIOobjects into a container
-    in the processors/ subdirectory.
+    Version of masterUncollatedFileOperation that collates regIOobjects
+    into a container in the processors/ subdirectory.
 
 See also
-    masterFileOperation
+    masterUncollatedFileOperation
 
 SourceFiles
-    masterCollatingFileOperation.C
+    collatedFileOperation.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef fileOperations_masterCollatingFileOperation_H
-#define fileOperations_masterCollatingFileOperation_H
+#ifndef fileOperations_collatedFileOperation_H
+#define fileOperations_collatedFileOperation_H
 
 #include "OSspecific.H"
-#include "masterFileOperation.H"
+#include "masterUncollatedFileOperation.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -50,12 +50,12 @@ namespace fileOperations
 {
 
 /*---------------------------------------------------------------------------*\
-                Class masterCollatingFileOperation Declaration
+                Class collatedFileOperation Declaration
 \*---------------------------------------------------------------------------*/
 
-class masterCollatingFileOperation
+class collatedFileOperation
 :
-    public masterFileOperation
+    public masterUncollatedFileOperation
 {
 public:
 
@@ -66,11 +66,11 @@ public:
     // Constructors
 
         //- Construct null
-        masterCollatingFileOperation();
+        collatedFileOperation();
 
 
     //- Destructor
-    virtual ~masterCollatingFileOperation();
+    virtual ~collatedFileOperation();
 
 
     // Member Functions

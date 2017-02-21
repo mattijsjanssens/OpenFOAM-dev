@@ -23,11 +23,10 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "masterCollatingFileOperation.H"
+#include "collatedFileOperation.H"
 #include "addToRunTimeSelectionTable.H"
 #include "Pstream.H"
 #include "Time.H"
-#include "IFstream.H"
 #include "masterOFstream.H"
 #include "masterCollatingOFstream.H"
 #include "decomposedBlockData.H"
@@ -39,11 +38,11 @@ namespace Foam
 {
 namespace fileOperations
 {
-    defineTypeNameAndDebug(masterCollatingFileOperation, 0);
+    defineTypeNameAndDebug(collatedFileOperation, 0);
     addToRunTimeSelectionTable
     (
         fileOperation,
-        masterCollatingFileOperation,
+        collatedFileOperation,
         word
     );
 }
@@ -52,29 +51,29 @@ namespace fileOperations
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::fileOperations::masterCollatingFileOperation::
-masterCollatingFileOperation()
+Foam::fileOperations::collatedFileOperation::
+collatedFileOperation()
 :
-    masterFileOperation()
+    masterUncollatedFileOperation()
 {}
 
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-Foam::fileOperations::masterCollatingFileOperation::
-~masterCollatingFileOperation()
+Foam::fileOperations::collatedFileOperation::
+~collatedFileOperation()
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-Foam::fileName Foam::fileOperations::masterCollatingFileOperation::objectPath
+Foam::fileName Foam::fileOperations::collatedFileOperation::objectPath
 (
     const IOobject& io
 ) const
 {
     // Replacement for objectPath
-    return masterFileOperation::objectPath
+    return masterUncollatedFileOperation::objectPath
     (
         io,
         fileOperation::PROCESSORSOBJECT,
@@ -83,7 +82,7 @@ Foam::fileName Foam::fileOperations::masterCollatingFileOperation::objectPath
 }
 
 
-bool Foam::fileOperations::masterCollatingFileOperation::writeObject
+bool Foam::fileOperations::collatedFileOperation::writeObject
 (
     const regIOobject& io,
     IOstream::streamFormat fmt,
@@ -230,7 +229,7 @@ bool Foam::fileOperations::masterCollatingFileOperation::writeObject
                 bool bigFile;
                 if (Pstream::master())
                 {
-                    bigFile = (Foam::fileSize(pathName) > maxCommsSize);
+                    bigFile = (Foam::fileSize(pathName) > maxBufferSize);
                 }
                 Pstream::scatter(bigFile);
 

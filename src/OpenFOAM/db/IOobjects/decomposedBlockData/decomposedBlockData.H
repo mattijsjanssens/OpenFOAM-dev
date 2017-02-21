@@ -132,10 +132,10 @@ public:
             List<char>& data
         );
 
-        //- Read data into *this. Istream is only valid on master.
+        //- Read data into *this. ISstream is only valid on master.
         static bool readBlocks
         (
-            autoPtr<Istream>& isPtr,
+            autoPtr<ISstream>& isPtr,
             List<char>& data,
             const UPstream::commsTypes commsType
         );

@@ -22,15 +22,15 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::fileOperations::localFileOperation
+    Foam::fileOperations::uncollatedFileOperation
 
 Description
     fileOperation that assumes file operations are local.
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef fileOperations_localFileOperation_H
-#define fileOperations_localFileOperation_H
+#ifndef fileOperations_uncollatedFileOperation_H
+#define fileOperations_uncollatedFileOperation_H
 
 #include "fileOperation.H"
 #include "OSspecific.H"
@@ -43,10 +43,10 @@ namespace fileOperations
 {
 
 /*---------------------------------------------------------------------------*\
-                     Class localFileOperation Declaration
+                     Class uncollatedFileOperation Declaration
 \*---------------------------------------------------------------------------*/
 
-class localFileOperation
+class uncollatedFileOperation
 :
     public fileOperation
 {
@@ -59,11 +59,11 @@ public:
     // Constructors
 
         //- Construct null
-        localFileOperation();
+        uncollatedFileOperation();
 
 
     //- Destructor
-    virtual ~localFileOperation();
+    virtual ~uncollatedFileOperation();
 
 
     // Member Functions
@@ -173,17 +173,17 @@ public:
             //- Read object header from supplied file
             virtual bool readHeader(IOobject&, const fileName&) const;
 
-            //- Reads header for regIOobject and returns an Istream
+            //- Reads header for regIOobject and returns an ISstream
             //  to read the contents.
-            virtual autoPtr<Istream> readStream
+            virtual autoPtr<ISstream> readStream
             (
                 regIOobject&,
                 const fileName&,
                 const bool procValid = true
             ) const;
 
-            //- Generate an Istream that reads a file
-            virtual autoPtr<Istream> NewIFstream(const fileName&) const;
+            //- Generate an ISstream that reads a file
+            virtual autoPtr<ISstream> NewIFstream(const fileName&) const;
 
             //- Generate an Ostream that writes a file
             virtual autoPtr<Ostream> NewOFstream

@@ -1,0 +1,126 @@
+Global File
+-----------
+
+New parallel file format
+------------------------
+- data from all processors gets written to single file
+- in processors/ directory, e.g.:
+    processors/0.1/p
+- it is still decomposed data!
+- all processor bits are appended into single file
+- master writes the file, all the slaves send to master
+- selectable through 'fileHandler':
+    - uncollated (default): all processors write their own data
+    - collated            : all slaves send to master; master writes collated file
+    - masterUncollated    : same as uncollated but only master reads/writes
+                            (slaves can run without NFS access their processor directory)
+
+
+fileHandler
+-----------
+- all IO should go through fileHandler()
+- which is a single instance of one of the methods above
+- is used automatically for all regIOobjects using streaming
+  (almost all containers)
+- but all other calls (e.g. OFstream, exists) should be rewritten to
+  use the file handler, e.g. for OFstream, exists:
+
+        autoPtr<Ostream> osPtr(fileHandler().NewOFstream("myFile");
+        Ostream& os = osPtr();
+    or
+        bool haveFile = fileHandler().exists("myFile");
+- fileHandlers are used for
+    - OSspecific functionality (e.g. exists)
+    - regIOobject reading, writing
+    - file-change monitoring
+- default is the 'uncollated' version. A different one can be selected
+  using (in increasing order of priority)
+    - environment variable FOAM_FILEHANDLER
+    - command line option -fileHandler XXX
+    - 'fileHander' entry in system/controlDict
+
+
+Backwards compatibility
+-----------------------
+- uncollated mode should behave exactly as before
+- foamFormatConvert can be used to change the format
+- decomposePar, reconstructPar
+
+
+Implementation
+--------------
+- the case name still contains the processorDDD directory, e.g.
+processorDDD/cavity
+- it is only scanning/reading/writing that gets intercepted.
+
+
+Writing:
+- regIOobject::writeObject is the main writing routine. It normally opens
+a file stream (OFstream) and uses the writeData routine to stream
+the data into the file.
+- there are two changes to this process:
+    - the fileName used for writing is now obtained from the fileHandler.
+    The uncollated fileHandler returns the objectPath() as before, the
+    collating one returns the equivalent path in the processors/ directory.
+    - instead of an OFstream a masterCollatingOFstream is opened and returned.
+    This is an OStringStream and in its destruction will collect all the
+    processor contributions on the master and write the file.
+- special handling is for the lagrangian data which only gets read/written
+  if there are particles. Since we still need to have a call to the writing
+  on all processors a flag gets passed which tells the fileHandler whether
+  actually write the file. In the collocated writer this writes a dummy entry.
+
+Reading:
+- reading is done through regIOobject::readStream() which opens a file
+and returns a stream
+- reading is done in two steps:
+    - find the file ('filePath()'). This searching is done inside the
+    fileHandler so can be overridden when necessary.
+    - open and return a stream to the file. In case of the uncollated
+    fileHandler this uses IFstream, in case of the masterUncollated/collated
+    fileHandlers this:
+        - sends all the filenames to the master
+        - detects if it is a single (collated) file in the processors/
+        directory
+        - and opens the file(s) and sends the contents back to the slaves.
+        These then return the contents to the caller as an IStringStream.
+
+Other:
+- special handling to get the number of processor directories.
+- special handling to set the time and get the time directories.
+- special handling to get the IOobjects for a time.
+
+
+Debugging
+---------
+- set the debug variables for the fileOperation types:
+    DebugSwitches
+    {
+        uncollated          1;
+        masterUncollated    1;
+        collated            1;
+    }
+- if a parallel run is hanging connect with e.g. gdb and see where it
+  is hanging. The fileHandler calls should always be made on all processors
+  at the same time (i.e. synchronous); if this is not possible the fileHandler
+  mechanism should not be used.
+
+
+
+
+Todo:
+- globalCellModeller, debugSwitches cannot use fileHandler
+- all OSspecific calls
+- redistributePar
+- determine priority of -envvar, -argList, -system/controlDict
+- maxBufferSize into all master*FileOperation
+- master*OFstream with uniform file
+- Lagrangian IOField reading:
+    - if both processors and processorDDD then
+      the processors without IOField will search for
+        processors/<field>
+      instead of processorDDD/<field>
+  Small problem since generally not running with both.
+- have wrapper for combination of readDir(filePath(..)) to read e.g. lagrangian
+- have syncPar flag on all low-level routines
+- threading?
