@@ -80,7 +80,7 @@ public:
         //- Inherit readData from regIOobject
         using regIOobject::readData;
 
-        virtual void readData(CloudType& c, bool checkClass);
+        virtual void readData(Istream&, CloudType&);
 
         virtual bool write(const bool valid = true) const;
 
