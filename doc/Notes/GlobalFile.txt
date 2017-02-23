@@ -68,7 +68,12 @@ the data into the file.
 - special handling is for the lagrangian data which only gets read/written
   if there are particles. Since we still need to have a call to the writing
   on all processors a flag gets passed which tells the fileHandler whether
-  actually write the file. In the collocated writer this writes a dummy entry.
+  to actually write the file. In the collocated writer this writes a dummy
+  entry.
+- non-parallel running (e.g. decomposePar): the collating writer assumes
+the processors are handled in order and adds the section for the current
+processor to the collated file.
+
 
 Reading:
 - reading is done through regIOobject::readStream() which opens a file
@@ -84,6 +89,10 @@ and returns a stream
         directory
         - and opens the file(s) and sends the contents back to the slaves.
         These then return the contents to the caller as an IStringStream.
+- non-parallel running (e.g. reconstructPar): reading collated files determines
+the processor number from the casename and uses this to index the collated
+file.
+
 
 Other:
 - special handling to get the number of processor directories.
@@ -123,4 +132,5 @@ Todo:
   Small problem since generally not running with both.
 - have wrapper for combination of readDir(filePath(..)) to read e.g. lagrangian
 - have syncPar flag on all low-level routines
+- indexing for single processor reading in decomposedBlockData::readBlock
 - threading?
