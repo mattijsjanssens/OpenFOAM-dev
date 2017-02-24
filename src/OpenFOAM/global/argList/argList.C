@@ -33,7 +33,7 @@ License
 #include "labelList.H"
 #include "regIOobject.H"
 #include "dynamicCode.H"
-#include "fileOperation.H"
+#include "masterUncollatedFileOperation.H"
 
 #include <cctype>
 
@@ -597,7 +597,10 @@ void Foam::argList::parse
     }
     if (Pstream::master() && bannerEnabled)
     {
-        Info<< "I/O    : " << fileHandler().type() << endl;
+        Info<< "I/O    : " << fileHandler().type()
+            << " (maxBufferSize "
+            << fileOperations::masterUncollatedFileOperation::maxBufferSize
+            << ')' << endl;
     }
 
     // Case is a single processor run unless it is running parallel

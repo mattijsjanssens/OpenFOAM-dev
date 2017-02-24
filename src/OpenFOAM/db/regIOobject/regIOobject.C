@@ -428,26 +428,13 @@ bool Foam::regIOobject::headerOk()
 
     fileName fName(filePath());
 
-//    if (fName.empty())
-//    {
-//        if (IOobject::debug)
-//        {
-//            InfoInFunction
-//                << "file " << objectPath() << " could not be opened"
-//                << endl;
-//        }
-//        ok = false;
-//    }
-//    else
-    {
-        ok = Foam::fileHandler().readHeader(*this, fName);
+    ok = Foam::fileHandler().readHeader(*this, fName);
 
-        if (!ok && IOobject::debug)
-        {
-            IOWarningInFunction(fName)
-                << "failed to read header of file " << objectPath()
-                << endl;
-        }
+    if (!ok && IOobject::debug)
+    {
+        IOWarningInFunction(fName)
+            << "failed to read header of file " << objectPath()
+            << endl;
     }
 
     return ok;

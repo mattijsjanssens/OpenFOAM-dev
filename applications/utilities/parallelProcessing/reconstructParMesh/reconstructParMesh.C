@@ -581,7 +581,10 @@ int main(int argc, char *argv[])
         );
 
 
-        if (!facesIO.typeHeaderOk<faceCompactIOList>(true))
+        // Problem: faceCompactIOList recognises both 'faceList' and
+        //          'faceCompactList' so we should be lenient when doing
+        //          typeHeaderOk
+        if (!facesIO.typeHeaderOk<faceCompactIOList>(false))
         {
             Info<< "No mesh." << nl << endl;
             continue;

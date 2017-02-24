@@ -27,13 +27,14 @@ License
 #include "OFstream.H"
 #include "IOobject.H"
 #include "decomposedBlockData.H"
+#include "PstreamReduceOps.H"
+#include "masterUncollatedFileOperation.H"
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 Foam::masterCollatingOFstream::masterCollatingOFstream
 (
     const fileName& pathName,
-    const UPstream::commsTypes commsType,
     streamFormat format,
     versionNumber version,
     compressionType compression
@@ -41,7 +42,6 @@ Foam::masterCollatingOFstream::masterCollatingOFstream
 :
     OStringStream(format, version),
     pathName_(pathName),
-    commsType_(commsType),
     compression_(compression)
 {}
 
@@ -84,8 +84,22 @@ Foam::masterCollatingOFstream::~masterCollatingOFstream()
     string s(str());
     UList<char> slice(const_cast<char*>(s.data()), label(s.size()));
 
+    bool bigFile =
+    (
+        returnReduce(off_t(s.size()), sumOp<off_t>())
+      > fileOperations::masterUncollatedFileOperation::maxBufferSize
+    );
+    Pstream::scatter(bigFile);
+
     List<std::streamoff> start;
-    decomposedBlockData::writeBlocks(osPtr, start, slice, commsType_);
+    decomposedBlockData::writeBlocks
+    (
+        osPtr,
+        start,
+        slice,
+        (bigFile ? UPstream::scheduled : UPstream::nonBlocking)
+    );
+
     if (osPtr.valid() && !osPtr().good())
     {
         FatalIOErrorInFunction(osPtr())

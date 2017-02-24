@@ -24,7 +24,6 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "decomposedBlockData.H"
-#include "IOstreams.H"
 #include "OPstream.H"
 #include "IPstream.H"
 #include "PstreamBuffers.H"
@@ -39,9 +38,6 @@ namespace Foam
 {
     defineTypeNameAndDebug(decomposedBlockData, 0);
 }
-
-// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
-
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
@@ -161,44 +157,21 @@ Foam::decomposedBlockData::~decomposedBlockData()
 
 bool Foam::decomposedBlockData::readMasterHeader(IOobject& io, Istream& is)
 {
+    if (debug)
+    {
+        Pout<< "decomposedBlockData::readMasterHeader:"
+            << " stream:" << is.name() << endl;
+    }
+
     // Master-only reading of header
     is.fatalCheck("read(Istream&)");
-//    token firstToken(is);
-//    is.fatalCheck("read(Istream&) : " "reading first token");
-//
-//    if (firstToken.isLabel())
-//    {
-//         // Read size of list
-//         label s = firstToken.labelToken();
-//
-//         if (s != UPstream::nProcs())
-//         {
-//             //FatalIOErrorInFunction(is)
-//             IOWarningInFunction(is)
-//                 << "size " << s
-//                 << " differs from the number of processors "
-//                 << UPstream::nProcs()
-//                 //<< exit(FatalIOError);
-//                 << endl;
-//         }
-//
-//        // Read beginning of contents
-//        char delimiter = is.readBeginList("List");
 
-//        if (s)
-        {
-//            if (delimiter == token::BEGIN_LIST)
-            {
-                List<char> data(is);
-                is.fatalCheck("read(Istream&) : reading entry");
-                string buf(data.begin(), data.size());
-                IStringStream str(buf);
+    List<char> data(is);
+    is.fatalCheck("read(Istream&) : reading entry");
+    string buf(data.begin(), data.size());
+    IStringStream str(is.name(), buf);
 
-                return io.readHeader(str);
-            }
-        }
-//    }
-    return false;
+    return io.readHeader(str);
 }
 
 
@@ -209,53 +182,22 @@ bool Foam::decomposedBlockData::readBlock
     List<char>& data
 )
 {
-    bool ok = false;
+    if (debug)
+    {
+        Pout<< "decomposedBlockData::readMasterHeader:"
+            << " stream:" << is.name() << " attempt to read block " << blocki
+            << endl;
+    }
 
     is.fatalCheck("read(Istream&)");
-//    token firstToken(is);
-//    is.fatalCheck("read(Istream&) : " "reading first token");
-//
-//    if (firstToken.isLabel())
-//    {
-//        // Read size of list
-//        label s = firstToken.labelToken();
 
-//        // Read beginning of contents
-//        char delimiter = is.readBeginList("List");
-
-//        if (s)
-        {
-//            if (delimiter == token::BEGIN_LIST)
-            {
-                for (label i = 0; i < blocki+1; i++)
-                {
-                    // Read data, override old data
-                    is >> data;
-                    is.fatalCheck("read(Istream&) : reading entry");
-                }
-            }
-//            else
-//            {
-//                FatalIOErrorInFunction
-//                (
-//                    is
-//                )   << "incorrect delimiter, expected (, found "
-//                    << delimiter
-//                    << exit(FatalIOError);
-//            }
-        }
-
-        ok = is.good();
-//    }
-//    else
-//    {
-//        FatalIOErrorInFunction
-//        (
-//            is
-//        )   << "incorrect first token, expected <int>, found "
-//            << firstToken.info() << exit(FatalIOError);
-//    }
-    return ok;
+    for (label i = 0; i < blocki+1; i++)
+    {
+        // Read data, override old data
+        is >> data;
+        is.fatalCheck("read(Istream&) : reading entry");
+    }
+    return is.good();
 }
 
 
@@ -266,6 +208,13 @@ bool Foam::decomposedBlockData::readBlocks
     const UPstream::commsTypes commsType
 )
 {
+    if (debug)
+    {
+        Pout<< "decomposedBlockData::readBlocks:"
+            << " stream:" << (isPtr.valid() ? isPtr().name() : "invalid")
+            << " commsType:" << Pstream::commsTypeNames[commsType] << endl;
+    }
+
     bool ok = false;
 
     if (commsType == UPstream::scheduled)
@@ -274,75 +223,28 @@ bool Foam::decomposedBlockData::readBlocks
         {
             Istream& is = isPtr();
             is.fatalCheck("read(Istream&)");
-//             token firstToken(is);
-//             is.fatalCheck("read(Istream&) : " "reading first token");
-//
-//             if (firstToken.isLabel())
-//             {
-//                 // Read size of list
-//                 label s = firstToken.labelToken();
-//
-//                 if (s != UPstream::nProcs())
-//                 {
-//                     FatalIOErrorInFunction
-//                     (
-//                         is
-//                     )   << "size " << s
-//                         << " differs from the number of processors "
-//                         << UPstream::nProcs() << exit(FatalIOError);
-//                 }
-//
-//                // Read beginning of contents
-//                char delimiter = is.readBeginList("List");
-//
-//                 if (s)
-                {
-//                    if (delimiter == token::BEGIN_LIST)
-                    {
-                        // Read master data
-                        {
-                            is >> data;
-                            is.fatalCheck("read(Istream&) : reading entry");
-                        }
 
-                        for
-                        (
-                            label proci = 1;
-                            proci < UPstream::nProcs();
-                            proci++
-                        )
-                        {
-                            List<char> elems(is);
-                            is.fatalCheck("read(Istream&) : reading entry");
+            // Read master data
+            {
+                is >> data;
+                is.fatalCheck("read(Istream&) : reading entry");
+            }
 
-                            OPstream os(UPstream::scheduled, proci);
-                            os << elems;
-                        }
-                    }
-//                    else
-//                    {
-//                        FatalIOErrorInFunction
-//                        (
-//                            is
-//                        )   << "incorrect delimiter, expected (, found "
-//                            << delimiter
-//                            << exit(FatalIOError);
-//                    }
-                }
+            for
+            (
+                label proci = 1;
+                proci < UPstream::nProcs();
+                proci++
+            )
+            {
+                List<char> elems(is);
+                is.fatalCheck("read(Istream&) : reading entry");
 
-//                // Read end of contents
-//                is.readEndList("List");
+                OPstream os(UPstream::scheduled, proci);
+                os << elems;
+            }
 
-                ok = is.good();
-//             }
-//             else
-//             {
-//                 FatalIOErrorInFunction
-//                 (
-//                     is
-//                 )   << "incorrect first token, expected <int>, found "
-//                     << firstToken.info() << exit(FatalIOError);
-//             }
+            ok = is.good();
         }
         else
         {
@@ -358,75 +260,26 @@ bool Foam::decomposedBlockData::readBlocks
         {
             Istream& is = isPtr();
             is.fatalCheck("read(Istream&)");
-//             token firstToken(is);
-//             is.fatalCheck("read(Istream&) : " "reading first token");
-//
-//             if (firstToken.isLabel())
-//             {
-//                 // Read size of list
-//                 label s = firstToken.labelToken();
-//
-//                 if (s != UPstream::nProcs())
-//                 {
-//                     FatalIOErrorInFunction
-//                     (
-//                         is
-//                     )   << "size " << s
-//                         << " differs from the number of processors "
-//                         << UPstream::nProcs() << exit(FatalIOError);
-//                 }
-//
-// //                // Read beginning of contents
-// //                char delimiter = is.readBeginList("List");
-//
-//                 if (s)
-//                 {
-//                    if (delimiter == token::BEGIN_LIST)
-                    {
-                        // Read master data
-                        {
-                            is >> data;
-                            is.fatalCheck("read(Istream&) : reading entry");
-                        }
 
-                        for
-                        (
-                            label proci = 1;
-                            proci < UPstream::nProcs();
-                            proci++
-                        )
-                        {
-                            List<char> elems(is);
-                            is.fatalCheck("read(Istream&) : reading entry");
+            // Read master data
+            {
+                is >> data;
+                is.fatalCheck("read(Istream&) : reading entry");
+            }
 
-                            UOPstream os(proci, pBufs);
-                            os << elems;
-                        }
-                    }
-//                    else
-//                    {
-//                        FatalIOErrorInFunction
-//                        (
-//                            is
-//                        )   << "incorrect delimiter, expected (, found "
-//                            << delimiter
-//                            << exit(FatalIOError);
-//                    }
-//                 }
-//
-// //                // Read end of contents
-// //                is.readEndList("List");
-//
-//                 ok = is.good();
-//             }
-//             else
-//             {
-//                 FatalIOErrorInFunction
-//                 (
-//                     is
-//                 )   << "incorrect first token, expected <int>, found "
-//                     << firstToken.info() << exit(FatalIOError);
-//             }
+            for
+            (
+                label proci = 1;
+                proci < UPstream::nProcs();
+                proci++
+            )
+            {
+                List<char> elems(is);
+                is.fatalCheck("read(Istream&) : reading entry");
+
+                UOPstream os(proci, pBufs);
+                os << elems;
+            }
         }
 
         labelList recvSizes;
@@ -453,6 +306,14 @@ bool Foam::decomposedBlockData::writeBlocks
     const UPstream::commsTypes commsType
 )
 {
+    if (debug)
+    {
+        Pout<< "decomposedBlockData::writeBlocks:"
+            << " stream:" << (osPtr.valid() ? osPtr().name() : "invalid")
+            << " data:" << data.size()
+            << " commsType:" << Pstream::commsTypeNames[commsType] << endl;
+    }
+
     bool ok = false;
 
     if (commsType == UPstream::scheduled)
@@ -462,10 +323,6 @@ bool Foam::decomposedBlockData::writeBlocks
             start.setSize(UPstream::nProcs());
 
             OSstream& os = osPtr();
-
-            // Write size and start delimiter
-            //os << nl << UPstream::nProcs() << nl;
-            // << token::BEGIN_LIST;
 
             // Write master data
             {
@@ -485,9 +342,6 @@ bool Foam::decomposedBlockData::writeBlocks
                 start[proci] = os.stdStream().tellp();
                 os << elems;
             }
-
-            // Write end delimiter
-            //os << nl << token::END_LIST << nl;
 
             ok = os.good();
         }
@@ -515,9 +369,6 @@ bool Foam::decomposedBlockData::writeBlocks
             start.setSize(UPstream::nProcs());
 
             OSstream& os = osPtr();
-            // Write size and start delimiter
-            //os << nl << UPstream::nProcs() << nl;
-            // << token::BEGIN_LIST;
 
             // Write master data
             {
@@ -538,9 +389,6 @@ bool Foam::decomposedBlockData::writeBlocks
                 start[proci] = os.stdStream().tellp();
                 os << elems;
             }
-
-            // Write end delimiter
-            //os << nl << token::END_LIST << nl;
 
             ok = os.good();
         }
@@ -572,16 +420,16 @@ bool Foam::decomposedBlockData::writeObject
     const bool valid
 ) const
 {
-      autoPtr<OSstream> osPtr;
-      if (UPstream::master())
-      {
-          // Note: always write binary. These are strings so readable
-          //       anyway. They have already be tokenised on the sending side.
-          osPtr.reset(new OFstream(objectPath(), IOstream::BINARY, ver, cmp));
-          writeHeader(osPtr());
-      }
-      List<std::streamoff> start;
-      return writeBlocks(osPtr, start, *this, commsType_);
+    autoPtr<OSstream> osPtr;
+    if (UPstream::master())
+    {
+        // Note: always write binary. These are strings so readable
+        //       anyway. They have already be tokenised on the sending side.
+        osPtr.reset(new OFstream(objectPath(), IOstream::BINARY, ver, cmp));
+        writeHeader(osPtr());
+    }
+    List<std::streamoff> start;
+    return writeBlocks(osPtr, start, *this, commsType_);
 }
 
 

@@ -216,7 +216,7 @@ Foam::fileOperations::masterUncollatedFileOperation::splitProcessorPath
     }
     string procName(local.substr(0, pos));
     label proci;
-    if (read(procName.c_str(), proci))
+    if (Foam::read(procName.c_str(), proci))
     {
         local = local.substr(pos+1);
         return proci;
@@ -864,7 +864,7 @@ Foam::fileOperations::masterUncollatedFileOperation::readStream
 
         // TBD: remove extra copying
         string buf(data.begin(), data.size());
-        autoPtr<ISstream> realIsPtr(new IStringStream(buf));
+        autoPtr<ISstream> realIsPtr(new IStringStream(fName, buf));
 
         // Read header
         if (!io.readHeader(realIsPtr()))
@@ -983,7 +983,7 @@ Foam::fileOperations::masterUncollatedFileOperation::readStream
                     Pout<< "masterUncollatedFileOperation::readStream:"
                         << " Done reading " << buf.size() << " bytes" << endl;
                 }
-                isPtr.reset(new IStringStream(buf));
+                isPtr.reset(new IStringStream(fName, buf));
 
                 if (!io.readHeader(isPtr()))
                 {
@@ -1000,6 +1000,100 @@ Foam::fileOperations::masterUncollatedFileOperation::readStream
             }
         }
     }
+}
+
+
+bool Foam::fileOperations::masterUncollatedFileOperation::read
+(
+    regIOobject& io,
+    const bool masterOnly,
+    const IOstream::streamFormat format,
+    const word& typeName
+) const
+{
+    bool ok = true;
+
+    if (io.globalObject())
+    {
+        if (debug)
+        {
+            Pout<< "masterUncollatedFileOperation::read:"
+                << "reading global object " << io.name() << endl;
+        }
+
+        bool ok = false;
+        if (Pstream::master())
+        {
+            // Do master-only reading always.
+            bool oldParRun = UPstream::parRun();
+            UPstream::parRun() = false;
+
+            ok = io.readData(io.readStream(typeName));
+            io.close();
+
+            UPstream::parRun() = oldParRun;
+        }
+
+        Pstream::scatter(ok);
+        Pstream::scatter(io.headerClassName());
+        Pstream::scatter(io.note());
+
+
+        // scatter operation for regIOobjects
+
+        // Get my communication order
+        const List<Pstream::commsStruct>& comms =
+        (
+            (Pstream::nProcs() < Pstream::nProcsSimpleSum)
+          ? Pstream::linearCommunication()
+          : Pstream::treeCommunication()
+        );
+        const Pstream::commsStruct& myComm = comms[Pstream::myProcNo()];
+
+        // Reveive from up
+        if (myComm.above() != -1)
+        {
+            IPstream fromAbove
+            (
+                Pstream::scheduled,
+                myComm.above(),
+                0,
+                Pstream::msgType(),
+                Pstream::worldComm,
+                format
+            );
+            ok = io.readData(fromAbove);
+        }
+
+        // Send to my downstairs neighbours
+        forAll(myComm.below(), belowI)
+        {
+            OPstream toBelow
+            (
+                Pstream::scheduled,
+                myComm.below()[belowI],
+                0,
+                Pstream::msgType(),
+                Pstream::worldComm,
+                format
+            );
+            bool okWrite = io.writeData(toBelow);
+            ok = ok && okWrite;
+        }
+    }
+    else
+    {
+        if (debug)
+        {
+            Pout<< "masterUncollatedFileOperation::read:"
+                << "reading local object " << io.name() << endl;
+        }
+
+        ok = io.readData(io.readStream(typeName));
+        io.close();
+    }
+
+    return ok;
 }
 
 
@@ -1198,7 +1292,7 @@ Foam::fileOperations::masterUncollatedFileOperation::NewIFstream
             // Note: IPstream is not an IStream so use a IStringStream to
             //       convert the buffer. Note that we construct with a string
             //       so it holds a copy of the buffer.
-            return autoPtr<ISstream>(new IStringStream(buf));
+            return autoPtr<ISstream>(new IStringStream(filePath, buf));
         }
     }
     else

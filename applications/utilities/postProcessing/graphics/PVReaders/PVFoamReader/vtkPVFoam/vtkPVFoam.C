@@ -566,8 +566,7 @@ double* Foam::vtkPVFoam::findTimes(int& nTimeSteps)
 
             if
             (
-                isFile(runTime.path()/timeName/meshDir_/"points")
-             && IOobject
+                IOobject
                 (
                     "points",
                     timeName,

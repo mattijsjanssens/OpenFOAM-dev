@@ -25,9 +25,11 @@ License
 
 #include "includeEntry.H"
 #include "dictionary.H"
-#include "fileOperation.H"
+#include "IFstream.H"
 #include "addToMemberFunctionSelectionTable.H"
 #include "stringOps.H"
+#include "IOstreams.H"
+#include "fileOperation.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -127,6 +129,7 @@ bool Foam::functionEntries::includeEntry::execute
     (
         includeFileName(is.name().path(), rawFName, parentDict)
     );
+
     //IFstream ifs(fName);
     autoPtr<ISstream> ifsPtr(fileHandler().NewIFstream(fName));
     ISstream& ifs = ifsPtr();
@@ -167,6 +170,7 @@ bool Foam::functionEntries::includeEntry::execute
     (
         includeFileName(is.name().path(), rawFName, parentDict)
     );
+
     //IFstream ifs(fName);
     autoPtr<ISstream> ifsPtr(fileHandler().NewIFstream(fName));
     ISstream& ifs = ifsPtr();

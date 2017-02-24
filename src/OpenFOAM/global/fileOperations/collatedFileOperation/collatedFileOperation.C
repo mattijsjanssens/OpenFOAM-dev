@@ -225,20 +225,11 @@ bool Foam::fileOperations::collatedFileOperation::writeObject
                         << " starting collating output to " << path << endl;
                 }
 
-                // Get size of file (on master)
-                bool bigFile;
-                if (Pstream::master())
-                {
-                    bigFile = (Foam::fileSize(pathName) > maxBufferSize);
-                }
-                Pstream::scatter(bigFile);
-
                 osPtr.reset
                 (
                     new masterCollatingOFstream
                     (
                         pathName,
-                        (bigFile ? UPstream::scheduled : UPstream::nonBlocking),
                         fmt,
                         ver,
                         cmp

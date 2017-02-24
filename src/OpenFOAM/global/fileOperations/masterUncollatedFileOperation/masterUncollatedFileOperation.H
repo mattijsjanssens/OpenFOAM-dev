@@ -417,6 +417,15 @@ public:
                 const bool valid = true
             ) const;
 
+            //- Top-level read
+            virtual bool read
+            (
+                regIOobject&,
+                const bool masterOnly,
+                const IOstream::streamFormat format,
+                const word& typeName
+            ) const;
+
             //- Writes a regIOobject (so header, contents and divider).
             //  Returns success state.
             virtual bool writeObject

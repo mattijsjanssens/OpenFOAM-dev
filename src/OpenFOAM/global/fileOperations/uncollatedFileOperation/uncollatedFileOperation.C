@@ -487,7 +487,7 @@ Foam::fileOperations::uncollatedFileOperation::readStream
         decomposedBlockData::readBlock(proci, isPtr(), data);
         // TBD: remove extra copying
         string buf(data.begin(), data.size());
-        autoPtr<ISstream> realIsPtr(new IStringStream(buf));
+        autoPtr<ISstream> realIsPtr(new IStringStream(fName, buf));
 
         // Read header
         if (!io.readHeader(realIsPtr()))
@@ -499,6 +499,92 @@ Foam::fileOperations::uncollatedFileOperation::readStream
         }
         return realIsPtr;
     }
+}
+
+
+bool Foam::fileOperations::uncollatedFileOperation::read
+(
+    regIOobject& io,
+    const bool masterOnly,
+    const IOstream::streamFormat format,
+    const word& typeName
+) const
+{
+    bool ok = true;
+    if (Pstream::master() || !masterOnly)
+    {
+        if (debug)
+        {
+            Pout<< "uncollatedFileOperation::read() : "
+                << "reading object " << io.name()
+                << " from file " << endl;
+        }
+
+        // Set flag for e.g. codeStream
+        const bool oldGlobal = io.globalObject();
+        io.globalObject() = masterOnly;
+        // If codeStream originates from dictionary which is
+        // not IOdictionary we have a problem so use global
+        const bool oldFlag = regIOobject::masterOnlyReading;
+        regIOobject::masterOnlyReading = masterOnly;
+
+        // Read file
+        ok = io.readData(io.readStream(typeName));
+        io.close();
+
+        // Restore flags
+        io.globalObject() = oldGlobal;
+        regIOobject::masterOnlyReading = oldFlag;
+    }
+
+    if (masterOnly && Pstream::parRun())
+    {
+        // Master reads headerclassname from file. Make sure this gets
+        // transfered as well as contents.
+        Pstream::scatter(io.headerClassName());
+        Pstream::scatter(io.note());
+
+        // Get my communication order
+        const List<Pstream::commsStruct>& comms =
+        (
+            (Pstream::nProcs() < Pstream::nProcsSimpleSum)
+          ? Pstream::linearCommunication()
+          : Pstream::treeCommunication()
+        );
+        const Pstream::commsStruct& myComm = comms[Pstream::myProcNo()];
+
+        // Reveive from up
+        if (myComm.above() != -1)
+        {
+            IPstream fromAbove
+            (
+                Pstream::scheduled,
+                myComm.above(),
+                0,
+                Pstream::msgType(),
+                Pstream::worldComm,
+                format
+            );
+            ok = io.readData(fromAbove);
+        }
+
+        // Send to my downstairs neighbours
+        forAll(myComm.below(), belowI)
+        {
+            OPstream toBelow
+            (
+                Pstream::scheduled,
+                myComm.below()[belowI],
+                0,
+                Pstream::msgType(),
+                Pstream::worldComm,
+                format
+            );
+            bool okWrite = io.writeData(toBelow);
+            ok = ok && okWrite;
+        }
+    }
+    return ok;
 }
 
 

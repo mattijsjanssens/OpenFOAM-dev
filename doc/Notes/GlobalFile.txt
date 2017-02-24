@@ -18,7 +18,7 @@ New parallel file format
 
 fileHandler
 -----------
-- all IO should go through fileHandler()
+- all (parallel) IO should go through fileHandler()
 - which is a single instance of one of the methods above
 - is used automatically for all regIOobjects using streaming
   (almost all containers)
@@ -27,7 +27,9 @@ fileHandler
 
         autoPtr<Ostream> osPtr(fileHandler().NewOFstream("myFile");
         Ostream& os = osPtr();
-    or
+
+    respectively
+
         bool haveFile = fileHandler().exists("myFile");
 - fileHandlers are used for
     - OSspecific functionality (e.g. exists)
@@ -38,6 +40,17 @@ fileHandler
     - environment variable FOAM_FILEHANDLER
     - command line option -fileHandler XXX
     - 'fileHander' entry in system/controlDict
+- parallel communication is done using non-blocking communication by
+  default. This means that the total buffer size needed is the overall
+  length of a file on all processors. In etc/controlDict there is a
+  parameter:
+
+    // In master-only reading/writing: when to switch from non-blocking
+    // to scheduled. This is the overall file size
+    maxBufferSize    1000000000
+
+
+
 
 
 Backwards compatibility

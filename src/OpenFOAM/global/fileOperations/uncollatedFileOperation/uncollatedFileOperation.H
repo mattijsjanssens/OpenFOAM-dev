@@ -182,6 +182,15 @@ public:
                 const bool procValid = true
             ) const;
 
+            //- Top-level read
+            virtual bool read
+            (
+                regIOobject&,
+                const bool masterOnly,
+                const IOstream::streamFormat format,
+                const word& typeName
+            ) const;
+
             //- Generate an ISstream that reads a file
             virtual autoPtr<ISstream> NewIFstream(const fileName&) const;
 

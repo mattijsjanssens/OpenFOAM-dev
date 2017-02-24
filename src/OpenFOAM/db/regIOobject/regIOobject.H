@@ -53,6 +53,11 @@ namespace functionEntries
 {
     class codeStream;
 }
+namespace fileOperations
+{
+    class uncollatedFileOperation;
+    class masterUncollatedFileOperation;
+}
 
 /*---------------------------------------------------------------------------*\
                          Class regIOobject Declaration
@@ -62,29 +67,13 @@ class regIOobject
 :
     public IOobject
 {
-
 protected:
-
-        //- Read everywhere or only on master and scatter
-        bool read
-        (
-            const bool masterOnly,
-            const IOstream::streamFormat PstreamFormat,
-            const word& typeName
-        );
-
-public:
-        //- Check readOpt flags and read if necessary. Uses above read
+        //- Helper: check readOpt flags and read if necessary
         bool readHeaderOk
         (
             const IOstream::streamFormat PstreamFormat,
             const word& typeName
         );
-protected:
-
-        ////- Construct and return an IFstream for the object.
-        ////  The results is nullPtr if the stream construction failed
-        //autoPtr<Istream> objectStream();
 
         //- To flag master-only reading of objects
         static bool masterOnlyReading;
@@ -124,6 +113,8 @@ public:
         //- Declare friendship with any classes that need access to
         //  masterOnlyReading
         friend class functionEntries::codeStream;
+        friend class fileOperations::uncollatedFileOperation;
+        friend class fileOperations::masterUncollatedFileOperation;
 
 
     // Static data

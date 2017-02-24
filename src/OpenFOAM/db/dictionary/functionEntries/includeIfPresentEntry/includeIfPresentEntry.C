@@ -25,8 +25,9 @@ License
 
 #include "includeIfPresentEntry.H"
 #include "dictionary.H"
-#include "fileOperation.H"
+#include "IFstream.H"
 #include "addToMemberFunctionSelectionTable.H"
+#include "fileOperation.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 

@@ -248,6 +248,15 @@ public:
                 const bool valid = true
             ) const = 0;
 
+            //- Top-level read
+            virtual bool read
+            (
+                regIOobject&,
+                const bool masterOnly,
+                const IOstream::streamFormat format,
+                const word& typeName
+            ) const = 0;
+
             //- Writes a regIOobject (so header, contents and divider).
             //  Returns success state. Default action is to write to
             //  the objectPath using writeData. If !valid the

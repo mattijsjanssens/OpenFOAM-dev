@@ -25,9 +25,10 @@ License
 
 #include "includeEtcEntry.H"
 #include "etcFiles.H"
-#include "fileOperation.H"
 #include "stringOps.H"
 #include "addToMemberFunctionSelectionTable.H"
+#include "IOstreams.H"
+#include "fileOperation.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -104,6 +105,7 @@ bool Foam::functionEntries::includeEtcEntry::execute
     (
         includeEtcFileName(rawFName, parentDict)
     );
+
     //IFstream ifs(fName);
     autoPtr<ISstream> ifsPtr(fileHandler().NewIFstream(fName));
     ISstream& ifs = ifsPtr();
@@ -144,6 +146,7 @@ bool Foam::functionEntries::includeEtcEntry::execute
     (
         includeEtcFileName(rawFName, parentDict)
     );
+
     //IFstream ifs(fName);
     autoPtr<ISstream> ifsPtr(fileHandler().NewIFstream(fName));
     ISstream& ifs = ifsPtr();
