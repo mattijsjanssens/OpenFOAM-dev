@@ -27,6 +27,7 @@ License
 #include "Time.H"
 #include "demandDrivenData.H"
 #include "dictionary.H"
+#include "localIOdictionary.H"
 #include "data.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -71,7 +72,7 @@ void Foam::GeometricField<Type, PatchField, GeoMesh>::readFields
 template<class Type, template<class> class PatchField, class GeoMesh>
 void Foam::GeometricField<Type, PatchField, GeoMesh>::readFields()
 {
-    const IOdictionary dict
+    const localIOdictionary dict
     (
         IOobject
         (

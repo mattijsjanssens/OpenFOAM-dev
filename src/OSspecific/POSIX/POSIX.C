@@ -300,7 +300,7 @@ bool Foam::mkDir(const fileName& pathName, mode_t mode)
     {
         Pout<< FUNCTION_NAME << " : pathName:" << pathName << " mode:" << mode
             << endl;
-        if (POSIX::debug & 2)
+        if ((POSIX::debug & 2) && !Pstream::master())
         {
             error::printStack(Pout);
         }
@@ -455,7 +455,7 @@ bool Foam::chMod(const fileName& name, const mode_t m)
     if (POSIX::debug)
     {
         Pout<< FUNCTION_NAME << " : name:" << name << endl;
-        if (POSIX::debug & 2)
+        if ((POSIX::debug & 2) && !Pstream::master())
         {
             error::printStack(Pout);
         }
@@ -487,7 +487,7 @@ Foam::fileName::Type Foam::type(const fileName& name)
     if (POSIX::debug)
     {
         Pout<< FUNCTION_NAME << " : name:" << name << endl;
-        if (POSIX::debug & 2)
+        if ((POSIX::debug & 2) && !Pstream::master())
         {
             error::printStack(Pout);
         }
@@ -515,7 +515,7 @@ bool Foam::exists(const fileName& name, const bool checkGzip)
     {
         Pout<< FUNCTION_NAME << " : name:" << name << " checkGzip:" << checkGzip
             << endl;
-        if (POSIX::debug & 2)
+        if ((POSIX::debug & 2) && !Pstream::master())
         {
             error::printStack(Pout);
         }
@@ -529,7 +529,7 @@ bool Foam::isDir(const fileName& name)
     if (POSIX::debug)
     {
         Pout<< FUNCTION_NAME << " : name:" << name << endl;
-        if (POSIX::debug & 2)
+        if ((POSIX::debug & 2) && !Pstream::master())
         {
             error::printStack(Pout);
         }
@@ -544,7 +544,7 @@ bool Foam::isFile(const fileName& name, const bool checkGzip)
     {
         Pout<< FUNCTION_NAME << " : name:" << name << " checkGzip:" << checkGzip
             << endl;
-        if (POSIX::debug & 2)
+        if ((POSIX::debug & 2) && !Pstream::master())
         {
             error::printStack(Pout);
         }
@@ -558,7 +558,7 @@ off_t Foam::fileSize(const fileName& name)
     if (POSIX::debug)
     {
         Pout<< FUNCTION_NAME << " : name:" << name << endl;
-        if (POSIX::debug & 2)
+        if ((POSIX::debug & 2) && !Pstream::master())
         {
             error::printStack(Pout);
         }
@@ -580,7 +580,7 @@ time_t Foam::lastModified(const fileName& name)
     if (POSIX::debug)
     {
         Pout<< FUNCTION_NAME << " : name:" << name << endl;
-        if (POSIX::debug & 2)
+        if ((POSIX::debug & 2) && !Pstream::master())
         {
             error::printStack(Pout);
         }
@@ -602,7 +602,7 @@ double Foam::highResLastModified(const fileName& name)
     if (POSIX::debug)
     {
         Pout<< FUNCTION_NAME << " : name:" << name << endl;
-        if (POSIX::debug & 2)
+        if ((POSIX::debug & 2) && !Pstream::master())
         {
             error::printStack(Pout);
         }
@@ -636,7 +636,7 @@ Foam::fileNameList Foam::readDir
     {
         //InfoInFunction
         Pout<< FUNCTION_NAME << " : reading directory " << directory << endl;
-        if (POSIX::debug & 2)
+        if ((POSIX::debug & 2) && !Pstream::master())
         {
             error::printStack(Pout);
         }
@@ -724,7 +724,7 @@ bool Foam::cp(const fileName& src, const fileName& dest)
     if (POSIX::debug)
     {
         Pout<< FUNCTION_NAME << " : src:" << src << " dest:" << dest << endl;
-        if (POSIX::debug & 2)
+        if ((POSIX::debug & 2) && !Pstream::master())
         {
             error::printStack(Pout);
         }
@@ -834,7 +834,7 @@ bool Foam::ln(const fileName& src, const fileName& dst)
         //InfoInFunction
         Pout<< FUNCTION_NAME
             << " : Create softlink from : " << src << " to " << dst << endl;
-        if (POSIX::debug & 2)
+        if ((POSIX::debug & 2) && !Pstream::master())
         {
             error::printStack(Pout);
         }
@@ -874,7 +874,7 @@ bool Foam::mv(const fileName& src, const fileName& dst)
     {
         //InfoInFunction
         Pout<< FUNCTION_NAME << " : Move : " << src << " to " << dst << endl;
-        if (POSIX::debug & 2)
+        if ((POSIX::debug & 2) && !Pstream::master())
         {
             error::printStack(Pout);
         }
@@ -904,7 +904,7 @@ bool Foam::mvBak(const fileName& src, const std::string& ext)
         //InfoInFunction
         Pout<< FUNCTION_NAME
             << " : moving : " << src << " to extension " << ext << endl;
-        if (POSIX::debug & 2)
+        if ((POSIX::debug & 2) && !Pstream::master())
         {
             error::printStack(Pout);
         }
@@ -945,7 +945,7 @@ bool Foam::rm(const fileName& file)
     {
         //InfoInFunction
         Pout<< FUNCTION_NAME << " : Removing : " << file << endl;
-        if (POSIX::debug & 2)
+        if ((POSIX::debug & 2) && !Pstream::master())
         {
             error::printStack(Pout);
         }
@@ -969,7 +969,7 @@ bool Foam::rmDir(const fileName& directory)
     {
         //InfoInFunction
         Pout<< FUNCTION_NAME << " : removing directory " << directory << endl;
-        if (POSIX::debug & 2)
+        if ((POSIX::debug & 2) && !Pstream::master())
         {
             error::printStack(Pout);
         }
