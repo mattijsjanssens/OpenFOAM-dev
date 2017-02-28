@@ -29,32 +29,56 @@ License
 #include "PstreamBuffers.H"
 #include "masterUncollatedFileOperation.H"
 #include "boolList.H"
+#include "OFstreamWriter.H"
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-Foam::autoPtr<Foam::Ostream> Foam::masterOFstream::open
+void Foam::masterOFstream::write
 (
-    const fileName& fName
-) const
+    const fileName& fName,
+    const string& str
+)
 {
     mkDir(fName.path());
-    autoPtr<Ostream> osPtr
-    (
-        new OFstream
+
+    if (writer_)
+    {
+        //OFstreamWriter& writer = const_cast<OFstreamWriter&>(writer_());
+        writer_->write
+        (
+            fName,
+            str,
+            IOstream::BINARY,
+            version(),
+            compression_,
+            append_
+        );
+    }
+    else
+    {
+        OFstream os
         (
             fName,
             IOstream::BINARY,   //format(),
             version(),
-            compression_
-        )
-    );
-    if (!osPtr().good())
-    {
-        FatalIOErrorInFunction(osPtr())
-            << "Could not open file " << fName
-            << exit(FatalIOError);
+            compression_,
+            append_
+        );
+        if (!os.good())
+        {
+            FatalIOErrorInFunction(os)
+                << "Could not open file " << fName
+                << exit(FatalIOError);
+        }
+
+        os.writeQuoted(str, false);
+        if (!os.good())
+        {
+            FatalIOErrorInFunction(os)
+                << "Failed writing to " << fName
+                << exit(FatalIOError);
+        }
     }
-    return osPtr;
 }
 
 
@@ -62,16 +86,20 @@ Foam::autoPtr<Foam::Ostream> Foam::masterOFstream::open
 
 Foam::masterOFstream::masterOFstream
 (
+    OFstreamWriter* writer,
     const fileName& pathName,
     streamFormat format,
     versionNumber version,
     compressionType compression,
+    const bool append,
     const bool valid
 )
 :
     OStringStream(format, version),
+    writer_(writer),
     pathName_(pathName),
     compression_(compression),
+    append_(append),
     valid_(valid)
 {}
 
@@ -86,11 +114,11 @@ Foam::masterOFstream::~masterOFstream()
         filePaths[Pstream::myProcNo()] = pathName_;
         Pstream::gatherList(filePaths);
 
-        bool uniform = fileOperations::masterUncollatedFileOperation::
-        uniformFile
-        (
-            filePaths
-        );
+        bool uniform =
+            fileOperations::masterUncollatedFileOperation::uniformFile
+            (
+                filePaths
+            );
 
         Pstream::scatter(uniform);
 
@@ -98,14 +126,7 @@ Foam::masterOFstream::~masterOFstream()
         {
             if (Pstream::master() && valid_)
             {
-                const fileName& fName = filePaths[0];
-                autoPtr<Ostream> osPtr(open(fName));
-                osPtr().writeQuoted(str(), false);
-                if (!osPtr().good())
-                {
-                    FatalIOErrorInFunction(osPtr())
-                        << "Failed writing to " << fName << exit(FatalIOError);
-                }
+                write(pathName_, str());
             }
             return;
         }
@@ -132,18 +153,9 @@ Foam::masterOFstream::~masterOFstream()
         {
             // Write my own data
             {
-                const fileName& fName = filePaths[Pstream::myProcNo()];
-
                 if (valid[Pstream::myProcNo()])
                 {
-                    autoPtr<Ostream> osPtr(open(fName));
-                    osPtr().writeQuoted(str(), false);
-                    if (!osPtr().good())
-                    {
-                        FatalIOErrorInFunction(osPtr())
-                            << "Failed writing to " << fName
-                            << exit(FatalIOError);
-                    }
+                    write(filePaths[Pstream::myProcNo()], str());
                 }
             }
 
@@ -156,29 +168,14 @@ Foam::masterOFstream::~masterOFstream()
 
                 if (valid[proci])
                 {
-                    const fileName& fName = filePaths[proci];
-
-                    autoPtr<Ostream> osPtr(open(fName));
-                    osPtr().writeQuoted(string(buf.begin(), buf.size()), false);
-                    if (!osPtr().good())
-                    {
-                        FatalIOErrorInFunction(osPtr())
-                            << "Failed writing to " << fName
-                            << exit(FatalIOError);
-                    }
+                    write(filePaths[proci], string(buf.begin(), buf.size()));
                 }
             }
         }
     }
     else
     {
-        autoPtr<Ostream> osPtr(open(pathName_));
-        osPtr().writeQuoted(str(), false);
-        if (!osPtr().good())
-        {
-            FatalIOErrorInFunction(osPtr())
-                << "Failed writing to " << pathName_ << exit(FatalIOError);
-        }
+        write(pathName_, str());
     }
 }
 

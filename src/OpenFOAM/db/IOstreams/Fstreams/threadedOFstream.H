@@ -22,94 +22,71 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::fileOperations::collatedFileOperation
+    Foam::threadedOFstream
 
 Description
-    Version of masterUncollatedFileOperation that collates regIOobjects
-    into a container in the processors/ subdirectory.
-
-See also
-    masterUncollatedFileOperation
+    Threaded drop-in replacement for OFstream.
 
 SourceFiles
-    collatedFileOperation.C
+    threadedOFstream.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef fileOperations_collatedFileOperation_H
-#define fileOperations_collatedFileOperation_H
+#ifndef threadedOFstream_H
+#define threadedOFstream_H
 
-#include "OSspecific.H"
-#include "masterUncollatedFileOperation.H"
-#include "OFstreamWriter.H"
+#include "OStringStream.H"
+#include "tmpNrc.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
-namespace fileOperations
-{
+
+class OFstreamWriter;
 
 /*---------------------------------------------------------------------------*\
-                Class collatedFileOperation Declaration
+                      Class threadedOFstream Declaration
 \*---------------------------------------------------------------------------*/
 
-class collatedFileOperation
+class threadedOFstream
 :
-    public masterUncollatedFileOperation
+    public OStringStream
 {
     // Private data
 
-        //- Thread controller
-        mutable OFstreamWriter writeServer_;
+        OFstreamWriter& writer_;
+
+        const fileName pathName_;
+
+        const IOstream::compressionType compression_;
+
+        const bool append_;
 
 
 public:
 
-        //- Runtime type information
-        TypeName("collated");
-
-
-    // Static data
-
-        //- Max size of thread buffer size. This is the overall size of
-        //  all files to be written. Starts blocking if not enough size.
-        static off_t maxThreadBufferSize;
-
-
     // Constructors
 
-        //- Construct null
-        collatedFileOperation();
+        //- Construct and set stream status
+        threadedOFstream
+        (
+            OFstreamWriter&,
+            const fileName& pathname,
+            streamFormat format=ASCII,
+            versionNumber version=currentVersion,
+            compressionType compression=UNCOMPRESSED,
+            const bool append = false
+        );
 
 
     //- Destructor
-    virtual ~collatedFileOperation();
-
-
-    // Member Functions
-
-        // (reg)IOobject functionality
-
-            //- Generate disk file name for object. Opposite of filePath.
-            virtual fileName objectPath(const IOobject& io) const;
-
-            //- Writes a regIOobject (so header, contents and divider).
-            //  Returns success state.
-            virtual bool writeObject
-            (
-                const regIOobject&,
-                IOstream::streamFormat format=IOstream::ASCII,
-                IOstream::versionNumber version=IOstream::currentVersion,
-                IOstream::compressionType compression=IOstream::UNCOMPRESSED,
-                const bool valid = true
-            ) const;
+    ~threadedOFstream();
 };
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-} // End namespace fileOperations
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

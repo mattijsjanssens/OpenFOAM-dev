@@ -36,12 +36,14 @@ SourceFiles
 #define masterOFstream_H
 
 #include "OStringStream.H"
-#include "autoPtr.H"
+//#include "tmpNrc.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
+
+class OFstreamWriter;
 
 /*---------------------------------------------------------------------------*\
                        Class masterOFstream Declaration
@@ -53,9 +55,13 @@ class masterOFstream
 {
     // Private data
 
+        OFstreamWriter* writer_;
+
         const fileName pathName_;
 
         const IOstream::compressionType compression_;
+
+        const bool append_;
 
         //- Should file be written
         const bool valid_;
@@ -64,7 +70,7 @@ class masterOFstream
     // Private Member Functions
 
         //- Open file with checking
-        autoPtr<Ostream> open(const fileName&) const;
+        void write(const fileName& fName, const string& str);
 
 
 public:
@@ -74,10 +80,12 @@ public:
         //- Construct and set stream status
         masterOFstream
         (
+            OFstreamWriter*,
             const fileName& pathname,
             streamFormat format=ASCII,
             versionNumber version=currentVersion,
             compressionType compression=UNCOMPRESSED,
+            const bool append = false,
             const bool valid = true
         );
 

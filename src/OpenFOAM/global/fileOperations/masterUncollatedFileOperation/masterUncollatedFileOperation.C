@@ -29,6 +29,7 @@ License
 #include "Time.H"
 #include "instant.H"
 #include "IFstream.H"
+#include "OFstreamWriter.H"
 #include "masterOFstream.H"
 #include "decomposedBlockData.H"
 #include "registerSwitch.H"
@@ -1313,7 +1314,19 @@ Foam::fileOperations::masterUncollatedFileOperation::NewOFstream
     const bool valid
 ) const
 {
-    return autoPtr<Ostream>(new masterOFstream(pathName, fmt, ver, cmp, valid));
+    return autoPtr<Ostream>
+    (
+        new masterOFstream
+        (
+            nullptr,
+            pathName,
+            fmt,
+            ver,
+            cmp,
+            false,      // append
+            valid
+        )
+    );
 }
 
 

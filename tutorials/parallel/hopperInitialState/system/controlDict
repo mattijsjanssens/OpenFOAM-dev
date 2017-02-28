@@ -15,10 +15,10 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-DebugSwitches
-{
-    masterUncollated    1;
-}
+//DebugSwitches
+//{
+//    masterUncollated    1;
+//}
 
 application     icoUncoupledKinematicParcelFoam;
 

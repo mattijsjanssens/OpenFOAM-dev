@@ -27,10 +27,13 @@ License
 #include "addToRunTimeSelectionTable.H"
 #include "Pstream.H"
 #include "Time.H"
+#include "OFstreamWriter.H"
+#include "threadedOFstream.H"
 #include "masterOFstream.H"
 #include "masterCollatingOFstream.H"
 #include "decomposedBlockData.H"
 #include "OFstream.H"
+#include "registerSwitch.H"
 
 /* * * * * * * * * * * * * * * Static Member Data  * * * * * * * * * * * * * */
 
@@ -45,6 +48,17 @@ namespace fileOperations
         collatedFileOperation,
         word
     );
+
+    off_t collatedFileOperation::maxThreadBufferSize
+    (
+        Foam::debug::optimisationSwitch("maxThreadBufferSize", 1000000000)
+    );
+    registerOptSwitch
+    (
+        "maxThreadBufferSize",
+        off_t,
+        collatedFileOperation::maxThreadBufferSize
+    );
 }
 }
 
@@ -54,7 +68,8 @@ namespace fileOperations
 Foam::fileOperations::collatedFileOperation::
 collatedFileOperation()
 :
-    masterUncollatedFileOperation()
+    masterUncollatedFileOperation(),
+    writeServer_(maxThreadBufferSize)
 {}
 
 
@@ -107,7 +122,23 @@ bool Foam::fileOperations::collatedFileOperation::writeObject
                 << " falling back to master-only output to " << io.path()
                 << endl;
         }
-        osPtr.reset(new masterOFstream(pathName, fmt, ver, cmp, valid));
+        osPtr.reset
+        (
+            new masterOFstream
+            (
+                (
+                    maxThreadBufferSize > 0
+                 ? &writeServer_
+                 : nullptr
+                ),
+                pathName,
+                fmt,
+                ver,
+                cmp,
+                false,
+                valid
+            )
+        );
     }
     else
     {
@@ -125,7 +156,19 @@ bool Foam::fileOperations::collatedFileOperation::writeObject
                     << " falling back to master-only output to " << pathName
                     << endl;
             }
-            osPtr.reset(new masterOFstream(pathName, fmt, ver, cmp, valid));
+            osPtr.reset
+            (
+                new masterOFstream
+                (
+                    nullptr,    // Avoid thread writing
+                    pathName,
+                    fmt,
+                    ver,
+                    cmp,
+                    false,
+                    valid
+                )
+            );
         }
         else
         {
@@ -178,14 +221,37 @@ bool Foam::fileOperations::collatedFileOperation::writeObject
                     buf = os.str();
                 }
 
-                OFstream os
-                (
-                    pathName,
-                    IOstream::BINARY,
-                    ver,
-                    cmp,        // compression_  ??
-                    proci > 0   // append
-                );
+                autoPtr<OSstream> osPtr;
+                if (maxThreadBufferSize > 0)
+                {
+                    osPtr.reset
+                    (
+                        new threadedOFstream
+                        (
+                            writeServer_,
+                            pathName,
+                            IOstream::BINARY,
+                            ver,
+                            cmp,        // compression_  ??
+                            proci > 0   // append
+                        )
+                    );
+                }
+                else
+                {
+                    osPtr.reset
+                    (
+                        new OFstream
+                        (
+                            pathName,
+                            IOstream::BINARY,
+                            ver,
+                            cmp,        // compression_  ??
+                            proci > 0   // append
+                        )
+                    );
+                }
+                OSstream& os = osPtr();
 
                 if (!os.good())
                 {
@@ -229,6 +295,11 @@ bool Foam::fileOperations::collatedFileOperation::writeObject
                 (
                     new masterCollatingOFstream
                     (
+                        (
+                            maxThreadBufferSize > 0
+                         ? &writeServer_
+                         : nullptr
+                        ),
                         pathName,
                         fmt,
                         ver,

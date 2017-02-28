@@ -36,16 +36,17 @@ SourceFiles
 #define masterCollatingOFstream_H
 
 #include "OStringStream.H"
-#include "autoPtr.H"
-#include "UPstream.H"
+//#include "tmpNrc.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
 
+class OFstreamWriter;
+
 /*---------------------------------------------------------------------------*\
-                       Class masterCollatingOFstream Declaration
+                   Class masterCollatingOFstream Declaration
 \*---------------------------------------------------------------------------*/
 
 class masterCollatingOFstream
@@ -54,7 +55,8 @@ class masterCollatingOFstream
 {
     // Private data
 
-        //- File
+        OFstreamWriter* writer_;
+
         const fileName pathName_;
 
         const IOstream::compressionType compression_;
@@ -67,6 +69,7 @@ public:
         //- Construct and set stream status
         masterCollatingOFstream
         (
+            OFstreamWriter*,
             const fileName& pathname,
             streamFormat format=ASCII,
             versionNumber version=currentVersion,

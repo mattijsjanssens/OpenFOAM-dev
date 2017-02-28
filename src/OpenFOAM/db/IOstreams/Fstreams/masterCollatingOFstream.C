@@ -24,16 +24,19 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "masterCollatingOFstream.H"
-#include "OFstream.H"
 #include "IOobject.H"
 #include "decomposedBlockData.H"
 #include "PstreamReduceOps.H"
 #include "masterUncollatedFileOperation.H"
+#include "OFstream.H"
+#include "threadedOFstream.H"
+#include "OFstreamWriter.H"
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 Foam::masterCollatingOFstream::masterCollatingOFstream
 (
+    OFstreamWriter* writer,
     const fileName& pathName,
     streamFormat format,
     versionNumber version,
@@ -41,6 +44,7 @@ Foam::masterCollatingOFstream::masterCollatingOFstream
 )
 :
     OStringStream(format, version),
+    writer_(writer),
     pathName_(pathName),
     compression_(compression)
 {}
@@ -55,16 +59,33 @@ Foam::masterCollatingOFstream::~masterCollatingOFstream()
     {
         // Note: always write binary. These are strings so readable
         //       anyway. They have already be tokenised on the sending side.
-        osPtr.reset
-        (
-            new OFstream
+        if (writer_)
+        {
+            osPtr.reset
             (
-                pathName_,
-                IOstream::BINARY,
-                version(),
-                compression_
-            )
-        );
+                new threadedOFstream
+                (
+                    *writer_,
+                    pathName_,
+                    IOstream::BINARY,
+                    version(),
+                    compression_
+                )
+            );
+        }
+        else
+        {
+            osPtr.reset
+            (
+                new OFstream
+                (
+                    pathName_,
+                    IOstream::BINARY,
+                    version(),
+                    compression_
+                )
+            );
+        }
 
         //writeHeader(osPtr());
         // We don't have IOobject so cannot use writeHeader
