@@ -12,6 +12,7 @@ New parallel file format
 - selectable through 'fileHandler':
     - uncollated (default): all processors write their own data
     - collated            : all slaves send to master; master writes collated file
+                            (with optional threading)
     - masterUncollated    : same as uncollated but only master reads/writes
                             (slaves can run without NFS access their processor directory)
 
@@ -50,7 +51,15 @@ fileHandler
     maxBufferSize    1000000000
 
 
+collated fileHandler
+--------------------
+- uses the collated file format ('decomposedBlockData', always written
+in binary)
+- optionally uses threading. This is controlled through the etc/controlDict:
 
+    // Thread buff size (sum of all waiting writes). Set to 0 do disable
+    // threading.
+    maxThreadBufferSize 3000000000;
 
 
 Backwards compatibility
@@ -104,7 +113,7 @@ and returns a stream
         These then return the contents to the caller as an IStringStream.
 - non-parallel running (e.g. reconstructPar): reading collated files determines
 the processor number from the casename and uses this to index the collated
-file.
+file so e.g. 'paraFoam -case processor0' still works.
 
 
 Other:
@@ -135,7 +144,6 @@ Todo:
 - all OSspecific calls
 - redistributePar
 - determine priority of -envvar, -argList, -system/controlDict
-- maxBufferSize into all master*FileOperation
 - master*OFstream with uniform file
 - Lagrangian IOField reading:
     - if both processors and processorDDD then
@@ -143,7 +151,6 @@ Todo:
         processors/<field>
       instead of processorDDD/<field>
   Small problem since generally not running with both.
-- have wrapper for combination of readDir(filePath(..)) to read e.g. lagrangian
 - have syncPar flag on all low-level routines
 - indexing for single processor reading in decomposedBlockData::readBlock
-- threading?
+- move thread stuff to OSspecific

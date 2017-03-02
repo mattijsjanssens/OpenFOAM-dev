@@ -317,8 +317,8 @@ masterUncollatedFileOperation()
 {
     if (regIOobject::fileModificationChecking == regIOobject::timeStampMaster)
     {
-        WarningInFunction
-            << "Resetting fileModificationChecking to timeStamp" << endl;
+        //WarningInFunction
+        //    << "Resetting fileModificationChecking to timeStamp" << endl;
         regIOobject::fileModificationChecking = regIOobject::timeStamp;
     }
     else if
@@ -327,8 +327,8 @@ masterUncollatedFileOperation()
      == regIOobject::inotifyMaster
     )
     {
-        WarningInFunction
-            << "Resetting fileModificationChecking to inotifyMaster" << endl;
+        //WarningInFunction
+        //    << "Resetting fileModificationChecking to inotifyMaster" << endl;
         regIOobject::fileModificationChecking = regIOobject::inotifyMaster;
     }
 }

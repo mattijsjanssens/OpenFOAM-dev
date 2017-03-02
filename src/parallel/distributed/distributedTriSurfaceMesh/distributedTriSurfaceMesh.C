@@ -1334,7 +1334,6 @@ Foam::distributedTriSurfaceMesh::distributedTriSurfaceMesh
 
 Foam::distributedTriSurfaceMesh::distributedTriSurfaceMesh(const IOobject& io)
 :
-    //triSurfaceMesh(io),
     triSurfaceMesh
     (
         IOobject
@@ -1346,7 +1345,8 @@ Foam::distributedTriSurfaceMesh::distributedTriSurfaceMesh(const IOobject& io)
             io.readOpt(),
             io.writeOpt(),
             io.registerObject()
-        )
+        ),
+        false
     ),
     dict_
     (
@@ -1429,7 +1429,8 @@ Foam::distributedTriSurfaceMesh::distributedTriSurfaceMesh
             io.writeOpt(),
             io.registerObject()
         ),
-        dict
+        dict,
+        false
     ),
     dict_
     (

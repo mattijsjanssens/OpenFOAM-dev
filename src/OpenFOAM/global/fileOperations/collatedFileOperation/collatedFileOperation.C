@@ -221,6 +221,11 @@ bool Foam::fileOperations::collatedFileOperation::writeObject
                     buf = os.str();
                 }
 
+
+                // Note: cannot do append + compression. This is a limitation
+                // of ogzstream (or rather most compressed formats)
+                bool append = (proci > 0);
+
                 autoPtr<OSstream> osPtr;
                 if (maxThreadBufferSize > 0)
                 {
@@ -232,8 +237,8 @@ bool Foam::fileOperations::collatedFileOperation::writeObject
                             pathName,
                             IOstream::BINARY,
                             ver,
-                            cmp,        // compression_  ??
-                            proci > 0   // append
+                            IOstream::UNCOMPRESSED, // no compression
+                            append
                         )
                     );
                 }
@@ -246,8 +251,8 @@ bool Foam::fileOperations::collatedFileOperation::writeObject
                             pathName,
                             IOstream::BINARY,
                             ver,
-                            cmp,        // compression_  ??
-                            proci > 0   // append
+                            IOstream::UNCOMPRESSED, // no compression
+                            append
                         )
                     );
                 }
