@@ -58,9 +58,21 @@ OptimisationSwitches
     //  - inotifyMaster     : do inotify (and file reading) only on master.
     fileModificationChecking timeStampMaster;
 
-    // In master-only reading/writing: when to switch from non-blocking
-    // to scheduled. This is the overall file size
-    maxBufferSize    1000000000;
+
+    //- File handlers:
+
+        // Default handler
+        //fileHandler collated;
+
+        // In master-only reading/writing: when to switch from non-blocking
+        // to scheduled. This is the overall file size.
+        maxBufferSize           1000000000;
+
+        // If > 0: use threading in the 'collated' fileHandler. This is the
+        // overall size of all the waiting file writes. Default is the
+        // maxBufferSize
+        maxThreadBufferSize     1000000000;
+
 
     commsType       nonBlocking; //scheduled; //blocking;
     floatTransfer   0;
