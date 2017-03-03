@@ -1178,11 +1178,18 @@ void Foam::GeometricField<Type, PatchField, GeoMesh>::operator=
 
     this->dimensions() = gf.dimensions();
 
-    // Transfer the storage from the tmp
-    primitiveFieldRef().transfer
-    (
-        const_cast<Field<Type>&>(gf.primitiveField())
-    );
+    if (tgf.isTmp())
+    {
+        // Transfer the storage from the tmp
+        primitiveFieldRef().transfer
+        (
+            const_cast<Field<Type>&>(gf.primitiveField())
+        );
+    }
+    else
+    {
+        primitiveFieldRef() = gf.primitiveField();
+    }
 
     boundaryFieldRef() = gf.boundaryField();
 
