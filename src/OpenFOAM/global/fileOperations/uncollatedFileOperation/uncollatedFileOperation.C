@@ -44,6 +44,108 @@ namespace fileOperations
 }
 
 
+// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
+
+Foam::fileName Foam::fileOperations::uncollatedFileOperation::doFilePath
+(
+    const bool checkGlobal,
+    const IOobject& io
+) const
+{
+    if (io.instance().isAbsolute())
+    {
+        fileName objectPath = io.instance()/io.name();
+
+        if (Foam::isFile(objectPath))
+        {
+            return objectPath;
+        }
+        else
+        {
+            return fileName::null;
+        }
+    }
+    else
+    {
+        fileName path = io.path();
+        fileName objectPath = path/io.name();
+
+        if (Foam::isFile(objectPath))
+        {
+            return objectPath;
+        }
+        else
+        {
+            if
+            (
+                checkGlobal
+             && io.time().processorCase()
+             && (
+                    io.instance() == io.time().system()
+                 || io.instance() == io.time().constant()
+                )
+            )
+            {
+                // Constant & system can come from global case
+
+                fileName parentObjectPath =
+                    io.rootPath()/io.time().globalCaseName()
+                   /io.instance()/io.db().dbDir()/io.local()/io.name();
+
+                if (Foam::isFile(parentObjectPath))
+                {
+                    return parentObjectPath;
+                }
+            }
+
+            // Check if parallel "procesors" directory
+            if (io.time().processorCase())
+            {
+                fileName path = fileOperations::masterUncollatedFileOperation::
+                processorsPath
+                (
+                    io,
+                    io.instance()
+                );
+                fileName objectPath = path/io.name();
+
+                if (Foam::isFile(objectPath))
+                {
+                    return objectPath;
+                }
+            }
+
+
+            // Check for approximately same time. E.g. if time = 1e-2 and
+            // directory is 0.01 (due to different time formats)
+            if (!Foam::isDir(path))
+            {
+                word newInstancePath = io.time().findInstancePath
+                (
+                    instant(io.instance())
+                );
+
+                if (newInstancePath.size())
+                {
+                    fileName fName
+                    (
+                        io.rootPath()/io.caseName()
+                       /newInstancePath/io.db().dbDir()/io.local()/io.name()
+                    );
+
+                    if (Foam::isFile(fName))
+                    {
+                        return fName;
+                    }
+                }
+            }
+        }
+
+        return fileName::null;
+    }
+}
+
+
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 Foam::fileOperations::uncollatedFileOperation::uncollatedFileOperation()
@@ -234,96 +336,16 @@ Foam::fileName Foam::fileOperations::uncollatedFileOperation::filePath
             << " checkGlobal:" << checkGlobal << endl;
     }
 
-    if (io.instance().isAbsolute())
+    fileName objPath(doFilePath(checkGlobal, io));
+
+    if (debug)
     {
-        fileName objectPath = io.instance()/io.name();
-
-        if (Foam::isFile(objectPath))
-        {
-            return objectPath;
-        }
-        else
-        {
-            return fileName::null;
-        }
+        Pout<< "uncollatedFileOperation::filePath :"
+            << " Returning from file searching:" << endl
+            << "    objectPath:" << io.objectPath() << endl
+            << "    filePath  :" << objPath << endl << endl;
     }
-    else
-    {
-        fileName path = io.path();
-        fileName objectPath = path/io.name();
-
-        if (Foam::isFile(objectPath))
-        {
-            return objectPath;
-        }
-        else
-        {
-            if
-            (
-                checkGlobal
-             && io.time().processorCase()
-             && (
-                    io.instance() == io.time().system()
-                 || io.instance() == io.time().constant()
-                )
-            )
-            {
-                // Constant & system can come from global case
-
-                fileName parentObjectPath =
-                    io.rootPath()/io.time().globalCaseName()
-                   /io.instance()/io.db().dbDir()/io.local()/io.name();
-
-                if (Foam::isFile(parentObjectPath))
-                {
-                    return parentObjectPath;
-                }
-            }
-
-            // Check if parallel "procesors" directory
-            if (io.time().processorCase())
-            {
-                fileName path = fileOperations::masterUncollatedFileOperation::
-                processorsPath
-                (
-                    io,
-                    io.instance()
-                );
-                fileName objectPath = path/io.name();
-
-                if (Foam::isFile(objectPath))
-                {
-                    return objectPath;
-                }
-            }
-
-
-            // Check for approximately same time
-            if (!Foam::isDir(path))
-            {
-                word newInstancePath = io.time().findInstancePath
-                (
-                    instant(io.instance())
-                );
-
-                if (newInstancePath.size())
-                {
-                    fileName fName
-                    (
-                        io.rootPath()/io.caseName()
-                       /newInstancePath/io.db().dbDir()/io.local()/io.name()
-                    );
-
-                    if (Foam::isFile(fName))
-                    {
-                        return fName;
-                    }
-                }
-            }
-        }
-
-        return fileName::null;
-    }
+    return objPath;
 }
 
 
@@ -432,7 +454,8 @@ Foam::fileOperations::uncollatedFileOperation::readStream
     if (fName.empty())
     {
         FatalErrorInFunction
-            << "empty file name" << exit(FatalError);
+            << "empty file name for object " << io.name()
+            << exit(FatalError);
     }
 
     isPtr = NewIFstream(fName);

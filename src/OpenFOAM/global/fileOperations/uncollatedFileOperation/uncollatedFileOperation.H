@@ -50,6 +50,12 @@ class uncollatedFileOperation
 :
     public fileOperation
 {
+    // Private Member Functions
+
+        //- Search for an object. checkGlobal : also check undecomposed case
+        fileName doFilePath(const bool checkGlobal, const IOobject&) const;
+
+
 public:
 
         //- Runtime type information

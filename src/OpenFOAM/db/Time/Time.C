@@ -669,12 +669,17 @@ Foam::word Foam::Time::findInstancePath
     const instant& t
 ) const
 {
+    // Simplified version: use findTimes (readDir + sort). The expensive
+    // bit is the readDir, not the sorting. Tbd: avoid calling findInstancePath
+    // from filePath.
+
     instantList timeDirs = findTimes(path(), constant());
     // Note:
-    // - times will include constant (with value 0) so search in reverse
-    //   direction to make sure we find 0 instead of constant first
+    // - times will include constant (with value 0) as first element.
+    //   For backwards compatibility search in forward order so it
+    //   finds 'constant' in preference to '0'.
     // - list is sorted so could use binary search
-    forAllReverse(timeDirs, i)
+    forAll(timeDirs, i)
     {
         if (t.equal(timeDirs[i].value()))
         {
