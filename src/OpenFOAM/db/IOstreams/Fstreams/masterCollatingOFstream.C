@@ -108,7 +108,7 @@ Foam::masterCollatingOFstream::~masterCollatingOFstream()
     bool bigFile =
     (
         returnReduce(off_t(s.size()), sumOp<off_t>())
-      > fileOperations::masterUncollatedFileOperation::maxBufferSize
+      > off_t(fileOperations::masterUncollatedFileOperation::maxBufferSize)
     );
     Pstream::scatter(bigFile);
 

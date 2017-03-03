@@ -563,15 +563,7 @@ const Foam::fileOperation& Foam::fileHandler()
     {
         word handler(getEnv("FOAM_FILEHANDLER"));
 
-        if (handler.size())
-        {
-            //if (Pstream::master())
-            //{
-            //    cout<< "fileHandler() : Inserting fileOperation of type "
-            //        << handler << std::endl;
-            //}
-        }
-        else
+        if (!handler.size())
         {
             handler = fileOperations::uncollatedFileOperation::typeName;
         }

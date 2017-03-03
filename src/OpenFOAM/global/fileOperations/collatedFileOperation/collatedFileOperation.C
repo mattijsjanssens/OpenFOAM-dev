@@ -49,14 +49,18 @@ namespace fileOperations
         word
     );
 
-    off_t collatedFileOperation::maxThreadBufferSize
+    float collatedFileOperation::maxThreadBufferSize
     (
-        Foam::debug::optimisationSwitch("maxThreadBufferSize", 1000000000)
+        debug::floatOptimisationSwitch
+        (
+            "maxThreadBufferSize",
+            masterUncollatedFileOperation::maxBufferSize
+        )
     );
     registerOptSwitch
     (
         "maxThreadBufferSize",
-        off_t,
+        float,
         collatedFileOperation::maxThreadBufferSize
     );
 }
@@ -69,7 +73,7 @@ Foam::fileOperations::collatedFileOperation::
 collatedFileOperation()
 :
     masterUncollatedFileOperation(),
-    writeServer_(maxThreadBufferSize)
+    writeServer_(off_t(maxThreadBufferSize))
 {}
 
 
@@ -127,7 +131,7 @@ bool Foam::fileOperations::collatedFileOperation::writeObject
             new masterOFstream
             (
                 (
-                    maxThreadBufferSize > 0
+                    off_t(maxThreadBufferSize) > 0
                  ? &writeServer_
                  : nullptr
                 ),
@@ -227,7 +231,7 @@ bool Foam::fileOperations::collatedFileOperation::writeObject
                 bool append = (proci > 0);
 
                 autoPtr<OSstream> osPtr;
-                if (maxThreadBufferSize > 0)
+                if (off_t(maxThreadBufferSize) > 0)
                 {
                     osPtr.reset
                     (
@@ -301,7 +305,7 @@ bool Foam::fileOperations::collatedFileOperation::writeObject
                     new masterCollatingOFstream
                     (
                         (
-                            maxThreadBufferSize > 0
+                            off_t(maxThreadBufferSize) > 0
                          ? &writeServer_
                          : nullptr
                         ),

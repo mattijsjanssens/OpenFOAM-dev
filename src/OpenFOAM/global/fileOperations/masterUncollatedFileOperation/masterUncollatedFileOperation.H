@@ -287,8 +287,9 @@ public:
     // Static data
 
         //- Max size of parallel communications. Switches from non-blocking
-        //  to scheduled when reading/writing files.
-        static off_t maxBufferSize;
+        //  to scheduled when reading/writing files. Read as float to enable
+        //  easy specificiation of large sizes.
+        static float maxBufferSize;
 
 
     // Constructors

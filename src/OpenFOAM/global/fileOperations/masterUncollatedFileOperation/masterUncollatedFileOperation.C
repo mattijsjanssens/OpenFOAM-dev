@@ -49,14 +49,14 @@ namespace fileOperations
         word
     );
 
-    off_t masterUncollatedFileOperation::maxBufferSize
+    float masterUncollatedFileOperation::maxBufferSize
     (
-        Foam::debug::optimisationSwitch("maxBufferSize", 1000000000)
+        Foam::debug::floatOptimisationSwitch("maxBufferSize", 1e9)
     );
     registerOptSwitch
     (
         "maxBufferSize",
-        off_t,
+        float,
         masterUncollatedFileOperation::maxBufferSize
     );
 }
@@ -856,7 +856,7 @@ Foam::fileOperations::masterUncollatedFileOperation::readStream
                 isPtr,
                 data,
                 (
-                    sz > maxBufferSize
+                    sz > off_t(maxBufferSize)
                   ? UPstream::scheduled
                   : UPstream::nonBlocking
                 )

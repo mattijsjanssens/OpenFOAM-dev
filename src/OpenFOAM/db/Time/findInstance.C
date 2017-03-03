@@ -47,26 +47,22 @@ Foam::word Foam::Time::findInstance
     //       - check for an object with local file scope (so no looking up in
     //         parent directory in case of parallel)
 
-    const fileName tPath(path());
-
     {
-        const fileName dirPath(tPath/timeName()/dir);
+        IOobject io
+        (
+            name,           // name might be empty!
+            timeName(),
+            dir,
+            *this
+        );
+        const fileName fileOrDir(fileHandler().objectPath(io));
 
         // check the current time directory
         if
         (
             name.empty()
-          ? fileHandler().isDir(dirPath)
-          :
-            (
-                IOobject
-                (
-                    name,
-                    timeName(),
-                    dir,
-                    *this
-                ).typeHeaderOk<IOList<label>>(false) // object with local scope
-            )
+          ? fileHandler().isDir(fileOrDir)
+          : io.typeHeaderOk<IOList<label>>(false) // object with local scope
         )
         {
             if (debug)
@@ -99,22 +95,20 @@ Foam::word Foam::Time::findInstance
     // continue searching from here
     for (; instanceI >= 0; --instanceI)
     {
-        const fileName dirPath(tPath/ts[instanceI].name()/dir);
+        IOobject io
+        (
+            name,           // name might be empty!
+            ts[instanceI].name(),
+            dir,
+            *this
+        );
+        const fileName fileOrDir(fileHandler().objectPath(io));
 
         if
         (
             name.empty()
-          ? fileHandler().isDir(dirPath)
-          :
-            (
-                IOobject
-                (
-                    name,
-                    ts[instanceI].name(),
-                    dir,
-                    *this
-                ).typeHeaderOk<IOList<label>>(false)
-            )
+          ? fileHandler().isDir(fileOrDir)
+          : io.typeHeaderOk<IOList<label>>(false)
         )
         {
             if (debug)
@@ -175,20 +169,21 @@ Foam::word Foam::Time::findInstance
     // constant function of the time, because the latter points to
     // the case constant directory in parallel cases
 
+    IOobject io
+    (
+        name,
+        constant(),
+        dir,
+        *this
+    );
+
+    const fileName fileOrDir(fileHandler().objectPath(io));
+
     if
     (
         name.empty()
-      ? fileHandler().isDir(tPath/constant()/dir)
-      :
-        (
-            IOobject
-            (
-                name,
-                constant(),
-                dir,
-                *this
-            ).typeHeaderOk<IOList<label>>(false)
-        )
+      ? fileHandler().isDir(fileOrDir)
+      : io.typeHeaderOk<IOList<label>>(false)
     )
     {
         if (debug)

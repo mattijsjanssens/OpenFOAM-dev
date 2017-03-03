@@ -33,6 +33,7 @@ License
 #include "labelList.H"
 #include "regIOobject.H"
 #include "dynamicCode.H"
+#include "uncollatedFileOperation.H"
 #include "masterUncollatedFileOperation.H"
 
 #include <cctype>
@@ -583,18 +584,39 @@ void Foam::argList::parse
         }
     }
 
-    // See if override with argList
-    HashTable<string>::const_iterator iter = options_.find("fileHandler");
-    if (iter != options_.end())
+
+    // Set fileHandler. In increasing order of priority:
+    // 1. default = uncollated
+    // 2. environment var FOAM_FILEHANDLER
+    // 3. etc/controlDict optimisationSwitches 'fileHandler'
+    // 4. system/controlDict 'fileHandler' (not handled here; done in TimeIO.C)
+
     {
-        autoPtr<fileOperation> handler(fileOperation::New(iter()));
+        word handlerType(getEnv("FOAM_FILEHANDLER"));
+        HashTable<string>::const_iterator iter = options_.find("fileHandler");
+        if (iter != options_.end())
+        {
+            handlerType = iter();
+        }
+        else
+        {
+            debug::optimisationSwitches().readIfPresent
+            (
+                "fileHandler",
+                handlerType
+            );
+        }
+
+        if (handlerType.empty())
+        {
+            handlerType =
+                Foam::fileOperations::uncollatedFileOperation::typeName;
+        }
+
+        autoPtr<fileOperation> handler(fileOperation::New(handlerType));
         Foam::fileHandler(handler);
     }
-    else
-    {
-        // Trigger default
-        (void)Foam::fileHandler();
-    }
+
     if (Pstream::master() && bannerEnabled)
     {
         Info<< "I/O    : " << fileHandler().type()

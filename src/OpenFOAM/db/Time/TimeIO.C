@@ -399,6 +399,8 @@ void Foam::Time::readDict()
         controlDict_.watchIndices().clear();
 
         // Installing the new handler
+        Info<< "Overriding fileHandler to " << fileHandlerName << endl;
+
         autoPtr<fileOperation> handler(fileOperation::New(fileHandlerName));
         Foam::fileHandler(handler);
 

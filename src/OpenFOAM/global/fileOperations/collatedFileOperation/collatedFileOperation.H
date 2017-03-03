@@ -74,7 +74,8 @@ public:
 
         //- Max size of thread buffer size. This is the overall size of
         //  all files to be written. Starts blocking if not enough size.
-        static off_t maxThreadBufferSize;
+        //  Read as float to enable easy specificiation of large sizes.
+        static float maxThreadBufferSize;
 
 
     // Constructors
