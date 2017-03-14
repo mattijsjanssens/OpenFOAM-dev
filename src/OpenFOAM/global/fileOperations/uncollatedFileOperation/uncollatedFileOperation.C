@@ -148,8 +148,16 @@ Foam::fileName Foam::fileOperations::uncollatedFileOperation::doFilePath
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::fileOperations::uncollatedFileOperation::uncollatedFileOperation()
-{}
+Foam::fileOperations::uncollatedFileOperation::uncollatedFileOperation
+(
+    const bool verbose
+)
+{
+    if (verbose)
+    {
+        Info<< "I/O    : " << typeName << endl;
+    }
+}
 
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //

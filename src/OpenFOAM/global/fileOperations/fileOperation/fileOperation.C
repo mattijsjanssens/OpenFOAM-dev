@@ -145,7 +145,11 @@ Foam::fileOperation::fileOperation()
 {}
 
 
-Foam::autoPtr<Foam::fileOperation> Foam::fileOperation::New(const word& type)
+Foam::autoPtr<Foam::fileOperation> Foam::fileOperation::New
+(
+    const word& type,
+    const bool verbose
+)
 {
     if (debug)
     {
@@ -165,7 +169,7 @@ Foam::autoPtr<Foam::fileOperation> Foam::fileOperation::New(const word& type)
             << abort(FatalError);
     }
 
-    return autoPtr<fileOperation>(cstrIter()());
+    return autoPtr<fileOperation>(cstrIter()(verbose));
 }
 
 
@@ -568,7 +572,7 @@ const Foam::fileOperation& Foam::fileHandler()
             handler = fileOperations::uncollatedFileOperation::typeName;
         }
 
-        fileOperation::fileHandlerPtr_ = fileOperation::New(handler);
+        fileOperation::fileHandlerPtr_ = fileOperation::New(handler, true);
     }
     return fileOperation::fileHandlerPtr_();
 }

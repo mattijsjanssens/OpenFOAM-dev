@@ -295,7 +295,7 @@ public:
     // Constructors
 
         //- Construct null
-        masterUncollatedFileOperation();
+        masterUncollatedFileOperation(const bool verbose);
 
 
     //- Destructor

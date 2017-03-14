@@ -44,6 +44,8 @@ Foam::word Foam::Time::findInstance
 ) const
 {
     // Note: - if name is empty, just check the directory itself
+    //       - check both for isFile and headerOk since the latter does a
+    //         filePath so searches for the file.
     //       - check for an object with local file scope (so no looking up in
     //         parent directory in case of parallel)
 
@@ -62,14 +64,16 @@ Foam::word Foam::Time::findInstance
         (
             name.empty()
           ? fileHandler().isDir(fileOrDir)
-          : io.typeHeaderOk<IOList<label>>(false) // object with local scope
+          : (
+                fileHandler().isFile(fileOrDir)
+             && io.typeHeaderOk<IOList<label>>(false) // object with local scope
+            )
         )
         {
             if (debug)
             {
-                //InfoInFunction
-                Pout<< "findInstance : "
-                    << "Found \"" << name
+                InfoInFunction
+                    << "Found exact match for \"" << name
                     << "\" in " << timeName()/dir
                     << endl;
             }
@@ -108,14 +112,16 @@ Foam::word Foam::Time::findInstance
         (
             name.empty()
           ? fileHandler().isDir(fileOrDir)
-          : io.typeHeaderOk<IOList<label>>(false)
+          : (
+                fileHandler().isFile(fileOrDir)
+             && io.typeHeaderOk<IOList<label>>(false) // object with local scope
+            )
         )
         {
             if (debug)
             {
-                //InfoInFunction
-                Pout<< "findInstance : "
-                    << "Found \"" << name
+                InfoInFunction
+                    << "Found instance match for \"" << name
                     << "\" in " << ts[instanceI].name()/dir
                     << endl;
             }
@@ -183,14 +189,16 @@ Foam::word Foam::Time::findInstance
     (
         name.empty()
       ? fileHandler().isDir(fileOrDir)
-      : io.typeHeaderOk<IOList<label>>(false)
+      : (
+            fileHandler().isFile(fileOrDir)
+         && io.typeHeaderOk<IOList<label>>(false) // object with local scope
+        )
     )
     {
         if (debug)
         {
-            //InfoInFunction
-            Pout<< "findInstance : "
-                << "Found \"" << name
+            InfoInFunction
+                << "Found constant match for \"" << name
                 << "\" in " << constant()/dir
                 << endl;
         }

@@ -81,7 +81,7 @@ public:
     // Constructors
 
         //- Construct null
-        collatedFileOperation();
+        collatedFileOperation(const bool verbose);
 
 
     //- Destructor

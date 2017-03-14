@@ -136,12 +136,16 @@ Debugging
   at the same time (i.e. synchronous); if this is not possible the fileHandler
   mechanism should not be used.
 
-
+- with collated: errors of the form:
+        unexpected class name IOobject expected faceSet
+  Try and disable threading (set maxThreadBufferSize 0) or use a different
+  writer. Especially topoSet does writing and reading of the same file
+  and with threading this might conflict.
+  Maybe run topoSet with a different fileHandler?
 
 
 Todo:
 - globalCellModeller, debugSwitches cannot use fileHandler
-- all OSspecific calls
 - redistributePar
 - determine priority of -envvar, -argList, -system/controlDict
 - master*OFstream with uniform file
@@ -153,4 +157,3 @@ Todo:
   Small problem since generally not running with both.
 - have syncPar flag on all low-level routines
 - indexing for single processor reading in decomposedBlockData::readBlock
-- move thread stuff to OSspecific

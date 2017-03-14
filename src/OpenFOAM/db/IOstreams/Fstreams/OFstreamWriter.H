@@ -89,12 +89,14 @@ class OFstreamWriter
         const off_t maxBufferSize_;
 
         pthread_mutex_t mutex_;
+        //label mutex_;
 
         pthread_t thread_;
+        //label thread_;
 
         FIFOStack<writeData*> objects_;
 
-        int threadID_;
+        bool threadRunning_;
 
 
     // Private Member Functions

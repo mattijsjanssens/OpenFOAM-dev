@@ -676,10 +676,11 @@ Foam::word Foam::Time::findInstancePath
     instantList timeDirs = findTimes(path(), constant());
     // Note:
     // - times will include constant (with value 0) as first element.
-    //   For backwards compatibility search in forward order so it
-    //   finds 'constant' in preference to '0'.
+    //   For backwards compatibility make sure to find 0 in preference
+    //   to constant.
     // - list is sorted so could use binary search
-    forAll(timeDirs, i)
+
+    forAllReverse(timeDirs, i)
     {
         if (t.equal(timeDirs[i].value()))
         {

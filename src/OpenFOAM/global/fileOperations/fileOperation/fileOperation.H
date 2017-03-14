@@ -114,15 +114,17 @@ public:
             autoPtr,
             fileOperation,
             word,
-            (),
-            ()
+            (
+                const bool verbose
+            ),
+            (verbose)
         );
 
 
     // Selectors
 
         //- Select type
-        static autoPtr<fileOperation> New(const word& type);
+        static autoPtr<fileOperation> New(const word& type, const bool verbose);
 
 
     //- Destructor

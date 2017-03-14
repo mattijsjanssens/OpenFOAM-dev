@@ -313,12 +313,24 @@ bool Foam::fileOperations::masterUncollatedFileOperation::uniformFile
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 Foam::fileOperations::masterUncollatedFileOperation::
-masterUncollatedFileOperation()
+masterUncollatedFileOperation
+(
+    const bool verbose
+)
 {
+    if (verbose)
+    {
+        Info<< "I/O    : " << typeName
+            << " (maxBufferSize " << maxBufferSize << ')' << endl;
+    }
+
     if (regIOobject::fileModificationChecking == regIOobject::timeStampMaster)
     {
-        //WarningInFunction
-        //    << "Resetting fileModificationChecking to timeStamp" << endl;
+        if (verbose)
+        {
+            WarningInFunction
+                << "Resetting fileModificationChecking to timeStamp" << endl;
+        }
         regIOobject::fileModificationChecking = regIOobject::timeStamp;
     }
     else if
@@ -327,9 +339,13 @@ masterUncollatedFileOperation()
      == regIOobject::inotifyMaster
     )
     {
-        //WarningInFunction
-        //    << "Resetting fileModificationChecking to inotifyMaster" << endl;
-        regIOobject::fileModificationChecking = regIOobject::inotifyMaster;
+        if (verbose)
+        {
+            WarningInFunction
+                << "Resetting fileModificationChecking to inotify"
+                << endl;
+        }
+        regIOobject::fileModificationChecking = regIOobject::inotify;
     }
 }
 

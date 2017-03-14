@@ -77,11 +77,13 @@ void* Foam::OFstreamWriter::writeAll(void *threadarg)
         writeData* ptr = nullptr;
 
         pthread_mutex_lock(&handler.mutex_);
+        //lockMutex(handler.mutex_);
         if (handler.objects_.size())
         {
             ptr = handler.objects_.pop();
         }
         pthread_mutex_unlock(&handler.mutex_);
+        //unlockMutex(handler.mutex_);
 
         if (!ptr)
         {
@@ -112,13 +114,14 @@ void* Foam::OFstreamWriter::writeAll(void *threadarg)
 
     if (debug)
     {
-        Pout<< "OFstreamWriter : Exiting thread " << handler.threadID_
-            << endl;
+        Pout<< "OFstreamWriter : Exiting write thread " << endl;
     }
 
     pthread_mutex_lock(&handler.mutex_);
-    handler.threadID_ = -1;
+    //lockMutex(handler.mutex_);
+    handler.threadRunning_ = false;
     pthread_mutex_unlock(&handler.mutex_);
+    //unlockMutex(handler.mutex_);
 
     return nullptr;
 }
@@ -130,7 +133,9 @@ Foam::OFstreamWriter::OFstreamWriter(const off_t maxBufferSize)
 :
     maxBufferSize_(maxBufferSize),
     mutex_(PTHREAD_MUTEX_INITIALIZER),
-    threadID_(-1)
+    //mutex_(allocateMutex()),
+    //thread_(allocateThread()),
+    threadRunning_(false)
 {}
 
 
@@ -138,11 +143,14 @@ Foam::OFstreamWriter::OFstreamWriter(const off_t maxBufferSize)
 
 Foam::OFstreamWriter::~OFstreamWriter()
 {
-    if (threadID_ != -1)
+    //freeMutex(mutex_);
+    //freeThread(thread_);
+
+    if (threadRunning_)
     {
         if (debug)
         {
-            Pout<< "OFstreamWriter : Waiting for thread " << threadID_ << endl;
+            Pout<< "OFstreamWriter : Waiting for write thread" << endl;
         }
         pthread_join(thread_, nullptr);
     }
@@ -168,11 +176,13 @@ bool Foam::OFstreamWriter::write
             // Count files to be written
             off_t totalSize = 0;
             pthread_mutex_lock(&mutex_);
+            //lockMutex(mutex_);
             forAllConstIter(FIFOStack<writeData*>, objects_, iter)
             {
                 totalSize += iter()->data_.size();
             }
             pthread_mutex_unlock(&mutex_);
+            //unlockMutex(mutex_);
 
             if
             (
@@ -195,19 +205,29 @@ bool Foam::OFstreamWriter::write
         }
 
         pthread_mutex_lock(&mutex_);
+        //lockMutex(mutex_);
         objects_.push(new writeData(fName, data, fmt, ver, cmp, append));
         pthread_mutex_unlock(&mutex_);
+        //unlockMutex(mutex_);
 
         pthread_mutex_lock(&mutex_);
-        if (threadID_ == -1)
+        //lockMutex(mutex_);
+        if (!threadRunning_)
         {
-            threadID_ = pthread_create(&thread_, nullptr, writeAll, this);
+            if (pthread_create(&thread_, nullptr, writeAll, this))
+            {
+                FatalErrorInFunction
+                    << "Failed starting write thread " << exit(FatalError);
+            }
+            //createThread(thread_, writeAll, this);
             if (debug)
             {
-                Pout<< "OFstreamWriter : Started thread " << threadID_ << endl;
+                Pout<< "OFstreamWriter : Started write thread " << endl;
             }
+            threadRunning_ = true;
         }
         pthread_mutex_unlock(&mutex_);
+        //unlockMutex(mutex_);
 
         return true;
     }

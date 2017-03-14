@@ -66,12 +66,12 @@ OptimisationSwitches
 
         // In master-only reading/writing: when to switch from non-blocking
         // to scheduled. This is the overall file size.
-        maxBufferSize           1000000000;
+        maxBufferSize           1e9;
 
         // If > 0: use threading in the 'collated' fileHandler. This is the
         // overall size of all the waiting file writes. Default is the
         // maxBufferSize
-        maxThreadBufferSize     1000000000;
+        maxThreadBufferSize     2e9;
 
 
     commsType       nonBlocking; //scheduled; //blocking;

@@ -69,18 +69,45 @@ namespace fileOperations
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::fileOperations::collatedFileOperation::
-collatedFileOperation()
+Foam::fileOperations::collatedFileOperation::collatedFileOperation
+(
+    const bool verbose
+)
 :
-    masterUncollatedFileOperation(),
+    masterUncollatedFileOperation(false),
     writeServer_(off_t(maxThreadBufferSize))
-{}
+{
+    if (verbose)
+    {
+        Info<< "I/O    : " << typeName
+            << " (maxBufferSize " << maxBufferSize
+            << "  maxThreadBufferSize " << maxThreadBufferSize
+            << ')' << endl;
+        if
+        (
+            regIOobject::fileModificationChecking
+         == regIOobject::inotifyMaster
+        )
+        {
+            WarningInFunction
+                << "Resetting fileModificationChecking to inotify" << endl;
+        }
+        if
+        (
+            regIOobject::fileModificationChecking
+         == regIOobject::timeStampMaster
+        )
+        {
+            WarningInFunction
+                << "Resetting fileModificationChecking to timeStamp" << endl;
+        }
+    }
+}
 
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-Foam::fileOperations::collatedFileOperation::
-~collatedFileOperation()
+Foam::fileOperations::collatedFileOperation::~collatedFileOperation()
 {}
 
 
@@ -92,12 +119,24 @@ Foam::fileName Foam::fileOperations::collatedFileOperation::objectPath
 ) const
 {
     // Replacement for objectPath
-    return masterUncollatedFileOperation::objectPath
-    (
-        io,
-        fileOperation::PROCESSORSOBJECT,
-        io.instance()
-    );
+    if (io.time().processorCase())
+    {
+        return masterUncollatedFileOperation::objectPath
+        (
+            io,
+            fileOperation::PROCESSORSOBJECT,
+            io.instance()
+        );
+    }
+    else
+    {
+        return masterUncollatedFileOperation::objectPath
+        (
+            io,
+            fileOperation::OBJECT,
+            io.instance()
+        );
+    }
 }
 
 

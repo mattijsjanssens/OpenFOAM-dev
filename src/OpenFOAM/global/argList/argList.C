@@ -613,16 +613,15 @@ void Foam::argList::parse
                 Foam::fileOperations::uncollatedFileOperation::typeName;
         }
 
-        autoPtr<fileOperation> handler(fileOperation::New(handlerType));
+        autoPtr<fileOperation> handler
+        (
+            fileOperation::New
+            (
+                handlerType,
+                bannerEnabled
+            )
+        );
         Foam::fileHandler(handler);
-    }
-
-    if (Pstream::master() && bannerEnabled)
-    {
-        Info<< "I/O    : " << fileHandler().type()
-            << " (maxBufferSize "
-            << fileOperations::masterUncollatedFileOperation::maxBufferSize
-            << ')' << endl;
     }
 
     // Case is a single processor run unless it is running parallel

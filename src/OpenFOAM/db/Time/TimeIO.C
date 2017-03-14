@@ -401,7 +401,14 @@ void Foam::Time::readDict()
         // Installing the new handler
         Info<< "Overriding fileHandler to " << fileHandlerName << endl;
 
-        autoPtr<fileOperation> handler(fileOperation::New(fileHandlerName));
+        autoPtr<fileOperation> handler
+        (
+            fileOperation::New
+            (
+                fileHandlerName,
+                true
+            )
+        );
         Foam::fileHandler(handler);
 
         // Reinstall old watches

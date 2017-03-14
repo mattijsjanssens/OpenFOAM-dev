@@ -174,8 +174,43 @@ int main(int argc, char *argv[])
     const bool allRegions = args.optionFound("allRegions");
 
 
+    wordList regionNames;
+    wordList regionDirs;
+    if (allRegions)
+    {
+        Info<< "Reconstructing for all regions in regionProperties" << nl
+            << endl;
+        regionProperties rp(runTime);
+        forAllConstIter(HashTable<wordList>, rp, iter)
+        {
+            const wordList& regions = iter();
+            forAll(regions, i)
+            {
+                if (findIndex(regionNames, regions[i]) == -1)
+                {
+                    regionNames.append(regions[i]);
+                }
+            }
+        }
+        regionDirs = regionNames;
+    }
+    else
+    {
+        word regionName;
+        if (args.optionReadIfPresent("region", regionName))
+        {
+            regionNames = wordList(1, regionName);
+            regionDirs = regionNames;
+        }
+        else
+        {
+            regionNames = wordList(1, fvMesh::defaultRegion);
+            regionDirs = wordList(1, word::null);
+        }
+    }
+
     // Determine the processor count
-    label nProcs = fileHandler().nProcs(args.path());
+    label nProcs = fileHandler().nProcs(args.path(), regionDirs[0]);
 
     if (!nProcs)
     {
@@ -241,42 +276,6 @@ int main(int argc, char *argv[])
     forAll(databases, proci)
     {
         databases[proci].setTime(runTime);
-    }
-
-
-    wordList regionNames;
-    wordList regionDirs;
-    if (allRegions)
-    {
-        Info<< "Reconstructing for all regions in regionProperties" << nl
-            << endl;
-        regionProperties rp(runTime);
-        forAllConstIter(HashTable<wordList>, rp, iter)
-        {
-            const wordList& regions = iter();
-            forAll(regions, i)
-            {
-                if (findIndex(regionNames, regions[i]) == -1)
-                {
-                    regionNames.append(regions[i]);
-                }
-            }
-        }
-        regionDirs = regionNames;
-    }
-    else
-    {
-        word regionName;
-        if (args.optionReadIfPresent("region", regionName))
-        {
-            regionNames = wordList(1, regionName);
-            regionDirs = regionNames;
-        }
-        else
-        {
-            regionNames = wordList(1, fvMesh::defaultRegion);
-            regionDirs = wordList(1, word::null);
-        }
     }
 
 
