@@ -957,6 +957,10 @@ void Foam::argList::parse
 Foam::argList::~argList()
 {
     jobInfo.end();
+
+    // Delete file handler to flush any remaining IO
+    autoPtr<fileOperation> dummy(nullptr);
+    fileHandler(dummy);
 }
 
 

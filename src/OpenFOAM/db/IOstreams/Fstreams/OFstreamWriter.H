@@ -38,7 +38,7 @@ SourceFiles
 #include "IOstream.H"
 #include "List.H"
 #include "FIFOStack.H"
-#include <pthread.h>
+//#include <pthread.h>
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -88,11 +88,11 @@ class OFstreamWriter
 
         const off_t maxBufferSize_;
 
-        pthread_mutex_t mutex_;
-        //label mutex_;
+        //pthread_mutex_t mutex_;
+        label mutex_;
 
-        pthread_t thread_;
-        //label thread_;
+        //pthread_t thread_;
+        label thread_;
 
         FIFOStack<writeData*> objects_;
 
