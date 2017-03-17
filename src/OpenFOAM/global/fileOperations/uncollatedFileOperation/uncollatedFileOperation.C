@@ -589,7 +589,7 @@ bool Foam::fileOperations::uncollatedFileOperation::read
         {
             IPstream fromAbove
             (
-                Pstream::scheduled,
+                Pstream::commsTypes::scheduled,
                 myComm.above(),
                 0,
                 Pstream::msgType(),
@@ -604,7 +604,7 @@ bool Foam::fileOperations::uncollatedFileOperation::read
         {
             OPstream toBelow
             (
-                Pstream::scheduled,
+                Pstream::commsTypes::scheduled,
                 myComm.below()[belowI],
                 0,
                 Pstream::msgType(),

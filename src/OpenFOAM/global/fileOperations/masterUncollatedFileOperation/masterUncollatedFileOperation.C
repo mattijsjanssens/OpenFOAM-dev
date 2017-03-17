@@ -873,8 +873,8 @@ Foam::fileOperations::masterUncollatedFileOperation::readStream
                 data,
                 (
                     sz > off_t(maxBufferSize)
-                  ? UPstream::scheduled
-                  : UPstream::nonBlocking
+                  ? UPstream::commsTypes::scheduled
+                  : UPstream::commsTypes::nonBlocking
                 )
             );
         }
@@ -909,7 +909,7 @@ Foam::fileOperations::masterUncollatedFileOperation::readStream
         procValid[Pstream::myProcNo()] = valid;
         Pstream::gatherList(procValid);
 
-        PstreamBuffers pBufs(Pstream::nonBlocking);
+        PstreamBuffers pBufs(Pstream::commsTypes::nonBlocking);
 
         if (Pstream::master())
         {
@@ -1072,7 +1072,7 @@ bool Foam::fileOperations::masterUncollatedFileOperation::read
         {
             IPstream fromAbove
             (
-                Pstream::scheduled,
+                Pstream::commsTypes::scheduled,
                 myComm.above(),
                 0,
                 Pstream::msgType(),
@@ -1087,7 +1087,7 @@ bool Foam::fileOperations::masterUncollatedFileOperation::read
         {
             OPstream toBelow
             (
-                Pstream::scheduled,
+                Pstream::commsTypes::scheduled,
                 myComm.below()[belowI],
                 0,
                 Pstream::msgType(),
@@ -1211,7 +1211,7 @@ Foam::fileOperations::masterUncollatedFileOperation::NewIFstream
         filePaths[Pstream::myProcNo()] = filePath;
         Pstream::gatherList(filePaths);
 
-        PstreamBuffers pBufs(Pstream::nonBlocking);
+        PstreamBuffers pBufs(Pstream::commsTypes::nonBlocking);
 
         if (Pstream::master())
         {

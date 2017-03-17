@@ -118,7 +118,11 @@ Foam::masterCollatingOFstream::~masterCollatingOFstream()
         osPtr,
         start,
         slice,
-        (bigFile ? UPstream::scheduled : UPstream::nonBlocking)
+        (
+            bigFile
+          ? UPstream::commsTypes::scheduled
+          : UPstream::commsTypes::nonBlocking
+        )
     );
 
     if (osPtr.valid() && !osPtr().good())

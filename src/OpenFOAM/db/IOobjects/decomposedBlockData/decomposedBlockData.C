@@ -217,7 +217,7 @@ bool Foam::decomposedBlockData::readBlocks
 
     bool ok = false;
 
-    if (commsType == UPstream::scheduled)
+    if (commsType == UPstream::commsTypes::scheduled)
     {
         if (UPstream::master())
         {
@@ -240,7 +240,7 @@ bool Foam::decomposedBlockData::readBlocks
                 List<char> elems(is);
                 is.fatalCheck("read(Istream&) : reading entry");
 
-                OPstream os(UPstream::scheduled, proci);
+                OPstream os(UPstream::commsTypes::scheduled, proci);
                 os << elems;
             }
 
@@ -248,13 +248,13 @@ bool Foam::decomposedBlockData::readBlocks
         }
         else
         {
-            IPstream is(UPstream::scheduled, UPstream::masterNo());
+            IPstream is(UPstream::commsTypes::scheduled, UPstream::masterNo());
             is >> data;
         }
     }
     else
     {
-        PstreamBuffers pBufs(UPstream::nonBlocking);
+        PstreamBuffers pBufs(UPstream::commsTypes::nonBlocking);
 
         if (UPstream::master())
         {
@@ -316,7 +316,7 @@ bool Foam::decomposedBlockData::writeBlocks
 
     bool ok = false;
 
-    if (commsType == UPstream::scheduled)
+    if (commsType == UPstream::commsTypes::scheduled)
     {
         if (UPstream::master())
         {
@@ -333,7 +333,7 @@ bool Foam::decomposedBlockData::writeBlocks
             // Write slaves
             for (label proci = 1; proci < UPstream::nProcs(); proci++)
             {
-                IPstream is(UPstream::scheduled, proci);
+                IPstream is(UPstream::commsTypes::scheduled, proci);
                 List<char> elems(is);
 
                 is.fatalCheck("write(Istream&) : reading entry");
@@ -347,13 +347,13 @@ bool Foam::decomposedBlockData::writeBlocks
         }
         else
         {
-            OPstream os(UPstream::scheduled, UPstream::masterNo());
+            OPstream os(UPstream::commsTypes::scheduled, UPstream::masterNo());
             os << data;
         }
     }
     else
     {
-        PstreamBuffers pBufs(UPstream::nonBlocking);
+        PstreamBuffers pBufs(UPstream::commsTypes::nonBlocking);
 
         if (!UPstream::master())
         {

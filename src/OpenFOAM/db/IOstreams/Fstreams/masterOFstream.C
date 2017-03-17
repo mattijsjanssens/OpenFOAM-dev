@@ -136,7 +136,7 @@ Foam::masterOFstream::~masterOFstream()
 
 
         // Different files
-        PstreamBuffers pBufs(Pstream::nonBlocking);
+        PstreamBuffers pBufs(Pstream::commsTypes::nonBlocking);
 
         // Send my buffer to master
         if (!Pstream::master())
