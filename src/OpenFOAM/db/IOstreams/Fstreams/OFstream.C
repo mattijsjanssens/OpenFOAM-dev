@@ -61,20 +61,37 @@ Foam::OFstreamAllocator::OFstreamAllocator
 
     if (compression == IOstream::COMPRESSED)
     {
-        // get identically named uncompressed version out of the way
-        if (isFile(pathname, false))
+        // Get identically named uncompressed version out of the way
+        fileName::Type pathType = Foam::type(pathname);
+        if (pathType == fileName::FILE || pathType == fileName::LINK)
         {
             rm(pathname);
         }
+        fileName gzPathName(pathname + ".gz");
 
-        ofPtr_ = new ogzstream((pathname + ".gz").c_str(), mode);
+        if (!append && Foam::type(gzPathName) == fileName::LINK)
+        {
+            // Disallow writing into softlink to avoid any problems with
+            // e.g. softlinked initial fields
+            rm(gzPathName);
+        }
+
+        ofPtr_ = new ogzstream(gzPathName.c_str(), mode);
     }
     else
     {
         // get identically named compressed version out of the way
-        if (isFile(pathname + ".gz", false))
+        fileName gzPathName(pathname + ".gz");
+        fileName::Type gzType = Foam::type(gzPathName);
+        if (gzType == fileName::FILE || gzType == fileName::LINK)
         {
-            rm(pathname + ".gz");
+            rm(gzPathName);
+        }
+        if (!append && Foam::type(pathname) == fileName::LINK)
+        {
+            // Disallow writing into softlink to avoid any problems with
+            // e.g. softlinked initial fields
+            rm(pathname);
         }
 
         ofPtr_ = new ofstream(pathname.c_str(), mode);

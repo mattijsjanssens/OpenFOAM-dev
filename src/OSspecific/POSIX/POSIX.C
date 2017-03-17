@@ -498,6 +498,10 @@ Foam::fileName::Type Foam::type(const fileName& name)
     {
         return fileName::FILE;
     }
+    else if (S_ISLNK(m))
+    {
+        return fileName::LINK;
+    }
     else if (S_ISDIR(m))
     {
         return fileName::DIRECTORY;
