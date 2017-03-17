@@ -52,8 +52,15 @@ class uncollatedFileOperation
 {
     // Private Member Functions
 
-        //- Search for an object. checkGlobal : also check undecomposed case
-        fileName doFilePath(const bool checkGlobal, const IOobject&) const;
+        //- Search for an object.
+        //    checkGlobal : also check undecomposed case
+        //    isFile      : true:check for file  false:check for directory
+        fileName doFilePath
+        (
+            const bool checkGlobal,
+            const bool isFile,
+            const IOobject&
+        ) const;
 
 
 public:
@@ -162,6 +169,14 @@ public:
 
             //- Search for an object. checkGlobal : also check undecomposed case
             virtual fileName filePath
+            (
+                const bool checkGlobal,
+                const IOobject&
+            ) const;
+
+            //- Search for a directory. checkGlobal : also check undecomposed
+            //  case
+            virtual fileName dirPath
             (
                 const bool checkGlobal,
                 const IOobject&

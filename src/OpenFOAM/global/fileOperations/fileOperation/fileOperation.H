@@ -65,10 +65,11 @@ protected:
 
         fileMonitor& monitor() const;
 
-
         //- Sort directory entries according to time value
         static instantList sortTimes(const fileNameList&, const word&);
 
+        //- Helper: check for file (isFile) or directory (!isFile)
+        static bool isFileOrDir(const bool isFile, const fileName&);
 
 public:
 
@@ -224,6 +225,14 @@ public:
 
             //- Search for an object. checkGlobal : also check undecomposed case
             virtual fileName filePath
+            (
+                const bool checkGlobal,
+                const IOobject&
+            ) const = 0;
+
+            //- Search for a directory. checkGlobal : also check undecomposed
+            //  case
+            virtual fileName dirPath
             (
                 const bool checkGlobal,
                 const IOobject&

@@ -225,10 +225,22 @@ protected:
 
         class fileOrNullOp
         {
+            const bool isFile_;
         public:
+            fileOrNullOp(const bool isFile)
+            :
+                isFile_(isFile)
+            {}
+
             fileName operator()(const fileName& fName) const
             {
-                return (Foam::isFile(fName) ? fName : fileName::null);
+                return
+                (
+                    (isFile_ && Foam::isFile(fName))
+                 || (!isFile_ && Foam::isDir(fName))
+                  ? fName
+                  : fileName::null
+                );
             }
         };
 
@@ -266,8 +278,17 @@ protected:
             const fileOp& fop
         ) const;
 
-        //- Search for filePath; return info on how was found
-        static fileName filePath(const bool, const IOobject&, pathType&, word&);
+        //- Search for object; return info on how was found
+        //    checkGlobal : also check undecomposed case
+        //    isFile      : true:check for file  false:check for directory
+        static fileName filePath
+        (
+            const bool checkGlobal,
+            const bool isFile,
+            const IOobject&,
+            pathType&,
+            word&
+        );
 
         //- Construct filePath
         static fileName objectPath
@@ -392,6 +413,14 @@ public:
 
             //- Search for an object. checkGlobal : also check undecomposed case
             virtual fileName filePath
+            (
+                const bool checkGlobal,
+                const IOobject&
+            ) const;
+
+            //- Search for a directory. checkGlobal : also check undecomposed
+            //  case
+            virtual fileName dirPath
             (
                 const bool checkGlobal,
                 const IOobject&

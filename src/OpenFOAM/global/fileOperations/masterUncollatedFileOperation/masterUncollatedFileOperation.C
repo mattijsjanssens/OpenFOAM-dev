@@ -68,6 +68,7 @@ namespace fileOperations
 Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePath
 (
     const bool checkGlobal,
+    const bool isFile,
     const IOobject& io,
     pathType& searchType,
     word& newInstancePath
@@ -78,7 +79,7 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePath
     if (io.instance().isAbsolute())
     {
         fileName objectPath = io.instance()/io.name();
-        if (Foam::isFile(objectPath))
+        if (isFileOrDir(isFile, objectPath))
         {
             searchType = fileOperation::ABSOLUTE;
             return objectPath;
@@ -95,7 +96,7 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePath
         if (io.time().processorCase())
         {
             fileName objectPath = processorsPath(io, io.instance())/io.name();
-            if (Foam::isFile(objectPath))
+            if (isFileOrDir(isFile, objectPath))
             {
                 searchType = fileOperation::PROCESSORSOBJECT;
                 return objectPath;
@@ -105,7 +106,7 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePath
             // 2. Check local
             fileName localObjectPath = io.objectPath();
 
-            if (Foam::isFile(localObjectPath))
+            if (isFileOrDir(isFile, localObjectPath))
             {
                 searchType = fileOperation::OBJECT;
                 return localObjectPath;
@@ -129,7 +130,7 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePath
                 io.rootPath()/io.time().globalCaseName()
                /io.instance()/io.db().dbDir()/io.local()/io.name();
 
-            if (Foam::isFile(parentObjectPath))
+            if (isFileOrDir(isFile, parentObjectPath))
             {
                 searchType = fileOperation::PARENTOBJECT;
                 return parentObjectPath;
@@ -550,7 +551,7 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePath
     word newInstancePath;
     if (Pstream::master())
     {
-        objPath = filePath(checkGlobal, io, searchType, newInstancePath);
+        objPath = filePath(checkGlobal, true, io, searchType, newInstancePath);
     }
     {
         label masterType(searchType);
@@ -580,11 +581,10 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePath
         {
             // Retest all processors separately since some processors might
             // have the file and some not (e.g. lagrangian data)
-
             objPath = masterOp<fileName, fileOrNullOp>
             (
                 io.objectPath(),
-                fileOrNullOp()
+                fileOrNullOp(true)
             );
         }
         break;
@@ -593,6 +593,76 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePath
     if (debug)
     {
         Pout<< "masterUncollatedFileOperation::filePath :"
+            << " Returning from file searching:" << endl
+            << "    objectPath:" << io.objectPath() << endl
+            << "    filePath  :" << objPath << endl << endl;
+    }
+    return objPath;
+}
+
+
+Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::dirPath
+(
+    const bool checkGlobal,
+    const IOobject& io
+) const
+{
+    if (debug)
+    {
+        Pout<< "masterUncollatedFileOperation::dirPath :"
+            << " objectPath:" << io.objectPath()
+            << " checkGlobal:" << checkGlobal << endl;
+    }
+
+    // Determine master dirPath and scatter
+
+    fileName objPath;
+    pathType searchType;
+    word newInstancePath;
+    if (Pstream::master())
+    {
+        objPath = filePath(checkGlobal, false, io, searchType, newInstancePath);
+    }
+    {
+        label masterType(searchType);
+        Pstream::scatter(masterType);
+        searchType = pathType(masterType);
+    }
+    Pstream::scatter(newInstancePath);
+
+
+    // Use the master type to determine if additional information is
+    // needed to construct the local equivalent
+    switch (searchType)
+    {
+        case fileOperation::ABSOLUTE:
+        case fileOperation::PROCESSORSOBJECT:
+        case fileOperation::PARENTOBJECT:
+        case fileOperation::FINDINSTANCE:
+        case fileOperation::PROCESSORSFINDINSTANCE:
+        {
+            // Construct equivalent local path
+            objPath = objectPath(io, searchType, newInstancePath);
+        }
+        break;
+
+        case fileOperation::OBJECT:
+        case fileOperation::NOTFOUND:
+        {
+            // Retest all processors separately since some processors might
+            // have the file and some not (e.g. lagrangian data)
+            objPath = masterOp<fileName, fileOrNullOp>
+            (
+                io.objectPath(),
+                fileOrNullOp(false)
+            );
+        }
+        break;
+    }
+
+    if (debug)
+    {
+        Pout<< "masterUncollatedFileOperation::dirPath :"
             << " Returning from file searching:" << endl
             << "    objectPath:" << io.objectPath() << endl
             << "    filePath  :" << objPath << endl << endl;

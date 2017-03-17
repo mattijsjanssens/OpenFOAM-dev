@@ -139,6 +139,14 @@ Foam::instantList Foam::fileOperation::sortTimes
 }
 
 
+bool Foam::fileOperation::isFileOrDir(const bool isFile, const fileName& f)
+{
+    return
+        (isFile && Foam::isFile(f))
+     || (!isFile && Foam::isDir(f));
+}
+
+
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 Foam::fileOperation::fileOperation()

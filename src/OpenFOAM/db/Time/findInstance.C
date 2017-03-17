@@ -57,18 +57,20 @@ Foam::word Foam::Time::findInstance
             dir,
             *this
         );
-        const fileName fileOrDir(fileHandler().objectPath(io));
 
-        // check the current time directory
-        if
-        (
-            name.empty()
-          ? fileHandler().isDir(fileOrDir)
-          : (
-                fileHandler().isFile(fileOrDir)
-             && io.typeHeaderOk<IOList<label>>(false) // object with local scope
-            )
-        )
+        bool ok;
+        if (name.empty())
+        {
+            ok = fileHandler().isDir(fileHandler().dirPath(false, io));
+        }
+        else
+        {
+            ok =
+                fileHandler().isFile(fileHandler().filePath(false, io))
+             && io.typeHeaderOk<IOList<label>>(false);// object with local scope
+        }
+
+        if (ok)
         {
             if (debug)
             {
@@ -106,17 +108,20 @@ Foam::word Foam::Time::findInstance
             dir,
             *this
         );
-        const fileName fileOrDir(fileHandler().objectPath(io));
 
-        if
-        (
-            name.empty()
-          ? fileHandler().isDir(fileOrDir)
-          : (
-                fileHandler().isFile(fileOrDir)
-             && io.typeHeaderOk<IOList<label>>(false) // object with local scope
-            )
-        )
+        bool ok;
+        if (name.empty())
+        {
+            ok = fileHandler().isDir(fileHandler().dirPath(false, io));
+        }
+        else
+        {
+            ok =
+                fileHandler().isFile(fileHandler().filePath(false, io))
+             && io.typeHeaderOk<IOList<label>>(false);// object with local scope
+        }
+
+        if (ok)
         {
             if (debug)
             {
@@ -183,17 +188,19 @@ Foam::word Foam::Time::findInstance
         *this
     );
 
-    const fileName fileOrDir(fileHandler().objectPath(io));
+    bool ok;
+    if (name.empty())
+    {
+        ok = fileHandler().isDir(fileHandler().dirPath(false, io));
+    }
+    else
+    {
+        ok =
+            fileHandler().isFile(fileHandler().filePath(false, io))
+         && io.typeHeaderOk<IOList<label>>(false);// object with local scope
+    }
 
-    if
-    (
-        name.empty()
-      ? fileHandler().isDir(fileOrDir)
-      : (
-            fileHandler().isFile(fileOrDir)
-         && io.typeHeaderOk<IOList<label>>(false) // object with local scope
-        )
-    )
+    if (ok)
     {
         if (debug)
         {

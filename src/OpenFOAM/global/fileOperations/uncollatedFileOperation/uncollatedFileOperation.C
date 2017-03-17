@@ -49,6 +49,7 @@ namespace fileOperations
 Foam::fileName Foam::fileOperations::uncollatedFileOperation::doFilePath
 (
     const bool checkGlobal,
+    const bool isFile,
     const IOobject& io
 ) const
 {
@@ -56,7 +57,7 @@ Foam::fileName Foam::fileOperations::uncollatedFileOperation::doFilePath
     {
         fileName objectPath = io.instance()/io.name();
 
-        if (Foam::isFile(objectPath))
+        if (isFileOrDir(isFile, objectPath))
         {
             return objectPath;
         }
@@ -70,7 +71,7 @@ Foam::fileName Foam::fileOperations::uncollatedFileOperation::doFilePath
         fileName path = io.path();
         fileName objectPath = path/io.name();
 
-        if (Foam::isFile(objectPath))
+        if (isFileOrDir(isFile, objectPath))
         {
             return objectPath;
         }
@@ -92,7 +93,7 @@ Foam::fileName Foam::fileOperations::uncollatedFileOperation::doFilePath
                     io.rootPath()/io.time().globalCaseName()
                    /io.instance()/io.db().dbDir()/io.local()/io.name();
 
-                if (Foam::isFile(parentObjectPath))
+                if (isFileOrDir(isFile, parentObjectPath))
                 {
                     return parentObjectPath;
                 }
@@ -109,7 +110,7 @@ Foam::fileName Foam::fileOperations::uncollatedFileOperation::doFilePath
                 );
                 fileName objectPath = path/io.name();
 
-                if (Foam::isFile(objectPath))
+                if (isFileOrDir(isFile, objectPath))
                 {
                     return objectPath;
                 }
@@ -133,7 +134,7 @@ Foam::fileName Foam::fileOperations::uncollatedFileOperation::doFilePath
                        /newInstancePath/io.db().dbDir()/io.local()/io.name()
                     );
 
-                    if (Foam::isFile(fName))
+                    if (isFileOrDir(isFile, fName))
                     {
                         return fName;
                     }
@@ -344,7 +345,7 @@ Foam::fileName Foam::fileOperations::uncollatedFileOperation::filePath
             << " checkGlobal:" << checkGlobal << endl;
     }
 
-    fileName objPath(doFilePath(checkGlobal, io));
+    fileName objPath(doFilePath(checkGlobal, true, io));
 
     if (debug)
     {
@@ -352,6 +353,32 @@ Foam::fileName Foam::fileOperations::uncollatedFileOperation::filePath
             << " Returning from file searching:" << endl
             << "    objectPath:" << io.objectPath() << endl
             << "    filePath  :" << objPath << endl << endl;
+    }
+    return objPath;
+}
+
+
+Foam::fileName Foam::fileOperations::uncollatedFileOperation::dirPath
+(
+    const bool checkGlobal,
+    const IOobject& io
+) const
+{
+    if (debug)
+    {
+        Pout<< "uncollatedFileOperation::dirPath :"
+            << " objectPath:" << io.objectPath()
+            << " checkGlobal:" << checkGlobal << endl;
+    }
+
+    fileName objPath(doFilePath(checkGlobal, false, io));
+
+    if (debug)
+    {
+        Pout<< "uncollatedFileOperation::dirPath :"
+            << " Returning from directory searching:" << endl
+            << "    objectPath:" << io.objectPath() << endl
+            << "    dirPath   :" << objPath << endl << endl;
     }
     return objPath;
 }
