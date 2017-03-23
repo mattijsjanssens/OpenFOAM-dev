@@ -101,6 +101,7 @@ Usage
 #include "pointFieldDecomposer.H"
 #include "lagrangianFieldDecomposer.H"
 #include "decompositionModel.H"
+#include "collatedFileOperation.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -423,6 +424,12 @@ int main(int argc, char *argv[])
         // Decompose the mesh
         if (!decomposeFieldsOnly)
         {
+            // Disable buffering when writing mesh since we need to read
+            // it later on when decomposing the fields
+            float bufSz =
+                fileOperations::collatedFileOperation::maxThreadBufferSize;
+            fileOperations::collatedFileOperation::maxThreadBufferSize = 0;
+
             mesh.decomposeMesh();
 
             mesh.writeDecomposition(decomposeSets);
@@ -478,12 +485,15 @@ int main(int argc, char *argv[])
                     << cellDist.name() << " for use in postprocessing."
                     << endl;
             }
+
+            fileOperations::collatedFileOperation::maxThreadBufferSize = bufSz;
         }
 
 
         if (copyZero)
         {
-            // Link the 0 directory into each of the processor directories
+            // Copy the 0 directory into each of the processor directories
+            fileName prevTimePath;
             for (label proci = 0; proci < mesh.nProcs(); proci++)
             {
                 Time processorDb
@@ -496,16 +506,28 @@ int main(int argc, char *argv[])
 
                 if (fileHandler().isDir(runTime.timePath()))
                 {
-                    const fileName timePath = processorDb.timePath();
-
-                    Info<< "Processor " << proci
-                        << ": linking " << runTime.timePath() << nl
-                        << " to " << processorDb.timePath() << endl;
-                    fileHandler().cp
+                    const fileName timePath
                     (
-                        runTime.timePath(),
-                        processorDb.timePath()
+                        fileHandler().objectPath
+                        (
+                            IOobject
+                            (
+                                "",
+                                processorDb.timeName(),
+                                processorDb
+                            )
+                        )
                     );
+
+                    if (timePath != prevTimePath)
+                    {
+                        Info<< "Processor " << proci
+                            << ": copying " << runTime.timePath() << nl
+                            << " to " << timePath << endl;
+                        fileHandler().cp(runTime.timePath(), timePath);
+
+                        prevTimePath = timePath;
+                    }
                 }
             }
         }
