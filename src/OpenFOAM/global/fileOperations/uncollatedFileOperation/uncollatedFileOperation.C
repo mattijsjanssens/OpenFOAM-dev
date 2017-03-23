@@ -191,75 +191,83 @@ bool Foam::fileOperations::uncollatedFileOperation::chMod
 
 mode_t Foam::fileOperations::uncollatedFileOperation::mode
 (
-    const fileName& fName
+    const fileName& fName,
+    const bool followLink
 ) const
 {
-    return Foam::mode(fName);
+    return Foam::mode(fName, followLink);
 }
 
 
 Foam::fileName::Type Foam::fileOperations::uncollatedFileOperation::type
 (
-    const fileName& fName
+    const fileName& fName,
+    const bool followLink
 ) const
 {
-    return Foam::type(fName);
+    return Foam::type(fName, followLink);
 }
 
 
 bool Foam::fileOperations::uncollatedFileOperation::exists
 (
     const fileName& fName,
-    const bool checkGzip
+    const bool checkGzip,
+    const bool followLink
 ) const
 {
-    return Foam::exists(fName, checkGzip);
+    return Foam::exists(fName, checkGzip, followLink);
 }
 
 
 bool Foam::fileOperations::uncollatedFileOperation::isDir
 (
-    const fileName& fName
+    const fileName& fName,
+    const bool followLink
 ) const
 {
-    return Foam::isDir(fName);
+    return Foam::isDir(fName, followLink);
 }
 
 
 bool Foam::fileOperations::uncollatedFileOperation::isFile
 (
     const fileName& fName,
-    const bool checkGzip
+    const bool checkGzip,
+    const bool followLink
 ) const
 {
-    return Foam::isFile(fName, checkGzip);
+    return Foam::isFile(fName, checkGzip, followLink);
 }
 
 
 off_t Foam::fileOperations::uncollatedFileOperation::fileSize
 (
-    const fileName& fName
+    const fileName& fName,
+    const bool followLink
 ) const
 {
-    return Foam::fileSize(fName);
+    return Foam::fileSize(fName, followLink);
 }
 
 
 time_t Foam::fileOperations::uncollatedFileOperation::lastModified
 (
-    const fileName& fName
+    const fileName& fName,
+    const bool followLink
 ) const
 {
-    return Foam::lastModified(fName);
+    return Foam::lastModified(fName, followLink);
 }
 
 
 double Foam::fileOperations::uncollatedFileOperation::highResLastModified
 (
-    const fileName& fName
+    const fileName& fName,
+    const bool followLink
 ) const
 {
-    return Foam::highResLastModified(fName);
+    return Foam::highResLastModified(fName, followLink);
 }
 
 
@@ -295,20 +303,22 @@ Foam::fileNameList Foam::fileOperations::uncollatedFileOperation::readDir
 (
     const fileName& dir,
     const fileName::Type type,
-    const bool filtergz
+    const bool filtergz,
+    const bool followLink
 ) const
 {
-    return Foam::readDir(dir, type, filtergz);
+    return Foam::readDir(dir, type, filtergz, followLink);
 }
 
 
 bool Foam::fileOperations::uncollatedFileOperation::cp
 (
     const fileName& src,
-    const fileName& dst
+    const fileName& dst,
+    const bool followLink
 ) const
 {
-    return Foam::cp(src, dst);
+    return Foam::cp(src, dst, followLink);
 }
 
 
@@ -325,10 +335,11 @@ bool Foam::fileOperations::uncollatedFileOperation::ln
 bool Foam::fileOperations::uncollatedFileOperation::mv
 (
     const fileName& src,
-    const fileName& dst
+    const fileName& dst,
+    const bool followLink
 ) const
 {
-    return Foam::mv(src, dst);
+    return Foam::mv(src, dst, followLink);
 }
 
 

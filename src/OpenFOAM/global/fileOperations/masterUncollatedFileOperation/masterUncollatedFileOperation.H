@@ -57,7 +57,7 @@ protected:
 
         class mkDirOp
         {
-            mode_t mode_;
+            const mode_t mode_;
         public:
             mkDirOp(const mode_t mode)
             :
@@ -72,7 +72,7 @@ protected:
 
         class chModOp
         {
-            mode_t mode_;
+            const mode_t mode_;
         public:
             chModOp(const mode_t mode)
             :
@@ -87,79 +87,129 @@ protected:
 
         class modeOp
         {
+            const bool followLink_;
         public:
+            modeOp(const bool followLink)
+            :
+                followLink_(followLink)
+            {}
+
             mode_t operator()(const fileName& fName) const
             {
-                return Foam::mode(fName);
+                return Foam::mode(fName, followLink_);
             }
         };
 
         class typeOp
         {
+            const bool followLink_;
         public:
+            typeOp(const bool followLink)
+            :
+                followLink_(followLink)
+            {}
+
             label operator()(const fileName& fName) const
             {
-                return Foam::type(fName);
+                return Foam::type(fName, followLink_);
             }
         };
 
         class existsOp
         {
-            bool checkGzip_;
+            const bool checkGzip_;
+            const bool followLink_;
         public:
-            existsOp(const bool checkGzip)
+            existsOp(const bool checkGzip, const bool followLink)
             :
-                checkGzip_(checkGzip)
+                checkGzip_(checkGzip),
+                followLink_(followLink)
             {}
 
             bool operator()(const fileName& fName) const
             {
-                return Foam::exists(fName, checkGzip_);
+                return Foam::exists(fName, checkGzip_, followLink_);
             }
         };
 
         class isDirOp
         {
+            const bool followLink_;
+        public:
+            isDirOp(const bool followLink)
+            :
+                followLink_(followLink)
+            {}
+
         public:
             bool operator()(const fileName& fName) const
             {
-                return Foam::isDir(fName);
+                return Foam::isDir(fName, followLink_);
             }
         };
 
         class isFileOp
         {
+            const bool checkGzip_;
+            const bool followLink_;
+        public:
+            isFileOp(const bool checkGzip, const bool followLink)
+            :
+                checkGzip_(checkGzip),
+                followLink_(followLink)
+            {}
         public:
             bool operator()(const fileName& fName) const
             {
-                return Foam::isFile(fName);
+                return Foam::isFile(fName, checkGzip_, followLink_);
             }
         };
 
         class fileSizeOp
         {
+            const bool followLink_;
+        public:
+            fileSizeOp(const bool followLink)
+            :
+                followLink_(followLink)
+            {}
+
         public:
             off_t operator()(const fileName& fName) const
             {
-                return Foam::fileSize(fName);
+                return Foam::fileSize(fName, followLink_);
             }
         };
 
         class lastModifiedOp
         {
+            const bool followLink_;
+        public:
+            lastModifiedOp(const bool followLink)
+            :
+                followLink_(followLink)
+            {}
+
         public:
             time_t operator()(const fileName& fName) const
             {
-                return Foam::lastModified(fName);
+                return Foam::lastModified(fName, followLink_);
             }
         };
 
         class lastModifiedHROp
         {
+            const bool followLink_;
+        public:
+            lastModifiedHROp(const bool followLink)
+            :
+                followLink_(followLink)
+            {}
+
         public:
             double operator()(const fileName& fName) const
             {
-                return Foam::highResLastModified(fName);
+                return Foam::highResLastModified(fName, followLink_);
             }
         };
 
@@ -198,10 +248,17 @@ protected:
 
         class cpOp
         {
+            const bool followLink_;
+        public:
+            cpOp(const bool followLink)
+            :
+                followLink_(followLink)
+            {}
+
         public:
             bool operator()(const fileName& src, const fileName& dest) const
             {
-                return Foam::cp(src, dest);
+                return Foam::cp(src, dest, followLink_);
             }
         };
 
@@ -216,10 +273,17 @@ protected:
 
         class mvOp
         {
+            const bool followLink_;
+        public:
+            mvOp(const bool followLink)
+            :
+                followLink_(followLink)
+            {}
+
         public:
             bool operator()(const fileName& src, const fileName& dest) const
             {
-                return Foam::mv(src, dest);
+                return Foam::mv(src, dest, followLink_);
             }
         };
 
@@ -248,16 +312,23 @@ protected:
         {
             const fileName::Type type_;
             const bool filtergz_;
+            const bool followLink_;
         public:
-            readDirOp(const fileName::Type type, const bool filtergz)
+            readDirOp
+            (
+                const fileName::Type type,
+                const bool filtergz,
+                const bool followLink
+            )
             :
                 type_(type),
-                filtergz_(filtergz)
+                filtergz_(filtergz),
+                followLink_(followLink)
             {}
 
             fileNameList operator()(const fileName& fName) const
             {
-                return Foam::readDir(fName, type_, filtergz_);
+                return Foam::readDir(fName, type_, filtergz_, followLink_);
             }
         };
 
@@ -334,56 +405,93 @@ public:
             virtual bool chMod(const fileName&, const mode_t) const;
 
             //- Return the file mode
-            virtual mode_t mode(const fileName&) const;
+            virtual mode_t mode
+            (
+                const fileName&,
+                const bool followLink = true
+            ) const;
 
-            //- Return the file type: DIRECTORY or FILE
-            virtual fileName::Type type(const fileName&) const;
+            //- Return the file type: DIRECTORY, FILE or LINK
+            virtual fileName::Type type
+            (
+                const fileName&,
+                const bool followLink = true
+            ) const;
 
             //- Does the name exist (as DIRECTORY or FILE) in the file system?
             //  Optionally enable/disable check for gzip file.
             virtual bool exists
             (
                 const fileName&,
-                const bool checkGzip=true
+                const bool checkGzip=true,
+                const bool followLink = true
             ) const;
 
             //- Does the name exist as a DIRECTORY in the file system?
-            virtual bool isDir(const fileName&) const;
+            virtual bool isDir
+            (
+                const fileName&,
+                const bool followLink = true
+            ) const;
 
             //- Does the name exist as a FILE in the file system?
             //  Optionally enable/disable check for gzip file.
             virtual bool isFile
             (
                 const fileName&,
-                const bool checkGzip=true
+                const bool checkGzip=true,
+                const bool followLink = true
             ) const;
 
             //- Return size of file
-            virtual off_t fileSize(const fileName&) const;
+            virtual off_t fileSize
+            (
+                const fileName&,
+                const bool followLink = true
+            ) const;
 
             //- Return time of last file modification
-            virtual time_t lastModified(const fileName&) const;
+            virtual time_t lastModified
+            (
+                const fileName&,
+                const bool followLink = true
+            ) const;
 
             //- Return time of last file modification
-            virtual double highResLastModified(const fileName&) const;
+            virtual double highResLastModified
+            (
+                const fileName&,
+                const bool followLink = true
+            ) const;
 
             //- Read a directory and return the entries as a string list
             virtual fileNameList readDir
             (
                 const fileName&,
                 const fileName::Type=fileName::FILE,
-                const bool filtergz=true
+                const bool filtergz=true,
+                const bool followLink = true
             ) const;
 
             //- Copy, recursively if necessary, the source to the destination
-            virtual bool cp(const fileName& src, const fileName& dst) const;
+            virtual bool cp
+            (
+                const fileName& src,
+                const fileName& dst,
+                const bool followLink = true
+            ) const;
 
             //- Create a softlink. dst should not exist. Returns true if
             //  successful.
             virtual bool ln(const fileName& src, const fileName& dst) const;
 
             //- Rename src to dst
-            virtual bool mv(const fileName& src, const fileName& dst) const;
+            virtual bool mv
+            (
+                const fileName& src,
+                const fileName& dst,
+                const bool followLink = false
+            ) const;
 
             //- Rename to a corresponding backup file
             //  If the backup file already exists, attempt with

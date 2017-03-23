@@ -143,56 +143,93 @@ public:
             virtual bool chMod(const fileName&, const mode_t) const = 0;
 
             //- Return the file mode
-            virtual mode_t mode(const fileName&) const = 0;
+            virtual mode_t mode
+            (
+                const fileName&,
+                const bool followLink = true
+            ) const = 0;
 
-            //- Return the file type: DIRECTORY or FILE
-            virtual fileName::Type type(const fileName&) const = 0;
+            //- Return the file type: DIRECTORY, FILE or LINK
+            virtual fileName::Type type
+            (
+                const fileName&,
+                const bool followLink = true
+            ) const = 0;
 
             //- Does the name exist (as DIRECTORY or FILE) in the file system?
             //  Optionally enable/disable check for gzip file.
             virtual bool exists
             (
                 const fileName&,
-                const bool checkGzip=true
+                const bool checkGzip=true,
+                const bool followLink = true
             ) const = 0;
 
             //- Does the name exist as a DIRECTORY in the file system?
-            virtual bool isDir(const fileName&) const = 0;
+            virtual bool isDir
+            (
+                const fileName&,
+                const bool followLink = true
+            ) const = 0;
 
             //- Does the name exist as a FILE in the file system?
             //  Optionally enable/disable check for gzip file.
             virtual bool isFile
             (
                 const fileName&,
-                const bool checkGzip=true
+                const bool checkGzip=true,
+                const bool followLink = true
             ) const = 0;
 
             //- Return size of file
-            virtual off_t fileSize(const fileName&) const = 0;
+            virtual off_t fileSize
+            (
+                const fileName&,
+                const bool followLink = true
+            ) const = 0;
 
             //- Return time of last file modification
-            virtual time_t lastModified(const fileName&) const = 0;
+            virtual time_t lastModified
+            (
+                const fileName&,
+                const bool followLink = true
+            ) const = 0;
 
             //- Return time of last file modification
-            virtual double highResLastModified(const fileName&) const = 0;
+            virtual double highResLastModified
+            (
+                const fileName&,
+                const bool followLink = true
+            ) const = 0;
 
             //- Read a directory and return the entries as a string list
             virtual fileNameList readDir
             (
                 const fileName&,
                 const fileName::Type=fileName::FILE,
-                const bool filtergz=true
+                const bool filtergz=true,
+                const bool followLink = true
             ) const = 0;
 
             //- Copy, recursively if necessary, the source to the destination
-            virtual bool cp(const fileName& src, const fileName& dst) const = 0;
+            virtual bool cp
+            (
+                const fileName& src,
+                const fileName& dst,
+                const bool followLink = true
+            ) const = 0;
 
             //- Create a softlink. dst should not exist. Returns true if
             //  successful.
             virtual bool ln(const fileName& src, const fileName& dst) const = 0;
 
             //- Rename src to dst
-            virtual bool mv(const fileName& src, const fileName& dst) const = 0;
+            virtual bool mv
+            (
+                const fileName& src,
+                const fileName& dst,
+                const bool followLink = false
+            ) const = 0;
 
             //- Rename to a corresponding backup file
             //  If the backup file already exists, attempt with

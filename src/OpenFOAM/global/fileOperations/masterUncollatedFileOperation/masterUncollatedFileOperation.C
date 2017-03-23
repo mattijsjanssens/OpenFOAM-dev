@@ -382,78 +382,90 @@ bool Foam::fileOperations::masterUncollatedFileOperation::chMod
 
 mode_t Foam::fileOperations::masterUncollatedFileOperation::mode
 (
-    const fileName& fName
+    const fileName& fName,
+    const bool followLink
 ) const
 {
-    return masterOp<mode_t, modeOp>(fName, modeOp());
+    return masterOp<mode_t, modeOp>(fName, modeOp(followLink));
 }
 
 
 Foam::fileName::Type Foam::fileOperations::masterUncollatedFileOperation::type
 (
-    const fileName& fName
+    const fileName& fName,
+    const bool followLink
 ) const
 {
-    return fileName::Type(masterOp<label, typeOp>(fName, typeOp()));
+    return fileName::Type(masterOp<label, typeOp>(fName, typeOp(followLink)));
 }
 
 
 bool Foam::fileOperations::masterUncollatedFileOperation::exists
 (
     const fileName& fName,
-    const bool checkGzip
+    const bool checkGzip,
+    const bool followLink
 ) const
 {
-    return masterOp<bool, existsOp>(fName, existsOp(checkGzip));
+    return masterOp<bool, existsOp>(fName, existsOp(checkGzip, followLink));
 }
 
 
 bool Foam::fileOperations::masterUncollatedFileOperation::isDir
 (
-    const fileName& fName
+    const fileName& fName,
+    const bool followLink
 ) const
 {
-    return masterOp<bool, isDirOp>(fName, isDirOp());
+    return masterOp<bool, isDirOp>(fName, isDirOp(followLink));
 }
 
 
 bool Foam::fileOperations::masterUncollatedFileOperation::isFile
 (
     const fileName& fName,
-    const bool checkGzip
+    const bool checkGzip,
+    const bool followLink
 ) const
 {
-    return masterOp<bool, isFileOp>(fName, isFileOp());
+    return masterOp<bool, isFileOp>(fName, isFileOp(checkGzip, followLink));
 }
 
 
 off_t Foam::fileOperations::masterUncollatedFileOperation::fileSize
 (
-    const fileName& fName
+    const fileName& fName,
+    const bool followLink
 ) const
 {
-    return masterOp<off_t, fileSizeOp>(fName, fileSizeOp());
+    return masterOp<off_t, fileSizeOp>(fName, fileSizeOp(followLink));
 }
 
 
 time_t Foam::fileOperations::masterUncollatedFileOperation::lastModified
 (
-    const fileName& fName
+    const fileName& fName,
+    const bool followLink
 ) const
 {
-    return masterOp<time_t, lastModifiedOp>(fName, lastModifiedOp());
+    return masterOp<time_t, lastModifiedOp>
+    (
+        fName,
+        lastModifiedOp(followLink)
+    );
 }
 
 
 double Foam::fileOperations::masterUncollatedFileOperation::highResLastModified
 (
-    const fileName& fName
+    const fileName& fName,
+    const bool followLink
 ) const
 {
     return masterOp<double, lastModifiedHROp>
     (
         fName,
-        lastModifiedHROp()
+        lastModifiedHROp(followLink)
     );
 }
 
@@ -490,13 +502,14 @@ Foam::fileNameList Foam::fileOperations::masterUncollatedFileOperation::readDir
 (
     const fileName& dir,
     const fileName::Type type,
-    const bool filtergz
+    const bool filtergz,
+    const bool followLink
 ) const
 {
     return masterOp<fileNameList, readDirOp>
     (
         dir,
-        readDirOp(type, filtergz)
+        readDirOp(type, filtergz, followLink)
     );
 }
 
@@ -504,10 +517,11 @@ Foam::fileNameList Foam::fileOperations::masterUncollatedFileOperation::readDir
 bool Foam::fileOperations::masterUncollatedFileOperation::cp
 (
     const fileName& src,
-    const fileName& dst
+    const fileName& dst,
+    const bool followLink
 ) const
 {
-    return masterOp<bool, cpOp>(src, dst, cpOp());
+    return masterOp<bool, cpOp>(src, dst, cpOp(followLink));
 }
 
 
@@ -524,10 +538,11 @@ bool Foam::fileOperations::masterUncollatedFileOperation::ln
 bool Foam::fileOperations::masterUncollatedFileOperation::mv
 (
     const fileName& src,
-    const fileName& dst
+    const fileName& dst,
+    const bool followLink
 ) const
 {
-    return masterOp<bool, mvOp>(src, dst, mvOp());
+    return masterOp<bool, mvOp>(src, dst, mvOp(followLink));
 }
 
 
