@@ -175,6 +175,73 @@ bool Foam::decomposedBlockData::readMasterHeader(IOobject& io, Istream& is)
 }
 
 
+void Foam::decomposedBlockData::writeHeader
+(
+    Ostream& os,
+    const IOstream::versionNumber version,
+    const IOstream::streamFormat format,
+    const word& type,
+    const string& note,
+    const fileName& location,
+    const word& name
+)
+{
+    IOobject::writeBanner(os)
+        << "FoamFile\n{\n"
+        << "    version     " << version << ";\n"
+        << "    format      " << format << ";\n"
+        << "    class       " << type << ";\n";
+    if (note.size())
+    {
+        os  << "    note        " << note << ";\n";
+    }
+
+    if (location.size())
+    {
+        os  << "    location    " << location << ";\n";
+    }
+
+    os  << "    object      " << name << ";\n"
+        << "}" << nl;
+
+    IOobject::writeDivider(os) << nl;
+}
+
+
+void Foam::decomposedBlockData::readHeader
+(
+    Istream& is,
+    IOstream::versionNumber& version,
+    IOstream::streamFormat& format,
+    word& type,
+    string& note,
+    fileName& location,
+    word& name
+)
+{
+    token firstToken(is);
+
+    if
+    (
+        is.good()
+     && firstToken.isWord()
+     && firstToken.wordToken() == "FoamFile"
+    )
+    {
+        dictionary headerDict(is);
+
+        version = IOstream::versionNumber(headerDict.lookup("version"));
+        format = IOstream::formatEnum(headerDict.lookup("format"));
+        type = word(headerDict.lookup("class"));
+        name = word(headerDict.lookup("object"));
+        // The location entry is optional
+        headerDict.readIfPresent("location", location);
+        // The note entry is optional
+        headerDict.readIfPresent("note", note);
+    }
+}
+
+
 bool Foam::decomposedBlockData::readBlock
 (
     const label blocki,
@@ -191,11 +258,53 @@ bool Foam::decomposedBlockData::readBlock
 
     is.fatalCheck("read(Istream&)");
 
-    for (label i = 0; i < blocki+1; i++)
+    if (blocki == 0)
     {
-        // Read data, override old data
         is >> data;
         is.fatalCheck("read(Istream&) : reading entry");
+    }
+    else
+    {
+        // Read master for header
+        IOstream::versionNumber version(IOstream::currentVersion);
+        IOstream::streamFormat format;
+        word type;
+        string note;
+        fileName location;
+        word name;
+        {
+            List<char> data(is);
+            is.fatalCheck("read(Istream&) : reading entry");
+            string buf(data.begin(), data.size());
+            IStringStream str(is.name(), buf);
+            readHeader(str, version, format, type, note, location, name);
+        }
+        OStringStream os;
+        writeHeader(os, version, format, type, note, location, name);
+        string s(os.str());
+        UList<char> slice(const_cast<char*>(s.data()), label(s.size()));
+
+
+        for (label i = 1; i < blocki+1; i++)
+        {
+            // Read data, override old data
+            is >> data;
+
+            // Prepend the header
+            label n = data.size();
+            label sz = slice.size()+n;
+            data.setSize(sz);
+            for (label i = sz-1; i >= slice.size(); --i)
+            {
+                data[i] = data[i-slice.size()];
+            }
+            forAll(slice, i)
+            {
+                data[i] = slice[i];
+            }
+
+            is.fatalCheck("read(Istream&) : reading entry");
+        }
     }
     return is.good();
 }
@@ -230,6 +339,31 @@ bool Foam::decomposedBlockData::readBlocks
                 is.fatalCheck("read(Istream&) : reading entry");
             }
 
+            // Extract the header from the master data
+            string headerBytes;
+            {
+                IOstream::versionNumber version(IOstream::currentVersion);
+                IOstream::streamFormat format;
+                word type;
+                string note;
+                fileName loc;
+                word name;
+                {
+                    string buf(data.begin(), data.size());
+                    IStringStream str(is.name(), buf);
+                    readHeader(str, version, format, type, note, loc, name);
+                }
+                OStringStream os;
+                writeHeader(os, version, format, type, note, loc, name);
+                headerBytes = os.str();
+            }
+            UList<char> slice
+            (
+                const_cast<char*>(headerBytes.data()),
+                label(headerBytes.size())
+            );
+
+
             for
             (
                 label proci = 1;
@@ -239,6 +373,19 @@ bool Foam::decomposedBlockData::readBlocks
             {
                 List<char> elems(is);
                 is.fatalCheck("read(Istream&) : reading entry");
+
+                // Prepend the header
+                label n = elems.size();
+                label sz = slice.size()+n;
+                elems.setSize(sz);
+                for (label i = sz-1; i >= slice.size(); --i)
+                {
+                    elems[i] = elems[i-slice.size()];
+                }
+                forAll(slice, i)
+                {
+                    elems[i] = slice[i];
+                }
 
                 OPstream os(UPstream::commsTypes::scheduled, proci);
                 os << elems;
@@ -267,6 +414,30 @@ bool Foam::decomposedBlockData::readBlocks
                 is.fatalCheck("read(Istream&) : reading entry");
             }
 
+            // Extract the header from the master data
+            string headerBytes;
+            {
+                IOstream::versionNumber version(IOstream::currentVersion);
+                IOstream::streamFormat format;
+                word type;
+                string note;
+                fileName loc;
+                word name;
+                {
+                    string buf(data.begin(), data.size());
+                    IStringStream str(is.name(), buf);
+                    readHeader(str, version, format, type, note, loc, name);
+                }
+                OStringStream os;
+                writeHeader(os, version, format, type, note, loc, name);
+                headerBytes = os.str();
+            }
+            UList<char> slice
+            (
+                const_cast<char*>(headerBytes.data()),
+                label(headerBytes.size())
+            );
+
             for
             (
                 label proci = 1;
@@ -276,6 +447,19 @@ bool Foam::decomposedBlockData::readBlocks
             {
                 List<char> elems(is);
                 is.fatalCheck("read(Istream&) : reading entry");
+
+                // Prepend the header
+                label n = elems.size();
+                label sz = slice.size()+n;
+                elems.setSize(sz);
+                for (label i = sz-1; i >= slice.size(); --i)
+                {
+                    elems[i] = elems[i-slice.size()];
+                }
+                forAll(slice, i)
+                {
+                    elems[i] = slice[i];
+                }
 
                 UOPstream os(proci, pBufs);
                 os << elems;
@@ -326,7 +510,7 @@ bool Foam::decomposedBlockData::writeBlocks
 
             // Write master data
             {
-                os << nl;
+                os << nl << "// Processor" << UPstream::masterNo() << nl;
                 start[UPstream::masterNo()] = os.stdStream().tellp();
                 os << data;
             }
@@ -338,7 +522,7 @@ bool Foam::decomposedBlockData::writeBlocks
 
                 is.fatalCheck("write(Istream&) : reading entry");
 
-                os << nl;
+                os << nl << "// Processor" << proci << nl;
                 start[proci] = os.stdStream().tellp();
                 os << elems;
             }
@@ -372,7 +556,7 @@ bool Foam::decomposedBlockData::writeBlocks
 
             // Write master data
             {
-                os << nl;
+                os << nl << "// Processor" << UPstream::masterNo() << nl;
                 start[UPstream::masterNo()] = os.stdStream().tellp();
                 os << data;
             }
@@ -385,7 +569,7 @@ bool Foam::decomposedBlockData::writeBlocks
 
                 is.fatalCheck("write(Istream&) : reading entry");
 
-                os << nl;
+                os << nl << "// Processor" << proci << nl;
                 start[proci] = os.stdStream().tellp();
                 os << elems;
             }
@@ -406,7 +590,7 @@ bool Foam::decomposedBlockData::read()
     if (UPstream::master())
     {
         isPtr.reset(new IFstream(objectPath()));
-        readHeader(isPtr());
+        IOobject::readHeader(isPtr());
     }
     return readBlocks(isPtr, *this, commsType_);
 }
@@ -426,7 +610,7 @@ bool Foam::decomposedBlockData::writeObject
         // Note: always write binary. These are strings so readable
         //       anyway. They have already be tokenised on the sending side.
         osPtr.reset(new OFstream(objectPath(), IOstream::BINARY, ver, cmp));
-        writeHeader(osPtr());
+        IOobject::writeHeader(osPtr());
     }
     List<std::streamoff> start;
     return writeBlocks(osPtr, start, *this, commsType_);

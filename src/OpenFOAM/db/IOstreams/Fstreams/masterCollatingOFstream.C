@@ -87,18 +87,18 @@ Foam::masterCollatingOFstream::~masterCollatingOFstream()
             );
         }
 
-        //writeHeader(osPtr());
-        // We don't have IOobject so cannot use writeHeader
+        // We don't have IOobject so cannot use IOobject::writeHeader
         OSstream& os = osPtr();
-        IOobject::writeBanner(os)
-            << "FoamFile\n{\n"
-            << "    version     " << version() << ";\n"
-            << "    format      " << os.format() << ";\n"
-            << "    class       " << decomposedBlockData::typeName << ";\n"
-            << "    location    " << pathName_ << ";\n"
-            << "    object      " << pathName_.name() << ";\n"
-            << "}" << nl;
-        IOobject::writeDivider(os) << nl;
+        decomposedBlockData::writeHeader
+        (
+            os,
+            version(),
+            os.format(),
+            decomposedBlockData::typeName,
+            "",
+            pathName_,
+            pathName_.name()
+        );
     }
 
 

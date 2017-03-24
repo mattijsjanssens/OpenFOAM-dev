@@ -124,6 +124,30 @@ public:
         //- Read header. Call only on master.
         static bool readMasterHeader(IOobject&, Istream&);
 
+        //- Write FoamFile IOobject header
+        static void writeHeader
+        (
+            Ostream& os,
+            const IOstream::versionNumber version,
+            const IOstream::streamFormat format,
+            const word& type,
+            const string& note,
+            const fileName& location,
+            const word& name
+        );
+
+        //- Read FoamFile header
+        static void readHeader
+        (
+            Istream& is,
+            IOstream::versionNumber& version,
+            IOstream::streamFormat& format,
+            word& type,
+            string& note,
+            fileName& location,
+            word& name
+        );
+
         //- Read selected block (non-seeking)
         static bool readBlock
         (

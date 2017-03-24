@@ -152,6 +152,9 @@ bool Foam::fileOperations::collatedFileOperation::writeObject
     const Time& tm = io.time();
     const fileName& inst = io.instance();
 
+    // Write header (suppressed for masterCollatingOFstream slaves)
+    bool writeHeader = true;
+
     autoPtr<Ostream> osPtr;
     if (inst.isAbsolute() || !tm.processorCase())
     {
@@ -245,12 +248,16 @@ bool Foam::fileOperations::collatedFileOperation::writeObject
                 }
 
 
+                // Create string from all data to write
                 string buf;
                 {
                     OStringStream os(fmt, ver);
-                    if (!io.writeHeader(os))
+                    if (proci == 0)
                     {
-                        return false;
+                        if (!io.writeHeader(os))
+                        {
+                            return false;
+                        }
                     }
 
                     // Write the data to the Ostream
@@ -259,7 +266,10 @@ bool Foam::fileOperations::collatedFileOperation::writeObject
                         return false;
                     }
 
-                    IOobject::writeEndDivider(os);
+                    if (proci == 0)
+                    {
+                        IOobject::writeEndDivider(os);
+                    }
 
                     buf = os.str();
                 }
@@ -321,12 +331,14 @@ bool Foam::fileOperations::collatedFileOperation::writeObject
                         << "}" << nl;
                     IOobject::writeDivider(os) << nl;
                 }
+
+                // Write data
                 UList<char> slice
                 (
                     const_cast<char*>(buf.data()),
                     label(buf.size())
                 );
-                os << nl << slice;
+                os << nl << "// Processor" << proci << nl << slice << nl;
 
                 return os.good();
             }
@@ -354,6 +366,9 @@ bool Foam::fileOperations::collatedFileOperation::writeObject
                         cmp
                     )
                 );
+
+                // Suppress header on slaves
+                writeHeader = Pstream::master();
             }
         }
     }
@@ -365,7 +380,7 @@ bool Foam::fileOperations::collatedFileOperation::writeObject
         return false;
     }
 
-    if (!io.writeHeader(os))
+    if (writeHeader && !io.writeHeader(os))
     {
         return false;
     }
@@ -376,7 +391,10 @@ bool Foam::fileOperations::collatedFileOperation::writeObject
         return false;
     }
 
-    IOobject::writeEndDivider(os);
+    if (writeHeader)
+    {
+        IOobject::writeEndDivider(os);
+    }
 
     return true;
 }
