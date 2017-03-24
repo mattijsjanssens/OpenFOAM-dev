@@ -22,24 +22,57 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::Function1Types::quarterCosine
+    Foam::Function1Types::Scale
 
 Description
-    Quarter-cosine ramp function starting from 0 and increasing to 1 from \c
-    start over the \c duration and remaining at 1 thereafter.
+    Function1 which scales a given 'value' function by a scalar 'scale'
+    function.
 
-See also
-    Foam::Function1Types::ramp
+    This is particularly useful to ramp a time-varying value by one of the
+    monotonic ramp functions.
+
+    Usage for a vector:
+    \verbatim
+        <entryName>
+        {
+            type      scale;
+
+            scale
+            {
+                type        linearRamp;
+
+                start       0;
+                duration    10;
+            }
+
+            value
+            {
+                type        sine;
+
+                frequency   10;
+                amplitude   1;
+                scale       (1 0.1 0);
+                level       (10 1 0);
+            }
+        }
+    \endverbatim
+
+    Where:
+    \table
+        Property | Description                                  | Required
+        value    | Function of type Function1<Type>             | yes
+        scale    | Scaling function of type Function1<scalar>   | yes
+    \endtable
 
 SourceFiles
-    quarterCosine.C
+    Scale.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef quarterCosine_H
-#define quarterCosine_H
+#ifndef Scale_H
+#define Scale_H
 
-#include "ramp.H"
+#include "Function1.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -49,43 +82,68 @@ namespace Function1Types
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class quarterCosine Declaration
+                           Class Scale Declaration
 \*---------------------------------------------------------------------------*/
 
-class quarterCosine
+template<class Type>
+class Scale
 :
-    public ramp
+    public Function1<Type>
 {
+    // Private data
+
+        //- Scalar scaling function
+        autoPtr<Function1<scalar>> scale_;
+
+        //- Value function
+        autoPtr<Function1<Type>> value_;
+
+
     // Private Member Functions
 
+        //- Read the coefficients from the given dictionary
+        void read(const dictionary& coeffs);
+
         //- Disallow default bitwise assignment
-        void operator=(const quarterCosine&);
+        void operator=(const Scale<Type>&);
 
 
 public:
 
     // Runtime type information
-    TypeName("quarterCosine");
+    TypeName("scale");
 
 
     // Constructors
 
         //- Construct from entry name and dictionary
-        quarterCosine
+        Scale
         (
             const word& entryName,
             const dictionary& dict
         );
 
+        //- Copy constructor
+        Scale(const Scale<Type>& se);
+
+        //- Construct and return a clone
+        virtual tmp<Function1<Type>> clone() const
+        {
+            return tmp<Function1<Type>>(new Scale<Type>(*this));
+        }
+
 
     //- Destructor
-    virtual ~quarterCosine();
+    virtual ~Scale();
 
 
     // Member Functions
 
         //- Return value for time t
-        scalar value(const scalar t) const;
+        Type value(const scalar t) const;
+
+        //- Write in dictionary format
+        virtual void writeData(Ostream& os) const;
 };
 
 
@@ -93,6 +151,12 @@ public:
 
 } // End namespace Function1Types
 } // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#ifdef NoRepository
+    #include "Scale.C"
+#endif
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

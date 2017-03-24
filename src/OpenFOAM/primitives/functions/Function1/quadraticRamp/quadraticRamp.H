@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -21,64 +21,77 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
-Typedef
-    Foam::tensor
+Class
+    Foam::Function1Types::quadraticRamp
 
 Description
-    Tensor of scalars.
+    Quadratic ramp function starting from 0 and increasing quadraticRampally
+    to 1 from \c t_0 over the \c duration and remaining at 1 thereafter.
+
+See also
+    Foam::Function1Types::ramp
 
 SourceFiles
-    tensor.C
+    quadraticRamp.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef tensor_H
-#define tensor_H
+#ifndef quadraticRamp_H
+#define quadraticRamp_H
 
-#include "Tensor.H"
-#include "vector.H"
-#include "sphericalTensor.H"
-#include "symmTensor.H"
-#include "contiguous.H"
+#include "ramp.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
+namespace Function1Types
+{
+
+/*---------------------------------------------------------------------------*\
+                           Class quadraticRamp Declaration
+\*---------------------------------------------------------------------------*/
+
+class quadraticRamp
+:
+    public ramp
+{
+    // Private Member Functions
+
+        //- Disallow default bitwise assignment
+        void operator=(const quadraticRamp&);
+
+
+public:
+
+    // Runtime type information
+    TypeName("quadraticRamp");
+
+
+    // Constructors
+
+        //- Construct from entry name and dictionary
+        quadraticRamp
+        (
+            const word& entryName,
+            const dictionary& dict
+        );
+
+
+    //- Destructor
+    virtual ~quadraticRamp();
+
+
+    // Member Functions
+
+        //- Return value for time t
+        scalar value(const scalar t) const;
+};
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-typedef Tensor<scalar> tensor;
-
-vector eigenValues(const tensor& T);
-vector eigenVector
-(
-    const tensor& T,
-    const scalar lambda,
-    const vector& direction1,
-    const vector& direction2
-);
-tensor eigenVectors(const tensor& T, const vector& lambdas);
-tensor eigenVectors(const tensor& T);
-
-vector eigenValues(const symmTensor& T);
-vector eigenVector
-(
-    const symmTensor& T,
-    const scalar lambda,
-    const vector& direction1,
-    const vector& direction2
-);
-tensor eigenVectors(const symmTensor& T, const vector& lambdas);
-tensor eigenVectors(const symmTensor& T);
-
-//- Data associated with tensor type are contiguous
-template<>
-inline bool contiguous<tensor>() {return true;}
-
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
+} // End namespace Function1Types
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

@@ -23,42 +23,66 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "linear.H"
-
-// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
-
-namespace Foam
-{
-namespace Function1Types
-{
-    makeScalarFunction1(linear);
-}
-}
-
+#include "Scale.H"
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::Function1Types::linear::linear
+template<class Type>
+void Foam::Function1Types::Scale<Type>::read(const dictionary& coeffs)
+{
+    scale_ = Function1<scalar>::New("scale", coeffs);
+    value_ = Function1<Type>::New("value", coeffs);
+}
+
+
+template<class Type>
+Foam::Function1Types::Scale<Type>::Scale
 (
     const word& entryName,
     const dictionary& dict
 )
 :
-    ramp(entryName, dict)
+    Function1<Type>(entryName)
+{
+    read(dict);
+}
+
+
+template<class Type>
+Foam::Function1Types::Scale<Type>::Scale(const Scale<Type>& se)
+:
+    Function1<Type>(se),
+    scale_(se.scale_, false),
+    value_(se.value_, false)
 {}
 
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-Foam::Function1Types::linear::~linear()
+template<class Type>
+Foam::Function1Types::Scale<Type>::~Scale()
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-Foam::scalar Foam::Function1Types::linear::value(const scalar t) const
+template<class Type>
+Type Foam::Function1Types::Scale<Type>::value(const scalar t) const
 {
-    return linearRamp(t);
+    return scale_->value(t)*value_->value(t);
+}
+
+
+template<class Type>
+void Foam::Function1Types::Scale<Type>::writeData(Ostream& os) const
+{
+    Function1<Type>::writeData(os);
+    os  << token::END_STATEMENT << nl;
+    os  << indent << word(this->name() + "Coeffs") << nl;
+    os  << indent << token::BEGIN_BLOCK << incrIndent << nl;
+    scale_->writeData(os);
+    value_->writeData(os);
+    os  << decrIndent << indent << token::END_BLOCK << endl;
 }
 
 

@@ -23,7 +23,7 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "quarterSine.H"
+#include "halfCosineRamp.H"
 #include "mathematicalConstants.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
@@ -32,14 +32,14 @@ namespace Foam
 {
 namespace Function1Types
 {
-    makeScalarFunction1(quarterSine);
+    makeScalarFunction1(halfCosineRamp);
 }
 }
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::Function1Types::quarterSine::quarterSine
+Foam::Function1Types::halfCosineRamp::halfCosineRamp
 (
     const word& entryName,
     const dictionary& dict
@@ -51,15 +51,15 @@ Foam::Function1Types::quarterSine::quarterSine
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-Foam::Function1Types::quarterSine::~quarterSine()
+Foam::Function1Types::halfCosineRamp::~halfCosineRamp()
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-Foam::scalar Foam::Function1Types::quarterSine::value(const scalar t) const
+Foam::scalar Foam::Function1Types::halfCosineRamp::value(const scalar t) const
 {
-    return sin(0.5*constant::mathematical::pi*linearRamp(t));
+    return 0.5*(1 - cos(constant::mathematical::pi*linearRamp(t)));
 }
 
 

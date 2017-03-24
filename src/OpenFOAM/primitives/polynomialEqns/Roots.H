@@ -22,77 +22,107 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::Function1Types::quarterSine
+    Foam::Roots
 
 Description
-    Quarter-sine ramp function starting from 0 and increasing to 1 from \c start
-    over the \c duration and remaining at 1 thereafter.
-
-See also
-    Foam::Function1Types::ramp
+    Templated storage for the roots of polynomial equations, plus flags to
+    indicate the nature of the roots.
 
 SourceFiles
-    quarterSine.C
+    RootsI.H
+    Roots.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef quarterSine_H
-#define quarterSine_H
+#ifndef Roots_H
+#define Roots_H
 
-#include "ramp.H"
+#include "VectorSpace.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
-namespace Function1Types
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace roots
 {
+
+//- Types of root
+enum type
+{
+    real = 0,
+    complex,
+    posInf,
+    negInf,
+    nan
+};
+
+}
 
 /*---------------------------------------------------------------------------*\
-                           Class quarterSine Declaration
+                         Class Roots Declaration
 \*---------------------------------------------------------------------------*/
 
-class quarterSine
+template<direction N>
+class Roots
 :
-    public ramp
+    public VectorSpace<Roots<N>, scalar, N>
 {
-    // Private Member Functions
+    // Private data
 
-        //- Disallow default bitwise assignment
-        void operator=(const quarterSine&);
-
+        //- Root types, encoded into a single integer
+        label types_;
 
 public:
 
-    // Runtime type information
-    TypeName("quarterSine");
-
-
     // Constructors
 
-        //- Construct from entry name and dictionary
-        quarterSine
+        //- Construct null
+        inline Roots();
+
+        //- Construct with a uniform value
+        inline Roots(const roots::type t, const scalar x);
+
+        //- Construct by concatenation
+        inline Roots
         (
-            const word& entryName,
-            const dictionary& dict
+            const roots::type t,
+            const scalar x,
+            const Roots<N - 1>& xs
         );
 
+        //- Construct by concatenation
+        inline Roots
+        (
+            const Roots<N - 1>& xs,
+            const roots::type t,
+            const scalar x
+        );
 
-    //- Destructor
-    virtual ~quarterSine();
+        //- Construct by concatenation
+        template <direction M>
+        inline Roots(const Roots<M>& xs, const Roots<N - M>& ys);
 
 
     // Member Functions
 
-        //- Return value for time t
-        scalar value(const scalar t) const;
+        //- Set the type of the i-th root
+        inline void type(const direction i, const roots::type t);
+
+        //- Return the type of the i-th root
+        inline roots::type type(const direction i) const;
 };
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-} // End namespace Function1Types
 } // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "RootsI.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

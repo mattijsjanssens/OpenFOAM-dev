@@ -22,77 +22,83 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::Function1Types::quadratic
+    Foam::quadraticEqn
 
 Description
-    Quadratic ramp function starting from 0 and increasing quadratically to 1
-    from \c t_0 over the \c duration and remaining at 1 thereafter.
-
-See also
-    Foam::Function1Types::ramp
+    Quadratic equation of the form a*x^2 + b*x + c = 0
 
 SourceFiles
-    quadratic.C
+    quadraticEqnI.H
+    quadraticEqn.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef quadratic_H
-#define quadratic_H
+#ifndef quadraticEqn_H
+#define quadraticEqn_H
 
-#include "ramp.H"
+#include "Roots.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
-namespace Function1Types
-{
 
 /*---------------------------------------------------------------------------*\
-                           Class quadratic Declaration
+                         Class quadraticEqn Declaration
 \*---------------------------------------------------------------------------*/
 
-class quadratic
+class quadraticEqn
 :
-    public ramp
+    public VectorSpace<quadraticEqn, scalar, 3>
 {
-    // Private Member Functions
-
-        //- Disallow default bitwise assignment
-        void operator=(const quadratic&);
-
-
 public:
 
-    // Runtime type information
-    TypeName("quadratic");
+    //- Component labeling enumeration
+    enum components { A, B, C };
 
 
     // Constructors
 
-        //- Construct from entry name and dictionary
-        quadratic
-        (
-            const word& entryName,
-            const dictionary& dict
-        );
+        //- Construct null
+        inline quadraticEqn();
 
+        //- Construct initialized to zero
+        inline quadraticEqn(const Foam::zero);
 
-    //- Destructor
-    virtual ~quadratic();
+        //- Construct from components
+        inline quadraticEqn(const scalar a, const scalar b, const scalar c);
 
 
     // Member Functions
 
-        //- Return value for time t
-        scalar value(const scalar t) const;
+        // Access
+
+            inline scalar a() const;
+            inline scalar b() const;
+            inline scalar c() const;
+
+            inline scalar& a();
+            inline scalar& b();
+            inline scalar& c();
+
+        //- Evaluate at x
+        inline scalar value(const scalar x) const;
+
+        //- Estimate the error of evaluation at x
+        inline scalar error(const scalar x) const;
+
+        //- Get the roots
+        Roots<2> roots() const;
 };
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-} // End namespace Function1Types
 } // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "quadraticEqnI.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
