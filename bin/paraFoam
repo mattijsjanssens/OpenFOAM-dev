@@ -3,7 +3,7 @@
 # =========                 |
 # \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
 #  \\    /   O peration     |
-#   \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+#   \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
 #    \\/     M anipulation  |
 #-------------------------------------------------------------------------------
 # License
@@ -56,6 +56,27 @@ USAGE
     exit 1
 }
 
+
+# Change directory into case directory. Rewrite processorXXX to processors
+# if that exists
+cdCase() {
+    if [ -d "$1" ]
+    then
+        cd "$1"
+    else
+        dir=`echo "$1" | sed -e 's/processor[0-9][0-9]*/processors/g'`
+        if [ -d "$dir" ]
+        then
+            echo "Creating directory $1"
+            mkdir $1
+            cd "$1"
+        else
+            usage "directory does not exist:  '$1'"
+        fi
+    fi
+}
+
+
 # We want to do nice exit when running paraview to give paraview opportunity
 # to clean up
 unset FOAM_ABORT
@@ -90,7 +111,7 @@ do
         ;;
     -case)
         [ "$#" -ge 2 ] || usage "'$1' option requires an argument"
-        cd "$2" 2>/dev/null || usage "directory does not exist:  '$2'"
+        cdCase "$2"
         shift 2
         ;;
     -region)

@@ -145,9 +145,12 @@ Debugging
 
 
 Todo:
+- rewrite all OSspecific calls (that are parallel aware) to use the
+  fileHandler()
+- do the remaining lagrangian
+- determine priority of -envvar, -argList, -system/controlDict
 - globalCellModeller, debugSwitches cannot use fileHandler
 - redistributePar
-- determine priority of -envvar, -argList, -system/controlDict
 - master*OFstream with uniform file
 - Lagrangian IOField reading:
     - if both processors and processorDDD then
