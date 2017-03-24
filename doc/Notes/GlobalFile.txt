@@ -131,7 +131,6 @@ Debugging
         masterUncollated    1;
         collated            1;
     }
-- decomposePar -copyZero creates processor[0-9] which upsets file searching
 - if a parallel run is hanging connect with e.g. gdb and see where it
   is hanging. The fileHandler calls should always be made on all processors
   at the same time (i.e. synchronous); if this is not possible the fileHandler
@@ -146,9 +145,6 @@ Debugging
 
 
 Todo:
-- OFstream: remove softlink if present
-    - OSspecific: have Foam::type return link type
-    - fileStat: use lstat instead of stat
 - globalCellModeller, debugSwitches cannot use fileHandler
 - redistributePar
 - determine priority of -envvar, -argList, -system/controlDict
