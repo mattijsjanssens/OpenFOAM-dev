@@ -77,10 +77,6 @@ template<class ParcelType>
 template<class CloudType>
 void Foam::MPPICParcel<ParcelType>::readFields(CloudType& c)
 {
-//    if (!c.size())
-//    {
-//        return;
-//    }
     bool valid = c.size();
 
     ParcelType::readFields(c);

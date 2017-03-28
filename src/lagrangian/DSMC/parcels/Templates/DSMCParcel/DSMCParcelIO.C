@@ -78,10 +78,6 @@ Foam::DSMCParcel<ParcelType>::DSMCParcel
 template<class ParcelType>
 void Foam::DSMCParcel<ParcelType>::readFields(Cloud<DSMCParcel<ParcelType>>& c)
 {
-//    if (!c.size())
-//    {
-//        return;
-//    }
     bool valid = c.size();
 
     ParcelType::readFields(c);

@@ -50,14 +50,7 @@ Foam::IOPosition<CloudType>::IOPosition(const CloudType& c)
 template<class CloudType>
 bool Foam::IOPosition<CloudType>::write(const bool valid) const
 {
-//    if (cloud_.size())
-    {
-        return regIOobject::write(cloud_.size());
-    }
-//    else
-//    {
-//        return true;
-//    }
+    return regIOobject::write(cloud_.size());
 }
 
 

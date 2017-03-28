@@ -55,6 +55,17 @@ class decomposedBlockData
 {
 protected:
 
+    // Protected member functions
+
+        //- Read data into *this. ISstream is only valid on master.
+        static bool readBlocks
+        (
+            autoPtr<ISstream>& isPtr,
+            List<char>& data,
+            const UPstream::commsTypes commsType
+        );
+
+
     // Protected data
 
         //- Type to use for gather
@@ -124,7 +135,7 @@ public:
         //- Read header. Call only on master.
         static bool readMasterHeader(IOobject&, Istream&);
 
-        //- Write FoamFile IOobject header
+        //- Helper: write FoamFile IOobject header
         static void writeHeader
         (
             Ostream& os,
@@ -136,31 +147,21 @@ public:
             const word& name
         );
 
-        //- Read FoamFile header
-        static void readHeader
-        (
-            Istream& is,
-            IOstream::versionNumber& version,
-            IOstream::streamFormat& format,
-            word& type,
-            string& note,
-            fileName& location,
-            word& name
-        );
-
-        //- Read selected block (non-seeking)
-        static bool readBlock
+        //- Read selected block (non-seeking) + header information
+        static autoPtr<ISstream> readBlock
         (
             const label blocki,
             Istream& is,
-            List<char>& data
+            IOobject& headerIO
         );
 
-        //- Read data into *this. ISstream is only valid on master.
-        static bool readBlocks
+        //- Read master header information (into headerIO) and return
+        //  data in stream. Note: isPtr is only valid on master.
+        static autoPtr<ISstream> readBlocks
         (
+            const fileName& fName,
             autoPtr<ISstream>& isPtr,
-            List<char>& data,
+            IOobject& headerIO,
             const UPstream::commsTypes commsType
         );
 

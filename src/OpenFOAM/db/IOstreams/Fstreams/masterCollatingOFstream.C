@@ -58,7 +58,7 @@ Foam::masterCollatingOFstream::~masterCollatingOFstream()
     if (UPstream::master())
     {
         // Note: always write binary. These are strings so readable
-        //       anyway. They have already be tokenised on the sending side.
+        //       anyway. They have already been tokenised on the sending side.
         if (writer_)
         {
             osPtr.reset

@@ -1291,6 +1291,7 @@ bool Foam::argList::checkRootCase() const
     if (Pstream::master() && !isDir(path()))
     {
         // Allow slaves on non-existing processor directories, created later
+        // (e.g. redistributePar)
         //FatalError
         Warning
             << executable_

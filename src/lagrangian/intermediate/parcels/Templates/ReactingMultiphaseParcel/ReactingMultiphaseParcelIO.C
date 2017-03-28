@@ -91,11 +91,6 @@ template<class ParcelType>
 template<class CloudType>
 void Foam::ReactingMultiphaseParcel<ParcelType>::readFields(CloudType& c)
 {
-    if (!c.size())
-    {
-        return;
-    }
-
     ParcelType::readFields(c);
 }
 
@@ -108,10 +103,6 @@ void Foam::ReactingMultiphaseParcel<ParcelType>::readFields
     const CompositionType& compModel
 )
 {
-//    if (!c.size())
-//    {
-//        return;
-//    }
     bool valid = c.size();
 
     ParcelType::readFields(c, compModel);
@@ -233,7 +224,6 @@ void Foam::ReactingMultiphaseParcel<ParcelType>::writeFields
     label np = c.size();
 
     // Write the composition fractions
-//    if (np > 0)
     {
         const wordList& stateLabels = compModel.stateLabels();
 

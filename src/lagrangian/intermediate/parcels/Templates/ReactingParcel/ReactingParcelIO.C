@@ -88,11 +88,6 @@ template<class ParcelType>
 template<class CloudType>
 void Foam::ReactingParcel<ParcelType>::readFields(CloudType& c)
 {
-    if (!c.size())
-    {
-        return;
-    }
-
     ParcelType::readFields(c);
 }
 
@@ -105,10 +100,6 @@ void Foam::ReactingParcel<ParcelType>::readFields
     const CompositionType& compModel
 )
 {
-//    if (!c.size())
-//    {
-//        return;
-//    }
     bool valid = c.size();
 
     ParcelType::readFields(c);
@@ -187,7 +178,6 @@ void Foam::ReactingParcel<ParcelType>::writeFields
 
     const label np = c.size();
 
-//    if (np > 0)
     {
         IOField<scalar> mass0(c.fieldIOobject("mass0", IOobject::NO_READ), np);
 

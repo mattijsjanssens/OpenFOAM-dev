@@ -101,11 +101,6 @@ template<class ParcelType>
 template<class CloudType>
 void Foam::SprayParcel<ParcelType>::readFields(CloudType& c)
 {
-    if (!c.size())
-    {
-        return;
-    }
-
     ParcelType::readFields(c);
 }
 
@@ -118,10 +113,6 @@ void Foam::SprayParcel<ParcelType>::readFields
     const CompositionType& compModel
 )
 {
-//    if (!c.size())
-//    {
-//        return;
-//    }
     bool valid = c.size();
 
     ParcelType::readFields(c, compModel);

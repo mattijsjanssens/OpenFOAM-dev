@@ -551,22 +551,8 @@ Foam::fileOperations::uncollatedFileOperation::readStream
                 << exit(FatalIOError);
         }
 
-        // Read my data
-        List<char> data;
-        decomposedBlockData::readBlock(proci, isPtr(), data);
-        // TBD: remove extra copying
-        string buf(data.begin(), data.size());
-        autoPtr<ISstream> realIsPtr(new IStringStream(fName, buf));
-
-        // Read header
-        if (!io.readHeader(realIsPtr()))
-        {
-            FatalIOErrorInFunction(isPtr())
-                << "problem while reading header for object " << io.name()
-                << " from " << decomposedBlockData::typeName
-                << " type file" << exit(FatalIOError);
-        }
-        return realIsPtr;
+        // Read data and return as stream
+        return decomposedBlockData::readBlock(proci, isPtr(), io);
     }
 }
 

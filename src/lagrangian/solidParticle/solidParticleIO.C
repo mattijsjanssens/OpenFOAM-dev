@@ -65,10 +65,6 @@ Foam::solidParticle::solidParticle
 
 void Foam::solidParticle::readFields(Cloud<solidParticle>& c)
 {
-//    if (!c.size())
-//    {
-//        return;
-//    }
     bool valid = c.size();
 
     particle::readFields(c);

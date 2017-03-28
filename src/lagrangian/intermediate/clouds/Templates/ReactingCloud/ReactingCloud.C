@@ -355,7 +355,6 @@ void Foam::ReactingCloud<CloudType>::info()
 template<class CloudType>
 void Foam::ReactingCloud<CloudType>::writeFields() const
 {
-//    if (this->size())
     if (this->solution().active())
     {
         CloudType::particleType::writeFields(*this, this->composition());

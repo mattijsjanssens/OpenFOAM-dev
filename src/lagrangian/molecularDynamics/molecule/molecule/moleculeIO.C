@@ -93,10 +93,6 @@ Foam::molecule::molecule
 
 void Foam::molecule::readFields(Cloud<molecule>& mC)
 {
-//    if (!mC.size())
-//    {
-//        return;
-//    }
     bool valid = mC.size();
 
     particle::readFields(mC);

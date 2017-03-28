@@ -81,10 +81,6 @@ template<class ParcelType>
 template<class CloudType>
 void Foam::ThermoParcel<ParcelType>::readFields(CloudType& c)
 {
-//    if (!c.size())
-//    {
-//        return;
-//    }
     bool valid = c.size();
 
     ParcelType::readFields(c);

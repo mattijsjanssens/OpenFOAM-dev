@@ -228,10 +228,7 @@ void Foam::Cloud<ParticleType>::checkFieldFieldIOobject
 template<class ParticleType>
 void Foam::Cloud<ParticleType>::writeFields() const
 {
-    //if (this->size())
-    {
-        ParticleType::writeFields(*this);
-    }
+    ParticleType::writeFields(*this);
 }
 
 
@@ -246,15 +243,8 @@ bool Foam::Cloud<ParticleType>::writeObject
 {
     writeCloudUniformProperties();
 
-    //if (this->size())
-    {
-        writeFields();
-        return cloud::writeObject(fmt, ver, cmp, this->size());
-    }
-//    else
-//    {
-//        return true;
-//    }
+    writeFields();
+    return cloud::writeObject(fmt, ver, cmp, this->size());
 }
 
 

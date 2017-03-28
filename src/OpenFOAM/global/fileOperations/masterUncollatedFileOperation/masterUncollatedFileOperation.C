@@ -944,7 +944,8 @@ Foam::fileOperations::masterUncollatedFileOperation::readStream
                     << " from objectPath:" << io.objectPath()
                     << exit(FatalIOError);
             }
-            decomposedBlockData::readBlock(proci, isPtr(), data);
+
+            return decomposedBlockData::readBlock(proci, isPtr(), io);
         }
         else
         {
@@ -952,10 +953,11 @@ Foam::fileOperations::masterUncollatedFileOperation::readStream
             off_t sz = fileSize(fName);
 
             // Read my data
-            decomposedBlockData::readBlocks
+            return decomposedBlockData::readBlocks
             (
+                fName,
                 isPtr,
-                data,
+                io,
                 (
                     sz > off_t(maxBufferSize)
                   ? UPstream::commsTypes::scheduled
@@ -963,20 +965,6 @@ Foam::fileOperations::masterUncollatedFileOperation::readStream
                 )
             );
         }
-
-        // TBD: remove extra copying
-        string buf(data.begin(), data.size());
-        autoPtr<ISstream> realIsPtr(new IStringStream(fName, buf));
-
-        // Read header
-        if (!io.readHeader(realIsPtr()))
-        {
-            FatalIOErrorInFunction(realIsPtr())
-                << "problem while reading header for object " << io.name()
-                << exit(FatalIOError);
-        }
-
-        return realIsPtr;
     }
     else
     {

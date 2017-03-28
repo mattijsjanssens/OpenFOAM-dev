@@ -133,8 +133,18 @@ Foam::OFstreamWriter::OFstreamWriter(const off_t maxBufferSize)
 :
     maxBufferSize_(maxBufferSize),
     //mutex_(PTHREAD_MUTEX_INITIALIZER),
-    mutex_(allocateMutex()),
-    thread_(allocateThread()),
+    mutex_
+    (
+        maxBufferSize_ > 0
+      ? allocateMutex()
+      : -1
+    ),
+    thread_
+    (
+        maxBufferSize_ > 0
+      ? allocateThread()
+      : -1
+    ),
     threadRunning_(false)
 {}
 
@@ -152,8 +162,14 @@ Foam::OFstreamWriter::~OFstreamWriter()
         //pthread_join(thread_, nullptr);
         joinThread(thread_);
     }
-    freeThread(thread_);
-    freeMutex(mutex_);
+    if (thread_ != -1)
+    {
+        freeThread(thread_);
+    }
+    if (mutex_ != -1)
+    {
+        freeMutex(mutex_);
+    }
 }
 
 

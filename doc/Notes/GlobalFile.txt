@@ -160,3 +160,4 @@ Todo:
   Small problem since generally not running with both.
 - have syncPar flag on all low-level routines
 - indexing for single processor reading in decomposedBlockData::readBlock
+- OK.paraFoam exits with double free or corruption in _ZN4Foam9freeMutexEi+0x29
