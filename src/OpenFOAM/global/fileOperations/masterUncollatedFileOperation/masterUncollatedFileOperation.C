@@ -200,18 +200,29 @@ Foam::fileOperations::masterUncollatedFileOperation::splitProcessorPath
     fileName& local
 )
 {
-    std::string::size_type pos = objectPath.find("/processor");
+    // Search for processor at start of line or /processor
+    std::string::size_type pos = objectPath.find("processor");
     if (pos == string::npos)
     {
         return -1;
     }
 
-    path = objectPath.substr(0, pos);
-
-    local = objectPath.substr(pos+10);
+    if (pos == 0)
+    {
+        path = "";
+        local = objectPath.substr(pos+9);
+    }
+    else if (objectPath[pos-1] != '/')
+    {
+        return -1;
+    }
+    else
+    {
+        path = objectPath.substr(0, pos-1);
+        local = objectPath.substr(pos+9);
+    }
 
     pos = local.find('/');
-
     if (pos == string::npos)
     {
         return -1;
@@ -990,7 +1001,13 @@ Foam::fileOperations::masterUncollatedFileOperation::readStream
 
             if (valid)
             {
-                if (!fName.empty())
+                if (fName.empty())
+                {
+                    FatalErrorInFunction
+                        << "cannot find file " << io.objectPath()
+                        << exit(FatalError);
+                }
+                else
                 {
                     autoPtr<IFstream> ifsPtr(new IFstream(fName));
 

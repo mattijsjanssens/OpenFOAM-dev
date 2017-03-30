@@ -140,6 +140,26 @@ Foam::fileName Foam::fileOperations::collatedFileOperation::objectPath
 }
 
 
+Foam::fileName Foam::fileOperations::collatedFileOperation::objectPath
+(
+    const fileName& fName
+) const
+{
+    fileName path;
+    fileName local;
+    label proci = splitProcessorPath(fName, path, local);
+
+    if (proci != -1)
+    {
+        return path/processorsDir/local;
+    }
+    else
+    {
+        return fName;
+    }
+}
+
+
 bool Foam::fileOperations::collatedFileOperation::writeObject
 (
     const regIOobject& io,

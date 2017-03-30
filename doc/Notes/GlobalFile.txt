@@ -40,7 +40,7 @@ fileHandler
   using (in increasing order of priority)
     - environment variable FOAM_FILEHANDLER
     - command line option -fileHandler XXX
-    - 'fileHander' entry in system/controlDict
+    - 'fileHander' entry in etc/controlDict (or system/controlDict)
 - parallel communication is done using non-blocking communication by
   default. This means that the total buffer size needed is the overall
   length of a file on all processors. In etc/controlDict there is a
@@ -147,7 +147,8 @@ Debugging
 Todo:
 - rewrite all OSspecific calls (that are parallel aware) to use the
   fileHandler()
-- do the remaining lagrangian
+- do the remaining lagrangian. Done.
+- mdFoam/nanoNozzle: mdFoam: pairPotentialList.C
 - determine priority of -envvar, -argList, -system/controlDict
 - globalCellModeller, debugSwitches cannot use fileHandler
 - redistributePar
@@ -161,3 +162,4 @@ Todo:
 - have syncPar flag on all low-level routines
 - indexing for single processor reading in decomposedBlockData::readBlock
 - OK.paraFoam exits with double free or corruption in _ZN4Foam9freeMutexEi+0x29
+- better error message if dictionary or field not found.

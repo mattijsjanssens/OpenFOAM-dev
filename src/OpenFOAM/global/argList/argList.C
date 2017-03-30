@@ -1288,7 +1288,9 @@ bool Foam::argList::checkRootCase() const
         return false;
     }
 
-    if (Pstream::master() && !isDir(path()))
+    fileName pathDir(fileHandler().objectPath(path()));
+
+    if (!fileHandler().isDir(pathDir))
     {
         // Allow slaves on non-existing processor directories, created later
         // (e.g. redistributePar)

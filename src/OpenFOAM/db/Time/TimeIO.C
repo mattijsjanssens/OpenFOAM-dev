@@ -128,6 +128,43 @@ void Foam::Time::readDict()
                 }
             }
         }
+
+
+        // Handle fileHandler override explicitly since interacts with
+        // local dictionary monitoring.
+        word fileHandlerName;
+        if
+        (
+            localSettings.readIfPresent("fileHandler", fileHandlerName)
+         && fileHandler().type() != fileHandlerName
+        )
+        {
+            // Remove the old watches since destroying the file
+            fileNameList oldWatchedFiles(controlDict_.watchIndices());
+            forAllReverse(controlDict_.watchIndices(), i)
+            {
+                label watchi = controlDict_.watchIndices()[i];
+                oldWatchedFiles[i] = fileHandler().getFile(watchi);
+                fileHandler().removeWatch(watchi);
+            }
+            controlDict_.watchIndices().clear();
+
+            // Installing the new handler
+            Info<< "Overriding fileHandler to " << fileHandlerName << endl;
+
+            autoPtr<fileOperation> handler
+            (
+                fileOperation::New
+                (
+                    fileHandlerName,
+                    true
+                )
+            );
+            Foam::fileHandler(handler);
+
+            // Reinstall old watches
+            fileHandler().addWatches(controlDict_, oldWatchedFiles);
+        }
     }
 
 
@@ -378,41 +415,6 @@ void Foam::Time::readDict()
             fileHandler().removeWatch(controlDict_.watchIndices()[i]);
         }
         controlDict_.watchIndices().clear();
-    }
-
-
-    word fileHandlerName;
-    if
-    (
-        controlDict_.readIfPresent("fileHandler", fileHandlerName)
-     && fileHandler().type() != fileHandlerName
-    )
-    {
-        // Remove the old watches since destroying the file
-        fileNameList oldWatchedFiles(controlDict_.watchIndices());
-        forAllReverse(controlDict_.watchIndices(), i)
-        {
-            label watchi = controlDict_.watchIndices()[i];
-            oldWatchedFiles[i] = fileHandler().getFile(watchi);
-            fileHandler().removeWatch(watchi);
-        }
-        controlDict_.watchIndices().clear();
-
-        // Installing the new handler
-        Info<< "Overriding fileHandler to " << fileHandlerName << endl;
-
-        autoPtr<fileOperation> handler
-        (
-            fileOperation::New
-            (
-                fileHandlerName,
-                true
-            )
-        );
-        Foam::fileHandler(handler);
-
-        // Reinstall old watches
-        fileHandler().addWatches(controlDict_, oldWatchedFiles);
     }
 }
 

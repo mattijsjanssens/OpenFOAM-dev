@@ -32,6 +32,7 @@ License
 #include "objectRegistry.H"
 #include "decomposedBlockData.H"
 #include "polyMesh.H"
+#include "registerSwitch.H"
 
 /* * * * * * * * * * * * * * * Static Member Data  * * * * * * * * * * * * * */
 
@@ -58,8 +59,20 @@ namespace Foam
 
     addArgsOptions intObj;
 
+    word fileOperation::fileHandlerType
+    (
+        debug::optimisationSwitches().lookupOrAddDefault
+        (
+            "fileHandler",
+            Foam::fileOperations::uncollatedFileOperation::typeName,
+            false,
+            false
+        )
+    );
+
     word fileOperation::processorsDir = "processors";
 }
+
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
@@ -248,6 +261,12 @@ bool Foam::fileOperation::writeObject
         IOobject::writeEndDivider(os);
     }
     return true;
+}
+
+
+Foam::fileName Foam::fileOperation::objectPath(const fileName& fName) const
+{
+    return fName;
 }
 
 
@@ -577,7 +596,7 @@ const Foam::fileOperation& Foam::fileHandler()
 
         if (!handler.size())
         {
-            handler = fileOperations::uncollatedFileOperation::typeName;
+            handler = fileOperation::fileHandlerType;
         }
 
         fileOperation::fileHandlerPtr_ = fileOperation::New(handler, true);

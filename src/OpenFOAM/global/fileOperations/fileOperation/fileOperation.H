@@ -78,6 +78,9 @@ public:
         //- Return the processors directory name (usually "processors")
         static word processorsDir;
 
+        //- Default fileHandler
+        static word fileHandlerType;
+
 
     // Public data types
 
@@ -321,6 +324,10 @@ public:
 
 
         // Filename (not IOobject) operations
+
+            //- Generate disk file name for object. Opposite of filePath.
+            //  Use IOobject version in preference
+            virtual fileName objectPath(const fileName&) const;
 
             //- Search for a file or directory. Use IOobject version in
             //  preference

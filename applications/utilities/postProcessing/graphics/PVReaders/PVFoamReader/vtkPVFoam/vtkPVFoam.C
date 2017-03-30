@@ -31,7 +31,6 @@ License
 #include "Time.H"
 #include "patchZones.H"
 #include "collatedFileOperation.H"
-#include "uncollatedFileOperation.H"
 
 // VTK includes
 #include "vtkDataArraySelection.h"
@@ -254,19 +253,7 @@ Foam::vtkPVFoam::vtkPVFoam
     // Make sure not to use the threaded version - it does not like
     // being loaded as a shared library - static cleanup order is problematic.
     // For now just disable the threaded writer.
-    if
-    (
-        getEnv("FOAM_FILEHANDLER")
-     == fileOperations::collatedFileOperation::typeName
-    )
-    {
-        setEnv
-        (
-            "FOAM_FILEHANDLER",
-            fileOperations::uncollatedFileOperation::typeName,
-            true
-        );
-    }
+    fileOperations::collatedFileOperation::maxThreadBufferSize = 0;
 
 
     // avoid argList and get rootPath/caseName directly from the file

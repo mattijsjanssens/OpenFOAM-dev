@@ -500,7 +500,7 @@ Foam::fileOperations::uncollatedFileOperation::readStream
     if (fName.empty())
     {
         FatalErrorInFunction
-            << "empty file name for object " << io.name()
+            << "cannot find file " << io.objectPath()
             << exit(FatalError);
     }
 
