@@ -503,26 +503,26 @@ Foam::fileNameList Foam::fileOperation::readObjects
             << " instance:" << instance << endl;
     }
 
-    fileName timePath(db.path(instance));
     fileName path(db.path(instance, db.dbDir()/local));
 
     newInstance = word::null;
     fileNameList objectNames;
-    if (Foam::isDir(timePath))
+
+    if (Foam::isDir(path))
     {
         newInstance = instance;
         objectNames = Foam::readDir(path, fileName::FILE);
     }
     else
     {
-        // Get processors equivalent of timePath
+        // Get processors equivalent of path
 
         fileName prefix;
         fileName postfix;
         label proci = fileOperations::masterUncollatedFileOperation::
         splitProcessorPath
         (
-            timePath,
+            path,
             prefix,
             postfix
         );
@@ -531,7 +531,7 @@ Foam::fileNameList Foam::fileOperation::readObjects
         if (proci != -1 && Foam::isDir(procsPath))
         {
             newInstance = instance;
-            objectNames = Foam::readDir(procsPath/local, fileName::FILE);
+            objectNames = Foam::readDir(procsPath, fileName::FILE);
         }
     }
     return objectNames;

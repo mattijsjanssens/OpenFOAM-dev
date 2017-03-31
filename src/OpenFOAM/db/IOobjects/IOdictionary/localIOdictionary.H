@@ -65,6 +65,10 @@ public:
         //- Construct given an IOobject and Istream
         localIOdictionary(const IOobject& io, Istream& is);
 
+        //- Construct given an IOobject, supply wanted typeName
+        localIOdictionary(const IOobject& io, const word& wantedType);
+
+
     //- Destructor
     virtual ~localIOdictionary();
 

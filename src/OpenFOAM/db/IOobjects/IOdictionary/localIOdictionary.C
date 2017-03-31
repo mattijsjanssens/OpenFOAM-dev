@@ -41,6 +41,21 @@ Foam::localIOdictionary::localIOdictionary(const IOobject& io)
 Foam::localIOdictionary::localIOdictionary
 (
     const IOobject& io,
+    const word& wantedType
+)
+:
+    baseIOdictionary(io)
+{
+    readHeaderOk(IOstream::ASCII, wantedType);
+
+    // For if MUST_READ_IF_MODIFIED
+    addWatch();
+}
+
+
+Foam::localIOdictionary::localIOdictionary
+(
+    const IOobject& io,
     const dictionary& dict
 )
 :

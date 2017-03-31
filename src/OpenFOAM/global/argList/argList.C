@@ -598,19 +598,10 @@ void Foam::argList::parse
         {
             handlerType = iter();
         }
-        else
-        {
-            debug::optimisationSwitches().readIfPresent
-            (
-                "fileHandler",
-                handlerType
-            );
-        }
 
         if (handlerType.empty())
         {
-            handlerType =
-                Foam::fileOperations::uncollatedFileOperation::typeName;
+            handlerType = fileOperation::fileHandlerType;
         }
 
         autoPtr<fileOperation> handler
