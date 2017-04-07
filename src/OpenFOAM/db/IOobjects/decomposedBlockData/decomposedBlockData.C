@@ -31,6 +31,7 @@ License
 #include "IFstream.H"
 #include "IStringStream.H"
 #include "dictionary.H"
+#include <sys/time.h>
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -434,11 +435,11 @@ Foam::autoPtr<Foam::ISstream> Foam::decomposedBlockData::readBlocks
                 proci++
             )
             {
-                List<char> elems(is);
+                is >> data;
                 is.fatalCheck("read(Istream&) : reading entry");
 
                 OPstream os(UPstream::commsTypes::scheduled, proci);
-                os << elems;
+                os << data;
             }
 
             ok = is.good();
@@ -553,7 +554,11 @@ bool Foam::decomposedBlockData::writeBlocks
             << " commsType:" << Pstream::commsTypeNames[commsType] << endl;
     }
 
-    bool ok = false;
+    bool ok = true;
+
+    labelList recvSizes(Pstream::nProcs());
+    recvSizes[Pstream::myProcNo()] = data.byteSize();
+    Pstream::gatherList(recvSizes);
 
     if (commsType == UPstream::commsTypes::scheduled)
     {
@@ -570,12 +575,19 @@ bool Foam::decomposedBlockData::writeBlocks
                 os << data;
             }
             // Write slaves
+            List<char> elems;
             for (label proci = 1; proci < UPstream::nProcs(); proci++)
             {
-                IPstream is(UPstream::commsTypes::scheduled, proci);
-                List<char> elems(is);
-
-                is.fatalCheck("write(Istream&) : reading entry");
+                elems.setSize(recvSizes[proci]);
+                IPstream::read
+                (
+                    UPstream::commsTypes::scheduled,
+                    proci,
+                    elems.begin(),
+                    elems.size(),
+                    Pstream::msgType(),
+                    Pstream::worldComm
+                );
 
                 os << nl << "// Processor" << proci << nl;
                 start[proci] = os.stdStream().tellp();
@@ -586,25 +598,72 @@ bool Foam::decomposedBlockData::writeBlocks
         }
         else
         {
-            OPstream os(UPstream::commsTypes::scheduled, UPstream::masterNo());
-            os << data;
+            UOPstream::write
+            (
+                UPstream::commsTypes::scheduled,
+                UPstream::masterNo(),
+                data.begin(),
+                data.byteSize(),
+                Pstream::msgType(),
+                Pstream::worldComm
+            );
         }
     }
     else
     {
-        PstreamBuffers pBufs(UPstream::commsTypes::nonBlocking);
+        if (debug)
+        {
+            struct timeval tv;
+            gettimeofday(&tv, nullptr);
+            Pout<< "Starting sending at:"
+                << 1.0*tv.tv_sec+tv.tv_usec/1e6 << " s"
+                << Foam::endl;
+        }
+
+
+        label startOfRequests = Pstream::nRequests();
 
         if (!UPstream::master())
         {
-            UOPstream os(UPstream::masterNo(), pBufs);
-            os << data;
+            UOPstream::write
+            (
+                UPstream::commsTypes::nonBlocking,
+                UPstream::masterNo(),
+                data.begin(),
+                data.byteSize(),
+                Pstream::msgType(),
+                Pstream::worldComm
+            );
+            Pstream::waitRequests(startOfRequests);
         }
-
-        labelList recvSizes;
-        pBufs.finishedSends(recvSizes);
-
-        if (UPstream::master())
+        else
         {
+            List<List<char>> recvBufs(Pstream::nProcs());
+            for (label proci = 1; proci < UPstream::nProcs(); proci++)
+            {
+                recvBufs[proci].setSize(recvSizes[proci]);
+                UIPstream::read
+                (
+                    UPstream::commsTypes::nonBlocking,
+                    proci,
+                    recvBufs[proci].begin(),
+                    recvSizes[proci],
+                    Pstream::msgType(),
+                    Pstream::worldComm
+                );
+            }
+            Pstream::waitRequests(startOfRequests);
+
+
+            if (debug)
+            {
+                struct timeval tv;
+                gettimeofday(&tv, nullptr);
+                Pout<< "Starting master-only writing at:"
+                    << 1.0*tv.tv_sec+tv.tv_usec/1e6 << " s"
+                    << Foam::endl;
+            }
+
             start.setSize(UPstream::nProcs());
 
             OSstream& os = osPtr();
@@ -619,20 +678,25 @@ bool Foam::decomposedBlockData::writeBlocks
             // Write slaves
             for (label proci = 1; proci < UPstream::nProcs(); proci++)
             {
-                UIPstream is(proci, pBufs);
-                List<char> elems(is);
-
-                is.fatalCheck("write(Istream&) : reading entry");
-
                 os << nl << "// Processor" << proci << nl;
                 start[proci] = os.stdStream().tellp();
-                os << elems;
+                os << recvBufs[proci];
             }
 
             ok = os.good();
         }
     }
+    if (debug)
+    {
+        struct timeval tv;
+        gettimeofday(&tv, nullptr);
+        Pout<< "Finished master-only writing at:"
+            << 1.0*tv.tv_sec+tv.tv_usec/1e6 << " s"
+            << Foam::endl;
+    }
 
+    //- Enable to get synchronised error checking. Is the one that keeps
+    //  slaves as slow as the master (which does all the writing)
     Pstream::scatter(ok);
 
     return ok;
