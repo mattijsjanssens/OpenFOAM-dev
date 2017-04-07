@@ -1279,9 +1279,9 @@ bool Foam::argList::checkRootCase() const
         return false;
     }
 
-    fileName pathDir(fileHandler().objectPath(path()));
+    fileName pathDir(fileHandler().filePath(path()));
 
-    if (!fileHandler().isDir(pathDir))
+    if (pathDir.empty())    //!fileHandler().isDir(pathDir))
     {
         // Allow slaves on non-existing processor directories, created later
         // (e.g. redistributePar)

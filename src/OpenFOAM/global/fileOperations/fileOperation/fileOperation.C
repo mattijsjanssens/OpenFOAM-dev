@@ -264,10 +264,10 @@ bool Foam::fileOperation::writeObject
 }
 
 
-Foam::fileName Foam::fileOperation::objectPath(const fileName& fName) const
-{
-    return fName;
-}
+//Foam::fileName Foam::fileOperation::objectPath(const fileName& fName) const
+//{
+//    return fName;
+//}
 
 
 Foam::fileName Foam::fileOperation::filePath(const fileName& fName) const

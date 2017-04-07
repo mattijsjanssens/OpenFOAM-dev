@@ -95,9 +95,9 @@ public:
             //- Generate disk file name for object. Opposite of filePath.
             virtual fileName objectPath(const IOobject& io) const;
 
-            //- Generate disk file name for object. Opposite of filePath.
-            //  Use IOobject version in preference
-            virtual fileName objectPath(const fileName&) const;
+//            //- Generate disk file name for object. Opposite of filePath.
+//            //  Use IOobject version in preference
+//            virtual fileName objectPath(const fileName&) const;
 
             //- Writes a regIOobject (so header, contents and divider).
             //  Returns success state.
