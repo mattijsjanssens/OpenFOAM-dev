@@ -144,6 +144,39 @@ Debugging
   Maybe run topoSet with a different fileHandler?
 
 
+Benchmarking
+------------
+- applications/test/CompactIOList
+- write binary faceCompactIOList, 10000000 quads (= 200Mbytes binary data)
+- 8 processors so in total 1.6Gb data to write
+- all slaves wait for master (scatter of os.good()) so are as slow
+  as the master.
+
+                            Master          Raw slave time
+                            cpu/elapsed     cpu/elapsed
+                            ------          --------------
+1) All penfold:
+- uncollated            :   0.83/1.6
+- scheduled             :   4.1/8.7
+- non-blocking          :   4.6/9.9
+- non-blocking+threaded :   8.14/16.5
+
+2) 4*penfold, 4*dm (disk local to the master)
+- uncollated            :   0.63/0.7
+- scheduled             :   9.7/10.5
+- non-blocking          :   9.9/12.9
+- non-blocking+threaded :   13.11/13.1
+
+3) 8*inkling (disk local to the master)
+- uncollated            :   0.25/0.3
+
+4) 6*inkling[1-8] (so 48 processes, 9.6Gb) (disk local to the master)
+- uncollated            :   0.32/0.3
+- scheduled             :   5.9/15.9
+- non-blocking          :   7.1/23.4
+- non-blocking+threaded :   out of memory
+
+
 Todo:
 - rewrite all OSspecific calls (that are parallel aware) to use the
   fileHandler()
@@ -167,4 +200,5 @@ Todo:
   processor0/0/bottomAir/p but not processors/0/bottomAir/p
 - rename fileOperation::fileHandlerType to fileOperation::defaultFileHandler
 - cache Times
-- fix static destruction error in readers loaded through libs().
+- FIXED. fix static destruction error in readers loaded through libs().
+- avoid copying data in decomposedBlockData, OFstreamWriter
