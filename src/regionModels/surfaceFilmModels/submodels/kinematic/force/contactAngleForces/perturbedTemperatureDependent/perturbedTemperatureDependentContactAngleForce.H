@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,23 +22,34 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::contactAngleForce
+    Foam::regionModels::surfaceFilmModels::
+        perturbedTemperatureDependentContactAngleForce
 
 Description
-    Film contact angle force
+    Temperature dependent contact angle force with a stochastic perturbation
 
-    The effect of the contact angle force can be ignored over a specified
-    distance from patches.
+    The contact angle in degrees is specified as a Foam::Function1 type, to
+    enable the use of, e.g.  contant, polynomial, table values and the
+    stochastic perturbation obtained from a
+    Foam::distributionModels::distributionModel
+
+See also
+    Foam::regionModels::surfaceFilmModels::contactAngleForce
+    Foam::regionModels::surfaceFilmModels::temperatureDependentContactAngleForce
+    Foam::regionModels::surfaceFilmModels::distributionContactAngleForce
+    Foam::Function1Types
+    Foam::distributionModel
 
 SourceFiles
-    contactAngleForce.C
+    perturbedTemperatureDependentContactAngleForce.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef contactAngleForce_H
-#define contactAngleForce_H
+#ifndef perturbedTemperatureDependentContactAngleForce_H
+#define perturbedTemperatureDependentContactAngleForce_H
 
-#include "force.H"
+#include "contactAngleForce.H"
+#include "Function1.H"
 #include "distributionModel.H"
 #include "cachedRandom.H"
 
@@ -52,68 +63,61 @@ namespace surfaceFilmModels
 {
 
 /*---------------------------------------------------------------------------*\
-                      Class contactAngleForce Declaration
+       Class perturbedTemperatureDependentContactAngleForce Declaration
 \*---------------------------------------------------------------------------*/
 
-class contactAngleForce
+class perturbedTemperatureDependentContactAngleForce
 :
-    public force
+    public contactAngleForce
 {
-private:
-
     // Private Data
 
-        //- Coefficient applied to the contact angle force
-        scalar Ccf_;
+        //- Contact angle function
+        autoPtr<Function1<scalar>> thetaPtr_;
 
         //- Random number generator
         cachedRandom rndGen_;
 
         //- Parcel size PDF model
-        const autoPtr<distributionModels::distributionModel> distribution_;
-
-        //- Mask over which force is applied
-        volScalarField mask_;
+        const autoPtr<distributionModel> distribution_;
 
 
     // Private member functions
 
-        //- Initialise
-        void initialise();
-
         //- Disallow default bitwise copy construct
-        contactAngleForce(const contactAngleForce&);
+        perturbedTemperatureDependentContactAngleForce
+        (
+            const perturbedTemperatureDependentContactAngleForce&
+        );
 
         //- Disallow default bitwise assignment
-        void operator=(const contactAngleForce&);
+        void operator=(const perturbedTemperatureDependentContactAngleForce&);
+
+
+protected:
+
+        //- Return the contact angle field
+        virtual tmp<volScalarField> theta() const;
 
 
 public:
 
     //- Runtime type information
-    TypeName("contactAngle");
+    TypeName("perturbedTemperatureDependentContactAngle");
 
 
     // Constructors
 
         //- Construct from surface film model
-        contactAngleForce
+        perturbedTemperatureDependentContactAngleForce
         (
-            surfaceFilmModel& owner,
+            surfaceFilmModel& film,
             const dictionary& dict
         );
 
 
     //- Destructor
-    virtual ~contactAngleForce();
-
-
-    // Member Functions
-
-        // Evolution
-
-            //- Correct
-            virtual tmp<fvVectorMatrix> correct(volVectorField& U);
+    virtual ~perturbedTemperatureDependentContactAngleForce();
 };
 
 

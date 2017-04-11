@@ -9,40 +9,51 @@ FoamFile
 {
     version     2.0;
     format      ascii;
-    class       volScalarField;
-    location    "0";
-    object      Qr;
+    class       dictionary;
+    location    "system";
+    object      controlDict;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-dimensions      [1 0 -3 0 0 0 0];
+application     interDyMFoam;
 
-internalField   uniform 0;
+startFrom       latestTime;
 
-boundaryField
+startTime       0;
+
+stopAt          endTime;
+
+endTime         0.5;
+
+deltaT          0.001;
+
+writeControl    adjustableRunTime;
+
+writeInterval   0.02;
+
+purgeWrite      0;
+
+writeFormat     ascii;
+
+writePrecision  6;
+
+writeCompression yes;
+
+timeFormat      general;
+
+timePrecision   6;
+
+runTimeModifiable yes;
+
+adjustTimeStep  yes;
+
+maxCo           2;
+maxAlphaCo      2;
+
+maxDeltaT       1;
+
+functions
 {
-    coupledWall_top
-    {
-        type            zeroGradient;
-    }
-
-    coupledWall_side
-    {
-        type            empty;
-    }
-
-    region0_to_pyrolysisRegion_coupledWall
-    {
-        type            mappedField;
-        sampleRegion    region0;
-        sampleMode      nearestPatchFace;
-        samplePatch     region0_to_pyrolysisRegion_coupledWall;
-        offset          (0 0 0);
-        field       Qr; // this is the name of Qr field in region0
-        setAverage      no;
-        average         0;
-        value           uniform 0;
-    }
 }
 
 

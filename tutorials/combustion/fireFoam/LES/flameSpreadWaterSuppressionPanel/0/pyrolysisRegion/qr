@@ -11,7 +11,7 @@ FoamFile
     format      ascii;
     class       volScalarField;
     location    "0";
-    object      Qr;
+    object      qr;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -21,42 +21,24 @@ internalField   uniform 0;
 
 boundaryField
 {
-    ".*"
+    coupledWall_top
     {
         type            zeroGradient;
     }
 
-    fRight_zone_side
+    coupledWall_side
     {
-        type            wedge;
+        type            empty;
     }
 
-    fLeft_zone_side
-    {
-        type            wedge;
-    }
-
-    region0_to_panelRegion_fLeft_zone
+    region0_to_pyrolysisRegion_coupledWall
     {
         type            mappedField;
         sampleRegion    region0;
         sampleMode      nearestPatchFace;
-        samplePatch     region0_to_panelRegion_fLeft_zone;
+        samplePatch     region0_to_pyrolysisRegion_coupledWall;
         offset          (0 0 0);
-        field       Qr;
-        setAverage      no;
-        average         0;
-        value           uniform 0;
-    }
-
-    region0_to_panelRegion_fRight_zone
-    {
-        type            mappedField;
-        sampleRegion    region0;
-        sampleMode      nearestPatchFace;
-        samplePatch     region0_to_panelRegion_fRight_zone;
-        offset          (0 0 0);
-        field       Qr;
+        field       qr; // this is the name of qr field in region0
         setAverage      no;
         average         0;
         value           uniform 0;

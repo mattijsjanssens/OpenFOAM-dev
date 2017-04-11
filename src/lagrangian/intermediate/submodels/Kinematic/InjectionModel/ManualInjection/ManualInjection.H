@@ -87,7 +87,7 @@ class ManualInjection
         const vector U0_;
 
         //- Parcel size distribution model
-        const autoPtr<distributionModels::distributionModel> sizeDistribution_;
+        const autoPtr<distributionModel> sizeDistribution_;
 
         //- Flag to suppress errors if particle injection site is out-of-bounds
         Switch ignoreOutOfBounds_;

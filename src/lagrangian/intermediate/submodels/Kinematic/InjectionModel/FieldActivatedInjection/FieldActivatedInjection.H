@@ -112,7 +112,7 @@ class FieldActivatedInjection
             scalarList diameters_;
 
             //- Parcel size distribution model
-            const autoPtr<distributionModels::distributionModel>
+            const autoPtr<distributionModel>
                 sizeDistribution_;
 
 
