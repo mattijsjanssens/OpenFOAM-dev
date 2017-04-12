@@ -115,6 +115,7 @@ Foam::masterCollatingOFstream::~masterCollatingOFstream()
     List<std::streamoff> start;
     decomposedBlockData::writeBlocks
     (
+        UPstream::worldComm,
         osPtr,
         start,
         slice,

@@ -105,7 +105,7 @@ bool Foam::IOobject::typeHeaderOk(const bool checkType)
 //        }
 //        else
         {
-            ok = fp.readHeader(*this, fName);
+            ok = fp.readHeader(*this, fName, Type::typeName);
             if (ok && checkType && headerClassName_ != Type::typeName)
             {
                 WarningInFunction

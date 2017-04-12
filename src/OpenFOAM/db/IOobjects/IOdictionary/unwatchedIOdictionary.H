@@ -85,7 +85,7 @@ public:
         //  either in the case/processor or case otherwise null
         virtual fileName filePath() const
         {
-            return globalFilePath();
+            return globalFilePath(type());
         }
 
         //- Add file watch on object (READ_IF_MODIFIED)

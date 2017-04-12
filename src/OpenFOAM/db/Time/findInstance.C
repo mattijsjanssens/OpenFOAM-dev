@@ -66,7 +66,10 @@ Foam::word Foam::Time::findInstance
         else
         {
             ok =
-                fileHandler().isFile(fileHandler().filePath(false, io))
+                fileHandler().isFile
+                (
+                    fileHandler().filePath(false, io, IOList<label>::typeName)
+                )
              && io.typeHeaderOk<IOList<label>>(false);// object with local scope
         }
 
@@ -117,7 +120,10 @@ Foam::word Foam::Time::findInstance
         else
         {
             ok =
-                fileHandler().isFile(fileHandler().filePath(false, io))
+                fileHandler().isFile
+                (
+                    fileHandler().filePath(false, io, IOList<label>::typeName)
+                )
              && io.typeHeaderOk<IOList<label>>(false);// object with local scope
         }
 
@@ -196,7 +202,10 @@ Foam::word Foam::Time::findInstance
     else
     {
         ok =
-            fileHandler().isFile(fileHandler().filePath(false, io))
+            fileHandler().isFile
+            (
+                fileHandler().filePath(false, io, IOList<label>::typeName)
+            )
          && io.typeHeaderOk<IOList<label>>(false);// object with local scope
     }
 

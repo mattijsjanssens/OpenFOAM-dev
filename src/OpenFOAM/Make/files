@@ -10,6 +10,9 @@ $(fileOps)/fileOperation/fileOperation.C
 $(fileOps)/uncollatedFileOperation/uncollatedFileOperation.C
 $(fileOps)/masterUncollatedFileOperation/masterUncollatedFileOperation.C
 $(fileOps)/collatedFileOperation/collatedFileOperation.C
+$(fileOps)/threadedCollatedFileOperation/threadedCollatedFileOperation.C
+$(fileOps)/threadedCollatedFileOperation/threadedCollatedOFstream.C
+$(fileOps)/threadedCollatedFileOperation/OFstreamCollator.C
 
 bools = primitives/bools
 $(bools)/bool/bool.C

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,100 +22,84 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::IOMap
+    Foam::fileOperations::threadedCollatedFileOperation
 
 Description
-    A Map of objects of type \<T\> with automated input and output.
-    Is a global object; i.e. can be read from undecomposed case.
+    Version of masterUnthreadedCollatedFileOperation that collates regIOobjects
+    into a container in the processors/ subdirectory.
+
+See also
+    masterUnthreadedCollatedFileOperation
 
 SourceFiles
-    IOMap.C
+    threadedCollatedFileOperation.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef IOMap_H
-#define IOMap_H
+#ifndef fileOperations_threadedCollatedFileOperation_H
+#define fileOperations_threadedCollatedFileOperation_H
 
-#include "Map.H"
-#include "regIOobject.H"
+#include "collatedFileOperation.H"
+#include "OFstreamCollator.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
+namespace fileOperations
+{
 
 /*---------------------------------------------------------------------------*\
-                           Class IOMap Declaration
+                Class threadedCollatedFileOperation Declaration
 \*---------------------------------------------------------------------------*/
 
-template<class T>
-class IOMap
+class threadedCollatedFileOperation
 :
-    public regIOobject,
-    public Map<T>
+    public collatedFileOperation
 {
+    // Private data
+
+        //- Threaded writer
+        mutable OFstreamCollator writer_;
+
 
 public:
 
-    //- Runtime type information
-    TypeName("Map");
+        //- Runtime type information
+        TypeName("threadedCollated");
 
 
     // Constructors
 
-        //- Construct from IOobject
-        IOMap(const IOobject&);
-
-        //- Construct from IOobject and size of Map
-        IOMap(const IOobject&, const label);
-
-        //- Construct from IOobject and a Map
-        IOMap(const IOobject&, const Map<T>&);
-
-        //- Construct by transferring the Map contents
-        IOMap(const IOobject&, const Xfer<Map<T>>&);
+        //- Construct null
+        threadedCollatedFileOperation(const bool verbose);
 
 
     //- Destructor
-    virtual ~IOMap();
+    virtual ~threadedCollatedFileOperation();
 
 
-    // Member functions
+    // Member Functions
 
-        bool writeData(Ostream&) const;
+        // (reg)IOobject functionality
 
-        //- Is object global
-        virtual bool global() const
-        {
-            return true;
-        }
-
-        //- Return complete path + object name if the file exists
-        //  either in the case/processor or case otherwise null
-        virtual fileName filePath() const
-        {
-            return globalFilePath(type());
-        }
-
-    // Member operators
-
-        //- Assignment of other IOMap's entries to this IOMap
-        void operator=(const IOMap<T>&);
-
-        //- Assignment of other Map's entries to this IOMap
-        void operator=(const Map<T>&);
+            //- Writes a regIOobject (so header, contents and divider).
+            //  Returns success state.
+            virtual bool writeObject
+            (
+                const regIOobject&,
+                IOstream::streamFormat format=IOstream::ASCII,
+                IOstream::versionNumber version=IOstream::currentVersion,
+                IOstream::compressionType compression=IOstream::UNCOMPRESSED,
+                const bool valid = true
+            ) const;
 };
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+} // End namespace fileOperations
 } // End namespace Foam
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-#ifdef NoRepository
-    #include "IOMap.C"
-#endif
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

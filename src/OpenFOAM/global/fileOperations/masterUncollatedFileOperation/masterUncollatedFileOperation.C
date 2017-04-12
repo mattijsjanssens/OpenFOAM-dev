@@ -560,7 +560,8 @@ bool Foam::fileOperations::masterUncollatedFileOperation::mv
 Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePath
 (
     const bool checkGlobal,
-    const IOobject& io
+    const IOobject& io,
+    const word& typeName
 ) const
 {
     if (debug)
@@ -778,7 +779,8 @@ Foam::fileOperations::masterUncollatedFileOperation::readObjects
 bool Foam::fileOperations::masterUncollatedFileOperation::readHeader
 (
     IOobject& io,
-    const fileName& fName
+    const fileName& fName,
+    const word& typeName
 ) const
 {
     bool ok = false;
@@ -877,6 +879,7 @@ Foam::fileOperations::masterUncollatedFileOperation::readStream
 (
     regIOobject& io,
     const fileName& fName,
+    const word& typeName,
     const bool valid
 ) const
 {
@@ -966,6 +969,7 @@ Foam::fileOperations::masterUncollatedFileOperation::readStream
             // Read my data
             return decomposedBlockData::readBlocks
             (
+                UPstream::worldComm,
                 fName,
                 isPtr,
                 io,

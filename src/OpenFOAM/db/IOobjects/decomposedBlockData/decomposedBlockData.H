@@ -55,21 +55,26 @@ class decomposedBlockData
 {
 protected:
 
+    // Protected data
+
+        //- Type to use for gather
+        const UPstream::commsTypes commsType_;
+
+        //- Communicator for all parallel comms
+        const label comm_;
+
+
     // Protected member functions
 
         //- Read data into *this. ISstream is only valid on master.
         static bool readBlocks
         (
+            const label comm,
             autoPtr<ISstream>& isPtr,
             List<char>& data,
             const UPstream::commsTypes commsType
         );
 
-
-    // Protected data
-
-        //- Type to use for gather
-        const UPstream::commsTypes commsType_;
 
 
 public:
@@ -82,6 +87,7 @@ public:
         //- Construct given an IOobject
         decomposedBlockData
         (
+            const label comm,
             const IOobject&,
             const UPstream::commsTypes = UPstream::commsTypes::scheduled
         );
@@ -89,6 +95,7 @@ public:
         //- Construct given an IOobject and for READ_IF_MODIFIED a List<char>
         decomposedBlockData
         (
+            const label comm,
             const IOobject&,
             const UList<char>&,
             const UPstream::commsTypes = UPstream::commsTypes::scheduled
@@ -97,6 +104,7 @@ public:
         //- Construct by transferring the IOList contents
         decomposedBlockData
         (
+            const label comm,
             const IOobject&,
             const Xfer<List<char>>&,
             const UPstream::commsTypes = UPstream::commsTypes::scheduled
@@ -159,6 +167,7 @@ public:
         //  data in stream. Note: isPtr is only valid on master.
         static autoPtr<ISstream> readBlocks
         (
+            const label comm,
             const fileName& fName,
             autoPtr<ISstream>& isPtr,
             IOobject& headerIO,
@@ -169,6 +178,7 @@ public:
         //  processor blocks
         static bool writeBlocks
         (
+            const label comm,
             autoPtr<OSstream>& osPtr,
             List<std::streamoff>& start,
             const UList<char>&,

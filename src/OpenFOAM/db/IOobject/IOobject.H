@@ -419,11 +419,11 @@ public:
                 return path()/name();
             }
 
-            //- Helper for filePath that searches locally
-            fileName localFilePath() const;
+            //- Helper for filePath that searches locally.
+            fileName localFilePath(const word& typeName) const;
 
             //- Helper for filePath that searches up if in parallel
-            fileName globalFilePath() const;
+            fileName globalFilePath(const word& typeName) const;
 
 
         // Reading
@@ -506,7 +506,12 @@ inline bool typeGlobal()
 template<class T>
 inline fileName typeFilePath(const IOobject& io)
 {
-    return (typeGlobal<T>() ? io.globalFilePath() : io.localFilePath());
+    return
+    (
+        typeGlobal<T>()
+      ? io.globalFilePath(T::typeName)
+      : io.localFilePath(T::typeName)
+    );
 }
 
 

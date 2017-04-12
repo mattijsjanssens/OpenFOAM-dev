@@ -127,7 +127,7 @@ Foam::Istream& Foam::regIOobject::readStream(const bool valid)
             }
         }
 
-        isPtr_ = fileHandler().readStream(*this, objPath, valid);
+        isPtr_ = fileHandler().readStream(*this, objPath, type(), valid);
     }
 
     return isPtr_();

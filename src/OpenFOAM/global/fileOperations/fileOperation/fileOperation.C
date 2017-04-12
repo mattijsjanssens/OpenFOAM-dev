@@ -202,7 +202,11 @@ Foam::fileOperation::~fileOperation()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-Foam::fileName Foam::fileOperation::objectPath(const IOobject& io) const
+Foam::fileName Foam::fileOperation::objectPath
+(
+    const IOobject& io,
+    const word& typeName
+) const
 {
     return io.objectPath();
 }

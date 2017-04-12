@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,100 +22,68 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::IOMap
+    Foam::threadedCollatedOFstream
 
 Description
-    A Map of objects of type \<T\> with automated input and output.
-    Is a global object; i.e. can be read from undecomposed case.
+    Master-only drop-in replacement for OFstream.
 
 SourceFiles
-    IOMap.C
+    threadedCollatedOFstream.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef IOMap_H
-#define IOMap_H
+#ifndef threadedCollatedOFstream_H
+#define threadedCollatedOFstream_H
 
-#include "Map.H"
-#include "regIOobject.H"
+#include "OStringStream.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
 
+class OFstreamCollator;
+
 /*---------------------------------------------------------------------------*\
-                           Class IOMap Declaration
+                  Class threadedCollatedOFstream Declaration
 \*---------------------------------------------------------------------------*/
 
-template<class T>
-class IOMap
+class threadedCollatedOFstream
 :
-    public regIOobject,
-    public Map<T>
+    public OStringStream
 {
+    // Private data
+
+        OFstreamCollator& writer_;
+
+        const fileName pathName_;
+
+        const IOstream::compressionType compression_;
+
 
 public:
 
-    //- Runtime type information
-    TypeName("Map");
-
-
     // Constructors
 
-        //- Construct from IOobject
-        IOMap(const IOobject&);
-
-        //- Construct from IOobject and size of Map
-        IOMap(const IOobject&, const label);
-
-        //- Construct from IOobject and a Map
-        IOMap(const IOobject&, const Map<T>&);
-
-        //- Construct by transferring the Map contents
-        IOMap(const IOobject&, const Xfer<Map<T>>&);
+        //- Construct and set stream status
+        threadedCollatedOFstream
+        (
+            OFstreamCollator&,
+            const fileName& pathname,
+            streamFormat format=ASCII,
+            versionNumber version=currentVersion,
+            compressionType compression=UNCOMPRESSED
+        );
 
 
     //- Destructor
-    virtual ~IOMap();
-
-
-    // Member functions
-
-        bool writeData(Ostream&) const;
-
-        //- Is object global
-        virtual bool global() const
-        {
-            return true;
-        }
-
-        //- Return complete path + object name if the file exists
-        //  either in the case/processor or case otherwise null
-        virtual fileName filePath() const
-        {
-            return globalFilePath(type());
-        }
-
-    // Member operators
-
-        //- Assignment of other IOMap's entries to this IOMap
-        void operator=(const IOMap<T>&);
-
-        //- Assignment of other Map's entries to this IOMap
-        void operator=(const Map<T>&);
+    ~threadedCollatedOFstream();
 };
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-#ifdef NoRepository
-    #include "IOMap.C"
-#endif
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

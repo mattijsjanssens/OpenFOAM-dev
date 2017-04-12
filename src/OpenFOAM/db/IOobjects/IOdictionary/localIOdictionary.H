@@ -86,7 +86,7 @@ public:
         virtual fileName filePath() const
         {
             // Use default (local only) search strategy
-            return localFilePath();
+            return localFilePath(type());
         }
 
 };

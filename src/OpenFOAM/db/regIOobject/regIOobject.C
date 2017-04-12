@@ -416,7 +416,7 @@ void Foam::regIOobject::rename(const word& newName)
 
 Foam::fileName Foam::regIOobject::filePath() const
 {
-    return localFilePath();
+    return localFilePath(type());
 }
 
 
@@ -428,7 +428,7 @@ bool Foam::regIOobject::headerOk()
 
     fileName fName(filePath());
 
-    ok = Foam::fileHandler().readHeader(*this, fName);
+    ok = Foam::fileHandler().readHeader(*this, fName, type());
 
     if (!ok && IOobject::debug)
     {

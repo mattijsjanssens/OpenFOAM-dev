@@ -208,7 +208,8 @@ public:
             virtual fileName filePath
             (
                 const bool checkGlobal,
-                const IOobject&
+                const IOobject&,
+                const word& typeName
             ) const;
 
             //- Search for a directory. checkGlobal : also check undecomposed
@@ -229,7 +230,12 @@ public:
             ) const;
 
             //- Read object header from supplied file
-            virtual bool readHeader(IOobject&, const fileName&) const;
+            virtual bool readHeader
+            (
+                IOobject&,
+                const fileName&,
+                const word& typeName
+            ) const;
 
             //- Reads header for regIOobject and returns an ISstream
             //  to read the contents.
@@ -237,6 +243,7 @@ public:
             (
                 regIOobject&,
                 const fileName&,
+                const word& typeName,
                 const bool procValid = true
             ) const;
 

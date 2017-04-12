@@ -115,7 +115,8 @@ Foam::fileOperations::collatedFileOperation::~collatedFileOperation()
 
 Foam::fileName Foam::fileOperations::collatedFileOperation::objectPath
 (
-    const IOobject& io
+    const IOobject& io,
+    const word& typeName
 ) const
 {
     // Replacement for objectPath

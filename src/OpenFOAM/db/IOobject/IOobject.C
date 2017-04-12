@@ -406,17 +406,17 @@ Foam::fileName Foam::IOobject::path
 }
 
 
-Foam::fileName Foam::IOobject::localFilePath() const
+Foam::fileName Foam::IOobject::localFilePath(const word& typeName) const
 {
     // Do not check for undecomposed files
-    return fileHandler().filePath(false, *this);
+    return fileHandler().filePath(false, *this, typeName);
 }
 
 
-Foam::fileName Foam::IOobject::globalFilePath() const
+Foam::fileName Foam::IOobject::globalFilePath(const word& typeName) const
 {
     // Check for undecomposed files
-    return fileHandler().filePath(true, *this);
+    return fileHandler().filePath(true, *this, typeName);
 }
 
 

@@ -261,17 +261,24 @@ public:
         // (reg)IOobject functinality
 
             //- Generate disk file name for object. Opposite of filePath.
-            virtual fileName objectPath(const IOobject& io) const;
+            //  Optional wanted typeName.
+            virtual fileName objectPath
+            (
+                const IOobject& io,
+                const word& typeName
+            ) const;
 
             //- Search for an object. checkGlobal : also check undecomposed case
+            //  Optional wanted typeName.
             virtual fileName filePath
             (
                 const bool checkGlobal,
-                const IOobject&
+                const IOobject&,
+                const word& typeName
             ) const = 0;
 
             //- Search for a directory. checkGlobal : also check undecomposed
-            //  case
+            //  case. Optional wanted typeName.
             virtual fileName dirPath
             (
                 const bool checkGlobal,
@@ -288,7 +295,12 @@ public:
             ) const;
 
             //- Read object header from supplied file
-            virtual bool readHeader(IOobject&, const fileName&) const = 0;
+            virtual bool readHeader
+            (
+                IOobject&,
+                const fileName&,
+                const word& typeName
+            ) const = 0;
 
             //- Reads header for regIOobject and returns an ISstream
             //  to read the contents.
@@ -296,6 +308,7 @@ public:
             (
                 regIOobject&,
                 const fileName&,
+                const word& typeName,
                 const bool valid = true
             ) const = 0;
 

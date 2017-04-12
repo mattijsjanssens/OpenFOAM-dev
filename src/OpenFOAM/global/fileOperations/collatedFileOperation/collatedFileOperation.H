@@ -93,7 +93,11 @@ public:
         // (reg)IOobject functionality
 
             //- Generate disk file name for object. Opposite of filePath.
-            virtual fileName objectPath(const IOobject& io) const;
+            virtual fileName objectPath
+            (
+                const IOobject& io,
+                const word& typeName
+            ) const;
 
 //            //- Generate disk file name for object. Opposite of filePath.
 //            //  Use IOobject version in preference

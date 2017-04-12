@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,19 +23,43 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "IOMap.H"
+#include "threadedCollatedOFstream.H"
+#include "decomposedBlockData.H"
+#include "OFstreamCollator.H"
 
-// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
-namespace Foam
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+Foam::threadedCollatedOFstream::threadedCollatedOFstream
+(
+    OFstreamCollator& writer,
+    const fileName& pathName,
+    streamFormat format,
+    versionNumber version,
+    compressionType compression
+)
+:
+    OStringStream(format, version),
+    writer_(writer),
+    pathName_(pathName),
+    compression_(compression)
+{}
+
+
+// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
+
+Foam::threadedCollatedOFstream::~threadedCollatedOFstream()
 {
-    defineTemplateTypeNameAndDebug(IOMap<dictionary>, 0);
-
-    //- Template specialisation for obtaining filePath
-    template<>
-    fileName typeFilePath<IOMap<dictionary>>(const IOobject& io)
-    {
-        return io.globalFilePath(IOMap<dictionary>::typeName);
-    }
+    writer_.write
+    (
+        decomposedBlockData::typeName,
+        pathName_,
+        str(),
+        IOstream::BINARY,
+        version(),
+        compression_,
+        false                   // append
+    );
 }
+
 
 // ************************************************************************* //

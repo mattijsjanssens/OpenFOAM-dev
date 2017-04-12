@@ -346,7 +346,8 @@ bool Foam::fileOperations::uncollatedFileOperation::mv
 Foam::fileName Foam::fileOperations::uncollatedFileOperation::filePath
 (
     const bool checkGlobal,
-    const IOobject& io
+    const IOobject& io,
+    const word& typeName
 ) const
 {
     if (debug)
@@ -447,7 +448,8 @@ Foam::fileNameList Foam::fileOperations::uncollatedFileOperation::readObjects
 bool Foam::fileOperations::uncollatedFileOperation::readHeader
 (
     IOobject& io,
-    const fileName& fName
+    const fileName& fName,
+    const word& typeName
 ) const
 {
     if (fName.empty())
@@ -486,6 +488,7 @@ Foam::fileOperations::uncollatedFileOperation::readStream
 (
     regIOobject& io,
     const fileName& fName,
+    const word& typeName,
     const bool valid
 ) const
 {

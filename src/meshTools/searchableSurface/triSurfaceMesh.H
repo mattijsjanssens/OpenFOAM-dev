@@ -309,7 +309,7 @@ public:
             //  either in the case/processor or case otherwise null
             virtual fileName filePath() const
             {
-                return searchableSurface::globalFilePath();
+                return searchableSurface::globalFilePath(type());
             }
 };
 

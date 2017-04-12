@@ -90,7 +90,7 @@ public:
         //  either in the case/processor or case otherwise null
         virtual fileName filePath() const
         {
-            return globalFilePath();
+            return globalFilePath(type());
         }
 
         //- ReadData function required for regIOobject read operation

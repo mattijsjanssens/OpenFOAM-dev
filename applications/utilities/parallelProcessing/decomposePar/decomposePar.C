@@ -506,6 +506,7 @@ int main(int argc, char *argv[])
 
                 if (fileHandler().isDir(runTime.timePath()))
                 {
+                    // Get corresponding directory name (to handle processors/)
                     const fileName timePath
                     (
                         fileHandler().objectPath
@@ -515,7 +516,8 @@ int main(int argc, char *argv[])
                                 "",
                                 processorDb.timeName(),
                                 processorDb
-                            )
+                            ),
+                            word::null
                         )
                     );
 

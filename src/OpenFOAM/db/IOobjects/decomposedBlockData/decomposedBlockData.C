@@ -44,12 +44,14 @@ namespace Foam
 
 Foam::decomposedBlockData::decomposedBlockData
 (
+    const label comm,
     const IOobject& io,
     const UPstream::commsTypes commsType
 )
 :
     regIOobject(io),
-    commsType_(commsType)
+    commsType_(commsType),
+    comm_(comm)
 {
     // Temporary warning
     if (io.readOpt() == IOobject::MUST_READ_IF_MODIFIED)
@@ -76,13 +78,15 @@ Foam::decomposedBlockData::decomposedBlockData
 
 Foam::decomposedBlockData::decomposedBlockData
 (
+    const label comm,
     const IOobject& io,
     const UList<char>& list,
     const UPstream::commsTypes commsType
 )
 :
     regIOobject(io),
-    commsType_(commsType)
+    commsType_(commsType),
+    comm_(comm)
 {
     // Temporary warning
     if (io.readOpt() == IOobject::MUST_READ_IF_MODIFIED)
@@ -114,13 +118,15 @@ Foam::decomposedBlockData::decomposedBlockData
 
 Foam::decomposedBlockData::decomposedBlockData
 (
+    const label comm,
     const IOobject& io,
     const Xfer<List<char>>& list,
     const UPstream::commsTypes commsType
 )
 :
     regIOobject(io),
-    commsType_(commsType)
+    commsType_(commsType),
+    comm_(comm)
 {
     // Temporary warning
     if (io.readOpt() == IOobject::MUST_READ_IF_MODIFIED)
@@ -286,6 +292,7 @@ Foam::autoPtr<Foam::ISstream> Foam::decomposedBlockData::readBlock
 
 bool Foam::decomposedBlockData::readBlocks
 (
+    const label comm,
     autoPtr<ISstream>& isPtr,
     List<char>& data,
     const UPstream::commsTypes commsType
@@ -295,14 +302,15 @@ bool Foam::decomposedBlockData::readBlocks
     {
         Pout<< "decomposedBlockData::readBlocks:"
             << " stream:" << (isPtr.valid() ? isPtr().name() : "invalid")
-            << " commsType:" << Pstream::commsTypeNames[commsType] << endl;
+            << " commsType:" << Pstream::commsTypeNames[commsType]
+            << " comm:" << comm << endl;
     }
 
     bool ok = false;
 
     if (commsType == UPstream::commsTypes::scheduled)
     {
-        if (UPstream::master())
+        if (UPstream::master(comm))
         {
             Istream& is = isPtr();
             is.fatalCheck("read(Istream&)");
@@ -317,14 +325,21 @@ bool Foam::decomposedBlockData::readBlocks
             for
             (
                 label proci = 1;
-                proci < UPstream::nProcs();
+                proci < UPstream::nProcs(comm);
                 proci++
             )
             {
                 List<char> elems(is);
                 is.fatalCheck("read(Istream&) : reading entry");
 
-                OPstream os(UPstream::commsTypes::scheduled, proci);
+                OPstream os
+                (
+                    UPstream::commsTypes::scheduled,
+                    proci,
+                    0,
+                    UPstream::msgType(),
+                    comm
+                );
                 os << elems;
             }
 
@@ -332,15 +347,27 @@ bool Foam::decomposedBlockData::readBlocks
         }
         else
         {
-            IPstream is(UPstream::commsTypes::scheduled, UPstream::masterNo());
+            IPstream is
+            (
+                UPstream::commsTypes::scheduled,
+                UPstream::masterNo(),
+                0,
+                UPstream::msgType(),
+                comm
+            );
             is >> data;
         }
     }
     else
     {
-        PstreamBuffers pBufs(UPstream::commsTypes::nonBlocking);
+        PstreamBuffers pBufs
+        (
+            UPstream::commsTypes::nonBlocking,
+            UPstream::msgType(),
+            comm
+        );
 
-        if (UPstream::master())
+        if (UPstream::master(comm))
         {
             Istream& is = isPtr();
             is.fatalCheck("read(Istream&)");
@@ -355,7 +382,7 @@ bool Foam::decomposedBlockData::readBlocks
             for
             (
                 label proci = 1;
-                proci < UPstream::nProcs();
+                proci < UPstream::nProcs(comm);
                 proci++
             )
             {
@@ -370,14 +397,14 @@ bool Foam::decomposedBlockData::readBlocks
         labelList recvSizes;
         pBufs.finishedSends(recvSizes);
 
-        if (!UPstream::master())
+        if (!UPstream::master(comm))
         {
             UIPstream is(UPstream::masterNo(), pBufs);
             is >> data;
         }
     }
 
-    Pstream::scatter(ok);
+    Pstream::scatter(ok, Pstream::msgType(), comm);
 
     return ok;
 }
@@ -385,6 +412,7 @@ bool Foam::decomposedBlockData::readBlocks
 
 Foam::autoPtr<Foam::ISstream> Foam::decomposedBlockData::readBlocks
 (
+    const label comm,
     const fileName& fName,
     autoPtr<ISstream>& isPtr,
     IOobject& headerIO,
@@ -405,7 +433,7 @@ Foam::autoPtr<Foam::ISstream> Foam::decomposedBlockData::readBlocks
 
     if (commsType == UPstream::commsTypes::scheduled)
     {
-        if (UPstream::master())
+        if (UPstream::master(comm))
         {
             Istream& is = isPtr();
             is.fatalCheck("read(Istream&)");
@@ -431,14 +459,21 @@ Foam::autoPtr<Foam::ISstream> Foam::decomposedBlockData::readBlocks
             for
             (
                 label proci = 1;
-                proci < UPstream::nProcs();
+                proci < UPstream::nProcs(comm);
                 proci++
             )
             {
                 is >> data;
                 is.fatalCheck("read(Istream&) : reading entry");
 
-                OPstream os(UPstream::commsTypes::scheduled, proci);
+                OPstream os
+                (
+                    UPstream::commsTypes::scheduled,
+                    proci,
+                    0,
+                    UPstream::msgType(),
+                    comm
+                );
                 os << data;
             }
 
@@ -446,7 +481,14 @@ Foam::autoPtr<Foam::ISstream> Foam::decomposedBlockData::readBlocks
         }
         else
         {
-            IPstream is(UPstream::commsTypes::scheduled, UPstream::masterNo());
+            IPstream is
+            (
+                UPstream::commsTypes::scheduled,
+                UPstream::masterNo(),
+                0,
+                UPstream::msgType(),
+                comm
+            );
             is >> data;
 
             string buf(data.begin(), data.size());
@@ -455,9 +497,14 @@ Foam::autoPtr<Foam::ISstream> Foam::decomposedBlockData::readBlocks
     }
     else
     {
-        PstreamBuffers pBufs(UPstream::commsTypes::nonBlocking);
+        PstreamBuffers pBufs
+        (
+            UPstream::commsTypes::nonBlocking,
+            UPstream::msgType(),
+            comm
+        );
 
-        if (UPstream::master())
+        if (UPstream::master(comm))
         {
             Istream& is = isPtr();
             is.fatalCheck("read(Istream&)");
@@ -483,7 +530,7 @@ Foam::autoPtr<Foam::ISstream> Foam::decomposedBlockData::readBlocks
             for
             (
                 label proci = 1;
-                proci < UPstream::nProcs();
+                proci < UPstream::nProcs(comm);
                 proci++
             )
             {
@@ -500,7 +547,7 @@ Foam::autoPtr<Foam::ISstream> Foam::decomposedBlockData::readBlocks
         labelList recvSizes;
         pBufs.finishedSends(recvSizes);
 
-        if (!UPstream::master())
+        if (!UPstream::master(comm))
         {
             UIPstream is(UPstream::masterNo(), pBufs);
             is >> data;
@@ -510,11 +557,11 @@ Foam::autoPtr<Foam::ISstream> Foam::decomposedBlockData::readBlocks
         }
     }
 
-    Pstream::scatter(ok);
+    Pstream::scatter(ok, Pstream::msgType(), comm);
 
     // version
     string versionString(realIsPtr().version().str());
-    Pstream::scatter(versionString);
+    Pstream::scatter(versionString,  Pstream::msgType(), comm);
     realIsPtr().version(IStringStream(versionString)());
 
     // stream
@@ -522,17 +569,17 @@ Foam::autoPtr<Foam::ISstream> Foam::decomposedBlockData::readBlocks
         OStringStream os;
         os << realIsPtr().format();
         string formatString(os.str());
-        Pstream::scatter(formatString);
+        Pstream::scatter(formatString,  Pstream::msgType(), comm);
         realIsPtr().format(formatString);
     }
 
     word name(headerIO.name());
-    Pstream::scatter(name);
+    Pstream::scatter(name, Pstream::msgType(), comm);
     headerIO.rename(name);
-    Pstream::scatter(headerIO.headerClassName());
-    Pstream::scatter(headerIO.note());
-    //Pstream::scatter(headerIO.instance());
-    //Pstream::scatter(headerIO.local());
+    Pstream::scatter(headerIO.headerClassName(), Pstream::msgType(), comm);
+    Pstream::scatter(headerIO.note(), Pstream::msgType(), comm);
+    //Pstream::scatter(headerIO.instance(), Pstream::msgType(), comm);
+    //Pstream::scatter(headerIO.local(), Pstream::msgType(), comm);
 
     return realIsPtr;
 }
@@ -540,6 +587,7 @@ Foam::autoPtr<Foam::ISstream> Foam::decomposedBlockData::readBlocks
 
 bool Foam::decomposedBlockData::writeBlocks
 (
+    const label comm,
     autoPtr<OSstream>& osPtr,
     List<std::streamoff>& start,
     const UList<char>& data,
@@ -556,15 +604,15 @@ bool Foam::decomposedBlockData::writeBlocks
 
     bool ok = true;
 
-    labelList recvSizes(Pstream::nProcs());
-    recvSizes[Pstream::myProcNo()] = data.byteSize();
-    Pstream::gatherList(recvSizes);
+    labelList recvSizes(Pstream::nProcs(comm));
+    recvSizes[Pstream::myProcNo(comm)] = data.byteSize();
+    Pstream::gatherList(recvSizes, Pstream::msgType(), comm);
 
     if (commsType == UPstream::commsTypes::scheduled)
     {
-        if (UPstream::master())
+        if (UPstream::master(comm))
         {
-            start.setSize(UPstream::nProcs());
+            start.setSize(UPstream::nProcs(comm));
 
             OSstream& os = osPtr();
 
@@ -576,7 +624,7 @@ bool Foam::decomposedBlockData::writeBlocks
             }
             // Write slaves
             List<char> elems;
-            for (label proci = 1; proci < UPstream::nProcs(); proci++)
+            for (label proci = 1; proci < UPstream::nProcs(comm); proci++)
             {
                 elems.setSize(recvSizes[proci]);
                 IPstream::read
@@ -586,7 +634,7 @@ bool Foam::decomposedBlockData::writeBlocks
                     elems.begin(),
                     elems.size(),
                     Pstream::msgType(),
-                    Pstream::worldComm
+                    comm
                 );
 
                 os << nl << "// Processor" << proci << nl;
@@ -605,7 +653,7 @@ bool Foam::decomposedBlockData::writeBlocks
                 data.begin(),
                 data.byteSize(),
                 Pstream::msgType(),
-                Pstream::worldComm
+                comm
             );
         }
     }
@@ -623,7 +671,7 @@ bool Foam::decomposedBlockData::writeBlocks
 
         label startOfRequests = Pstream::nRequests();
 
-        if (!UPstream::master())
+        if (!UPstream::master(comm))
         {
             UOPstream::write
             (
@@ -632,14 +680,14 @@ bool Foam::decomposedBlockData::writeBlocks
                 data.begin(),
                 data.byteSize(),
                 Pstream::msgType(),
-                Pstream::worldComm
+                comm
             );
             Pstream::waitRequests(startOfRequests);
         }
         else
         {
-            List<List<char>> recvBufs(Pstream::nProcs());
-            for (label proci = 1; proci < UPstream::nProcs(); proci++)
+            List<List<char>> recvBufs(Pstream::nProcs(comm));
+            for (label proci = 1; proci < UPstream::nProcs(comm); proci++)
             {
                 recvBufs[proci].setSize(recvSizes[proci]);
                 UIPstream::read
@@ -649,11 +697,9 @@ bool Foam::decomposedBlockData::writeBlocks
                     recvBufs[proci].begin(),
                     recvSizes[proci],
                     Pstream::msgType(),
-                    Pstream::worldComm
+                    comm
                 );
             }
-            Pstream::waitRequests(startOfRequests);
-
 
             if (debug)
             {
@@ -664,7 +710,7 @@ bool Foam::decomposedBlockData::writeBlocks
                     << Foam::endl;
             }
 
-            start.setSize(UPstream::nProcs());
+            start.setSize(UPstream::nProcs(comm));
 
             OSstream& os = osPtr();
 
@@ -675,13 +721,28 @@ bool Foam::decomposedBlockData::writeBlocks
                 os << data;
             }
 
+            if (debug)
+            {
+                struct timeval tv;
+                gettimeofday(&tv, nullptr);
+                Pout<< "Starting slave writing at:"
+                    << 1.0*tv.tv_sec+tv.tv_usec/1e6 << " s"
+                    << Foam::endl;
+            }
+
             // Write slaves
-            for (label proci = 1; proci < UPstream::nProcs(); proci++)
+            for (label proci = 1; proci < UPstream::nProcs(comm); proci++)
             {
                 os << nl << "// Processor" << proci << nl;
                 start[proci] = os.stdStream().tellp();
-                os << recvBufs[proci];
+
+                if (Pstream::finishedRequest(startOfRequests+proci-1))
+                {
+                    os << recvBufs[proci];
+                }
             }
+
+            Pstream::resetRequests(startOfRequests);
 
             ok = os.good();
         }
@@ -697,7 +758,7 @@ bool Foam::decomposedBlockData::writeBlocks
 
     //- Enable to get synchronised error checking. Is the one that keeps
     //  slaves as slow as the master (which does all the writing)
-    Pstream::scatter(ok);
+    Pstream::scatter(ok, Pstream::msgType(), comm);
 
     return ok;
 }
@@ -706,7 +767,7 @@ bool Foam::decomposedBlockData::writeBlocks
 bool Foam::decomposedBlockData::read()
 {
     autoPtr<ISstream> isPtr;
-    if (UPstream::master())
+    if (UPstream::master(comm_))
     {
         isPtr.reset(new IFstream(objectPath()));
         IOobject::readHeader(isPtr());
@@ -714,7 +775,7 @@ bool Foam::decomposedBlockData::read()
 
     List<char>& data = *this;
 
-    return readBlocks(isPtr, data, commsType_);
+    return readBlocks(comm_, isPtr, data, commsType_);
 }
 
 
@@ -727,7 +788,7 @@ bool Foam::decomposedBlockData::writeObject
 ) const
 {
     autoPtr<OSstream> osPtr;
-    if (UPstream::master())
+    if (UPstream::master(comm_))
     {
         // Note: always write binary. These are strings so readable
         //       anyway. They have already be tokenised on the sending side.
@@ -735,7 +796,7 @@ bool Foam::decomposedBlockData::writeObject
         IOobject::writeHeader(osPtr());
     }
     List<std::streamoff> start;
-    return writeBlocks(osPtr, start, *this, commsType_);
+    return writeBlocks(comm_, osPtr, start, *this, commsType_);
 }
 
 

@@ -61,7 +61,20 @@ void Foam::UPstream::addValidParOptions(HashTable<string>& validParOptions)
 
 bool Foam::UPstream::init(int& argc, char**& argv)
 {
-    MPI_Init(&argc, &argv);
+    //MPI_Init(&argc, &argv);
+    int provided_thread_support;
+    MPI_Init_thread
+    (
+        &argc,
+        &argv,
+        MPI_THREAD_MULTIPLE,
+        &provided_thread_support
+    );
+    if (provided_thread_support != MPI_THREAD_MULTIPLE)
+    {
+        FatalErrorInFunction << "mpi does not have thread support"
+            << Foam::exit(FatalError);
+    }
 
     int numprocs;
     MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
