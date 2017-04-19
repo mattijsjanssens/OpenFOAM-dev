@@ -28,7 +28,7 @@ License
 #include "scatterModel.H"
 #include "sootModel.H"
 #include "fvmSup.H"
-#include "fluidThermo.H"
+#include "basicThermo.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -228,10 +228,10 @@ void Foam::radiation::radiationModel::correct()
 
 Foam::tmp<Foam::fvScalarMatrix> Foam::radiation::radiationModel::Sh
 (
-    fluidThermo& thermo
+    const basicThermo& thermo,
+    const volScalarField& he
 ) const
 {
-    volScalarField& he = thermo.he();
     const volScalarField Cpv(thermo.Cpv());
     const volScalarField T3(pow3(T_));
 
