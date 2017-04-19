@@ -225,6 +225,13 @@ Foam::fileOperations::masterUncollatedFileOperation::splitProcessorPath
     pos = local.find('/');
     if (pos == string::npos)
     {
+        // processorXXX without local
+        label proci;
+        if (Foam::read(local.c_str(), proci))
+        {
+            local.clear();
+            return proci;
+        }
         return -1;
     }
     string procName(local.substr(0, pos));
