@@ -79,7 +79,7 @@ public:
         static word processorsDir;
 
         //- Default fileHandler
-        static word fileHandlerType;
+        static word defaultFileHandler;
 
 
     // Public data types

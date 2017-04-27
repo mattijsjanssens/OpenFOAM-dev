@@ -601,7 +601,7 @@ void Foam::argList::parse
 
         if (handlerType.empty())
         {
-            handlerType = fileOperation::fileHandlerType;
+            handlerType = fileOperation::defaultFileHandler;
         }
 
         autoPtr<fileOperation> handler

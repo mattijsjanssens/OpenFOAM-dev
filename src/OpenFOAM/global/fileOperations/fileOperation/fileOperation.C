@@ -59,7 +59,7 @@ namespace Foam
 
     addArgsOptions intObj;
 
-    word fileOperation::fileHandlerType
+    word fileOperation::defaultFileHandler
     (
         debug::optimisationSwitches().lookupOrAddDefault
         (
@@ -600,7 +600,7 @@ const Foam::fileOperation& Foam::fileHandler()
 
         if (!handler.size())
         {
-            handler = fileOperation::fileHandlerType;
+            handler = fileOperation::defaultFileHandler;
         }
 
         fileOperation::fileHandlerPtr_ = fileOperation::New(handler, true);

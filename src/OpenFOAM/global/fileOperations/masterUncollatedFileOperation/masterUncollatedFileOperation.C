@@ -34,6 +34,7 @@ License
 #include "decomposedBlockData.H"
 #include "registerSwitch.H"
 #include "dummyISstream.H"
+#include "SubList.H"
 
 /* * * * * * * * * * * * * * * Static Member Data  * * * * * * * * * * * * * */
 
@@ -1232,6 +1233,9 @@ bool Foam::fileOperations::masterUncollatedFileOperation::writeObject
             << " io:" << pathName << " valid:" << valid << endl;
     }
 
+    // Make sure to pick up any new times
+    setTime(io.time());
+
     autoPtr<Ostream> osPtr
     (
         NewOFstream
@@ -1280,20 +1284,86 @@ Foam::instantList Foam::fileOperations::masterUncollatedFileOperation::findTimes
             << " Finding times in directory " << directory << endl;
     }
 
-    instantList times;
-
-    if (Pstream::master())
+    HashPtrTable<instantList>::const_iterator iter = times_.find(directory);
+    if (iter != times_.end())
     {
-        times = fileOperation::findTimes(directory, constantName);
+        if (debug)
+        {
+            Pout<< "masterUncollatedFileOperation::findTimes:"
+                << " Found cached times:" << *iter() << endl;
+        }
+        return *iter();
     }
-    Pstream::scatter(times);
-
-    if (debug)
+    else
     {
-        Pout<< "masterUncollatedFileOperation::findTimes:"
-            << " Found times:" << times << endl;
+        instantList times;
+        if (Pstream::master())
+        {
+            times = fileOperation::findTimes(directory, constantName);
+        }
+        Pstream::scatter(times);
+
+        instantList* tPtr = new instantList(times.xfer());
+
+        times_.insert(directory, tPtr);
+
+        if (debug)
+        {
+            Pout<< "masterUncollatedFileOperation::findTimes:"
+                << " Caching times:" << *tPtr << endl;
+        }
+        return *tPtr;
     }
-    return times;
+}
+
+
+void Foam::fileOperations::masterUncollatedFileOperation::setTime
+(
+    const Time& tm
+) const
+{
+    HashPtrTable<instantList>::const_iterator iter = times_.find(tm.path());
+    if (iter != times_.end())
+    {
+        if (debug)
+        {
+            Pout<< "masterUncollatedFileOperation::setTime:"
+                << " Caching time " << tm.timeName()
+                << " for case:" << tm.path() << endl;
+        }
+
+        instantList& times = *iter();
+        const instant timeNow(tm.value(), tm.timeName());
+
+        if (times.size() > 0 && times[0].name() == tm.constant())
+        {
+            // Exclude constant
+            SubList<instant> realTimes(times, times.size()-1, 1);
+            if
+            (
+                findSortedIndex
+                (
+                    SubList<instant>(times, times.size()-1, 1),
+                    timeNow
+                )
+             == -1
+            )
+            {
+                times.append(timeNow);
+                SubList<instant> realTimes(times, times.size()-1, 1);
+                Foam::stableSort(realTimes);
+            }
+        }
+        else
+        {
+            if (findSortedIndex(times, timeNow) == -1)
+            {
+                times.append(timeNow);
+                Foam::stableSort(times);
+            }
+        }
+    }
+    fileOperation::setTime(tm);
 }
 
 

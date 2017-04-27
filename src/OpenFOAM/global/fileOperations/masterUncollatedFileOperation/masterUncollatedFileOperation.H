@@ -35,6 +35,7 @@ Description
 
 #include "fileOperation.H"
 #include "OSspecific.H"
+#include "HashPtrTable.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -52,6 +53,12 @@ class masterUncollatedFileOperation
     public fileOperation
 {
 protected:
+
+    // Protected data
+
+        //- Cached times for a given directory
+        mutable HashPtrTable<instantList> times_;
+
 
     // Protected classes
 
@@ -638,6 +645,9 @@ public:
 
             //- Get sorted list of times
             virtual instantList findTimes(const fileName&, const word&) const;
+
+            //- Callback for time change
+            virtual void setTime(const Time&) const;
 
             //- root+casename with any 'processorXXX' replaced by 'processsors'
             static fileName processorsCasePath(const IOobject&);
