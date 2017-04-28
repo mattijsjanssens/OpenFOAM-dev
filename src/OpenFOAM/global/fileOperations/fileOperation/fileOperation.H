@@ -278,7 +278,7 @@ public:
             ) const = 0;
 
             //- Search for a directory. checkGlobal : also check undecomposed
-            //  case. Optional wanted typeName.
+            //  case
             virtual fileName dirPath
             (
                 const bool checkGlobal,
