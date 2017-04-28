@@ -591,7 +591,8 @@ bool Foam::decomposedBlockData::writeBlocks
     autoPtr<OSstream>& osPtr,
     List<std::streamoff>& start,
     const UList<char>& data,
-    const UPstream::commsTypes commsType
+    const UPstream::commsTypes commsType,
+    const bool syncReturnState
 )
 {
     if (debug)
@@ -756,9 +757,12 @@ bool Foam::decomposedBlockData::writeBlocks
             << Foam::endl;
     }
 
-    //- Enable to get synchronised error checking. Is the one that keeps
-    //  slaves as slow as the master (which does all the writing)
-    Pstream::scatter(ok, Pstream::msgType(), comm);
+    if (syncReturnState)
+    {
+        //- Enable to get synchronised error checking. Is the one that keeps
+        //  slaves as slow as the master (which does all the writing)
+        Pstream::scatter(ok, Pstream::msgType(), comm);
+    }
 
     return ok;
 }

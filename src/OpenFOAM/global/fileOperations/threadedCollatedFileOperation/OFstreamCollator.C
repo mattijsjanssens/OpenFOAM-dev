@@ -103,7 +103,8 @@ bool Foam::OFstreamCollator::writeFile
         osPtr,
         start,
         slice,
-        UPstream::commsTypes::scheduled
+        UPstream::commsTypes::scheduled,
+        false       // do not reduce return state
     );
 
     if (osPtr.valid() && !osPtr().good())

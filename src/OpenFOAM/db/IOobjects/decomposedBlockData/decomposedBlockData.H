@@ -182,7 +182,8 @@ public:
             autoPtr<OSstream>& osPtr,
             List<std::streamoff>& start,
             const UList<char>&,
-            const UPstream::commsTypes
+            const UPstream::commsTypes,
+            const bool syncReturnState = true
         );
 
         //- Detect number of blocks in a file

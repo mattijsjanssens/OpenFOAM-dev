@@ -173,6 +173,8 @@ Benchmarking
 - scheduled             :   9.7/10.5
 - non-blocking          :   9.9/12.9
 - non-blocking+threaded :   13.11/13.1
+- frontthreaded+scheduled:  varying 0.9..1.5s, up to 4.5s for more writing
+
 
 3) 8*inkling (disk local to the master)
 - uncollated            :   0.25/0.3

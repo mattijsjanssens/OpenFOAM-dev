@@ -123,7 +123,8 @@ Foam::masterCollatingOFstream::~masterCollatingOFstream()
             bigFile
           ? UPstream::commsTypes::scheduled
           : UPstream::commsTypes::nonBlocking
-        )
+        ),
+        false           // do not reduce return value
     );
 
     if (osPtr.valid() && !osPtr().good())
