@@ -322,7 +322,7 @@ Foam::KinematicCloud<CloudType>::KinematicCloud
       : -1
     ),
     cellOccupancyPtr_(),
-    cellLengthScale_(cbrt(mesh_.V())),
+    cellLengthScale_(mag(cbrt(mesh_.V()))),
     rho_(rho),
     U_(U),
     mu_(mu),
@@ -849,18 +849,14 @@ void Foam::KinematicCloud<CloudType>::updateMesh()
 {
     updateCellOccupancy();
     injectors_.updateMesh();
-    cellLengthScale_ = cbrt(mesh_.V());
+    cellLengthScale_ = mag(cbrt(mesh_.V()));
 }
 
 
 template<class CloudType>
 void Foam::KinematicCloud<CloudType>::autoMap(const mapPolyMesh& mapper)
 {
-    typedef typename particle::TrackingData<KinematicCloud<CloudType>> tdType;
-
-    tdType td(*this);
-
-    Cloud<parcelType>::template autoMap<tdType>(td, mapper);
+    Cloud<parcelType>::autoMap(mapper);
 
     updateMesh();
 }

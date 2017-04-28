@@ -259,12 +259,7 @@ void Foam::ReactingMultiphaseCloud<CloudType>::autoMap
     const mapPolyMesh& mapper
 )
 {
-    typedef typename particle::TrackingData<ReactingMultiphaseCloud<CloudType>>
-        tdType;
-
-    tdType td(*this);
-
-    Cloud<parcelType>::template autoMap<tdType>(td, mapper);
+    Cloud<parcelType>::autoMap(mapper);
 
     this->updateMesh();
 }

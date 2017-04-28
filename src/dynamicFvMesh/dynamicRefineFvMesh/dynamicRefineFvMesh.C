@@ -191,7 +191,7 @@ void Foam::dynamicRefineFvMesh::readDict()
                 IOobject::NO_WRITE,
                 false
             )
-        ).subDict(typeName + "Coeffs")
+        ).optionalSubDict(typeName + "Coeffs")
     );
 
     List<Pair<word>> fluxVelocities = List<Pair<word>>
@@ -1202,7 +1202,7 @@ bool Foam::dynamicRefineFvMesh::update()
                 IOobject::NO_WRITE,
                 false
             )
-        ).subDict(typeName + "Coeffs")
+        ).optionalSubDict(typeName + "Coeffs")
     );
 
     label refineInterval = readLabel(refineDict.lookup("refineInterval"));

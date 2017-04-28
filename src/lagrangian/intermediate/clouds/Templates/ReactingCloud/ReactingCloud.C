@@ -333,11 +333,7 @@ void Foam::ReactingCloud<CloudType>::evolve()
 template<class CloudType>
 void Foam::ReactingCloud<CloudType>::autoMap(const mapPolyMesh& mapper)
 {
-    typedef typename particle::TrackingData<ReactingCloud<CloudType>> tdType;
-
-    tdType td(*this);
-
-    Cloud<parcelType>::template autoMap<tdType>(td, mapper);
+    Cloud<parcelType>::autoMap(mapper);
 
     this->updateMesh();
 }

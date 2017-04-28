@@ -134,13 +134,6 @@ void Foam::Cloud<ParticleType>::initCloud(const bool checkClass)
     // them, otherwise, if some processors have no particles then
     // there is a comms mismatch.
     polyMesh_.tetBasePtIs();
-
-    forAllIter(typename Cloud<ParticleType>, *this, pIter)
-    {
-        ParticleType& p = pIter();
-
-        p.initCellFacePt();
-    }
 }
 
 
