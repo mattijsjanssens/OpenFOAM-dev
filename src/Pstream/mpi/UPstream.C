@@ -72,8 +72,10 @@ bool Foam::UPstream::init(int& argc, char**& argv)
     );
     if (provided_thread_support != MPI_THREAD_MULTIPLE)
     {
-        FatalErrorInFunction << "mpi does not have thread support"
-            << Foam::exit(FatalError);
+        WarningInFunction
+            << "mpi does not seem to have thread support."
+            << " There might be issues with e.g. threaded IO"
+            << endl;
     }
 
     int numprocs;
