@@ -70,13 +70,6 @@ bool Foam::UPstream::init(int& argc, char**& argv)
         MPI_THREAD_MULTIPLE,
         &provided_thread_support
     );
-    if (provided_thread_support != MPI_THREAD_MULTIPLE)
-    {
-        WarningInFunction
-            << "mpi does not seem to have thread support."
-            << " There might be issues with e.g. threaded IO"
-            << endl;
-    }
 
     int numprocs;
     MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
@@ -100,6 +93,15 @@ bool Foam::UPstream::init(int& argc, char**& argv)
 
     // Initialise parallel structure
     setParRun(numprocs);
+
+    if (Pstream::master() && provided_thread_support != MPI_THREAD_MULTIPLE)
+    {
+        WarningInFunction
+            << "mpi does not seem to have thread support."
+            << " There might be issues with e.g. threaded IO"
+            << endl;
+    }
+
 
     #ifndef SGIMPI
     string bufferSizeName = getEnv("MPI_BUFFER_SIZE");
