@@ -49,6 +49,14 @@ Description
 #include "cellIOList.H"
 #include "IOobjectList.H"
 #include "IOPtrList.H"
+#include "cloud.H"
+#include "labelIOField.H"
+#include "scalarIOField.H"
+#include "sphericalTensorIOField.H"
+#include "symmTensorIOField.H"
+#include "tensorIOField.H"
+#include "labelFieldIOField.H"
+#include "vectorFieldIOField.H"
 
 #include "writeMeshObject.H"
 #include "fieldDictionary.H"
@@ -259,6 +267,75 @@ int main(int argc, char *argv[])
 
                 Info<< "        Writing " << iter()->name() << endl;
                 fDict.regIOobject::write();
+            }
+        }
+
+
+
+        // Check for lagrangian
+        fileName lagrangianDir
+        (
+            fileHandler().filePath
+            (
+                runTime.timePath()
+              / regionPrefix
+              / cloud::prefix
+            )
+        );
+
+        fileNameList cloudDirs;
+        if (!lagrangianDir.empty())
+        {
+            cloudDirs = fileHandler().readDir
+            (
+                lagrangianDir,
+                fileName::DIRECTORY
+            );
+
+            forAll(cloudDirs, i)
+            {
+                fileName dir(cloud::prefix/cloudDirs[i]);
+
+                // Do local scan for valid cloud objects
+                IOobjectList sprayObjs(runTime, runTime.timeName(), dir);
+
+                forAllConstIter(IOobjectList, sprayObjs, iter)
+                {
+                    const word& name = iter()->name();
+
+                    writeMeshObject<labelIOField>(name, dir, runTime, true);
+                    writeMeshObject<scalarIOField>(name, dir, runTime, true);
+                    writeMeshObject<vectorIOField>(name, dir, runTime, true);
+                    writeMeshObject<sphericalTensorIOField>
+                    (
+                        name,
+                        dir,
+                        runTime,
+                        true
+                    );
+                    writeMeshObject<symmTensorIOField>
+                    (
+                        name,
+                        dir,
+                        runTime,
+                        true
+                    );
+                    writeMeshObject<tensorIOField>(name, dir, runTime, true);
+                    writeMeshObject<labelFieldIOField>
+                    (
+                        name,
+                        dir,
+                        runTime,
+                        true
+                    );
+                    writeMeshObject<vectorFieldIOField>
+                    (
+                        name,
+                        dir,
+                        runTime,
+                        true
+                    );
+                }
             }
         }
 
