@@ -69,7 +69,11 @@ void Foam::domainDecomposition::mark
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::domainDecomposition::domainDecomposition(const IOobject& io)
+Foam::domainDecomposition::domainDecomposition
+(
+    const IOobject& io,
+    const fileName& dictFile
+)
 :
     fvMesh(io),
     facesInstancePointsPtr_
@@ -96,7 +100,8 @@ Foam::domainDecomposition::domainDecomposition(const IOobject& io)
         (
             decompositionModel::New
             (
-                *this
+                *this,
+                dictFile
             ).lookup("numberOfSubdomains")
         )
     ),
@@ -115,7 +120,8 @@ Foam::domainDecomposition::domainDecomposition(const IOobject& io)
 {
     decompositionModel::New
     (
-        *this
+        *this,
+        dictFile
     ).readIfPresent("distributed", distributed_);
 }
 
