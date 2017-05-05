@@ -10,9 +10,8 @@ $(fileOps)/fileOperation/fileOperation.C
 $(fileOps)/uncollatedFileOperation/uncollatedFileOperation.C
 $(fileOps)/masterUncollatedFileOperation/masterUncollatedFileOperation.C
 $(fileOps)/collatedFileOperation/collatedFileOperation.C
-$(fileOps)/threadedCollatedFileOperation/threadedCollatedFileOperation.C
-$(fileOps)/threadedCollatedFileOperation/threadedCollatedOFstream.C
-$(fileOps)/threadedCollatedFileOperation/OFstreamCollator.C
+$(fileOps)/collatedFileOperation/threadedCollatedOFstream.C
+$(fileOps)/collatedFileOperation/OFstreamCollator.C
 
 bools = primitives/bools
 $(bools)/bool/bool.C
@@ -172,7 +171,6 @@ $(Fstreams)/OFstream.C
 $(Fstreams)/threadedOFstream.C
 $(Fstreams)/OFstreamWriter.C
 $(Fstreams)/masterOFstream.C
-$(Fstreams)/masterCollatingOFstream.C
 
 Tstreams = $(Streams)/Tstreams
 $(Tstreams)/ITstream.C

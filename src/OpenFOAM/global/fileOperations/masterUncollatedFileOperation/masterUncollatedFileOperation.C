@@ -1505,7 +1505,6 @@ Foam::fileOperations::masterUncollatedFileOperation::NewOFstream
     (
         new masterOFstream
         (
-            nullptr,
             pathName,
             fmt,
             ver,

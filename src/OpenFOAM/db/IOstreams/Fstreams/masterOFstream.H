@@ -43,8 +43,6 @@ SourceFiles
 namespace Foam
 {
 
-class OFstreamWriter;
-
 /*---------------------------------------------------------------------------*\
                        Class masterOFstream Declaration
 \*---------------------------------------------------------------------------*/
@@ -54,8 +52,6 @@ class masterOFstream
     public OStringStream
 {
     // Private data
-
-        OFstreamWriter* writer_;
 
         const fileName pathName_;
 
@@ -80,7 +76,6 @@ public:
         //- Construct and set stream status
         masterOFstream
         (
-            OFstreamWriter*,
             const fileName& pathname,
             streamFormat format=ASCII,
             versionNumber version=currentVersion,

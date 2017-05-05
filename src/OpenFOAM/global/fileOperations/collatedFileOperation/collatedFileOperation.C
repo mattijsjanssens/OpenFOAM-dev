@@ -27,13 +27,11 @@ License
 #include "addToRunTimeSelectionTable.H"
 #include "Pstream.H"
 #include "Time.H"
-#include "OFstreamWriter.H"
-#include "threadedOFstream.H"
-#include "masterOFstream.H"
-#include "masterCollatingOFstream.H"
+#include "threadedCollatedOFstream.H"
 #include "decomposedBlockData.H"
-#include "OFstream.H"
 #include "registerSwitch.H"
+#include "masterOFstream.H"
+#include "OFstream.H"
 
 /* * * * * * * * * * * * * * * Static Member Data  * * * * * * * * * * * * * */
 
@@ -67,6 +65,118 @@ namespace fileOperations
 }
 
 
+// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
+
+bool Foam::fileOperations::collatedFileOperation::appendObject
+(
+    const regIOobject& io,
+    const fileName& pathName,
+    IOstream::streamFormat fmt,
+    IOstream::versionNumber ver,
+    IOstream::compressionType cmp
+) const
+{
+    // Append to processors/ file
+
+    fileName prefix;
+    fileName postfix;
+    label proci = splitProcessorPath
+    (
+        io.objectPath(),
+        prefix,
+        postfix
+    );
+
+    if (debug)
+    {
+        Pout<< "writeObject:" << " : For local object : "
+            << io.name()
+            << " appending processor " << proci
+            << " data to " << pathName << endl;
+    }
+
+    if (proci == -1)
+    {
+        FatalErrorInFunction
+            << "Not a valid processor path " << pathName
+            << exit(FatalError);
+    }
+
+
+    // Create string from all data to write
+    string buf;
+    {
+        OStringStream os(fmt, ver);
+        if (proci == 0)
+        {
+            if (!io.writeHeader(os))
+            {
+                return false;
+            }
+        }
+
+        // Write the data to the Ostream
+        if (!io.writeData(os))
+        {
+            return false;
+        }
+
+        if (proci == 0)
+        {
+            IOobject::writeEndDivider(os);
+        }
+
+        buf = os.str();
+    }
+
+
+    bool append = (proci > 0);
+
+    // Note: cannot do append + compression. This is a limitation
+    // of ogzstream (or rather most compressed formats)
+
+    OFstream os
+    (
+        pathName,
+        IOstream::BINARY,
+        ver,
+        IOstream::UNCOMPRESSED, // no compression
+        append
+    );
+
+    if (!os.good())
+    {
+        FatalIOErrorInFunction(os)
+            << "Cannot open for appending"
+            << exit(FatalIOError);
+    }
+
+    if (proci == 0)
+    {
+        IOobject::writeBanner(os)
+            << "FoamFile\n{\n"
+            << "    version     " << os.version() << ";\n"
+            << "    format      " << os.format() << ";\n"
+            << "    class       " << decomposedBlockData::typeName
+            << ";\n"
+            << "    location    " << pathName << ";\n"
+            << "    object      " << pathName.name() << ";\n"
+            << "}" << nl;
+        IOobject::writeDivider(os) << nl;
+    }
+
+    // Write data
+    UList<char> slice
+    (
+        const_cast<char*>(buf.data()),
+        label(buf.size())
+    );
+    os << nl << "// Processor" << proci << nl << slice << nl;
+
+    return os.good();
+}
+
+
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 Foam::fileOperations::collatedFileOperation::collatedFileOperation
@@ -75,13 +185,12 @@ Foam::fileOperations::collatedFileOperation::collatedFileOperation
 )
 :
     masterUncollatedFileOperation(false),
-    writeServer_(off_t(maxThreadBufferSize))
+    writer_(maxThreadBufferSize)
 {
     if (verbose)
     {
         Info<< "I/O    : " << typeName
-            << " (maxBufferSize " << maxBufferSize
-            << "  maxThreadBufferSize " << maxThreadBufferSize
+            << " (maxThreadBufferSize " << maxThreadBufferSize
             << ')' << endl;
         if
         (
@@ -141,26 +250,6 @@ Foam::fileName Foam::fileOperations::collatedFileOperation::objectPath
 }
 
 
-//Foam::fileName Foam::fileOperations::collatedFileOperation::objectPath
-//(
-//    const fileName& fName
-//) const
-//{
-//    fileName path;
-//    fileName local;
-//    label proci = splitProcessorPath(fName, path, local);
-//
-//    if (proci != -1)
-//    {
-//        return path/processorsDir/local;
-//    }
-//    else
-//    {
-//        return fName;
-//    }
-//}
-
-
 bool Foam::fileOperations::collatedFileOperation::writeObject
 (
     const regIOobject& io,
@@ -173,10 +262,6 @@ bool Foam::fileOperations::collatedFileOperation::writeObject
     const Time& tm = io.time();
     const fileName& inst = io.instance();
 
-    // Write header (suppressed for masterCollatingOFstream slaves)
-    bool writeHeader = true;
-
-    autoPtr<Ostream> osPtr;
     if (inst.isAbsolute() || !tm.processorCase())
     {
         mkDir(io.path());
@@ -189,23 +274,34 @@ bool Foam::fileOperations::collatedFileOperation::writeObject
                 << " falling back to master-only output to " << io.path()
                 << endl;
         }
-        osPtr.reset
+
+        masterOFstream os
         (
-            new masterOFstream
-            (
-                (
-                    off_t(maxThreadBufferSize) > 0
-                 ? &writeServer_
-                 : nullptr
-                ),
-                pathName,
-                fmt,
-                ver,
-                cmp,
-                false,
-                valid
-            )
+            pathName,
+            fmt,
+            ver,
+            cmp,
+            false,
+            valid
         );
+
+        // If any of these fail, return (leave error handling to Ostream class)
+        if (!os.good())
+        {
+            return false;
+        }
+        if (!io.writeHeader(os))
+        {
+            return false;
+        }
+        // Write the data to the Ostream
+        if (!io.writeData(os))
+        {
+            return false;
+        }
+        IOobject::writeEndDivider(os);
+
+        return true;
     }
     else
     {
@@ -223,201 +319,83 @@ bool Foam::fileOperations::collatedFileOperation::writeObject
                     << " falling back to master-only output to " << pathName
                     << endl;
             }
-            osPtr.reset
+
+            masterOFstream os
             (
-                new masterOFstream
-                (
-                    nullptr,    // Avoid thread writing
-                    pathName,
-                    fmt,
-                    ver,
-                    cmp,
-                    false,
-                    valid
-                )
+                pathName,
+                fmt,
+                ver,
+                cmp,
+                false,
+                valid
             );
+
+            // If any of these fail, return (leave error handling to Ostream
+            // class)
+            if (!os.good())
+            {
+                return false;
+            }
+            if (!io.writeHeader(os))
+            {
+                return false;
+            }
+            // Write the data to the Ostream
+            if (!io.writeData(os))
+            {
+                return false;
+            }
+            IOobject::writeEndDivider(os);
+
+            return true;
+        }
+        else if (!Pstream::parRun())
+        {
+            // Special path for e.g. decomposePar. Append to
+            // processors/ file
+            if (debug)
+            {
+                Pout<< "writeObject:"
+                    << " : For object : " << io.name()
+                    << " appending to " << pathName << endl;
+            }
+
+            return appendObject(io, pathName, fmt, ver, cmp);
         }
         else
         {
-            if (!Pstream::parRun())
+            if (debug)
             {
-                // Special path for e.g. decomposePar. Append to
-                // processors/ file
-
-                fileName prefix;
-                fileName postfix;
-                label proci = splitProcessorPath
-                (
-                    io.objectPath(),
-                    prefix,
-                    postfix
-                );
-
-                if (debug)
-                {
-                    Pout<< "writeObject:" << " : For local object : "
-                        << io.name()
-                        << " appending processor " << proci
-                        << " data to " << pathName << endl;
-                }
-
-                if (proci == -1)
-                {
-                    FatalErrorInFunction
-                        << "Not a valid processor path " << pathName
-                        << exit(FatalError);
-                }
-
-
-                // Create string from all data to write
-                string buf;
-                {
-                    OStringStream os(fmt, ver);
-                    if (proci == 0)
-                    {
-                        if (!io.writeHeader(os))
-                        {
-                            return false;
-                        }
-                    }
-
-                    // Write the data to the Ostream
-                    if (!io.writeData(os))
-                    {
-                        return false;
-                    }
-
-                    if (proci == 0)
-                    {
-                        IOobject::writeEndDivider(os);
-                    }
-
-                    buf = os.str();
-                }
-
-
-                // Note: cannot do append + compression. This is a limitation
-                // of ogzstream (or rather most compressed formats)
-                bool append = (proci > 0);
-
-                autoPtr<OSstream> osPtr;
-                if (off_t(maxThreadBufferSize) > 0)
-                {
-                    osPtr.reset
-                    (
-                        new threadedOFstream
-                        (
-                            writeServer_,
-                            pathName,
-                            IOstream::BINARY,
-                            ver,
-                            IOstream::UNCOMPRESSED, // no compression
-                            append
-                        )
-                    );
-                }
-                else
-                {
-                    osPtr.reset
-                    (
-                        new OFstream
-                        (
-                            pathName,
-                            IOstream::BINARY,
-                            ver,
-                            IOstream::UNCOMPRESSED, // no compression
-                            append
-                        )
-                    );
-                }
-                OSstream& os = osPtr();
-
-                if (!os.good())
-                {
-                    FatalIOErrorInFunction(os)
-                        << "Cannot open for appending"
-                        << exit(FatalIOError);
-                }
-
-                if (proci == 0)
-                {
-                    IOobject::writeBanner(os)
-                        << "FoamFile\n{\n"
-                        << "    version     " << os.version() << ";\n"
-                        << "    format      " << os.format() << ";\n"
-                        << "    class       " << decomposedBlockData::typeName
-                        << ";\n"
-                        << "    location    " << pathName << ";\n"
-                        << "    object      " << pathName.name() << ";\n"
-                        << "}" << nl;
-                    IOobject::writeDivider(os) << nl;
-                }
-
-                // Write data
-                UList<char> slice
-                (
-                    const_cast<char*>(buf.data()),
-                    label(buf.size())
-                );
-                os << nl << "// Processor" << proci << nl << slice << nl;
-
-                return os.good();
+                Pout<< "writeObject:"
+                    << " : For object : " << io.name()
+                    << " starting collating output to " << pathName << endl;
             }
-            else
+
+            threadedCollatedOFstream os(writer_, pathName, fmt, ver, cmp);
+
+            // If any of these fail, return (leave error handling to Ostream
+            // class)
+            if (!os.good())
             {
-                if (debug)
-                {
-                    Pout<< "writeObject:"
-                        << " : For object : " << io.name()
-                        << " starting collating output to " << path << endl;
-                }
-
-                osPtr.reset
-                (
-                    new masterCollatingOFstream
-                    (
-                        (
-                            off_t(maxThreadBufferSize) > 0
-                         ? &writeServer_
-                         : nullptr
-                        ),
-                        pathName,
-                        fmt,
-                        ver,
-                        cmp
-                    )
-                );
-
-                // Suppress header on slaves
-                writeHeader = Pstream::master();
+                return false;
             }
+            if (Pstream::master() && !io.writeHeader(os))
+            {
+                return false;
+            }
+            // Write the data to the Ostream
+            if (!io.writeData(os))
+            {
+                return false;
+            }
+            if (Pstream::master())
+            {
+                IOobject::writeEndDivider(os);
+            }
+
+            return true;
         }
     }
-    Ostream& os = osPtr();
-
-    // If any of these fail, return (leave error handling to Ostream class)
-    if (!os.good())
-    {
-        return false;
-    }
-
-    if (writeHeader && !io.writeHeader(os))
-    {
-        return false;
-    }
-
-    // Write the data to the Ostream
-    if (!io.writeData(os))
-    {
-        return false;
-    }
-
-    if (writeHeader)
-    {
-        IOobject::writeEndDivider(os);
-    }
-
-    return true;
 }
 
 

@@ -28,6 +28,8 @@ Description
     Version of masterUncollatedFileOperation that collates regIOobjects
     into a container in the processors/ subdirectory.
 
+    Uses threading if maxThreadBufferSize > 0.
+
 See also
     masterUncollatedFileOperation
 
@@ -39,9 +41,8 @@ SourceFiles
 #ifndef fileOperations_collatedFileOperation_H
 #define fileOperations_collatedFileOperation_H
 
-#include "OSspecific.H"
 #include "masterUncollatedFileOperation.H"
-#include "OFstreamWriter.H"
+#include "OFstreamCollator.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -51,7 +52,7 @@ namespace fileOperations
 {
 
 /*---------------------------------------------------------------------------*\
-                Class collatedFileOperation Declaration
+                    Class collatedFileOperation Declaration
 \*---------------------------------------------------------------------------*/
 
 class collatedFileOperation
@@ -60,8 +61,21 @@ class collatedFileOperation
 {
     // Private data
 
-        //- Thread controller
-        mutable OFstreamWriter writeServer_;
+        //- Threaded writer
+        mutable OFstreamCollator writer_;
+
+
+   // Private Member Functions
+
+        //- Append to processors/ file
+        bool appendObject
+        (
+            const regIOobject& io,
+            const fileName& pathName,
+            IOstream::streamFormat fmt,
+            IOstream::versionNumber ver,
+            IOstream::compressionType cmp
+        ) const;
 
 
 public:
@@ -98,10 +112,6 @@ public:
                 const IOobject& io,
                 const word& typeName
             ) const;
-
-//            //- Generate disk file name for object. Opposite of filePath.
-//            //  Use IOobject version in preference
-//            virtual fileName objectPath(const fileName&) const;
 
             //- Writes a regIOobject (so header, contents and divider).
             //  Returns success state.

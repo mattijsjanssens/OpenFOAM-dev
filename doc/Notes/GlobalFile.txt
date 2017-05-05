@@ -11,12 +11,10 @@ New parallel file format
 - master writes the file, all the slaves send to master
 - selectable through 'fileHandler':
     - uncollated (default): all processors write their own data
-    - collated            : all slaves send to master; master writes collated file
-                            (with optional threading)
     - masterUncollated    : same as uncollated but only master reads/writes
                             (slaves can run without NFS access their processor directory)
-    - threadedCollated    : same as collated but with threading before
-                            sending to master
+    - collated            : all slaves send to master; master writes collated file
+                            (with optional threading)
 
 
 fileHandler
@@ -184,6 +182,11 @@ Benchmarking
 - scheduled             :   5.9/15.9
 - non-blocking          :   7.1/23.4
 - non-blocking+threaded :   out of memory
+
+4b) Now writing 10000000/6 so same overall size (1.6Gb)
+    6*inkling[1-8] (so 48 processes) (disk local to the master)
+- non-blocking+threaded     :  1.56(master), 0.15(processor1) 1.28(processor47)
+- frontthreaded+scheduled   :  0.1..0.2s
 
 
 Todo:

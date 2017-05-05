@@ -29,7 +29,6 @@ License
 #include "PstreamBuffers.H"
 #include "masterUncollatedFileOperation.H"
 #include "boolList.H"
-#include "OFstreamWriter.H"
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
@@ -41,43 +40,27 @@ void Foam::masterOFstream::write
 {
     mkDir(fName.path());
 
-    if (writer_)
+    OFstream os
+    (
+        fName,
+        IOstream::BINARY,   //format(),
+        version(),
+        compression_,
+        append_
+    );
+    if (!os.good())
     {
-        //OFstreamWriter& writer = const_cast<OFstreamWriter&>(writer_());
-        writer_->write
-        (
-            fName,
-            str,
-            IOstream::BINARY,
-            version(),
-            compression_,
-            append_
-        );
+        FatalIOErrorInFunction(os)
+            << "Could not open file " << fName
+            << exit(FatalIOError);
     }
-    else
-    {
-        OFstream os
-        (
-            fName,
-            IOstream::BINARY,   //format(),
-            version(),
-            compression_,
-            append_
-        );
-        if (!os.good())
-        {
-            FatalIOErrorInFunction(os)
-                << "Could not open file " << fName
-                << exit(FatalIOError);
-        }
 
-        os.writeQuoted(str, false);
-        if (!os.good())
-        {
-            FatalIOErrorInFunction(os)
-                << "Failed writing to " << fName
-                << exit(FatalIOError);
-        }
+    os.writeQuoted(str, false);
+    if (!os.good())
+    {
+        FatalIOErrorInFunction(os)
+            << "Failed writing to " << fName
+            << exit(FatalIOError);
     }
 }
 
@@ -86,7 +69,6 @@ void Foam::masterOFstream::write
 
 Foam::masterOFstream::masterOFstream
 (
-    OFstreamWriter* writer,
     const fileName& pathName,
     streamFormat format,
     versionNumber version,
@@ -96,7 +78,6 @@ Foam::masterOFstream::masterOFstream
 )
 :
     OStringStream(format, version),
-    writer_(writer),
     pathName_(pathName),
     compression_(compression),
     append_(append),
