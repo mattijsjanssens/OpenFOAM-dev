@@ -669,6 +669,12 @@ public:
                 fileName& path,
                 fileName& local
             );
+
+            //- Return cached times
+            const HashPtrTable<instantList>& times() const
+            {
+                return times_;
+            }
 };
 
 
