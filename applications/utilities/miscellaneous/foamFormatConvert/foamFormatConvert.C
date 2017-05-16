@@ -57,9 +57,11 @@ Description
 #include "tensorIOField.H"
 #include "labelFieldIOField.H"
 #include "vectorFieldIOField.H"
+#include "Cloud.H"
+#include "passiveParticle.H"
+#include "fieldDictionary.H"
 
 #include "writeMeshObject.H"
-#include "fieldDictionary.H"
 
 using namespace Foam;
 
@@ -147,6 +149,82 @@ bool writeZones(const word& name, const fileName& meshDir, Time& runTime)
 }
 
 
+// Reduction for non-empty strings
+class uniqueEqOp
+{
+    public:
+    void operator()(stringList& x, const stringList& y) const
+    {
+        label n = 0;
+        forAll(y, i)
+        {
+            if (findIndex(x, y[i]) == -1)
+            {
+                n++;
+            }
+        }
+        if (n > 0)
+        {
+            label sz = x.size();
+            x.setSize(sz+n);
+            n = sz;
+
+            SubList<string> oldX(x, sz);
+            forAll(y, i)
+            {
+                if (findIndex(oldX, y[i]) == -1)
+                {
+                    x[n++] = y[i];
+                }
+            }
+        }
+    }
+};
+
+
+template<class T>
+bool writeOptionalMeshObject
+(
+    const word& name,
+    const fileName& meshDir,
+    Time& runTime,
+    const bool valid
+)
+{
+    IOobject io
+    (
+        name,
+        runTime.timeName(),
+        meshDir,
+        runTime,
+        IOobject::MUST_READ,
+        IOobject::NO_WRITE,
+        false
+    );
+
+    bool writeOk = false;
+
+    bool haveFile = io.typeHeaderOk<IOField<label>>(false);
+
+    // Make sure all know if there is a valid class name
+    stringList classNames(1, io.headerClassName());
+    combineReduce(classNames, uniqueEqOp());
+
+    // Check for correct type
+    if (classNames[0] == T::typeName)
+    {
+        Info<< "        Reading " << classNames[0]
+            << " : " << name << endl;
+        T meshObject(io, valid && haveFile);
+
+        Info<< "        Writing " << name << endl;
+        writeOk = meshObject.regIOobject::write(valid && haveFile);
+    }
+
+    return writeOk;
+}
+
+
 int main(int argc, char *argv[])
 {
     timeSelector::addOptions();
@@ -172,6 +250,8 @@ int main(int argc, char *argv[])
 
 
     #include "createTime.H"
+    // Optional mesh (used to read Clouds)
+    autoPtr<polyMesh> meshPtr;
 
 
     // Make sure we do not use the master-only reading since we read
@@ -273,8 +353,9 @@ int main(int argc, char *argv[])
 
 
         // Check for lagrangian
-        fileName lagrangianDir
+        stringList lagrangianDirs
         (
+            1,
             fileHandler().filePath
             (
                 runTime.timePath()
@@ -282,59 +363,156 @@ int main(int argc, char *argv[])
               / cloud::prefix
             )
         );
+        combineReduce(lagrangianDirs, uniqueEqOp());
 
-        fileNameList cloudDirs;
-        if (!lagrangianDir.empty())
+        if (!lagrangianDirs.empty())
         {
-            cloudDirs = fileHandler().readDir
+            if (!meshPtr.valid())
+            {
+                meshPtr().readUpdate();
+            }
+            else
+            {
+                meshPtr.reset
+                (
+                    new polyMesh
+                    (
+                        IOobject
+                        (
+                            polyMesh::defaultRegion,
+                            runTime.timeName(),
+                            runTime,
+                            Foam::IOobject::MUST_READ
+                        )
+                    )
+                );
+            }
+
+            stringList cloudDirs
             (
-                lagrangianDir,
-                fileName::DIRECTORY
+                fileHandler().readDir
+                (
+                    lagrangianDirs[0],
+                    fileName::DIRECTORY
+                )
             );
+            combineReduce(cloudDirs, uniqueEqOp());
 
             forAll(cloudDirs, i)
             {
                 fileName dir(cloud::prefix/cloudDirs[i]);
 
+                Cloud<passiveParticle> parcels(meshPtr(), cloudDirs[i], false);
+
+                parcels.writeObject
+                (
+                    runTime.writeFormat(),
+                    IOstream::currentVersion,
+                    runTime.writeCompression(),
+                    parcels.size()
+                );
+
+
                 // Do local scan for valid cloud objects
                 IOobjectList sprayObjs(runTime, runTime.timeName(), dir);
 
-                forAllConstIter(IOobjectList, sprayObjs, iter)
-                {
-                    const word& name = iter()->name();
+                // Combine with all other cloud objects
+                stringList sprayFields(sprayObjs.sortedToc());
+                combineReduce(sprayFields, uniqueEqOp());
 
-                    writeMeshObject<labelIOField>(name, dir, runTime, true);
-                    writeMeshObject<scalarIOField>(name, dir, runTime, true);
-                    writeMeshObject<vectorIOField>(name, dir, runTime, true);
-                    writeMeshObject<sphericalTensorIOField>
+                forAll(sprayFields, fieldi)
+                {
+                    const word& name = sprayFields[fieldi];
+
+                    // Note: try the various field types. Make sure to
+                    //       exit once sucessful conversion to avoid re-read
+                    //       converted file.
+
+                    if
+                    (
+                        name == "positions"
+                     || name == "origProcId"
+                     || name == "origId"
+                    )
+                    {
+                        continue;
+                    }
+
+                    bool writeOk = writeOptionalMeshObject<labelIOField>
                     (
                         name,
                         dir,
                         runTime,
-                        true
+                        parcels.size() > 0
                     );
-                    writeMeshObject<symmTensorIOField>
+                    if (writeOk) continue;
+
+                    writeOk = writeOptionalMeshObject<scalarIOField>
                     (
                         name,
                         dir,
                         runTime,
-                        true
+                        parcels.size() > 0
                     );
-                    writeMeshObject<tensorIOField>(name, dir, runTime, true);
-                    writeMeshObject<labelFieldIOField>
+                    if (writeOk) continue;
+
+                    writeOk = writeOptionalMeshObject<vectorIOField>
                     (
                         name,
                         dir,
                         runTime,
-                        true
+                        parcels.size() > 0
                     );
-                    writeMeshObject<vectorFieldIOField>
+                    if (writeOk) continue;
+
+                    writeOk = writeOptionalMeshObject<sphericalTensorIOField>
                     (
                         name,
                         dir,
                         runTime,
-                        true
+                        parcels.size() > 0
                     );
+                    if (writeOk) continue;
+
+                    writeOk = writeOptionalMeshObject<symmTensorIOField>
+                    (
+                        name,
+                        dir,
+                        runTime,
+                        parcels.size() > 0
+                    );
+                    if (writeOk) continue;
+
+                    writeOk = writeOptionalMeshObject<tensorIOField>
+                    (
+                        name,
+                        dir,
+                        runTime,
+                        parcels.size() > 0
+                    );
+                    if (writeOk) continue;
+
+                    writeOk = writeOptionalMeshObject<labelFieldIOField>
+                    (
+                        name,
+                        dir,
+                        runTime,
+                        parcels.size() > 0
+                    );
+                    if (writeOk) continue;
+
+                    writeOk = writeOptionalMeshObject<vectorFieldIOField>
+                    (
+                        name,
+                        dir,
+                        runTime,
+                        parcels.size() > 0
+                    );
+
+                    if (!writeOk)
+                    {
+                        Info<< "        Failed converting " << name << endl;
+                    }
                 }
             }
         }

@@ -61,7 +61,11 @@ inline bool writeMeshObject
 
     bool writeOk = false;
 
-    if (io.typeHeaderOk<T>(false))
+    //Pout<< "        Trying " << T::typeName
+    //        << " from " << io.objectPath() << endl;
+
+
+    if (io.typeHeaderOk<T>(false) && io.headerClassName() == T::typeName)
     {
         Info<< "        Reading " << io.headerClassName()
             << " : " << name << endl;
