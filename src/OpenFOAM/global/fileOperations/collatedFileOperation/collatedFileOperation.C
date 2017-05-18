@@ -80,12 +80,7 @@ bool Foam::fileOperations::collatedFileOperation::appendObject
 
     fileName prefix;
     fileName postfix;
-    label proci = splitProcessorPath
-    (
-        io.objectPath(),
-        prefix,
-        postfix
-    );
+    label proci = splitProcessorPath(io.objectPath(), prefix, postfix);
 
     if (debug)
     {
