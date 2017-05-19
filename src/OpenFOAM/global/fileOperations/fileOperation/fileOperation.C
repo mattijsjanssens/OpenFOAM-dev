@@ -448,38 +448,69 @@ Foam::instantList Foam::fileOperation::findTimes
 
         instantList extraTimes = sortTimes(extraEntries, constantName);
 
-        label sz = times.size();
-        times.setSize(sz+extraTimes.size());
-        forAll(extraTimes, i)
+        if (extraTimes.size())
         {
-            times[sz++] = extraTimes[i];
-        }
+            bool haveConstant =
+            (
+                times.size() > 0
+             && times[0].name() == constantName
+            );
 
-        // Sort
-        if (times.size() > 1)
-        {
-            label starti = 0;
-            if (times[0].name() == constantName)
-            {
-                starti = 1;
-            }
-            std::sort(&times[starti], times.end(), instant::less());
+            bool haveExtraConstant =
+            (
+                extraTimes.size() > 0
+             && extraTimes[0].name() == constantName
+            );
 
-            // Filter out duplicates
-            label newi = starti+1;
-            for (label i = newi; i < times.size(); i++)
+            // Combine times
+            instantList combinedTimes(times.size()+extraTimes.size());
+            label sz = 0;
+            label extrai = 0;
+            if (haveExtraConstant)
             {
-                if (times[i].value() != times[i-1].value())
+                extrai = 1;
+                if (!haveConstant)
                 {
-                    if (newi != i)
-                    {
-                        times[newi] = times[i];
-                    }
-                    newi++;
+                    combinedTimes[sz++] = extraTimes[0];    // constant
                 }
             }
+            forAll(times, i)
+            {
+                combinedTimes[sz++] = times[i];
+            }
+            for (; extrai < extraTimes.size(); extrai++)
+            {
+                combinedTimes[sz++] = extraTimes[extrai];
+            }
+            combinedTimes.setSize(sz);
+            times.transfer(combinedTimes);
 
-            times.setSize(newi);
+            // Sort
+            if (times.size() > 1)
+            {
+                label starti = 0;
+                if (times[0].name() == constantName)
+                {
+                    starti = 1;
+                }
+                std::sort(&times[starti], times.end(), instant::less());
+
+                // Filter out duplicates
+                label newi = starti+1;
+                for (label i = newi; i < times.size(); i++)
+                {
+                    if (times[i].value() != times[i-1].value())
+                    {
+                        if (newi != i)
+                        {
+                            times[newi] = times[i];
+                        }
+                        newi++;
+                    }
+                }
+
+                times.setSize(newi);
+            }
         }
     }
 
