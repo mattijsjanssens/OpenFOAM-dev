@@ -338,10 +338,6 @@ public:
 
         // Filename (not IOobject) operations
 
-//            //- Generate disk file name for object. Opposite of filePath.
-//            //  Use IOobject version in preference
-//            virtual fileName objectPath(const fileName&) const;
-
             //- Search for a file or directory. Use IOobject version in
             //  preference
             virtual fileName filePath(const fileName&) const;

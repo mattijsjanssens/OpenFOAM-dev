@@ -76,7 +76,6 @@ protected:
         );
 
 
-
 public:
 
     TypeName("decomposedBlockData");

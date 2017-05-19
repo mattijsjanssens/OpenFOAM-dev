@@ -771,14 +771,14 @@ bool Foam::decomposedBlockData::writeBlocks
 bool Foam::decomposedBlockData::read()
 {
     autoPtr<ISstream> isPtr;
+    fileName objPath(fileHandler().filePath(false, *this, word::null));
     if (UPstream::master(comm_))
     {
-        isPtr.reset(new IFstream(objectPath()));
+        isPtr.reset(new IFstream(objPath));
         IOobject::readHeader(isPtr());
     }
 
     List<char>& data = *this;
-
     return readBlocks(comm_, isPtr, data, commsType_);
 }
 
