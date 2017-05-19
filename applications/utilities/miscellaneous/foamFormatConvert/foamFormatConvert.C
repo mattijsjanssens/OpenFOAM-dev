@@ -155,29 +155,24 @@ class uniqueEqOp
     public:
     void operator()(stringList& x, const stringList& y) const
     {
+        stringList newX(x.size()+y.size());
         label n = 0;
+        forAll(x, i)
+        {
+            if (!x[i].empty())
+            {
+                newX[n++] = x[i];
+            }
+        }
         forAll(y, i)
         {
-            if (findIndex(x, y[i]) == -1)
+            if (!y[i].empty() && findIndex(x, y[i]) == -1)
             {
-                n++;
+                newX[n++] = y[i];
             }
         }
-        if (n > 0)
-        {
-            label sz = x.size();
-            x.setSize(sz+n);
-            n = sz;
-
-            SubList<string> oldX(x, sz);
-            forAll(y, i)
-            {
-                if (findIndex(oldX, y[i]) == -1)
-                {
-                    x[n++] = y[i];
-                }
-            }
-        }
+        newX.setSize(n);
+        x.transfer(newX);
     }
 };
 
@@ -277,10 +272,20 @@ int main(int argc, char *argv[])
         Info<< "Time = " << runTime.timeName() << endl;
 
         // Convert all the standard mesh files
-        writeMeshObject<cellCompactIOList>("cells", meshDir, runTime);
+        writeMeshObject<cellCompactIOList, cellIOList>
+        (
+            "cells",
+            meshDir,
+            runTime
+        );
         writeMeshObject<labelIOList>("owner", meshDir, runTime);
         writeMeshObject<labelIOList>("neighbour", meshDir, runTime);
-        writeMeshObject<faceCompactIOList>("faces", meshDir, runTime);
+        writeMeshObject<faceCompactIOList, faceIOList>
+        (
+            "faces",
+            meshDir,
+            runTime
+        );
         writeMeshObject<pointIOField>("points", meshDir, runTime);
         // Write boundary in ascii. This is only needed for fileHandler to
         // kick in. Should not give problems since always writing ascii.
@@ -338,6 +343,12 @@ int main(int argc, char *argv[])
              || headerClassName == pointSphericalTensorField::typeName
              || headerClassName == pointSymmTensorField::typeName
              || headerClassName == pointTensorField::typeName
+
+             || headerClassName == volScalarField::Internal::typeName
+             || headerClassName == volVectorField::Internal::typeName
+             || headerClassName == volSphericalTensorField::Internal::typeName
+             || headerClassName == volSymmTensorField::Internal::typeName
+             || headerClassName == volTensorField::Internal::typeName
             )
             {
                 Info<< "        Reading " << headerClassName
@@ -363,16 +374,20 @@ int main(int argc, char *argv[])
               / cloud::prefix
             )
         );
+
         combineReduce(lagrangianDirs, uniqueEqOp());
 
         if (!lagrangianDirs.empty())
         {
-            if (!meshPtr.valid())
+            if (meshPtr.valid())
             {
                 meshPtr().readUpdate();
             }
             else
             {
+                Info<< "        Create polyMesh for time = "
+                    << runTime.timeName() << endl;
+
                 meshPtr.reset
                 (
                     new polyMesh
@@ -396,6 +411,7 @@ int main(int argc, char *argv[])
                     fileName::DIRECTORY
                 )
             );
+
             combineReduce(cloudDirs, uniqueEqOp());
 
             forAll(cloudDirs, i)
