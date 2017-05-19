@@ -78,8 +78,8 @@ int main(int argc, char *argv[])
     );
 
     argList::noParallel();
-    argList::validArgs.append("inputFile");
-    argList::validArgs.append("outputFile");
+    argList::validArgs.append("surface file");
+    argList::validArgs.append("output surface file");
 
     argList::addBoolOption("clean");
     argList::addBoolOption("orient");

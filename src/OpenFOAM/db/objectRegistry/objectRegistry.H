@@ -180,6 +180,10 @@ public:
             template<class Type>
             const Type& lookupObject(const word& name) const;
 
+            //- Lookup and return the object reference of the given Type
+            template<class Type>
+            Type& lookupObjectRef(const word& name) const;
+
             //- Return new event number.
             label getEvent() const;
 

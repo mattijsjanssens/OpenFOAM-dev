@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
     (
         "extract surface from a polyMesh"
     );
-    argList::validArgs.append("output file");
+    argList::validArgs.append("output surface file");
     #include "addRegionOption.H"
     argList::addBoolOption
     (

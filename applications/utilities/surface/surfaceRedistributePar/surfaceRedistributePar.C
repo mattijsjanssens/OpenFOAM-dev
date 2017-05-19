@@ -100,8 +100,8 @@ int main(int argc, char *argv[])
         "redistribute a triSurface"
     );
 
-    argList::validArgs.append("triSurfaceMesh");
-    argList::validArgs.append("distributionType");
+    argList::validArgs.append("surface file");
+    argList::validArgs.append("distribution type");
     argList::addBoolOption
     (
         "keepNonMapped",

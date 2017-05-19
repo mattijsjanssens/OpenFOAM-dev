@@ -54,7 +54,7 @@ using namespace Foam;
 int main(int argc, char *argv[])
 {
     argList::noParallel();
-    argList::validArgs.append("outputFile.ext");
+    argList::validArgs.append("output surface file");
     timeSelector::addOptions();
 
     argList::addOption
