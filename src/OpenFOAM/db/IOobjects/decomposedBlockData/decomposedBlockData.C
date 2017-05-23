@@ -32,6 +32,7 @@ License
 #include "IStringStream.H"
 #include "dictionary.H"
 #include <sys/time.h>
+#include "objectRegistry.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -780,6 +781,74 @@ bool Foam::decomposedBlockData::read()
 
     List<char>& data = *this;
     return readBlocks(comm_, isPtr, data, commsType_);
+}
+
+
+bool Foam::decomposedBlockData::writeData(Ostream& os) const
+{
+    const List<char>& data = *this;
+
+    string str
+    (
+        reinterpret_cast<const char*>(data.cbegin()),
+        data.byteSize()
+    );
+
+    IOobject io(*this);
+    if (Pstream::master())
+    {
+        IStringStream is(name(), str);
+        io.readHeader(is);
+    }
+
+    // Scatter header information
+
+    // version
+    string versionString(os.version().str());
+    Pstream::scatter(versionString);
+
+    // stream
+    string formatString;
+    {
+        OStringStream os;
+        os << os.format();
+        formatString  = os.str();
+        Pstream::scatter(formatString);
+    }
+
+    //word masterName(name());
+    //Pstream::scatter(masterName);
+
+    Pstream::scatter(io.headerClassName());
+    Pstream::scatter(io.note());
+    //Pstream::scatter(io.instance(), Pstream::msgType(), comm);
+    //Pstream::scatter(io.local(), Pstream::msgType(), comm);
+
+    fileName masterLocation(instance()/db().dbDir()/local());
+    Pstream::scatter(masterLocation);
+
+    if (!Pstream::master())
+    {
+        writeHeader
+        (
+            os,
+            IOstream::versionNumber(IStringStream(versionString)()),
+            IOstream::formatEnum(formatString),
+            io.headerClassName(),
+            io.note(),
+            masterLocation,
+            name()
+        );
+    }
+
+    os.writeQuoted(str, false);
+
+    if (!Pstream::master())
+    {
+        IOobject::writeEndDivider(os);
+    }
+
+    return os.good();
 }
 
 

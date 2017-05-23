@@ -119,13 +119,9 @@ public:
         //- Read object
         virtual bool read();
 
-        //- Pure virtual writaData function.
-        //  Must be defined in derived types
-        virtual bool writeData(Ostream&) const
-        {
-            NotImplemented;
-            return false;
-        }
+        //- Write separated content. Assumes content is the serialised data
+        //  and that the master data contains a header
+        virtual bool writeData(Ostream&) const;
 
         //- Write using given format, version and compression
         virtual bool writeObject
