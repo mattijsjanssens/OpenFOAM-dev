@@ -435,7 +435,7 @@ Foam::instantList Foam::fileOperation::findTimes
         )
     );
 
-    if (!procsDir.empty())
+    if (!procsDir.empty() && procsDir != directory)
     {
         fileNameList extraEntries
         (
