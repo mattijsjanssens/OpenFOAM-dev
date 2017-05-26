@@ -39,8 +39,9 @@ fileHandler
 - default is the 'uncollated' version. A different one can be selected
   using (in increasing order of priority)
     - environment variable FOAM_FILEHANDLER
+    - 'fileHander' entry in etc/controlDict
     - command line option -fileHandler XXX
-    - 'fileHander' entry in etc/controlDict (or system/controlDict)
+    - 'fileHander' entry in system/controlDict
 - parallel communication is done using non-blocking communication by
   default. This means that the total buffer size needed is the overall
   length of a file on all processors. In etc/controlDict there is a
@@ -208,10 +209,14 @@ Todo:
 - indexing for single processor reading in decomposedBlockData::readBlock
 - FIXED.paraFoam exits with double free or corruption in _ZN4Foam9freeMutexEi+0x29
 - FIXED. better error message if dictionary or field not found.
-- FIXED.redistributePar -allRegions. uncollated/collated are fine with
+- FIXED. decomposePar -allRegions. uncollated/collated are fine with
   processor0/0/bottomAir/p but not processors/0/bottomAir/p
 - FIXED. rename fileOperation::fileHandlerType to fileOperation::defaultFileHandler
-- cache Times
+- FIXED. cache Times (done in masterUncollated, collated)
 - FIXED. fix static destruction error in readers loaded through libs().
 - avoid copying data in decomposedBlockData, OFstreamWriter
-- foamFormatConvert do lagrangian
+- FIXED. foamFormatConvert do lagrangian
+    - collated -> uncollated ok
+    - uncollated -> collated : only if master proc has cloud
+- test app: applications/test/decomposedBlockData can extract the data
+  from collated files.
