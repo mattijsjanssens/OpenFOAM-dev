@@ -420,34 +420,6 @@ Foam::fileName Foam::IOobject::globalFilePath(const word& typeName) const
 }
 
 
-Foam::Istream* Foam::IOobject::objectStream(const fileName& fName)
-{
-//Should not be used anymore. Should all redirect through fileHandler
-Pout<< "** IOobject::objectStream(const fileName& fName)**" << endl;
-DebugVar(fName);
-error::printStack(Pout);
-
-    if (fName.size())
-    {
-        IFstream* isPtr = new IFstream(fName);
-
-        if (isPtr->good())
-        {
-            return isPtr;
-        }
-        else
-        {
-            delete isPtr;
-            return nullptr;
-        }
-    }
-    else
-    {
-        return nullptr;
-    }
-}
-
-
 void Foam::IOobject::setBad(const string& s)
 {
     if (objState_ != GOOD)

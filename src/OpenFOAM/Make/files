@@ -168,8 +168,6 @@ $(gzstream)/gzstream.C
 Fstreams = $(Streams)/Fstreams
 $(Fstreams)/IFstream.C
 $(Fstreams)/OFstream.C
-$(Fstreams)/threadedOFstream.C
-$(Fstreams)/OFstreamWriter.C
 $(Fstreams)/masterOFstream.C
 
 Tstreams = $(Streams)/Tstreams

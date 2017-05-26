@@ -59,27 +59,6 @@ error() {
     exit 1
 }
 
-
-# Change directory into case directory. Rewrite processorXXX to processors
-# if that exists
-cdCase() {
-    if [ -d "$1" ]
-    then
-        cd "$1"
-    else
-        dir=`echo "$1" | sed -e 's/processor[0-9][0-9]*/processors/g'`
-        if [ -d "$dir" ]
-        then
-            echo "Creating directory $1"
-            mkdir $1
-            cd "$1"
-        else
-            usage "directory does not exist:  '$1'"
-        fi
-    fi
-}
-
-
 # We want to do nice exit when running paraview to give paraview opportunity
 # to clean up
 unset FOAM_ABORT

@@ -226,6 +226,8 @@ bool Foam::regIOobject::read()
          || regIOobject::fileModificationChecking == inotifyMaster
         );
 
+    // Note: IOstream::binary flag is for all the processor comms. (Only for
+    //       dictionaries should it be ascii)
     bool ok = fileHandler().read(*this, masterOnly, IOstream::BINARY, type());
 
     if (oldWatchFiles.size())

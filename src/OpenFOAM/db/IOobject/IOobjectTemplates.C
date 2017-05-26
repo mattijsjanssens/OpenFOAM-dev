@@ -26,7 +26,6 @@ License
 #include "IOobject.H"
 #include "fileOperation.H"
 #include "Istream.H"
-
 #include "IOstreams.H"
 #include "Pstream.H"
 
@@ -50,71 +49,17 @@ bool Foam::IOobject::typeHeaderOk(const bool checkType)
     // Determine local status
     if (!masterOnly || Pstream::master())
     {
-//        autoPtr<Istream> isPtr =
-//            fp.objectStream(typeFilePath<Type>(*this));
-//
-//        // If the stream has failed return
-//        if (!isPtr.valid())
-//        {
-//            if (IOobject::debug)
-//            {
-//                InfoInFunction
-//                    << "file " << objectPath() << " could not be opened"
-//                    << endl;
-//            }
-//
-//            ok = false;
-//        }
-//        else
-//        {
-//            // Try reading header
-//            if (readHeader(isPtr()))
-//            {
-//                if (checkType && headerClassName_ != Type::typeName)
-//                {
-//                    IOWarningInFunction(isPtr())
-//                        << "unexpected class name " << headerClassName_
-//                        << " expected " << Type::typeName << endl;
-//
-//                    ok = false;
-//                }
-//            }
-//            else
-//            {
-//                if (IOobject::debug)
-//                {
-//                    IOWarningInFunction(isPtr())
-//                        << "failed to read header of file " << objectPath()
-//                        << endl;
-//                }
-//
-//                ok = false;
-//            }
-//        }
-
         fileName fName(typeFilePath<Type>(*this));
-//        if (fName.empty())
-//        {
-//            if (IOobject::debug)
-//            {
-//                InfoInFunction
-//                    << "file " << objectPath() << " could not be opened"
-//                    << endl;
-//            }
-//            ok = false;
-//        }
-//        else
-        {
-            ok = fp.readHeader(*this, fName, Type::typeName);
-            if (ok && checkType && headerClassName_ != Type::typeName)
-            {
-                WarningInFunction
-                    << "unexpected class name " << headerClassName_
-                    << " expected " << Type::typeName
-                    << " when reading " << fName << endl;
 
-                ok = false;
-            }
+        ok = fp.readHeader(*this, fName, Type::typeName);
+        if (ok && checkType && headerClassName_ != Type::typeName)
+        {
+            WarningInFunction
+                << "unexpected class name " << headerClassName_
+                << " expected " << Type::typeName
+                << " when reading " << fName << endl;
+
+            ok = false;
         }
     }
 

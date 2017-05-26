@@ -29,7 +29,6 @@ License
 #include "Time.H"
 #include "instant.H"
 #include "IFstream.H"
-#include "OFstreamWriter.H"
 #include "masterOFstream.H"
 #include "decomposedBlockData.H"
 #include "registerSwitch.H"
