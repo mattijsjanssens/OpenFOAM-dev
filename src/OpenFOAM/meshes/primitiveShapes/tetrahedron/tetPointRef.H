@@ -21,19 +21,18 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
-Description
-    Foam::vector2DField
+Typedef
+    Foam::tetPointRef
 
-SourceFiles
-    vector2DField.C
+Description
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef vector2DField_H
-#define vector2DField_H
+#ifndef tetPointRef_H
+#define tetPointRef_H
 
-#include "vector2DFieldFwd.H"
-#include "Field.H"
+#include "point.H"
+#include "tetrahedron.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -42,13 +41,11 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-tmp<vector2DField> zip(const tmp<scalarField>& x, const tmp<scalarField>& y);
+typedef tetrahedron<point, const point&> tetPointRef;
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #endif
 
