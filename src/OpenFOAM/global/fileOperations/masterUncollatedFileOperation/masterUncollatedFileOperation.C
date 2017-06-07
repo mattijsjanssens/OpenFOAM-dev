@@ -66,6 +66,31 @@ namespace fileOperations
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
+Foam::word
+Foam::fileOperations::masterUncollatedFileOperation::findInstancePath
+(
+    const instantList& timeDirs,
+    const instant& t
+)
+{
+    // Note:
+    // - times will include constant (with value 0) as first element.
+    //   For backwards compatibility make sure to find 0 in preference
+    //   to constant.
+    // - list is sorted so could use binary search
+
+    forAllReverse(timeDirs, i)
+    {
+        if (t.equal(timeDirs[i].value()))
+        {
+            return timeDirs[i].name();
+        }
+    }
+
+    return word::null;
+}
+
+
 Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePath
 (
     const bool checkGlobal,
@@ -73,13 +98,14 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePath
     const IOobject& io,
     pathType& searchType,
     word& newInstancePath
-)
+) const
 {
     newInstancePath = word::null;
 
     if (io.instance().isAbsolute())
     {
         fileName objectPath = io.instance()/io.name();
+
         if (isFileOrDir(isFile, objectPath))
         {
             searchType = fileOperation::ABSOLUTE;
@@ -137,6 +163,49 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePath
                 return parentObjectPath;
             }
         }
+
+//        // Check for approximately same time. E.g. if time = 1e-2 and
+//        // directory is 0.01 (due to different time formats)
+//        fileName path = io.path();
+//
+//DebugVar(path);
+//DebugVar(times_);
+//
+//        HashPtrTable<instantList>::const_iterator pathFnd(times_.find(path));
+//        if (pathFnd != times_.end())
+//        {
+//            newInstancePath = findInstancePath
+//            (
+//                *pathFnd(),
+//                instant(io.instance())
+//            );
+//
+//DebugVar(newInstancePath);
+//
+//            if (newInstancePath.size())
+//            {
+//                // 1. Try processors equivalent
+//
+//                fileName fName =
+//                    processorsPath(io, newInstancePath)
+//                   /io.name();
+//                if (isFileOrDir(isFile, fName))
+//                {
+//                    searchType = fileOperation::PROCESSORSFINDINSTANCE;
+//                    return fName;
+//                }
+//
+//                fName =
+//                    io.rootPath()/io.caseName()
+//                   /newInstancePath/io.db().dbDir()/io.local()/io.name();
+//
+//                if (isFileOrDir(isFile, fName))
+//                {
+//                    searchType = fileOperation::FINDINSTANCE;
+//                    return fName;
+//                }
+//            }
+//        }
 
         searchType = fileOperation::NOTFOUND;
         return fileName::null;

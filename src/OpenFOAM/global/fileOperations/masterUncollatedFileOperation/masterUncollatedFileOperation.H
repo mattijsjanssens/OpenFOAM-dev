@@ -356,17 +356,24 @@ protected:
             const fileOp& fop
         ) const;
 
+        //- Equivalent of Time::findInstance
+        static word findInstancePath
+        (
+            const instantList& timeDirs,
+            const instant& t
+        );
+
         //- Search for object; return info on how was found
         //    checkGlobal : also check undecomposed case
         //    isFile      : true:check for file  false:check for directory
-        static fileName filePath
+        fileName filePath
         (
             const bool checkGlobal,
             const bool isFile,
             const IOobject&,
             pathType&,
             word&
-        );
+        ) const;
 
         //- Construct filePath
         static fileName objectPath
