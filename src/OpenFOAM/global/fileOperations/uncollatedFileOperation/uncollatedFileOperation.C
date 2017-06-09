@@ -574,7 +574,7 @@ bool Foam::fileOperations::uncollatedFileOperation::read
         if (debug)
         {
             Pout<< "uncollatedFileOperation::read() : "
-                << "reading object " << io.name()
+                << "reading object " << io.objectPath()
                 << " from file " << endl;
         }
 

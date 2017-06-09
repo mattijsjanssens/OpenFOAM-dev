@@ -64,7 +64,8 @@ namespace Foam
         debug::optimisationSwitches().lookupOrAddDefault
         (
             "fileHandler",
-            Foam::fileOperations::uncollatedFileOperation::typeName,
+            //Foam::fileOperations::uncollatedFileOperation::typeName,
+            word("uncollated"),
             false,
             false
         )

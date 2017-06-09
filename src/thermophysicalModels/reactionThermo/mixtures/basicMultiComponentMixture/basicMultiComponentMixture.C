@@ -62,7 +62,6 @@ Foam::basicMultiComponentMixture::basicMultiComponentMixture
         if (header.typeHeaderOk<volScalarField>(true))
         {
             Y_.set
-
             (
                 i,
                 new volScalarField
@@ -86,32 +85,45 @@ Foam::basicMultiComponentMixture::basicMultiComponentMixture
             {
                 word YdefaultName(IOobject::groupName("Ydefault", phaseName));
 
-                tYdefault = new volScalarField
+                IOobject timeIO
                 (
-                    IOobject
-                    (
-                        YdefaultName,
-                        exists
-                        (
-                            mesh.time().path()/mesh.time().timeName()
-                           /YdefaultName
-                        )
-                      ? mesh.time().timeName()
-                      : (
-                            exists
-                            (
-                                mesh.time().path()/mesh.time().constant()
-                               /YdefaultName
-                            )
-                          ? mesh.time().constant()
-                          : Time::timeName(0)
-                        ),
-                        mesh,
-                        IOobject::MUST_READ,
-                        IOobject::NO_WRITE
-                    ),
-                    mesh
+                    YdefaultName,
+                    mesh.time().timeName(),
+                    mesh,
+                    IOobject::MUST_READ,
+                    IOobject::NO_WRITE
                 );
+
+                IOobject constantIO
+                (
+                    YdefaultName,
+                    mesh.time().constant(),
+                    mesh,
+                    IOobject::MUST_READ,
+                    IOobject::NO_WRITE
+                );
+
+                IOobject time0IO
+                (
+                    YdefaultName,
+                    Time::timeName(0),
+                    mesh,
+                    IOobject::MUST_READ,
+                    IOobject::NO_WRITE
+                );
+
+                if (timeIO.typeHeaderOk<volScalarField>(true))
+                {
+                    tYdefault = new volScalarField(timeIO, mesh);
+                }
+                else if (constantIO.typeHeaderOk<volScalarField>(true))
+                {
+                    tYdefault = new volScalarField(constantIO, mesh);
+                }
+                else
+                {
+                    tYdefault = new volScalarField(time0IO, mesh);
+                }
             }
 
             Y_.set
