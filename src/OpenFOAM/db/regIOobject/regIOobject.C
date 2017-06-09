@@ -306,7 +306,7 @@ void Foam::regIOobject::addWatch()
             }
         }
 
-        fileHandler().addWatch(f);
+        watchIndices_.append(fileHandler().addWatch(f));
     }
 }
 
