@@ -163,48 +163,47 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePath
             }
         }
 
-//        // Check for approximately same time. E.g. if time = 1e-2 and
-//        // directory is 0.01 (due to different time formats)
-//        fileName path = io.path();
-//
-//DebugVar(path);
-//DebugVar(times_);
-//
-//        HashPtrTable<instantList>::const_iterator pathFnd(times_.find(path));
-//        if (pathFnd != times_.end())
-//        {
-//            newInstancePath = findInstancePath
-//            (
-//                *pathFnd(),
-//                instant(io.instance())
-//            );
-//
-//DebugVar(newInstancePath);
-//
-//            if (newInstancePath.size())
-//            {
-//                // 1. Try processors equivalent
-//
-//                fileName fName =
-//                    processorsPath(io, newInstancePath)
-//                   /io.name();
-//                if (isFileOrDir(isFile, fName))
-//                {
-//                    searchType = fileOperation::PROCESSORSFINDINSTANCE;
-//                    return fName;
-//                }
-//
-//                fName =
-//                    io.rootPath()/io.caseName()
-//                   /newInstancePath/io.db().dbDir()/io.local()/io.name();
-//
-//                if (isFileOrDir(isFile, fName))
-//                {
-//                    searchType = fileOperation::FINDINSTANCE;
-//                    return fName;
-//                }
-//            }
-//        }
+       // Check for approximately same time. E.g. if time = 1e-2 and
+       // directory is 0.01 (due to different time formats)
+       HashPtrTable<instantList>::const_iterator pathFnd
+        (
+            times_.find
+            (
+                io.time().path()
+            )
+        );
+       if (pathFnd != times_.end())
+       {
+           newInstancePath = findInstancePath
+           (
+               *pathFnd(),
+               instant(io.instance())
+           );
+
+           if (newInstancePath.size())
+           {
+               // 1. Try processors equivalent
+
+               fileName fName =
+                   processorsPath(io, newInstancePath)
+                  /io.name();
+               if (isFileOrDir(isFile, fName))
+               {
+                   searchType = fileOperation::PROCESSORSFINDINSTANCE;
+                   return fName;
+               }
+
+               fName =
+                   io.rootPath()/io.caseName()
+                  /newInstancePath/io.db().dbDir()/io.local()/io.name();
+
+               if (isFileOrDir(isFile, fName))
+               {
+                   searchType = fileOperation::FINDINSTANCE;
+                   return fName;
+               }
+           }
+       }
 
         searchType = fileOperation::NOTFOUND;
         return fileName::null;
@@ -646,6 +645,9 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePath
             << " objectPath:" << io.objectPath()
             << " checkGlobal:" << checkGlobal << endl;
     }
+
+    // Trigger caching of times
+    (void)findTimes(io.time().path(), io.time().constant());
 
     // Determine master filePath and scatter
 

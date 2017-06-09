@@ -78,6 +78,7 @@ void Foam::GeometricField<Type, PatchField, GeoMesh>::readFields()
         (
             this->name(),
             this->instance(),
+            this->local(),
             this->db(),
             IOobject::MUST_READ,
             IOobject::NO_WRITE,

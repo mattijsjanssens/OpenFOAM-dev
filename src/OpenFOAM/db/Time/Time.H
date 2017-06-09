@@ -169,6 +169,9 @@ protected:
         //- Read the control dictionary and set the write controls etc.
         virtual void readDict();
 
+        //- Find IOobject in the objectPath
+        static bool exists(IOobject&);
+
 
 private:
 

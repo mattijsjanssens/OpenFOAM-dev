@@ -35,6 +35,49 @@ Description
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+bool Foam::Time::exists(IOobject& io)
+{
+    // Generate filename for object
+    fileName objPath(fileHandler().objectPath(io, word::null));
+
+    // Test for either directory or a (valid) file & IOobject
+    bool ok;
+    if (io.name().empty())
+    {
+        ok = fileHandler().isDir(objPath);
+    }
+    else
+    {
+        ok =
+            fileHandler().isFile(objPath)
+         && io.typeHeaderOk<IOList<label>>(false);// object with local scope
+    }
+
+    if (!ok)
+    {
+        // Re-test with raw objectPath. This is for backwards
+        // compatibility
+        fileName originalPath(io.objectPath());
+        if (originalPath != objPath)
+        {
+            // Test for either directory or a (valid) file & IOobject
+            if (io.name().empty())
+            {
+                ok = fileHandler().isDir(originalPath);
+            }
+            else
+            {
+                ok =
+                    fileHandler().isFile(originalPath)
+                 && io.typeHeaderOk<IOList<label>>(false);
+            }
+        }
+    }
+
+    return ok;
+}
+
+
 Foam::word Foam::Time::findInstance
 (
     const fileName& dir,
@@ -58,22 +101,7 @@ Foam::word Foam::Time::findInstance
             *this
         );
 
-        bool ok;
-        if (name.empty())
-        {
-            ok = fileHandler().isDir(fileHandler().dirPath(false, io));
-        }
-        else
-        {
-            ok =
-                fileHandler().isFile
-                (
-                    fileHandler().filePath(false, io, IOList<label>::typeName)
-                )
-             && io.typeHeaderOk<IOList<label>>(false);// object with local scope
-        }
-
-        if (ok)
+        if (exists(io))
         {
             if (debug)
             {
@@ -112,22 +140,7 @@ Foam::word Foam::Time::findInstance
             *this
         );
 
-        bool ok;
-        if (name.empty())
-        {
-            ok = fileHandler().isDir(fileHandler().dirPath(false, io));
-        }
-        else
-        {
-            ok =
-                fileHandler().isFile
-                (
-                    fileHandler().filePath(false, io, IOList<label>::typeName)
-                )
-             && io.typeHeaderOk<IOList<label>>(false);// object with local scope
-        }
-
-        if (ok)
+        if (exists(io))
         {
             if (debug)
             {
@@ -194,22 +207,7 @@ Foam::word Foam::Time::findInstance
         *this
     );
 
-    bool ok;
-    if (name.empty())
-    {
-        ok = fileHandler().isDir(fileHandler().dirPath(false, io));
-    }
-    else
-    {
-        ok =
-            fileHandler().isFile
-            (
-                fileHandler().filePath(false, io, IOList<label>::typeName)
-            )
-         && io.typeHeaderOk<IOList<label>>(false);// object with local scope
-    }
-
-    if (ok)
+    if (exists(io))
     {
         if (debug)
         {

@@ -639,7 +639,7 @@ bool Foam::decomposedBlockData::writeBlocks
                     comm
                 );
 
-                os << nl << "// Processor" << proci << nl;
+                os << nl << nl << "// Processor" << proci << nl;
                 start[proci] = os.stdStream().tellp();
                 os << elems;
             }
@@ -735,7 +735,7 @@ bool Foam::decomposedBlockData::writeBlocks
             // Write slaves
             for (label proci = 1; proci < UPstream::nProcs(comm); proci++)
             {
-                os << nl << "// Processor" << proci << nl;
+                os << nl << nl << "// Processor" << proci << nl;
                 start[proci] = os.stdStream().tellp();
 
                 if (Pstream::finishedRequest(startOfRequests+proci-1))
