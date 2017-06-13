@@ -1,0 +1,70 @@
+Commit message:
+
+Parallel running: Collated file format.
+
+Currently when running in parallel the file format is as distributed
+as possible. Every processor writes data to its own directory,
+'processorDDD', where DDD is the processor number.
+
+It is now possible to select an alternative file format where
+all the processor data (for a single field) is assembled into a single file,
+written and read on the master processor.
+
+Advantages:
+- less files (one per field)
+- much less metadata traffic
+- no need to run NFS on the slaves
+- sending to master happens through the HPC communication fabric
+
+Disadvantages:
+- single point of failure
+- bigger files
+- less parallellism when writing (since NFS hides the communication effort
+using threading)
+
+Set-up:
+- in the etc/controlDict, add in the OptimisationSwitches section:
+
+    //- File handlers:
+
+        // Default handler (if not specified use uncollated)
+        fileHandler collated;
+
+        // In master-only reading/writing: when to switch from non-blocking
+        // to scheduled. This is the overall file size.
+        maxBufferSize           1e9;
+
+        // If > 0: use threading in the 'collated' fileHandler. This is the
+        // overall size of all the waiting file writes. Default is the
+        // maxBufferSize
+        maxThreadBufferSize     2e9;
+
+- adapt the maxBufferSize, maxThreadBufferSize to your situation:
+    - maxBufferSize : this is the buffer size (in bytes) when to switch from
+    non-blocking communications (all communications are done at the same
+    time) to scheduled (master communicates with slave 1, then 2 etc.).
+    Set to 0 to always use scheduled.
+
+    - maxThreadBufferSize : this is the buffer size (in bytes) allocated
+    for threaded writing. If any file is bigger than this size it will revert
+    to 'immediate' writing, i.e. block until finished. Set to zero to
+    disable any threading.
+
+- check: any application should now print in the header:
+    I/O    : collated (maxThreadBufferSize 2e+09)
+
+
+Other:
+- the I/O is now handled through a 'fileHandler'. This can be selected
+through an etc/controlDict entry as above, a command line argument or the
+environment variable FOAM_FILEHANDLER.
+- the default file handler is 'uncollated' which is the normal format. The
+other file handlers are 'masterUncollated' which uses the same file format
+but only does the operations on the master processors and above 'collated'.
+- the tutorial parallel/hopperInitialState demonstrates the
+new format.
+- formats can be converted using foamFormatConvert:
+    mpirun -np 2 foamFormatConvert -parallel -fileHandler uncollated
+- this is the first public release of this I/O framework. There might
+be some missing functionality and bugs. Please report on the Mantis bug
+tracker.
