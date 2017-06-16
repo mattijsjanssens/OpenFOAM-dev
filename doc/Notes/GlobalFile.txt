@@ -220,3 +220,15 @@ Todo:
     - uncollated -> collated : only if master proc has cloud
 - test app: applications/test/decomposedBlockData can extract the data
   from collated files.
+- tutorialsTest:
+    reactingParcelFoam/counterFlowFlame2DLTS
+        uncollated: FIXED
+        collated:   FIXED
+    mdFoam/nanoNozzle
+        collated:
+    foamyHexMesh
+        uncollated: FIXED
+        collated:   FIXED
+    foamyQuadMesh
+        uncollated: FIXED
+        collated:   FIXED
