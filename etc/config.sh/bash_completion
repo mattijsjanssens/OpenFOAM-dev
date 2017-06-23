@@ -35,7 +35,7 @@ _adiabaticFlameT_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
     opts="-case -doc -help -noFunctionObjects -parallel -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
@@ -64,9 +64,9 @@ _adjointShapeOptimizationFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -87,7 +87,7 @@ _ansysToFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
     opts="-case -doc -help -noFunctionObjects -scale -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
@@ -116,9 +116,9 @@ _applyBoundaryLayer_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -Cbl -doc -help -noFunctionObjects -parallel -roots -srcDoc -writenut -ybl"
+    opts="-case -Cbl -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -roots -srcDoc -writenut -ybl"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -139,9 +139,9 @@ _attachMesh_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -overwrite -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listSwitches -listUnsetSwitches -noFunctionObjects -overwrite -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -160,9 +160,9 @@ _autoPatch_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -overwrite -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listSwitches -listUnsetSwitches -noFunctionObjects -overwrite -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -181,9 +181,9 @@ _autoRefineMesh_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listSwitches -listUnsetSwitches -noFunctionObjects -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -202,9 +202,9 @@ _blockMesh_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-blockTopology -case -dict -doc -help -noClean -noFunctionObjects -region -srcDoc"
+    opts="-blockTopology -case -dict -doc -help -listFunctionObjects -listRegisteredSwitches -listSwitches -listUnsetSwitches -noClean -noFunctionObjects -region -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -227,9 +227,9 @@ _boundaryFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -248,9 +248,9 @@ _boxTurb_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noFunctionObjects -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -269,9 +269,9 @@ _buoyantBoussinesqPimpleFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -292,9 +292,9 @@ _buoyantBoussinesqSimpleFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -315,9 +315,9 @@ _buoyantPimpleFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -338,9 +338,9 @@ _buoyantSimpleFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -361,9 +361,9 @@ _cavitatingDyMFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -384,9 +384,9 @@ _cavitatingFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -407,7 +407,7 @@ _cfx4ToFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
     opts="-case -doc -help -noFunctionObjects -scale -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
@@ -436,9 +436,9 @@ _changeDictionary_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -constant -dict -disablePatchGroups -doc -enableFunctionEntries -help -instance -latestTime -literalRE -newTimes -noFunctionObjects -noZero -parallel -region -roots -srcDoc -subDict -time"
+    opts="-case -constant -dict -disablePatchGroups -doc -enableFunctionEntries -help -instance -latestTime -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -literalRE -newTimes -noFunctionObjects -noZero -parallel -region -roots -srcDoc -subDict -time"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -461,9 +461,9 @@ _checkMesh_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-allGeometry -allTopology -case -constant -doc -help -latestTime -meshQuality -newTimes -noFunctionObjects -noTopology -noZero -parallel -region -roots -srcDoc -time -writeSets"
+    opts="-allGeometry -allTopology -case -constant -doc -help -latestTime -listFunctionObjects -listRegisteredSwitches -listSwitches -listUnsetSwitches -meshQuality -newTimes -noFunctionObjects -noTopology -noZero -parallel -region -roots -srcDoc -time -writeSets"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -484,9 +484,9 @@ _chemFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -postProcess -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noFunctionObjects -postProcess -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -505,7 +505,7 @@ _chemkinToFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
     opts="-case -doc -help -newFormat -noFunctionObjects -parallel -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
@@ -529,9 +529,9 @@ _chtMultiRegionFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -552,9 +552,9 @@ _chtMultiRegionSimpleFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -575,9 +575,9 @@ _coalChemistryFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -598,9 +598,9 @@ _coldEngineFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -621,9 +621,9 @@ _collapseEdges_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -collapseFaces -collapseFaceSet -constant -dict -doc -help -latestTime -newTimes -noFunctionObjects -noZero -overwrite -parallel -roots -srcDoc -time"
+    opts="-case -collapseFaces -collapseFaceSet -constant -dict -doc -help -latestTime -listFunctionObjects -listRegisteredSwitches -listSwitches -listUnsetSwitches -newTimes -noFunctionObjects -noZero -overwrite -parallel -roots -srcDoc -time"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -646,9 +646,9 @@ _combinePatchFaces_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -concaveAngle -doc -help -meshQuality -noFunctionObjects -overwrite -parallel -roots -srcDoc"
+    opts="-case -concaveAngle -doc -help -listFunctionObjects -listRegisteredSwitches -listSwitches -listUnsetSwitches -meshQuality -noFunctionObjects -overwrite -parallel -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -669,9 +669,9 @@ _compressibleInterDyMFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -692,9 +692,9 @@ _compressibleInterFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -715,9 +715,9 @@ _compressibleMultiphaseInterFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -738,9 +738,9 @@ _createBaffles_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -dict -doc -help -noFunctionObjects -overwrite -parallel -region -roots -srcDoc"
+    opts="-case -dict -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noFunctionObjects -overwrite -parallel -region -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -763,9 +763,9 @@ _createExternalCoupledPatchGeometry_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -region -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -region -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -786,9 +786,9 @@ _createPatch_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -dict -doc -help -noFunctionObjects -overwrite -parallel -region -roots -srcDoc"
+    opts="-case -dict -doc -help -listFunctionObjects -listRegisteredSwitches -listSwitches -listUnsetSwitches -noFunctionObjects -overwrite -parallel -region -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -811,7 +811,7 @@ _datToFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
     opts="-case -doc -help -noFunctionObjects -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
@@ -838,9 +838,9 @@ _decomposePar_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-allRegions -case -cellDist -constant -copyUniform -copyZero -dict -doc -fields -force -help -ifRequired -latestTime -newTimes -noFunctionObjects -noSets -noZero -region -srcDoc -time"
+    opts="-allRegions -case -cellDist -constant -copyUniform -copyZero -dict -doc -fields -force -help -ifRequired -latestTime -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -newTimes -noFunctionObjects -noSets -noZero -region -srcDoc -time"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -861,9 +861,9 @@ _deformedGeom_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -884,9 +884,9 @@ _dnsFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -907,9 +907,9 @@ _DPMDyMFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -cloudName -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -cloudName -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -930,9 +930,9 @@ _DPMFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -cloudName -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -cloudName -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -953,9 +953,9 @@ _driftFluxFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -976,9 +976,9 @@ _dsmcFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -999,9 +999,9 @@ _dsmcInitialise_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -1022,9 +1022,9 @@ _electrostaticFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -1045,9 +1045,9 @@ _engineCompRatio_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -1068,9 +1068,9 @@ _engineFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -1091,9 +1091,9 @@ _engineSwirl_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -1114,9 +1114,9 @@ _equilibriumCO_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listSwitches -listUnsetSwitches -noFunctionObjects -parallel -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -1137,7 +1137,7 @@ _equilibriumFlameT_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
     opts="-case -doc -help -noFunctionObjects -parallel -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
@@ -1166,9 +1166,9 @@ _extrude2DMesh_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -overwrite -parallel -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listSwitches -listUnsetSwitches -noFunctionObjects -overwrite -parallel -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -1189,9 +1189,9 @@ _extrudeMesh_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -region -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listSwitches -listUnsetSwitches -noFunctionObjects -parallel -region -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -1212,9 +1212,9 @@ _extrudeToRegionMesh_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -dict -doc -help -noFunctionObjects -overwrite -parallel -region -roots -srcDoc"
+    opts="-case -dict -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noFunctionObjects -overwrite -parallel -region -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -1237,9 +1237,9 @@ _faceAgglomerate_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -dict -doc -help -noFunctionObjects -parallel -region -roots -srcDoc"
+    opts="-case -dict -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -region -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -1262,9 +1262,9 @@ _financialFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -1285,9 +1285,9 @@ _fireFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -1308,9 +1308,9 @@ _flattenMesh_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listSwitches -listUnsetSwitches -noFunctionObjects -parallel -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -1331,7 +1331,7 @@ _fluent3DMeshToFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
     opts="-case -cubit -doc -help -ignoreCellGroups -ignoreFaceGroups -noFunctionObjects -scale -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
@@ -1360,7 +1360,7 @@ _fluentMeshToFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
     opts="-2D -case -doc -help -noFunctionObjects -scale -srcDoc -writeSets -writeZones"
     for o in $used ; do opts="${opts/$o/}" ; done
@@ -1389,9 +1389,9 @@ _foamDataToFluent_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -latestTime -newTimes -noFunctionObjects -noZero -srcDoc -time"
+    opts="-case -doc -help -latestTime -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -newTimes -noFunctionObjects -noZero -srcDoc -time"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -1412,7 +1412,7 @@ _foamDictionary_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
     opts="-add -case -diff -disableFunctionEntries -doc -entry -expand -help -includes -keywords -noFunctionObjects -parallel -remove -roots -set -srcDoc -value"
     for o in $used ; do opts="${opts/$o/}" ; done
@@ -1441,9 +1441,9 @@ _foamFormatConvert_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -constant -doc -help -latestTime -newTimes -noConstant -noFunctionObjects -noZero -parallel -region -roots -srcDoc -time"
+    opts="-case -constant -doc -help -latestTime -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -newTimes -noConstant -noFunctionObjects -noZero -parallel -region -roots -srcDoc -time"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -1464,7 +1464,7 @@ _foamHelp_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
     opts=""
     for o in $used ; do opts="${opts/$o/}" ; done
@@ -1478,37 +1478,14 @@ _foamHelp_ ()
 }
 complete -o nospace -F _foamHelp_ foamHelp
 
-_foamList_ ()
-{
-    local cur="${COMP_WORDS[COMP_CWORD]}"
-    local prev="${COMP_WORDS[COMP_CWORD-1]}"
-    local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
-
-    opts="-case -compressibleTurbulenceModels -doc -functionObjects -fvOptions -help -incompressibleTurbulenceModels -noFunctionObjects -registeredSwitches -scalarBCs -srcDoc -switches -unset -vectorBCs"
-    for o in $used ; do opts="${opts/$o/}" ; done
-    extra=""
-
-    [ "$COMP_CWORD" = 1 ] || \
-    case "$prev" in
-        -case)
-            opts="" ; extra="-d" ;;
-        -scalarBCs|-vectorBCs)
-            opts="" ; extra="" ;;
-       *) ;;
-    esac
-    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
-}
-complete -o nospace -F _foamList_ foamList
-
 _foamListTimes_ ()
 {
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -constant -doc -help -latestTime -newTimes -noFunctionObjects -noZero -processor -rm -srcDoc -time -withZero"
+    opts="-case -constant -doc -help -latestTime -listFunctionObjects -listRegisteredSwitches -listSwitches -listUnsetSwitches -newTimes -noFunctionObjects -noZero -processor -rm -srcDoc -time -withZero"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -1529,9 +1506,9 @@ _foamMeshToFluent_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listSwitches -listUnsetSwitches -noFunctionObjects -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -1550,9 +1527,9 @@ _foamToEnsight_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-ascii -case -cellZone -constant -doc -faceZones -fields -help -latestTime -newTimes -nodeValues -noFunctionObjects -noPatches -noZero -parallel -patches -region -roots -srcDoc -time"
+    opts="-ascii -case -cellZone -constant -doc -faceZones -fields -help -latestTime -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -newTimes -nodeValues -noFunctionObjects -noPatches -noZero -parallel -patches -region -roots -srcDoc -time"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -1573,9 +1550,9 @@ _foamToEnsightParts_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-ascii -case -constant -doc -help -index -latestTime -name -newTimes -noFunctionObjects -noMesh -noZero -srcDoc -time -width"
+    opts="-ascii -case -constant -doc -help -index -latestTime -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -name -newTimes -noFunctionObjects -noMesh -noZero -srcDoc -time -width"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -1596,9 +1573,9 @@ _foamToGMV_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -1619,9 +1596,9 @@ _foamToStarMesh_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -constant -doc -help -latestTime -newTimes -noBnd -noFunctionObjects -noZero -scale -srcDoc -time"
+    opts="-case -constant -doc -help -latestTime -listFunctionObjects -listRegisteredSwitches -listSwitches -listUnsetSwitches -newTimes -noBnd -noFunctionObjects -noZero -scale -srcDoc -time"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -1642,9 +1619,9 @@ _foamToSurface_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -constant -doc -help -latestTime -newTimes -noFunctionObjects -noZero -scale -srcDoc -time -tri"
+    opts="-case -constant -doc -help -latestTime -listFunctionObjects -listRegisteredSwitches -listSwitches -listUnsetSwitches -newTimes -noFunctionObjects -noZero -scale -srcDoc -time -tri"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -1665,9 +1642,9 @@ _foamToTetDualMesh_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -constant -doc -help -latestTime -noFunctionObjects -noZero -overwrite -parallel -roots -srcDoc -time"
+    opts="-case -constant -doc -help -latestTime -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noFunctionObjects -noZero -overwrite -parallel -roots -srcDoc -time"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -1688,9 +1665,9 @@ _foamToVTK_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-allPatches -ascii -case -cellSet -constant -doc -excludePatches -faceSet -fields -help -latestTime -nearCellValue -newTimes -noFaceZones -noFunctionObjects -noInternal -noLinks -noPointValues -noZero -parallel -pointSet -poly -region -roots -srcDoc -surfaceFields -time -useTimeName"
+    opts="-allPatches -ascii -case -cellSet -constant -doc -excludePatches -faceSet -fields -help -latestTime -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -nearCellValue -newTimes -noFaceZones -noFunctionObjects -noInternal -noLinks -noPointValues -noZero -parallel -pointSet -poly -region -roots -srcDoc -surfaceFields -time -useTimeName"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -1711,9 +1688,9 @@ _foamUpgradeCyclics_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -constant -doc -enableFunctionEntries -help -latestTime -newTimes -noFunctionObjects -noZero -parallel -region -roots -srcDoc -test -time"
+    opts="-case -constant -doc -enableFunctionEntries -help -latestTime -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -newTimes -noFunctionObjects -noZero -parallel -region -roots -srcDoc -test -time"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -1734,7 +1711,7 @@ _gambitToFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
     opts="-case -doc -help -noFunctionObjects -scale -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
@@ -1763,9 +1740,9 @@ _gmshToFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -keepOrientation -noFunctionObjects -region -srcDoc"
+    opts="-case -doc -help -keepOrientation -listFunctionObjects -listRegisteredSwitches -listSwitches -listUnsetSwitches -noFunctionObjects -region -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra="-d -f"
 
@@ -1792,9 +1769,9 @@ _icoFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -1815,9 +1792,9 @@ _icoUncoupledKinematicParcelDyMFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -cloudName -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -cloudName -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -1838,9 +1815,9 @@ _icoUncoupledKinematicParcelFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -cloudName -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -cloudName -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -1861,9 +1838,9 @@ _ideasUnvToFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -dump -help -noFunctionObjects -srcDoc"
+    opts="-case -doc -dump -help -listFunctionObjects -listRegisteredSwitches -listSwitches -listUnsetSwitches -noFunctionObjects -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra="-d -f"
 
@@ -1888,9 +1865,9 @@ _insideCells_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listSwitches -listUnsetSwitches -noFunctionObjects -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra="-d -f"
 
@@ -1915,9 +1892,9 @@ _interDyMFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -1938,9 +1915,9 @@ _interFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -1961,9 +1938,9 @@ _interMixingFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -1984,9 +1961,9 @@ _interPhaseChangeDyMFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -2007,9 +1984,9 @@ _interPhaseChangeFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -2030,9 +2007,9 @@ _kivaToFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -file -help -noFunctionObjects -srcDoc -version -zHeadMin"
+    opts="-case -doc -file -help -listFunctionObjects -listRegisteredSwitches -listSwitches -listUnsetSwitches -noFunctionObjects -srcDoc -version -zHeadMin"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -2053,9 +2030,9 @@ _laplacianFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -2076,9 +2053,9 @@ _magneticFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -HdotGradH -help -noB -noFunctionObjects -noH -parallel -roots -srcDoc"
+    opts="-case -doc -HdotGradH -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noB -noFunctionObjects -noH -parallel -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -2099,7 +2076,7 @@ _mapFields_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
     opts="-case -consistent -doc -help -mapMethod -noFunctionObjects -parallelSource -parallelTarget -sourceRegion -sourceTime -srcDoc -subtract -targetRegion"
     for o in $used ; do opts="${opts/$o/}" ; done
@@ -2128,7 +2105,7 @@ _mapFieldsPar_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
     opts="-case -consistent -doc -fields -help -mapMethod -noFunctionObjects -noLagrangian -parallel -roots -sourceRegion -sourceTime -srcDoc -subtract -targetRegion"
     for o in $used ; do opts="${opts/$o/}" ; done
@@ -2157,9 +2134,9 @@ _mdEquilibrationFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -2180,9 +2157,9 @@ _mdFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -2203,9 +2180,9 @@ _mdInitialise_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -2226,7 +2203,7 @@ _mergeMeshes_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
     opts="-addRegion -case -doc -help -masterRegion -noFunctionObjects -overwrite -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
@@ -2250,9 +2227,9 @@ _mergeOrSplitBaffles_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -detectOnly -doc -help -noFunctionObjects -overwrite -parallel -region -roots -split -srcDoc"
+    opts="-case -detectOnly -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noFunctionObjects -overwrite -parallel -region -roots -split -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -2273,9 +2250,9 @@ _mhdFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -2296,9 +2273,9 @@ _mirrorMesh_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -overwrite -parallel -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listSwitches -listUnsetSwitches -noFunctionObjects -overwrite -parallel -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -2319,7 +2296,7 @@ _mixtureAdiabaticFlameT_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
     opts="-case -doc -help -noFunctionObjects -parallel -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
@@ -2348,9 +2325,9 @@ _modifyMesh_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -overwrite -parallel -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listSwitches -listUnsetSwitches -noFunctionObjects -overwrite -parallel -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -2371,9 +2348,9 @@ _moveDynamicMesh_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -checkAMI -doc -help -noFunctionObjects -parallel -region -roots -srcDoc"
+    opts="-case -checkAMI -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -region -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -2394,9 +2371,9 @@ _moveEngineMesh_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -2417,9 +2394,9 @@ _moveMesh_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listSwitches -listUnsetSwitches -noFunctionObjects -parallel -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -2440,9 +2417,9 @@ _MPPICDyMFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -cloudName -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -cloudName -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -2463,9 +2440,9 @@ _MPPICFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -cloudName -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -cloudName -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -2486,9 +2463,9 @@ _mshToFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -hex -noFunctionObjects -srcDoc"
+    opts="-case -doc -help -hex -listFunctionObjects -listRegisteredSwitches -listSwitches -listUnsetSwitches -noFunctionObjects -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra="-d -f"
 
@@ -2513,9 +2490,9 @@ _multiphaseEulerFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -2536,9 +2513,9 @@ _multiphaseInterDyMFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -2559,9 +2536,9 @@ _multiphaseInterFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -2582,9 +2559,9 @@ _netgenNeutralToFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listSwitches -listUnsetSwitches -noFunctionObjects -parallel -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra="-d -f"
 
@@ -2611,9 +2588,9 @@ _noise_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -dict -doc -help -noFunctionObjects -srcDoc"
+    opts="-case -dict -doc -help -listFunctionObjects -listRegisteredSwitches -listSwitches -listUnsetSwitches -noFunctionObjects -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -2634,9 +2611,9 @@ _nonNewtonianIcoFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -2657,7 +2634,7 @@ _objToVTK_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
     opts="-case -doc -help -noFunctionObjects -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
@@ -2684,9 +2661,9 @@ _orientFaceZone_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -region -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listSwitches -listUnsetSwitches -noFunctionObjects -parallel -region -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -2707,9 +2684,9 @@ _particleTracks_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -constant -doc -help -latestTime -newTimes -noFunctionObjects -noZero -parallel -region -roots -srcDoc -time"
+    opts="-case -constant -doc -help -latestTime -listFunctionObjects -listRegisteredSwitches -listSwitches -listUnsetSwitches -newTimes -noFunctionObjects -noZero -parallel -region -roots -srcDoc -time"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -2730,9 +2707,9 @@ _patchSummary_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -constant -doc -expand -help -latestTime -newTimes -noFunctionObjects -noZero -parallel -region -roots -srcDoc -time"
+    opts="-case -constant -doc -expand -help -latestTime -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -newTimes -noFunctionObjects -noZero -parallel -region -roots -srcDoc -time"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -2753,9 +2730,9 @@ _pdfPlot_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -2776,9 +2753,9 @@ _PDRFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -2799,9 +2776,9 @@ _PDRMesh_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -overwrite -parallel -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noFunctionObjects -overwrite -parallel -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -2822,9 +2799,9 @@ _pimpleDyMFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -2845,9 +2822,9 @@ _pimpleFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -2868,9 +2845,9 @@ _pisoFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -2891,7 +2868,7 @@ _plot3dToFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
     opts="-2D -case -doc -help -noBlank -noFunctionObjects -scale -singleBlock -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
@@ -2920,9 +2897,9 @@ _polyDualMesh_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -concaveMultiCells -doc -doNotPreserveFaceZones -help -noFunctionObjects -overwrite -splitAllFaces -srcDoc"
+    opts="-case -concaveMultiCells -doc -doNotPreserveFaceZones -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noFunctionObjects -overwrite -splitAllFaces -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -2941,9 +2918,9 @@ _porousSimpleFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -2964,9 +2941,9 @@ _postChannel_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -constant -doc -help -latestTime -newTimes -noFunctionObjects -noZero -srcDoc -time"
+    opts="-case -constant -doc -help -latestTime -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -newTimes -noFunctionObjects -noZero -srcDoc -time"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -2987,9 +2964,9 @@ _postProcess_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -constant -dict -doc -field -fields -func -funcs -help -latestTime -list -newTimes -noFunctionObjects -noZero -parallel -region -roots -srcDoc -time"
+    opts="-case -constant -dict -doc -field -fields -func -funcs -help -latestTime -list -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -newTimes -noFunctionObjects -noZero -parallel -region -roots -srcDoc -time"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -3012,9 +2989,9 @@ _potentialFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -initialiseUBCs -noFunctionObjects -parallel -pName -roots -srcDoc -withFunctionObjects -writep -writePhi"
+    opts="-case -doc -help -initialiseUBCs -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -pName -roots -srcDoc -withFunctionObjects -writep -writePhi"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -3035,9 +3012,9 @@ _potentialFreeSurfaceDyMFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -3058,9 +3035,9 @@ _potentialFreeSurfaceFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -3081,9 +3058,9 @@ _reactingFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -3104,9 +3081,9 @@ _reactingMultiphaseEulerFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -3127,9 +3104,9 @@ _reactingParcelFilmFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -3150,9 +3127,9 @@ _reactingParcelFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -3173,9 +3150,9 @@ _reactingTwoPhaseEulerFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -3196,9 +3173,9 @@ _reconstructPar_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="- -allRegions -case -constant -doc -fields -help -lagrangianFields -latestTime -newTimes -noFields -noFunctionObjects -noLagrangian -noSets -noZero -region -srcDoc -time -withZero"
+    opts="- -allRegions -case -constant -doc -fields -help -lagrangianFields -latestTime -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -newTimes -noFields -noFunctionObjects -noLagrangian -noSets -noZero -region -srcDoc -time -withZero"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -3219,9 +3196,9 @@ _reconstructParMesh_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -cellDist -constant -doc -fullMatch -help -latestTime -mergeTol -newTimes -noFunctionObjects -noZero -region -srcDoc -time -withZero"
+    opts="-case -cellDist -constant -doc -fullMatch -help -latestTime -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -mergeTol -newTimes -noFunctionObjects -noZero -region -srcDoc -time -withZero"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -3242,9 +3219,9 @@ _redistributePar_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -constant -doc -help -latestTime -mergeTol -newTimes -noFunctionObjects -noZero -overwrite -parallel -region -roots -srcDoc -time"
+    opts="-case -constant -doc -help -latestTime -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -mergeTol -newTimes -noFunctionObjects -noZero -overwrite -parallel -region -roots -srcDoc -time"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -3265,9 +3242,9 @@ _refineHexMesh_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -minSet -noFunctionObjects -overwrite -parallel -region -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -minSet -noFunctionObjects -overwrite -parallel -region -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -3288,9 +3265,9 @@ _refinementLevel_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -readLevel -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -readLevel -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -3311,9 +3288,9 @@ _refineMesh_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-all -case -dict -doc -help -noFunctionObjects -overwrite -parallel -region -roots -srcDoc"
+    opts="-all -case -dict -doc -help -listFunctionObjects -listRegisteredSwitches -listSwitches -listUnsetSwitches -noFunctionObjects -overwrite -parallel -region -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -3336,9 +3313,9 @@ _refineWallLayer_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -overwrite -srcDoc -useSet"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listSwitches -listUnsetSwitches -noFunctionObjects -overwrite -srcDoc -useSet"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -3359,9 +3336,9 @@ _removeFaces_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -overwrite -parallel -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noFunctionObjects -overwrite -parallel -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -3382,9 +3359,9 @@ _renumberMesh_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -constant -dict -doc -frontWidth -help -latestTime -noFunctionObjects -noZero -overwrite -parallel -region -roots -srcDoc -time"
+    opts="-case -constant -dict -doc -frontWidth -help -latestTime -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noFunctionObjects -noZero -overwrite -parallel -region -roots -srcDoc -time"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -3407,9 +3384,9 @@ _rhoCentralDyMFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -3430,9 +3407,9 @@ _rhoCentralFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -3453,9 +3430,9 @@ _rhoPimpleDyMFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -3476,9 +3453,9 @@ _rhoPimpleFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -3499,9 +3476,9 @@ _rhoPorousSimpleFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -3522,9 +3499,9 @@ _rhoReactingBuoyantFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -3545,9 +3522,9 @@ _rhoReactingFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -3568,9 +3545,9 @@ _rhoSimpleFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -3591,9 +3568,9 @@ _rotateMesh_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -constant -doc -help -latestTime -newTimes -noFunctionObjects -noZero -parallel -roots -srcDoc -time"
+    opts="-case -constant -doc -help -latestTime -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -newTimes -noFunctionObjects -noZero -parallel -roots -srcDoc -time"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -3614,11 +3591,11 @@ _sammToFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
     opts="-case -doc -help -noFunctionObjects -scale -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
-    extra="-d -f"
+    extra=""
 
     [ "$COMP_CWORD" = 1 ] || \
     case "$prev" in
@@ -3626,13 +3603,7 @@ _sammToFoam_ ()
             opts="" ; extra="-d" ;;
         -scale)
             opts="" ; extra="" ;;
-       -*) ;;
-        *)
-            case "${COMP_WORDS[COMP_CWORD-2]}" in
-                -scale|-case) ;;
-                *) opts=""; extra="" ;;
-            esac
-            ;;
+       *) ;;
     esac
     COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
 }
@@ -3643,9 +3614,9 @@ _scalarTransportFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -3666,9 +3637,9 @@ _selectCells_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listSwitches -listUnsetSwitches -noFunctionObjects -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -3687,9 +3658,9 @@ _setFields_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -dict -doc -help -noFunctionObjects -parallel -region -roots -srcDoc"
+    opts="-case -dict -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -region -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -3712,9 +3683,9 @@ _setSet_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-batch -case -constant -doc -help -latestTime -loop -newTimes -noFunctionObjects -noSync -noVTK -noZero -parallel -region -roots -srcDoc -time"
+    opts="-batch -case -constant -doc -help -latestTime -listFunctionObjects -listRegisteredSwitches -listSwitches -listUnsetSwitches -loop -newTimes -noFunctionObjects -noSync -noVTK -noZero -parallel -region -roots -srcDoc -time"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -3737,9 +3708,9 @@ _setsToZones_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -constant -doc -help -latestTime -newTimes -noFlipMap -noFunctionObjects -noZero -parallel -region -roots -srcDoc -time"
+    opts="-case -constant -doc -help -latestTime -listFunctionObjects -listRegisteredSwitches -listSwitches -listUnsetSwitches -newTimes -noFlipMap -noFunctionObjects -noZero -parallel -region -roots -srcDoc -time"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -3755,14 +3726,37 @@ _setsToZones_ ()
 }
 complete -o nospace -F _setsToZones_ setsToZones
 
+_setWaves_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts="-alpha -case -doc -help -latestTime -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -newTimes -noFunctionObjects -noZero -parallel -roots -srcDoc -time -U"
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra=""
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+        -case)
+            opts="" ; extra="-d" ;;
+        -U|-alpha|-roots|-time)
+            opts="" ; extra="" ;;
+       *) ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _setWaves_ setWaves
+
 _shallowWaterFoam_ ()
 {
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -3783,9 +3777,9 @@ _simpleFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -3806,9 +3800,9 @@ _simpleReactingParcelFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -3829,9 +3823,9 @@ _singleCellMesh_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -constant -doc -help -latestTime -newTimes -noFunctionObjects -noZero -parallel -roots -srcDoc -time"
+    opts="-case -constant -doc -help -latestTime -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -newTimes -noFunctionObjects -noZero -parallel -roots -srcDoc -time"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -3852,7 +3846,7 @@ _smapToFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
     opts="-case -doc -help -noFunctionObjects -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
@@ -3879,9 +3873,9 @@ _snappyHexMesh_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -checkGeometry -dict -doc -help -noFunctionObjects -outFile -overwrite -parallel -patches -roots -srcDoc -surfaceSimplify"
+    opts="-case -checkGeometry -dict -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noFunctionObjects -outFile -overwrite -parallel -patches -roots -srcDoc -surfaceSimplify"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -3904,9 +3898,9 @@ _solidDisplacementFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -3927,9 +3921,9 @@ _solidEquilibriumDisplacementFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -3950,9 +3944,9 @@ _sonicDyMFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -3973,9 +3967,9 @@ _sonicFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -3996,9 +3990,9 @@ _sonicLiquidFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -4019,9 +4013,9 @@ _splitCells_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -geometry -help -noFunctionObjects -overwrite -set -srcDoc -tol"
+    opts="-case -doc -geometry -help -listFunctionObjects -listRegisteredSwitches -listSwitches -listUnsetSwitches -noFunctionObjects -overwrite -set -srcDoc -tol"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -4042,9 +4036,9 @@ _splitMesh_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -overwrite -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listSwitches -listUnsetSwitches -noFunctionObjects -overwrite -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -4063,9 +4057,9 @@ _splitMeshRegions_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-blockedFaces -case -cellZones -cellZonesFileOnly -cellZonesOnly -detectOnly -doc -help -insidePoint -largestOnly -makeCellZones -noFunctionObjects -overwrite -parallel -prefixRegion -region -roots -sloppyCellZones -srcDoc -useFaceZones"
+    opts="-blockedFaces -case -cellZones -cellZonesFileOnly -cellZonesOnly -detectOnly -doc -help -insidePoint -largestOnly -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -makeCellZones -noFunctionObjects -overwrite -parallel -prefixRegion -region -roots -sloppyCellZones -srcDoc -useFaceZones"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -4088,9 +4082,9 @@ _sprayDyMFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -4111,9 +4105,9 @@ _sprayEngineFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -4134,9 +4128,9 @@ _sprayFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -4157,9 +4151,9 @@ _SRFPimpleFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -4180,9 +4174,9 @@ _SRFSimpleFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -4203,7 +4197,7 @@ _star3ToFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
     opts="-case -doc -help -noFunctionObjects -scale -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
@@ -4226,7 +4220,7 @@ _star4ToFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
     opts="-ascii -case -doc -help -noFunctionObjects -scale -solids -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
@@ -4249,9 +4243,9 @@ _steadyParticleTracks_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -constant -dict -doc -help -latestTime -newTimes -noFunctionObjects -noZero -region -srcDoc -time"
+    opts="-case -constant -dict -doc -help -latestTime -listFunctionObjects -listRegisteredSwitches -listSwitches -listUnsetSwitches -newTimes -noFunctionObjects -noZero -region -srcDoc -time"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -4274,9 +4268,9 @@ _stitchMesh_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -overwrite -partial -perfect -region -srcDoc -toleranceDict"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noFunctionObjects -overwrite -partial -perfect -region -srcDoc -toleranceDict"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -4299,9 +4293,9 @@ _subsetMesh_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -overwrite -parallel -patch -region -resultTime -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noFunctionObjects -overwrite -parallel -patch -region -resultTime -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -4322,7 +4316,7 @@ _surfaceAdd_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
     opts="-case -doc -help -mergeRegions -noFunctionObjects -points -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
@@ -4346,7 +4340,7 @@ _surfaceAutoPatch_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
     opts="-case -doc -help -noFunctionObjects -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
@@ -4373,9 +4367,9 @@ _surfaceBooleanFeatures_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -invertedSpace -noFunctionObjects -perturb -srcDoc -surf1Baffle -surf2Baffle"
+    opts="-case -doc -help -invertedSpace -listFunctionObjects -listRegisteredSwitches -listSwitches -listUnsetSwitches -noFunctionObjects -perturb -srcDoc -surf1Baffle -surf2Baffle"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra="-d -f"
 
@@ -4395,7 +4389,7 @@ _surfaceCheck_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
     opts="-blockMesh -case -checkSelfIntersection -doc -help -noFunctionObjects -splitNonManifold -srcDoc -verbose"
     for o in $used ; do opts="${opts/$o/}" ; done
@@ -4422,7 +4416,7 @@ _surfaceClean_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
     opts="-case -doc -help -noClean -noFunctionObjects -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
@@ -4449,7 +4443,7 @@ _surfaceCoarsen_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
     opts="-case -doc -help -noFunctionObjects -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
@@ -4476,7 +4470,7 @@ _surfaceConvert_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
     opts="-case -clean -doc -group -help -noFunctionObjects -scale -srcDoc -writePrecision"
     for o in $used ; do opts="${opts/$o/}" ; done
@@ -4505,7 +4499,7 @@ _surfaceFeatureConvert_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
     opts="-case -doc -help -noFunctionObjects -scale -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
@@ -4534,9 +4528,9 @@ _surfaceFeatureExtract_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -dict -doc -help -noFunctionObjects -srcDoc"
+    opts="-case -dict -doc -help -listFunctionObjects -listRegisteredSwitches -listSwitches -listUnsetSwitches -noFunctionObjects -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -4557,7 +4551,7 @@ _surfaceFind_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
     opts="-case -doc -help -noFunctionObjects -srcDoc -x -y -z"
     for o in $used ; do opts="${opts/$o/}" ; done
@@ -4586,9 +4580,9 @@ _surfaceHookUp_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -dict -doc -help -noFunctionObjects -srcDoc"
+    opts="-case -dict -doc -help -listFunctionObjects -listRegisteredSwitches -listSwitches -listUnsetSwitches -noFunctionObjects -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -4609,7 +4603,7 @@ _surfaceInertia_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
     opts="-case -density -doc -help -noFunctionObjects -referencePoint -shellProperties -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
@@ -4638,7 +4632,7 @@ _surfaceLambdaMuSmooth_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
     opts="-doc -featureFile -help -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
@@ -4665,7 +4659,7 @@ _surfaceMeshConvert_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
     opts="-case -clean -dict -doc -from -help -noFunctionObjects -scaleIn -scaleOut -srcDoc -to -tri"
     for o in $used ; do opts="${opts/$o/}" ; done
@@ -4696,9 +4690,9 @@ _surfaceMeshConvertTesting_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -clean -doc -help -noFunctionObjects -orient -scale -srcDoc -surfMesh -triFace -triSurface -unsorted"
+    opts="-case -clean -doc -help -listFunctionObjects -listRegisteredSwitches -listSwitches -listUnsetSwitches -noFunctionObjects -orient -scale -srcDoc -surfMesh -triFace -triSurface -unsorted"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra="-d -f"
 
@@ -4725,7 +4719,7 @@ _surfaceMeshExport_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
     opts="-case -clean -dict -doc -from -help -name -noFunctionObjects -scaleIn -scaleOut -srcDoc -to"
     for o in $used ; do opts="${opts/$o/}" ; done
@@ -4750,9 +4744,9 @@ _surfaceMeshImport_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -clean -dict -doc -from -help -name -noFunctionObjects -scaleIn -scaleOut -srcDoc -to"
+    opts="-case -clean -dict -doc -from -help -listFunctionObjects -listRegisteredSwitches -listSwitches -listUnsetSwitches -name -noFunctionObjects -scaleIn -scaleOut -srcDoc -to"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra="-d -f"
 
@@ -4781,7 +4775,7 @@ _surfaceMeshInfo_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
     opts="-areas -case -doc -help -noFunctionObjects -scale -srcDoc -xml"
     for o in $used ; do opts="${opts/$o/}" ; done
@@ -4810,9 +4804,9 @@ _surfaceMeshTriangulate_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -excludeProcPatches -faceZones -help -noFunctionObjects -parallel -patches -region -roots -srcDoc"
+    opts="-case -doc -excludeProcPatches -faceZones -help -listFunctionObjects -listRegisteredSwitches -listSwitches -listUnsetSwitches -noFunctionObjects -parallel -patches -region -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -4833,7 +4827,7 @@ _surfaceOrient_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
     opts="-case -doc -help -inside -noFunctionObjects -srcDoc -usePierceTest"
     for o in $used ; do opts="${opts/$o/}" ; done
@@ -4860,7 +4854,7 @@ _surfacePointMerge_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
     opts="-case -doc -help -noFunctionObjects -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
@@ -4887,9 +4881,9 @@ _surfaceRedistributePar_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -keepNonMapped -noFunctionObjects -parallel -roots -srcDoc"
+    opts="-case -doc -help -keepNonMapped -listFunctionObjects -listRegisteredSwitches -listSwitches -listUnsetSwitches -noFunctionObjects -parallel -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra="-d -f"
 
@@ -4916,7 +4910,7 @@ _surfaceRefineRedGreen_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
     opts="-case -doc -help -noFunctionObjects -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
@@ -4943,7 +4937,7 @@ _surfaceSplitByPatch_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
     opts="-case -doc -help -noFunctionObjects -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
@@ -4970,7 +4964,7 @@ _surfaceSplitByTopology_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
     opts="-doc -help -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
@@ -4992,7 +4986,7 @@ _surfaceSplitNonManifolds_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
     opts="-case -debug -doc -help -noFunctionObjects -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
@@ -5019,7 +5013,7 @@ _surfaceSubset_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
     opts="-case -doc -help -noFunctionObjects -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
@@ -5046,9 +5040,9 @@ _surfaceToPatch_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -faceSet -help -noFunctionObjects -srcDoc -tol"
+    opts="-case -doc -faceSet -help -listFunctionObjects -listRegisteredSwitches -listSwitches -listUnsetSwitches -noFunctionObjects -srcDoc -tol"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra="-d -f"
 
@@ -5075,7 +5069,7 @@ _surfaceTransformPoints_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
     opts="-case -doc -help -noFunctionObjects -rollPitchYaw -rotate -scale -srcDoc -translate -yawPitchRoll"
     for o in $used ; do opts="${opts/$o/}" ; done
@@ -5104,9 +5098,9 @@ _temporalInterpolate_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -constant -divisions -doc -fields -help -interpolationType -latestTime -newTimes -noFunctionObjects -noZero -parallel -region -roots -srcDoc -time"
+    opts="-case -constant -divisions -doc -fields -help -interpolationType -latestTime -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -newTimes -noFunctionObjects -noZero -parallel -region -roots -srcDoc -time"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -5127,11 +5121,11 @@ _tetgenToFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFaceFile -noFunctionObjects -parallel -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listSwitches -listUnsetSwitches -noFaceFile -noFunctionObjects -parallel -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
-    extra="-d -f"
+    extra=""
 
     [ "$COMP_CWORD" = 1 ] || \
     case "$prev" in
@@ -5139,13 +5133,7 @@ _tetgenToFoam_ ()
             opts="" ; extra="-d" ;;
         -roots)
             opts="" ; extra="" ;;
-       -*) ;;
-        *)
-            case "${COMP_WORDS[COMP_CWORD-2]}" in
-                -roots|-case) ;;
-                *) opts=""; extra="" ;;
-            esac
-            ;;
+       *) ;;
     esac
     COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
 }
@@ -5156,9 +5144,9 @@ _thermoFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -5179,9 +5167,9 @@ _topoSet_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -constant -dict -doc -help -latestTime -newTimes -noFunctionObjects -noSync -noZero -parallel -region -roots -srcDoc -time"
+    opts="-case -constant -dict -doc -help -latestTime -listFunctionObjects -listRegisteredSwitches -listSwitches -listUnsetSwitches -newTimes -noFunctionObjects -noSync -noZero -parallel -region -roots -srcDoc -time"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -5204,9 +5192,9 @@ _transformPoints_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -region -rollPitchYaw -roots -rotate -rotateFields -scale -srcDoc -translate -yawPitchRoll"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -region -rollPitchYaw -roots -rotate -rotateFields -scale -srcDoc -translate -yawPitchRoll"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -5227,9 +5215,9 @@ _twoLiquidMixingFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -5250,9 +5238,9 @@ _twoPhaseEulerFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -5273,9 +5261,9 @@ _uncoupledKinematicParcelDyMFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -cloudName -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -cloudName -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -5296,9 +5284,9 @@ _uncoupledKinematicParcelFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -cloudName -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -cloudName -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -5319,9 +5307,9 @@ _viewFactorsGen_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -region -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -region -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -5342,9 +5330,9 @@ _vtkUnstructuredToFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listSwitches -listUnsetSwitches -noFunctionObjects -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra="-d -f"
 
@@ -5369,9 +5357,9 @@ _wallFunctionTable_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -5392,9 +5380,9 @@ _writeMeshObj_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -cell -cellSet -constant -doc -face -faceSet -help -latestTime -newTimes -noFunctionObjects -noZero -parallel -patchEdges -patchFaces -point -region -roots -srcDoc -time"
+    opts="-case -cell -cellSet -constant -doc -face -faceSet -help -latestTime -listFunctionObjects -listRegisteredSwitches -listSwitches -listUnsetSwitches -newTimes -noFunctionObjects -noZero -parallel -patchEdges -patchFaces -point -region -roots -srcDoc -time"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -5415,9 +5403,9 @@ _XiFoam_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -postProcess -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -noFunctionObjects -parallel -postProcess -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -5438,9 +5426,9 @@ _zipUpMesh_ ()
     local cur="${COMP_WORDS[COMP_CWORD]}"
     local prev="${COMP_WORDS[COMP_CWORD-1]}"
     local line=${COMP_LINE}
-    local used=$(echo $line | grep -oE "\-[a-Z]+ ")
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
 
-    opts="-case -doc -help -noFunctionObjects -parallel -region -roots -srcDoc"
+    opts="-case -doc -help -listFunctionObjects -listRegisteredSwitches -listSwitches -listUnsetSwitches -noFunctionObjects -parallel -region -roots -srcDoc"
     for o in $used ; do opts="${opts/$o/}" ; done
     extra=""
 
@@ -5455,5 +5443,1164 @@ _zipUpMesh_ ()
     COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
 }
 complete -o nospace -F _zipUpMesh_ zipUpMesh
+
+_Co_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts=""
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra=""
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+       *) ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _Co_ Co
+
+_createTurbulenceFields_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts=""
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra=""
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+       *) ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _createTurbulenceFields_ createTurbulenceFields
+
+_execFlowFunctionObjects_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts="-case -constant -dict -doc -field -fields -func -funcs -help -latestTime -list -listFunctionObjects -listFvOptions -listRegisteredSwitches -listScalarBCs -listSwitches -listTurbulenceModels -listUnsetSwitches -listVectorBCs -newTimes -noFunctionObjects -noZero -parallel -postProcess -region -roots -srcDoc -time"
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra=""
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+        -case)
+            opts="" ; extra="-d" ;;
+        -dict)
+            opts="" ; extra="-d -f" ;;
+        -field|-fields|-func|-funcs|-region|-roots|-time)
+            opts="" ; extra="" ;;
+       *) ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _execFlowFunctionObjects_ execFlowFunctionObjects
+
+_foamCalc_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts="-case -constant -dict -doc -field -fields -func -funcs -help -latestTime -list -listFunctionObjects -listRegisteredSwitches -listScalarBCs -listSwitches -listUnsetSwitches -listVectorBCs -newTimes -noFunctionObjects -noZero -parallel -region -roots -srcDoc -time"
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra=""
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+        -case)
+            opts="" ; extra="-d" ;;
+        -dict)
+            opts="" ; extra="-d -f" ;;
+        -field|-fields|-func|-funcs|-region|-roots|-time)
+            opts="" ; extra="" ;;
+       *) ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _foamCalc_ foamCalc
+
+_foamCleanPath_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts="-help -strip"
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra=""
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+       *) ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _foamCleanPath_ foamCleanPath
+
+_foamCleanPolyMesh_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts="-case -help -region"
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra=""
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+        -case)
+            opts="" ; extra="-d" ;;
+        -region)
+            opts="" ; extra="" ;;
+       *) ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _foamCleanPolyMesh_ foamCleanPolyMesh
+
+_foamCleanTutorials_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts="-help"
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra=""
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+       *) ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _foamCleanTutorials_ foamCleanTutorials
+
+_foamCloneCase_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts="-help -latestTime -no-orig -no-scripts -template"
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra="-d"
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+       -*) ;;
+        *)
+            opts=""; extra=""
+            ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _foamCloneCase_ foamCloneCase
+
+_foamCreateVideo_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts="-dir -fps -help -image -out -start -webm"
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra=""
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+        -dir)
+            opts="" ; extra="-d" ;;
+        -fps|-image|-out|-start)
+            opts="" ; extra="" ;;
+       *) ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _foamCreateVideo_ foamCreateVideo
+
+_foamDebugSwitches_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts=""
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra=""
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+       *) ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _foamDebugSwitches_ foamDebugSwitches
+
+_foamEbrowse_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts="-help"
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra=""
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+       *) ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _foamEbrowse_ foamEbrowse
+
+_foamEtcFile_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts="-all -help -list -mode -prefix -quiet -silent -version"
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra=""
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+        -prefix)
+            opts="" ; extra="-d" ;;
+        -mode|-version)
+            opts="" ; extra="" ;;
+       *) ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _foamEtcFile_ foamEtcFile
+
+_foamExec_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts="-help -prefix -version"
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra=""
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+        -prefix)
+            opts="" ; extra="-d" ;;
+        -version)
+            opts="" ; extra="" ;;
+       *) ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _foamExec_ foamExec
+
+_foamJob_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts="-append -case -help -parallel -screen -version -wait"
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra=""
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+        -case)
+            opts="" ; extra="-d" ;;
+        -version)
+            opts="" ; extra="" ;;
+       *) ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _foamJob_ foamJob
+
+_foamLog_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts="-help -list -localDB -n -quiet"
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra="-d -f"
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+       -*) ;;
+        *)
+            opts=""; extra=""
+            ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _foamLog_ foamLog
+
+_foamMonitor_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts="-help -idle -logscale -refresh -yrange"
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra="-d -f"
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+        -idle|-refresh|-yrange)
+            opts="" ; extra="" ;;
+       -*) ;;
+        *)
+            case "${COMP_WORDS[COMP_CWORD-2]}" in
+                -idle|-refresh|-yrange) ;;
+                *) opts=""; extra="" ;;
+            esac
+            ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _foamMonitor_ foamMonitor
+
+_foamNew_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts="-help -source -template"
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra=""
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+        -source|-template)
+            opts="" ; extra="" ;;
+       *) ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _foamNew_ foamNew
+
+_foamNewApp_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts="-help"
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra=""
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+       *) ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _foamNewApp_ foamNewApp
+
+_foamNewBC_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts="-help"
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra=""
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+       *) ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _foamNewBC_ foamNewBC
+
+_foamNewFunctionObject_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts="-help"
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra=""
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+       *) ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _foamNewFunctionObject_ foamNewFunctionObject
+
+_foamRunTutorials_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts="-help -skipFirst -test"
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra=""
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+       *) ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _foamRunTutorials_ foamRunTutorials
+
+_foamSearch_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts="-count -help"
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra="-d"
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+       -*) ;;
+        *)
+            opts=""; extra=""
+            ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _foamSearch_ foamSearch
+
+_foamSequenceVTKFiles_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts="-case -dir -help -out"
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra=""
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+        -case|-dir|-out)
+            opts="" ; extra="-d" ;;
+       *) ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _foamSequenceVTKFiles_ foamSequenceVTKFiles
+
+_foamTags_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts="-help"
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra=""
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+       *) ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _foamTags_ foamTags
+
+_foamUpdateCaseFileHeader_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts="-help -version"
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra=""
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+        -version)
+            opts="" ; extra="" ;;
+       *) ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _foamUpdateCaseFileHeader_ foamUpdateCaseFileHeader
+
+_Mach_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts=""
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra=""
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+       *) ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _Mach_ Mach
+
+_mpirunDebug_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts="-help"
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra=""
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+       *) ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _mpirunDebug_ mpirunDebug
+
+_paraFoam_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts="-block -builtin -case -help -region -touch -touchAll"
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra=""
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+        -case)
+            opts="" ; extra="-d" ;;
+        -region)
+            opts="" ; extra="" ;;
+       *) ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _paraFoam_ paraFoam
+
+_patchAverage_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts=""
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra=""
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+       *) ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _patchAverage_ patchAverage
+
+_patchIntegrate_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts=""
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra=""
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+       *) ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _patchIntegrate_ patchIntegrate
+
+_Pe_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts=""
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra=""
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+       *) ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _Pe_ Pe
+
+_probeLocations_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts=""
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra=""
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+       *) ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _probeLocations_ probeLocations
+
+_ptot_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts=""
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra=""
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+       *) ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _ptot_ ptot
+
+_rm~all_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts="-help"
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra="-d"
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+       -*) ;;
+        *) opts="";;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _rm~all_ rm~all
+
+_rmcore_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts="-help"
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra="-d"
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+       -*) ;;
+        *) opts="";;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _rmcore_ rmcore
+
+_sample_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts=""
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra=""
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+       *) ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _sample_ sample
+
+_stressComponents_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts=""
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra=""
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+       *) ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _stressComponents_ stressComponents
+
+_supersededByPostProcess_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts=""
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra=""
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+       *) ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _supersededByPostProcess_ supersededByPostProcess
+
+_supersededByPostProcessOption_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts=""
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra=""
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+       *) ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _supersededByPostProcessOption_ supersededByPostProcessOption
+
+_wallGradU_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts=""
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra=""
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+       *) ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _wallGradU_ wallGradU
+
+_wdot_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts=""
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra=""
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+       *) ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _wdot_ wdot
+
+_wclean_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts="-help -silent"
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra="-d"
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+       -*) ;;
+        *)
+            opts=""; extra=""
+            ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _wclean_ wclean
+
+_wcleanLnIncludeAll_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts=""
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra="-d"
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+       -*) ;;
+        *) opts="";;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _wcleanLnIncludeAll_ wcleanLnIncludeAll
+
+_wcleanPlatform_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts="-all -current -help"
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra=""
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+       *) ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _wcleanPlatform_ wcleanPlatform
+
+_wdep_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts="-help"
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra="-d -f"
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+       -*) ;;
+        *)
+            opts=""; extra=""
+            ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _wdep_ wdep
+
+_wmake_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts="-all -help -j -j -non-stop -no-scheduler -queue -silent -update"
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra="-d"
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+        -j)
+            opts="" ; extra="" ;;
+       -*) ;;
+        *)
+            case "${COMP_WORDS[COMP_CWORD-2]}" in
+                -j) ;;
+                *) opts=""; extra="" ;;
+            esac
+            ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _wmake_ wmake
+
+_wmakeCheckPwd_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts="-help -quiet"
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra="-d"
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+       -*) ;;
+        *)
+            opts=""; extra=""
+            ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _wmakeCheckPwd_ wmakeCheckPwd
+
+_wmakeCollect_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts="-clean -help -kill"
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra=""
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+       *) ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _wmakeCollect_ wmakeCollect
+
+_wmakeFilesAndOptions_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts="-help"
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra=""
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+       *) ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _wmakeFilesAndOptions_ wmakeFilesAndOptions
+
+_wmakeLnInclude_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts="-help -silent -update"
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra="-d"
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+       -*) ;;
+        *)
+            opts=""; extra=""
+            ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _wmakeLnInclude_ wmakeLnInclude
+
+_wmakeLnIncludeAll_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts="-help -j -j"
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra="-d"
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+        -j)
+            opts="" ; extra="" ;;
+       -*) ;;
+        *)
+            case "${COMP_WORDS[COMP_CWORD-2]}" in
+                -j) ;;
+                *) opts=""; extra="" ;;
+            esac
+            ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _wmakeLnIncludeAll_ wmakeLnIncludeAll
+
+_wmakePrintBuild_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts="-check -help -major -pkg -short -update -version"
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra=""
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+        -pkg|-version)
+            opts="" ; extra="" ;;
+       *) ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _wmakePrintBuild_ wmakePrintBuild
+
+_wmakeScheduler_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts=""
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra=""
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+       *) ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _wmakeScheduler_ wmakeScheduler
+
+_wmakeSchedulerUptime_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts="-help"
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra=""
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+       *) ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _wmakeSchedulerUptime_ wmakeSchedulerUptime
+
+_wrmdep_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts=""
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra=""
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+       *) ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _wrmdep_ wrmdep
+
+_wrmo_ ()
+{
+    local cur="${COMP_WORDS[COMP_CWORD]}"
+    local prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local line=${COMP_LINE}
+    local used=$(echo "$line" | grep -oE "\-[a-zA-Z]+ ")
+
+    opts="-all -help"
+    for o in $used ; do opts="${opts/$o/}" ; done
+    extra="-d -f"
+
+    [ "$COMP_CWORD" = 1 ] || \
+    case "$prev" in
+       -*) ;;
+        *)
+            opts=""; extra=""
+            ;;
+    esac
+    COMPREPLY=( $(compgen -W "${opts}" $extra -- ${cur}) )
+}
+complete -o nospace -F _wrmo_ wrmo
 
 #------------------------------------------------------------------------------
