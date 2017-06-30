@@ -41,6 +41,9 @@ Description
 
 namespace Foam
 {
+
+class PstreamBuffers;
+
 namespace fileOperations
 {
 
@@ -381,6 +384,15 @@ protected:
             const IOobject&,
             const pathType&,
             const word&
+        );
+
+        //- Read file contents and send to processors
+        static void readAndSend
+        (
+            const fileName& filePath,
+            const IOstream::compressionType cmp,
+            const labelUList& procs,
+            PstreamBuffers& pBufs
         );
 
 

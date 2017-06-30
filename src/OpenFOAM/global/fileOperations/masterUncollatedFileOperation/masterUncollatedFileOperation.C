@@ -397,6 +397,57 @@ bool Foam::fileOperations::masterUncollatedFileOperation::uniformFile
 }
 
 
+void Foam::fileOperations::masterUncollatedFileOperation::readAndSend
+(
+    const fileName& filePath,
+    const IOstream::compressionType cmp,
+    const labelUList& procs,
+    PstreamBuffers& pBufs
+)
+{
+    if (cmp == IOstream::compressionType::COMPRESSED)
+    {
+        if (debug)
+        {
+            Pout<< "masterUncollatedFileOperation::readAndSend:"
+                << " opening compressed " << filePath << endl;
+        }
+
+        IFstream is(filePath, IOstream::streamFormat::BINARY);
+
+        std::ostringstream stringStr;
+        stringStr << is.stdStream().rdbuf();
+        string buf(stringStr.str());
+
+        forAll(procs, i)
+        {
+            UOPstream os(procs[i], pBufs);
+            os.write(&buf[0], buf.size());
+        }
+    }
+    else
+    {
+        off_t count(Foam::fileSize(filePath));
+        IFstream is(filePath, IOstream::streamFormat::BINARY);
+
+        if (debug)
+        {
+            Pout<< "masterUncollatedFileOperation::readStream:"
+                << " From " << filePath <<  " reading " << label(count)
+                << " bytes" << endl;
+        }
+        List<char> buf(static_cast<label>(count));
+        is.stdStream().read(buf.begin(), count);
+
+        forAll(procs, i)
+        {
+            UOPstream os(procs[i], pBufs);
+            os.write(buf.begin(), count);
+        }
+    }
+}
+
+
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 Foam::fileOperations::masterUncollatedFileOperation::
@@ -1118,23 +1169,29 @@ Foam::fileOperations::masterUncollatedFileOperation::readStream
 
                 if (procValid[proci] && !filePaths[proci].empty())
                 {
-                    std::ifstream is(filePaths[proci]);
-                    // Get length of file
-                    is.seekg(0, ios_base::end);
-                    std::streamoff count = is.tellg();
-                    is.seekg(0, ios_base::beg);
+                    // Note: handle compression ourselves since size cannot
+                    // be determined without actually uncompressing
 
-                    if (debug)
+                    if (Foam::exists(filePaths[proci]+".gz", false))
                     {
-                        Pout<< "masterUncollatedFileOperation::readStream:"
-                            << " From " << filePaths[proci]
-                            <<  " reading " << label(count) << " bytes" << endl;
+                        readAndSend
+                        (
+                            filePaths[proci],
+                            IOstream::compressionType::COMPRESSED,
+                            labelList(1, proci),
+                            pBufs
+                        );
                     }
-                    List<char> buf(static_cast<label>(count));
-                    is.read(buf.begin(), count);
-
-                    UOPstream os(proci, pBufs);
-                    os.write(buf.begin(), count);
+                    else
+                    {
+                        readAndSend
+                        (
+                            filePaths[proci],
+                            IOstream::compressionType::UNCOMPRESSED,
+                            labelList(1, proci),
+                            pBufs
+                        );
+                    }
                 }
             }
         }
@@ -1466,52 +1523,39 @@ Foam::fileOperations::masterUncollatedFileOperation::NewIFstream
                         << " Opening global file " << filePath << endl;
                 }
 
-                // get length of file:
-                off_t count(Foam::fileSize(filePath));
+                IOstream::compressionType cmp
+                (
+                    Foam::exists(filePath+".gz", false)
+                  ? IOstream::compressionType::COMPRESSED
+                  : IOstream::compressionType::UNCOMPRESSED
+                );
 
-                std::ifstream is(filePath);
-
-                if (debug)
-                {
-                    Pout<< "masterUncollatedFileOperation::NewIFstream:"
-                        << " From " << filePath
-                        <<  " reading " << label(count) << " bytes" << endl;
-                }
-                List<char> buf(static_cast<label>(count));
-                is.read(buf.begin(), count);
-
+                labelList procs(Pstream::nProcs()-1);
                 for (label proci = 1; proci < Pstream::nProcs(); proci++)
                 {
-                    UOPstream os(proci, pBufs);
-                    os.write(buf.begin(), count);
+                    procs[proci-1] = proci;
                 }
+
+                readAndSend(filePath, cmp, procs, pBufs);
             }
             else
             {
                 for (label proci = 1; proci < Pstream::nProcs(); proci++)
                 {
-                    if (debug)
-                    {
-                        Pout<< "masterUncollatedFileOperation::NewIFstream:"
-                            << " For processor " << proci
-                            << " opening " << filePaths[proci] << endl;
-                    }
+                    IOstream::compressionType cmp
+                    (
+                        Foam::exists(filePaths[proci]+".gz", false)
+                      ? IOstream::compressionType::COMPRESSED
+                      : IOstream::compressionType::UNCOMPRESSED
+                    );
 
-                    off_t count(Foam::fileSize(filePaths[proci]));
-
-                    std::ifstream is(filePaths[proci]);
-
-                    if (debug)
-                    {
-                        Pout<< "masterUncollatedFileOperation::NewIFstream:"
-                            << " From " << filePaths[proci]
-                            <<  " reading " << label(count) << " bytes" << endl;
-                    }
-                    List<char> buf(static_cast<label>(count));
-                    is.read(buf.begin(), count);
-
-                    UOPstream os(proci, pBufs);
-                    os.write(buf.begin(), count);
+                    readAndSend
+                    (
+                        filePaths[proci],
+                        cmp,
+                        labelList(1, proci),
+                        pBufs
+                    );
                 }
             }
         }
