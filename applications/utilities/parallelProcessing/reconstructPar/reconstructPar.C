@@ -253,9 +253,8 @@ int main(int argc, char *argv[])
 
     if (timeDirs.empty())
     {
-        FatalErrorInFunction
-            << "No times selected"
-            << exit(FatalError);
+        WarningInFunction << "No times selected";
+        exit(1);
     }
 
 

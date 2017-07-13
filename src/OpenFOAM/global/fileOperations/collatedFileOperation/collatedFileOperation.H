@@ -28,7 +28,7 @@ Description
     Version of masterUncollatedFileOperation that collates regIOobjects
     into a container in the processors/ subdirectory.
 
-    Uses threading if maxThreadBufferSize > 0.
+    Uses threading if maxThreadFileBufferSize > 0.
 
 See also
     masterUncollatedFileOperation
@@ -89,7 +89,7 @@ public:
         //- Max size of thread buffer size. This is the overall size of
         //  all files to be written. Starts blocking if not enough size.
         //  Read as float to enable easy specificiation of large sizes.
-        static float maxThreadBufferSize;
+        static float maxThreadFileBufferSize;
 
 
     // Constructors

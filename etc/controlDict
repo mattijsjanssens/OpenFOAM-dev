@@ -55,21 +55,19 @@ OptimisationSwitches
     //  - inotifyMaster     : do inotify (and file reading) only on master.
     fileModificationChecking timeStampMaster;
 
+    //- Parallel IO file handler
+    //  uncollated (default), collated or masterUncollated
+    fileHandler uncollated;
 
-    //- File handlers:
+    //- collated: thread buffer size for queued file writes.
+    //  If set to 0 or not sufficient for the file size threading is not used.
+    //  Default: 2e9
+    maxThreadFileBufferSize 2e9;
 
-        // Default handler (if not specified use uncollated)
-        fileHandler collated;
-
-        // In master-only reading/writing: when to switch from non-blocking
-        // to scheduled. This is the overall file size.
-        maxBufferSize           1e9;
-
-        // If > 0: use threading in the 'collated' fileHandler. This is the
-        // overall size of all the waiting file writes. Default is the
-        // maxBufferSize
-        maxThreadBufferSize     2e9;
-
+    //- masterUncollated: non-blocking buffer size.
+    //  If the file exceeds this buffer size scheduled transfer is used.
+    //  Default: 2e9
+    maxMasterFileBufferSize 2e9;
 
     commsType       nonBlocking; //scheduled; //blocking;
     floatTransfer   0;

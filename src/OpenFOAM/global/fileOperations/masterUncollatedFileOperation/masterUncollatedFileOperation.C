@@ -49,15 +49,15 @@ namespace fileOperations
         word
     );
 
-    float masterUncollatedFileOperation::maxBufferSize
+    float masterUncollatedFileOperation::maxMasterFileBufferSize
     (
-        Foam::debug::floatOptimisationSwitch("maxBufferSize", 1e9)
+        Foam::debug::floatOptimisationSwitch("maxMasterFileBufferSize", 1e9)
     );
     registerOptSwitch
     (
-        "maxBufferSize",
+        "maxMasterFileBufferSize",
         float,
-        masterUncollatedFileOperation::maxBufferSize
+        masterUncollatedFileOperation::maxMasterFileBufferSize
     );
 }
 }
@@ -90,7 +90,7 @@ Foam::fileOperations::masterUncollatedFileOperation::findInstancePath
 }
 
 
-Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePath
+Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePathInfo
 (
     const bool checkGlobal,
     const bool isFile,
@@ -459,7 +459,8 @@ masterUncollatedFileOperation
     if (verbose)
     {
         Info<< "I/O    : " << typeName
-            << " (maxBufferSize " << maxBufferSize << ')' << endl;
+            << " (maxMasterFileBufferSize " << maxMasterFileBufferSize << ')'
+            << endl;
     }
 
     if (regIOobject::fileModificationChecking == regIOobject::timeStampMaster)
@@ -707,7 +708,14 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePath
     word newInstancePath;
     if (Pstream::master())
     {
-        objPath = filePath(checkGlobal, true, io, searchType, newInstancePath);
+        objPath = filePathInfo
+        (
+            checkGlobal,
+            true,
+            io,
+            searchType,
+            newInstancePath
+        );
     }
     {
         label masterType(searchType);
@@ -777,7 +785,14 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::dirPath
     word newInstancePath;
     if (Pstream::master())
     {
-        objPath = filePath(checkGlobal, false, io, searchType, newInstancePath);
+        objPath = filePathInfo
+        (
+            checkGlobal,
+            false,
+            io,
+            searchType,
+            newInstancePath
+        );
     }
     {
         label masterType(searchType);
@@ -1103,7 +1118,7 @@ Foam::fileOperations::masterUncollatedFileOperation::readStream
                 isPtr,
                 io,
                 (
-                    sz > off_t(maxBufferSize)
+                    sz > off_t(maxMasterFileBufferSize)
                   ? UPstream::commsTypes::scheduled
                   : UPstream::commsTypes::nonBlocking
                 )

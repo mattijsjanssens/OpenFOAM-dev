@@ -366,10 +366,10 @@ protected:
             const instant& t
         );
 
-        //- Search for object; return info on how was found
+        //- Search for object; return info on how it was found
         //    checkGlobal : also check undecomposed case
         //    isFile      : true:check for file  false:check for directory
-        fileName filePath
+        fileName filePathInfo
         (
             const bool checkGlobal,
             const bool isFile,
@@ -407,7 +407,7 @@ public:
         //- Max size of parallel communications. Switches from non-blocking
         //  to scheduled when reading/writing files. Read as float to enable
         //  easy specificiation of large sizes.
-        static float maxBufferSize;
+        static float maxMasterFileBufferSize;
 
 
     // Constructors

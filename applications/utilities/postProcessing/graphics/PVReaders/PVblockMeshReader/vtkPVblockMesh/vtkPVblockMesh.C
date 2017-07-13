@@ -174,7 +174,7 @@ Foam::vtkPVblockMesh::vtkPVblockMesh
     // Make sure not to use the threaded version - it does not like
     // being loaded as a shared library - static cleanup order is problematic.
     // For now just disable the threaded writer.
-    fileOperations::collatedFileOperation::maxThreadBufferSize = 0;
+    fileOperations::collatedFileOperation::maxThreadFileBufferSize = 0;
 
 
     // avoid argList and get rootPath/caseName directly from the file
