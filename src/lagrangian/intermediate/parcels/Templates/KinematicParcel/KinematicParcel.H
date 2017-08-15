@@ -352,7 +352,7 @@ public:
             const scalar nParticle0,
             const scalar d0,
             const scalar dTarget0,
-            const vector& torque0,
+            const vector& U0,
             const constantProperties& constProps
         );
 
@@ -576,14 +576,6 @@ public:
 
 
         // Patch interactions
-
-            //- Overridable function to handle the particle hitting a face
-            //  without trackData
-            void hitFace(int& td);
-
-            //- Overridable function to handle the particle hitting a face
-            template<class TrackData>
-            void hitFace(TrackData& td);
 
             //- Overridable function to handle the particle hitting a patch
             //  Executed before other patch-hitting functions

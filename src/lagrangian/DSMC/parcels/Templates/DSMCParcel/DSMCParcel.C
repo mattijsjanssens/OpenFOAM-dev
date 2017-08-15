@@ -59,11 +59,11 @@ bool Foam::DSMCParcel<ParcelType>::move(TrackData& td, const scalar trackTime)
         meshTools::constrainDirection(mesh, mesh.solutionD(), Utracking);
 
         const scalar f = 1 - p.stepFraction();
-        p.trackToFace(f*trackTime*Utracking, f, td);
+        p.trackToAndHitFace(f*trackTime*Utracking, f, td);
 
         if (p.onBoundaryFace() && td.keepParticle)
         {
-            if (isA<processorPolyPatch>(pbMesh[p.patch(p.face())]))
+            if (isA<processorPolyPatch>(pbMesh[p.patch()]))
             {
                 td.switchProcessor = true;
             }

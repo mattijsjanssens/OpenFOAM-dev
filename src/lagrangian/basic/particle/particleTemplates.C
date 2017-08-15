@@ -27,6 +27,7 @@ License
 
 #include "cyclicPolyPatch.H"
 #include "cyclicAMIPolyPatch.H"
+#include "cyclicACMIPolyPatch.H"
 #include "processorPolyPatch.H"
 #include "symmetryPlanePolyPatch.H"
 #include "symmetryPolyPatch.H"
@@ -163,37 +164,24 @@ void Foam::particle::writeFields(const CloudType& c)
 
 
 template<class TrackData>
-void Foam::particle::trackToFace
+void Foam::particle::hitFace
 (
-    const vector& displacement,
-    const scalar fraction,
+    const vector& direction,
     TrackData& td
 )
 {
-    // Track
-    trackToFace(displacement, fraction);
-
-    // If the track is complete, return
     if (!onFace())
     {
         return;
     }
-
-    // Hit face/patch processing
-    typedef typename TrackData::cloudType::particleType particleType;
-    particleType& p = static_cast<particleType&>(*this);
-    p.hitFace(td);
-    if (onInternalFace())
+    else if (onInternalFace())
     {
         changeCell();
     }
-    else
+    else if (onBoundaryFace())
     {
-        label origFacei = facei_;
-        label patchi = mesh_.boundaryMesh().whichPatch(facei_);
-
-        // No action is taken for tetPti_ for tetFacei_ here. These are handled
-        // by the patch interaction call or later during processor transfer.
+        typename TrackData::cloudType::particleType& p =
+            static_cast<typename TrackData::cloudType::particleType&>(*this);
 
         const tetIndices faceHitTetIs(celli_, tetFacei_, tetPti_);
 
@@ -201,21 +189,15 @@ void Foam::particle::trackToFace
         (
            !p.hitPatch
             (
-                mesh_.boundaryMesh()[patchi],
+                mesh_.boundaryMesh()[patch()],
                 td,
-                patchi,
+                patch(),
                 stepFraction(),
                 faceHitTetIs
             )
         )
         {
-            // Did patch interaction model switch patches?
-            if (facei_ != origFacei)
-            {
-                patchi = mesh_.boundaryMesh().whichPatch(facei_);
-            }
-
-            const polyPatch& patch = mesh_.boundaryMesh()[patchi];
+            const polyPatch& patch = mesh_.boundaryMesh()[this->patch()];
 
             if (isA<wedgePolyPatch>(patch))
             {
@@ -245,13 +227,22 @@ void Foam::particle::trackToFace
                     static_cast<const cyclicPolyPatch&>(patch), td
                 );
             }
+            else if (isA<cyclicACMIPolyPatch>(patch))
+            {
+                p.hitCyclicACMIPatch
+                (
+                    static_cast<const cyclicACMIPolyPatch&>(patch),
+                    td,
+                    direction
+                );
+            }
             else if (isA<cyclicAMIPolyPatch>(patch))
             {
                 p.hitCyclicAMIPatch
                 (
                     static_cast<const cyclicAMIPolyPatch&>(patch),
                     td,
-                    displacement
+                    direction
                 );
             }
             else if (isA<processorPolyPatch>(patch))
@@ -278,8 +269,22 @@ void Foam::particle::trackToFace
 
 
 template<class TrackData>
-void Foam::particle::hitFace(TrackData&)
-{}
+void Foam::particle::trackToAndHitFace
+(
+    const vector& direction,
+    const scalar fraction,
+    TrackData& td
+)
+{
+    trackToFace(direction, fraction);
+
+    if (onBoundaryFace())
+    {
+        changeToMasterPatch();
+    }
+
+    hitFace(direction, td);
+}
 
 
 template<class TrackData>
@@ -451,6 +456,46 @@ void Foam::particle::hitCyclicAMIPatch
           : receiveCpp.separation()[receiveFacei]
         );
         transformProperties(-s);
+    }
+}
+
+
+template<class TrackData>
+void Foam::particle::hitCyclicACMIPatch
+(
+    const cyclicACMIPolyPatch& cpp,
+    TrackData& td,
+    const vector& direction
+)
+{
+    const label localFacei = cpp.whichFace(facei_);
+
+    // If the mask is within the patch tolerance at either end, then we can
+    // assume an interaction with the appropriate part of the ACMI pair.
+    const scalar mask = cpp.mask()[localFacei];
+    bool couple = mask >= 1 - cpp.tolerance();
+    bool nonOverlap = mask <= cpp.tolerance();
+
+    // If the mask is an intermediate value, then we search for a location on
+    // the other side of the AMI. If we can't find a location, then we assume
+    // that we have hit the non-overlap patch.
+    if (!couple && !nonOverlap)
+    {
+        vector pos = position();
+        couple = cpp.pointFace(localFacei, direction, pos) >= 0;
+        nonOverlap = !couple;
+    }
+
+    if (couple)
+    {
+        hitCyclicAMIPatch(cpp, td, direction);
+    }
+    else
+    {
+        // Move to the face associated with the non-overlap patch and redo the
+        // face interaction.
+        tetFacei_ = facei_ = cpp.nonOverlapPatch().start() + localFacei;
+        hitFace(direction, td);
     }
 }
 

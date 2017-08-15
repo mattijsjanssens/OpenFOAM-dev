@@ -108,7 +108,7 @@ void reactingOneDim::updateqr()
 
         // qr is positive going in the solid
         // If the surface is emitting the radiative flux is set to zero
-        qrBf[patchi] = max(qrBf[patchi], scalar(0.0));
+        qrBf[patchi] = max(qrBf[patchi], scalar(0));
     }
 
     const vectorField& cellC = regionMesh().cellCentres();
@@ -714,9 +714,9 @@ void reactingOneDim::evolveRegion()
     solidThermo_.correct();
 
     Info<< "pyrolysis min/max(T) = "
-        << min(solidThermo_.T().primitiveField())
+        << gMin(solidThermo_.T().primitiveField())
         << ", "
-        << max(solidThermo_.T().primitiveField())
+        << gMax(solidThermo_.T().primitiveField())
         << endl;
 }
 
