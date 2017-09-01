@@ -277,20 +277,15 @@ bool Foam::fileOperation::writeObject
 
 Foam::fileName Foam::fileOperation::filePath(const fileName& fName) const
 {
-    fileName path;
-    fileName local;
-    label proci = fileOperations::masterUncollatedFileOperation::
-    splitProcessorPath
+    fileName procsName
     (
-        fName,
-        path,
-        local
+        fileOperations::masterUncollatedFileOperation::processorsFilePath
+        (
+            true,   //    const bool isFile,
+            fName
+        )
     );
-
-    fileName procsName(path/processorsDir/local);
-
-    // Give preference to processors variant
-    if (proci != -1 && exists(procsName))
+    if (!procsName.empty())
     {
         return procsName;
     }
@@ -430,8 +425,9 @@ Foam::instantList Foam::fileOperation::findTimes
     // Check if directory is processorXXX
     fileName procsDir
     (
-        fileOperations::masterUncollatedFileOperation::processorsPath
+        fileOperations::masterUncollatedFileOperation::processorsFilePath
         (
+            false,                  // isFile
             directory
         )
     );
@@ -551,20 +547,16 @@ Foam::fileNameList Foam::fileOperation::readObjects
     }
     else
     {
-        // Get processors equivalent of path
-
-        fileName prefix;
-        fileName postfix;
-        label proci = fileOperations::masterUncollatedFileOperation::
-        splitProcessorPath
+        // Try processors equivalent of path
+        fileName procsPath
         (
-            path,
-            prefix,
-            postfix
+            fileOperations::masterUncollatedFileOperation::processorsFilePath
+            (
+                false,          //isFile
+                path
+            )
         );
-        fileName procsPath(prefix/processorsDir/postfix);
-
-        if (proci != -1 && Foam::isDir(procsPath))
+        if (!procsPath.empty())
         {
             newInstance = instance;
             objectNames = Foam::readDir(procsPath, fileName::FILE);
@@ -601,6 +593,19 @@ Foam::label Foam::fileOperation::nProcs
             WarningInFunction << "Cannot read file " << pointsFile
                 << " to determine the number of decompositions."
                 << " Falling back to looking for processor.*" << endl;
+        }
+    }
+
+    {
+        fileNameList dirs(Foam::readDir(dir, fileName::DIRECTORY));
+        forAll(dirs, i)
+        {
+            std::string::size_type pos = dirs[i].find(processorsDir);
+            if (pos == 0 && dirs[i] != processorsDir)
+            {
+                string num(dirs[i].substr(pos, pos+sizeof(processorsDir)));
+                return readLabel(IStringStream(num)());
+            }
         }
     }
 
