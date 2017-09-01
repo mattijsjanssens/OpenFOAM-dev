@@ -119,6 +119,10 @@ class OFstreamCollator
             const bool append
         );
 
+        //- Write all files in stack. Return true (normal exit, all stack
+        //  written) or false (signal to stop)
+        static bool writeAll(OFstreamCollator&);
+
         //- Write all files in stack
         static void* writeAll(void *threadarg);
 

@@ -60,6 +60,9 @@ bool Foam::OFstreamCollator::writeFile
             << " using comm " << comm << endl;
     }
 
+    //label oldWarn = UPstream::warnComm;
+    //UPstream::warnComm = comm;
+
     autoPtr<OSstream> osPtr;
     if (UPstream::master(comm))
     {
@@ -120,31 +123,43 @@ bool Foam::OFstreamCollator::writeFile
             << " using comm " << comm << endl;
     }
 
+    //UPstream::warnComm = oldWarn;
+
     return true;
 }
 
 
-void* Foam::OFstreamCollator::writeAll(void *threadarg)
+bool Foam::OFstreamCollator::writeAll(OFstreamCollator& handler)
 {
-    OFstreamCollator& handler = *static_cast<OFstreamCollator*>(threadarg);
+    // Consume stack. Return true if normal exit (stack empty), false
+    // if forcing exit.
 
-    // Consume stack
+    bool ok = true;
+
     while (true)
     {
         writeData* ptr = nullptr;
 
-        //pthread_mutex_lock(&handler.mutex_);
         lockMutex(handler.mutex_);
-
         if (handler.objects_.size())
         {
             ptr = handler.objects_.pop();
         }
-        //pthread_mutex_unlock(&handler.mutex_);
         unlockMutex(handler.mutex_);
 
         if (!ptr)
         {
+            break;
+        }
+        else if (ptr->pathName_.empty())
+        {
+            // An empty fileName is the signal to exit the thread
+            if (debug)
+            {
+                Pout<< "OFstreamCollator : Detected signalling data" << endl;
+            }
+
+            ok = false;
             break;
         }
         else
@@ -169,18 +184,45 @@ void* Foam::OFstreamCollator::writeAll(void *threadarg)
 
             delete ptr;
         }
-        //sleep(1);
     }
+
+    return ok;
+}
+
+
+void* Foam::OFstreamCollator::writeAll(void *threadarg)
+{
+    OFstreamCollator& handler = *static_cast<OFstreamCollator*>(threadarg);
+
+    bool keepAlive = false;
+    if (keepAlive)
+    {
+        while (true)
+        {
+            bool ok = writeAll(handler);
+
+            if (!ok)
+            {
+                break;
+            }
+
+            sleep(1);
+        }
+
+    }
+    else
+    {
+        writeAll(handler);
+    }
+
 
     if (debug)
     {
         Pout<< "OFstreamCollator : Exiting write thread " << endl;
     }
 
-    //pthread_mutex_lock(&handler.mutex_);
     lockMutex(handler.mutex_);
     handler.threadRunning_ = false;
-    //pthread_mutex_unlock(&handler.mutex_);
     unlockMutex(handler.mutex_);
 
     return nullptr;
@@ -192,7 +234,6 @@ void* Foam::OFstreamCollator::writeAll(void *threadarg)
 Foam::OFstreamCollator::OFstreamCollator(const off_t maxBufferSize)
 :
     maxBufferSize_(maxBufferSize),
-    //mutex_(PTHREAD_MUTEX_INITIALIZER),
     mutex_
     (
         maxBufferSize_ > 0
@@ -223,12 +264,40 @@ Foam::OFstreamCollator::~OFstreamCollator()
 {
     if (threadRunning_)
     {
-        if (debug)
+        bool keepAlive = false;
+        if (keepAlive)
         {
-            Pout<< "~OFstreamCollator : Waiting for write thread" << endl;
+            if (debug)
+            {
+                Pout<< "~OFstreamCollator : Push signalling data" << endl;
+            }
+
+            // Push special data onto write stack that signals the thread
+            // to stop
+
+            lockMutex(mutex_);
+            objects_.push
+            (
+                new writeData
+                (
+                    typeName,
+                    fileName::null,
+                    string::null,
+                    IOstream::BINARY,
+                    IOstream::currentVersion,
+                    IOstream::UNCOMPRESSED,
+                    false
+                )
+            );
+            unlockMutex(mutex_);
         }
 
-        //pthread_join(thread_, nullptr);
+        if (debug)
+        {
+            Pout<< "~OFstreamCollator : Waiting for write thread "
+                << thread_ << endl;
+        }
+
         joinThread(thread_);
     }
     if (thread_ != -1)
@@ -265,13 +334,11 @@ bool Foam::OFstreamCollator::write
         {
             // Count files to be written
             off_t totalSize = 0;
-            //pthread_mutex_lock(&mutex_);
             lockMutex(mutex_);
             forAllConstIter(FIFOStack<writeData*>, objects_, iter)
             {
                 totalSize += iter()->data_.size();
             }
-            //pthread_mutex_unlock(&mutex_);
             unlockMutex(mutex_);
 
             if
@@ -297,29 +364,29 @@ bool Foam::OFstreamCollator::write
         if (debug)
         {
             Pout<< "OFstreamCollator : relaying write of " << fName
-                << " to thread " << endl;
+                << " to thread " << thread_ << endl;
         }
-        //pthread_mutex_lock(&mutex_);
+
+        // Push the data onto the buffer
         lockMutex(mutex_);
         objects_.push
         (
             new writeData(typeName, fName, data, fmt, ver, cmp, append)
         );
-        //pthread_mutex_unlock(&mutex_);
         unlockMutex(mutex_);
 
-        //pthread_mutex_lock(&mutex_);
+        // Start the thread if necessary
         lockMutex(mutex_);
         if (!threadRunning_)
         {
             createThread(thread_, writeAll, this);
             if (debug)
             {
-                Pout<< "OFstreamCollator : Started write thread " << endl;
+                Pout<< "OFstreamCollator : Started write thread " << thread_
+                    << endl;
             }
             threadRunning_ = true;
         }
-        //pthread_mutex_unlock(&mutex_);
         unlockMutex(mutex_);
 
         return true;

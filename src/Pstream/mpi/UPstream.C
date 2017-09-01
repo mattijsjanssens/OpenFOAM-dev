@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -278,6 +278,13 @@ void Foam::reduce
     label& requestID
 )
 {
+    if (UPstream::warnComm != -1 && communicator != UPstream::warnComm)
+    {
+        Pout<< "** reducing:" << Value << " with comm:" << communicator
+            << " warnComm:" << UPstream::warnComm
+            << endl;
+        error::printStack(Pout);
+    }
 #ifdef MPIX_COMM_TYPE_SHARED
     // Assume mpich2 with non-blocking collectives extensions. Once mpi3
     // is available this will change.
@@ -319,6 +326,14 @@ void Foam::UPstream::allToAll
     const label communicator
 )
 {
+    if (UPstream::warnComm != -1 && communicator != UPstream::warnComm)
+    {
+        Pout<< "** allToAll:" << sendData << " with comm:" << communicator
+            << " warnComm:" << UPstream::warnComm
+            << endl;
+        error::printStack(Pout);
+    }
+
     label np = nProcs(communicator);
 
     if (sendData.size() != np || recvData.size() != np)
