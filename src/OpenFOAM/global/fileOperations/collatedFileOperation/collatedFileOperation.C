@@ -319,7 +319,7 @@ bool Foam::fileOperations::collatedFileOperation::writeObject
     else
     {
         // Construct the equivalent processors/ directory
-        fileName path(processorsPath(io, inst));
+        fileName path(processorsPath(io, inst, processorsDir));
 
         mkDir(path);
         fileName pathName(path/io.name());

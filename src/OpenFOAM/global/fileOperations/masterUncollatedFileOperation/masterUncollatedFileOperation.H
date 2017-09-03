@@ -668,15 +668,38 @@ public:
             //- Callback for time change
             virtual void setTime(const Time&) const;
 
-            //- root+casename with any 'processorXXX' replaced by 'processsors'
-            static fileName processorsCasePath(const IOobject&);
-
             //- Like io.path with provided instance and any 'processorXXX'
-            //  replaced by 'processsors'
-            static fileName processorsPath(const IOobject&, const word&);
+            //  replaced by 3rd argument (usually 'processsors')
+            static fileName processorsPath
+            (
+                const IOobject&,
+                const word&,
+                const word& processorsDir
+            );
 
-            //- Operating on fileName: replace processorXXX with processors
-            static fileName processorsPath(const fileName&);
+            //- Operating on fileName: replace processorXXX with processorsDir
+            static fileName processorsPath
+            (
+                const fileName&,
+                const word& processorsDir
+            );
+
+            //- Generate equivalent file under processors/ and check for
+            //  existence
+            static fileName processorsFilePath
+            (
+                const bool isFile,
+                const fileName& fName
+            );
+
+            //- Generate equivalent file under processors/ and check for
+            //  existence
+            static fileName processorsFilePath
+            (
+                const bool isFile,
+                const IOobject& io,
+                const word& instance
+            );
 
             //- Split fileName into part before processor and part after.
             //  Returns -1 or processor number. Use with care.
