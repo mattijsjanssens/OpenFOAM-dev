@@ -75,9 +75,6 @@ public:
 
     // Static data
 
-        //- Return the processors directory name (usually "processors")
-        static word processorsDir;
-
         //- Default fileHandler
         static word defaultFileHandler;
 

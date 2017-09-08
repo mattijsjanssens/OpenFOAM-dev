@@ -28,7 +28,7 @@ License
 #include "IFstream.H"
 #include "OFstream.H"
 #include "addToRunTimeSelectionTable.H"
-#include "masterUncollatedFileOperation.H"
+#include "collatedFileOperation.H"
 #include "decomposedBlockData.H"
 #include "dummyISstream.H"
 
@@ -104,7 +104,7 @@ Foam::fileName Foam::fileOperations::uncollatedFileOperation::filePathInfo
             {
                 fileName objectPath
                 (
-                    masterUncollatedFileOperation::processorsFilePath
+                    collatedFileOperation::processorsFilePath
                     (
                         isFile,
                         io,
@@ -529,34 +529,19 @@ Foam::fileOperations::uncollatedFileOperation::readStream
             << exit(FatalIOError);
     }
 
-    if (io.headerClassName() != decomposedBlockData::typeName)
-    {
-        return isPtr;
-    }
-    else
+    if (io.headerClassName() == decomposedBlockData::typeName)
     {
         // Analyse the objectpath to find out the processor we're trying
         // to access
-        fileName path;
-        fileName local;
-        label proci = fileOperations::masterUncollatedFileOperation::
-        splitProcessorPath
+        return fileOperations::collatedFileOperation::readProcStream
         (
-            io.objectPath(),
-            path,
-            local
+            io,
+            isPtr()
         );
-
-        if (proci == -1)
-        {
-            FatalIOErrorInFunction(isPtr())
-                << "could not detect processor number"
-                << " from objectPath:" << io.objectPath()
-                << exit(FatalIOError);
-        }
-
-        // Read data and return as stream
-        return decomposedBlockData::readBlock(proci, isPtr(), io);
+    }
+    else
+    {
+        return isPtr;
     }
 }
 

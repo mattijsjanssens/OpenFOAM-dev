@@ -28,7 +28,7 @@ License
 #include "regIOobject.H"
 #include "argList.H"
 #include "HashSet.H"
-#include "masterUncollatedFileOperation.H"
+#include "collatedFileOperation.H"
 #include "objectRegistry.H"
 #include "decomposedBlockData.H"
 #include "polyMesh.H"
@@ -54,8 +54,6 @@ namespace Foam
             false
         )
     );
-
-    word fileOperation::processorsDir = "processors";
 }
 
 
@@ -263,7 +261,7 @@ Foam::fileName Foam::fileOperation::filePath(const fileName& fName) const
 {
     fileName procsName
     (
-        fileOperations::masterUncollatedFileOperation::processorsFilePath
+        fileOperations::collatedFileOperation::processorsFilePath
         (
             true,   //    const bool isFile,
             fName
@@ -409,7 +407,7 @@ Foam::instantList Foam::fileOperation::findTimes
     // Check if directory is processorXXX
     fileName procsDir
     (
-        fileOperations::masterUncollatedFileOperation::processorsFilePath
+        fileOperations::collatedFileOperation::processorsFilePath
         (
             false,                  // isFile
             directory
@@ -534,7 +532,7 @@ Foam::fileNameList Foam::fileOperation::readObjects
         // Try processors equivalent of path
         fileName procsPath
         (
-            fileOperations::masterUncollatedFileOperation::processorsFilePath
+            fileOperations::collatedFileOperation::processorsFilePath
             (
                 false,          //isFile
                 path
@@ -556,53 +554,8 @@ Foam::label Foam::fileOperation::nProcs
     const fileName& local
 ) const
 {
-    if (Foam::isDir(dir/processorsDir))
-    {
-        fileName pointsFile
-        (
-            dir
-           /processorsDir
-           /"constant"
-           /local
-           /polyMesh::meshSubDir
-           /"points"
-        );
-
-        if (Foam::isFile(pointsFile))
-        {
-            return decomposedBlockData::numBlocks(pointsFile);
-        }
-        else
-        {
-            WarningInFunction << "Cannot read file " << pointsFile
-                << " to determine the number of decompositions."
-                << " Falling back to looking for processor.*" << endl;
-        }
-    }
-
-    {
-        fileNameList dirs(Foam::readDir(dir, fileName::DIRECTORY));
-        forAll(dirs, i)
-        {
-            std::string::size_type pos = dirs[i].find(processorsDir);
-            if (pos == 0 && dirs[i] != processorsDir)
-            {
-                string num(dirs[i].substr(pos, pos+sizeof(processorsDir)));
-                return readLabel(IStringStream(num)());
-            }
-        }
-    }
-
-    label nProcs = 0;
-    while
-    (
-        isDir(dir/(word("processor") + name(nProcs)))
-    )
-    {
-        ++nProcs;
-    }
-
-    return nProcs;
+    // Redirect to collated version
+    return fileOperations::collatedFileOperation::numProcs(dir, local);
 }
 
 

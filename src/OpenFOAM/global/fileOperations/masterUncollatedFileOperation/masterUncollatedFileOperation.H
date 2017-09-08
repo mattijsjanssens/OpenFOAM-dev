@@ -366,25 +366,13 @@ protected:
             const instant& t
         );
 
-        //- Search for object; return info on how it was found
-        //    checkGlobal : also check undecomposed case
-        //    isFile      : true:check for file  false:check for directory
-        fileName filePathInfo
-        (
-            const bool checkGlobal,
-            const bool isFile,
-            const IOobject&,
-            pathType&,
-            word&
-        ) const;
-
         //- Construct filePath
-        static fileName objectPath
-        (
-            const IOobject&,
-            const pathType&,
-            const word&
-        );
+        //static fileName objectPath
+        //(
+        //    const IOobject&,
+        //    const pathType&,
+        //    const word&
+        //);
 
         //- Read file contents and send to processors
         static void readAndSend
@@ -668,43 +656,9 @@ public:
             //- Callback for time change
             virtual void setTime(const Time&) const;
 
-            //- Like io.path with provided instance and any 'processorXXX'
-            //  replaced by 3rd argument (usually 'processsors')
-            static fileName processorsPath
-            (
-                const IOobject&,
-                const word&,
-                const word& processorsDir
-            );
-
-            //- Operating on fileName: replace processorXXX with processorsDir
-            static fileName processorsPath
-            (
-                const fileName&,
-                const word& processorsDir
-            );
-
-            //- Generate equivalent file under processors/ and check for
-            //  existence
-            static fileName processorsFilePath
-            (
-                const bool isFile,
-                const fileName& fName
-            );
-
-            //- Generate equivalent file under processors/ and check for
-            //  existence
-            static fileName processorsFilePath
-            (
-                const bool isFile,
-                const IOobject& io,
-                const word& instance
-            );
-
             //- Split fileName into part before processor and part after.
             //  Returns -1 or processor number. Use with care.
             //  - path/"processor" + Foam::name(proci)/local reconstructs input
-            //  - path/"processors"/local reconstructs processors equivalence
             static label splitProcessorPath
             (
                 const fileName&,

@@ -34,6 +34,7 @@ License
 #include "registerSwitch.H"
 #include "dummyISstream.H"
 #include "SubList.H"
+#include "collatedFileOperation.H"
 
 /* * * * * * * * * * * * * * * Static Member Data  * * * * * * * * * * * * * */
 
@@ -65,283 +66,283 @@ namespace fileOperations
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-Foam::word
-Foam::fileOperations::masterUncollatedFileOperation::findInstancePath
-(
-    const instantList& timeDirs,
-    const instant& t
-)
-{
-    // Note:
-    // - times will include constant (with value 0) as first element.
-    //   For backwards compatibility make sure to find 0 in preference
-    //   to constant.
-    // - list is sorted so could use binary search
-
-    forAllReverse(timeDirs, i)
-    {
-        if (t.equal(timeDirs[i].value()))
-        {
-            return timeDirs[i].name();
-        }
-    }
-
-    return word::null;
-}
-
-
-Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePathInfo
-(
-    const bool checkGlobal,
-    const bool isFile,
-    const IOobject& io,
-    pathType& searchType,
-    word& newInstancePath
-) const
-{
-    newInstancePath = word::null;
-
-    if (io.instance().isAbsolute())
-    {
-        fileName objectPath = io.instance()/io.name();
-
-        if (isFileOrDir(isFile, objectPath))
-        {
-            searchType = fileOperation::ABSOLUTE;
-            return objectPath;
-        }
-        else
-        {
-            searchType = fileOperation::NOTFOUND;
-            return fileName::null;
-        }
-    }
-    else
-    {
-        // 1. Check processors/
-        if (io.time().processorCase())
-        {
-            fileName objectPath = processorsFilePath(isFile, io, io.instance());
-            if (!objectPath.empty())
-            {
-                searchType = fileOperation::PROCESSORSOBJECT;
-                return objectPath;
-            }
-        }
-        {
-            // 2. Check local
-            fileName localObjectPath = io.objectPath();
-
-            if (isFileOrDir(isFile, localObjectPath))
-            {
-                searchType = fileOperation::OBJECT;
-                return localObjectPath;
-            }
-        }
-
-
-
-        // Any global checks
-        if
-        (
-            checkGlobal
-         && io.time().processorCase()
-         && (
-                io.instance() == io.time().system()
-             || io.instance() == io.time().constant()
-            )
-        )
-        {
-            fileName parentObjectPath =
-                io.rootPath()/io.time().globalCaseName()
-               /io.instance()/io.db().dbDir()/io.local()/io.name();
-
-            if (isFileOrDir(isFile, parentObjectPath))
-            {
-                searchType = fileOperation::PARENTOBJECT;
-                return parentObjectPath;
-            }
-        }
-
-        // Check for approximately same time. E.g. if time = 1e-2 and
-        // directory is 0.01 (due to different time formats)
-        HashPtrTable<instantList>::const_iterator pathFnd
-        (
-            times_.find
-            (
-                io.time().path()
-            )
-        );
-        if (pathFnd != times_.end())
-        {
-            newInstancePath = findInstancePath
-            (
-                *pathFnd(),
-                instant(io.instance())
-            );
-
-            if (newInstancePath.size())
-            {
-                // 1. Try processors equivalent
-
-                fileName fName
-                (
-                    processorsFilePath
-                    (
-                        isFile,
-                        io,
-                        newInstancePath
-                    )
-                );
-                if (!fName.empty())
-                {
-                    searchType = fileOperation::PROCESSORSFINDINSTANCE;
-                    return fName;
-                }
-
-                fName =
-                    io.rootPath()/io.caseName()
-                   /newInstancePath/io.db().dbDir()/io.local()/io.name();
-
-                if (isFileOrDir(isFile, fName))
-                {
-                    searchType = fileOperation::FINDINSTANCE;
-                    return fName;
-                }
-            }
-        }
-
-        searchType = fileOperation::NOTFOUND;
-        return fileName::null;
-    }
-}
-
-
-Foam::fileName
-Foam::fileOperations::masterUncollatedFileOperation::processorsPath
-(
-    const IOobject& io,
-    const word& instance,
-    const word& processorsDir
-)
-{
-    return
-        io.rootPath()
-       /io.time().globalCaseName()
-       /processorsDir
-       /instance
-       /io.db().dbDir()
-       /io.local();
-}
-
-
-Foam::fileName
-Foam::fileOperations::masterUncollatedFileOperation::processorsPath
-(
-    const fileName& dir,
-    const word& processorsDir
-)
-{
-    // Check if directory is processorXXX
-    word caseName(dir.name());
-
-    std::string::size_type pos = caseName.find("processor");
-    if (pos == 0)
-    {
-        return dir.path()/processorsDir;
-    }
-    else
-    {
-        return fileName::null;
-    }
-}
-
-
-//XXXXXX
-// Check if processorsXXX/fName exists. Rewrites 'processorDDD/' to
-// - processors/
-// - processorsNNN/
-// and checks for it
-Foam::fileName
-Foam::fileOperations::masterUncollatedFileOperation::processorsFilePath
-(
-    const bool isFile,
-    const fileName& fName
-)
-{
-    fileName path;
-    fileName local;
-    label proci = fileOperations::masterUncollatedFileOperation::
-    splitProcessorPath
-    (
-        fName,
-        path,
-        local
-    );
-
-    // Give preference to processors variant
-    if (proci != -1)
-    {
-        // Check processors/
-        fileName procsName(path/processorsDir/local);
-        if (isFileOrDir(isFile, procsName))
-        {
-            return procsName;
-        }
-
-        // Check for directory starting with processors/
-        fileNameList dirs(Foam::readDir(path, fileName::DIRECTORY));
-        forAll(dirs, i)
-        {
-            std::string::size_type pos = dirs[i].find(processorsDir);
-            if (pos == 0)
-            {
-                procsName = path/dirs[i]/local;
-                if (isFileOrDir(isFile, procsName))
-                {
-                    return procsName;
-                }
-            }
-        }
-    }
-
-    return fileName::null;
-}
-Foam::fileName
-Foam::fileOperations::masterUncollatedFileOperation::processorsFilePath
-(
-    const bool isFile,
-    const IOobject& io,
-    const word& instance
-)
-{
-    // Check processors/ directory
-    fileName objectPath =
-        processorsPath(io, instance, processorsDir)/io.name();
-    if (isFileOrDir(isFile, objectPath))
-    {
-        return objectPath;
-    }
-
-
-    // Check processorsDDD/ directory
-    const fileName path(io.rootPath()/io.time().globalCaseName());
-    fileNameList dirs(Foam::readDir(path, fileName::DIRECTORY));
-    forAll(dirs, i)
-    {
-        std::string::size_type pos = dirs[i].find(processorsDir);
-        if (pos == 0)
-        {
-            fileName objectPath =
-                processorsPath(io, instance, dirs[i])/io.name();
-            if (isFileOrDir(isFile, objectPath))
-            {
-                return objectPath;
-            }
-        }
-    }
-    return fileName::null;
-}
+// Foam::word
+// Foam::fileOperations::masterUncollatedFileOperation::findInstancePath
+// (
+//     const instantList& timeDirs,
+//     const instant& t
+// )
+// {
+//     // Note:
+//     // - times will include constant (with value 0) as first element.
+//     //   For backwards compatibility make sure to find 0 in preference
+//     //   to constant.
+//     // - list is sorted so could use binary search
+//
+//     forAllReverse(timeDirs, i)
+//     {
+//         if (t.equal(timeDirs[i].value()))
+//         {
+//             return timeDirs[i].name();
+//         }
+//     }
+//
+//     return word::null;
+// }
+//
+//
+// Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePathInfo
+// (
+//     const bool checkGlobal,
+//     const bool isFile,
+//     const IOobject& io,
+//     pathType& searchType,
+//     word& newInstancePath
+// ) const
+// {
+//     newInstancePath = word::null;
+//
+//     if (io.instance().isAbsolute())
+//     {
+//         fileName objectPath = io.instance()/io.name();
+//
+//         if (isFileOrDir(isFile, objectPath))
+//         {
+//             searchType = fileOperation::ABSOLUTE;
+//             return objectPath;
+//         }
+//         else
+//         {
+//             searchType = fileOperation::NOTFOUND;
+//             return fileName::null;
+//         }
+//     }
+//     else
+//     {
+//         // 1. Check processors/
+//         if (io.time().processorCase())
+//         {
+//             fileName objectPath = processorsFilePath(isFile, io, io.instance());
+//             if (!objectPath.empty())
+//             {
+//                 searchType = fileOperation::PROCESSORSOBJECT;
+//                 return objectPath;
+//             }
+//         }
+//         {
+//             // 2. Check local
+//             fileName localObjectPath = io.objectPath();
+//
+//             if (isFileOrDir(isFile, localObjectPath))
+//             {
+//                 searchType = fileOperation::OBJECT;
+//                 return localObjectPath;
+//             }
+//         }
+//
+//
+//
+//         // Any global checks
+//         if
+//         (
+//             checkGlobal
+//          && io.time().processorCase()
+//          && (
+//                 io.instance() == io.time().system()
+//              || io.instance() == io.time().constant()
+//             )
+//         )
+//         {
+//             fileName parentObjectPath =
+//                 io.rootPath()/io.time().globalCaseName()
+//                /io.instance()/io.db().dbDir()/io.local()/io.name();
+//
+//             if (isFileOrDir(isFile, parentObjectPath))
+//             {
+//                 searchType = fileOperation::PARENTOBJECT;
+//                 return parentObjectPath;
+//             }
+//         }
+//
+//         // Check for approximately same time. E.g. if time = 1e-2 and
+//         // directory is 0.01 (due to different time formats)
+//         HashPtrTable<instantList>::const_iterator pathFnd
+//         (
+//             times_.find
+//             (
+//                 io.time().path()
+//             )
+//         );
+//         if (pathFnd != times_.end())
+//         {
+//             newInstancePath = findInstancePath
+//             (
+//                 *pathFnd(),
+//                 instant(io.instance())
+//             );
+//
+//             if (newInstancePath.size())
+//             {
+//                 // 1. Try processors equivalent
+//
+//                 fileName fName
+//                 (
+//                     processorsFilePath
+//                     (
+//                         isFile,
+//                         io,
+//                         newInstancePath
+//                     )
+//                 );
+//                 if (!fName.empty())
+//                 {
+//                     searchType = fileOperation::PROCESSORSFINDINSTANCE;
+//                     return fName;
+//                 }
+//
+//                 fName =
+//                     io.rootPath()/io.caseName()
+//                    /newInstancePath/io.db().dbDir()/io.local()/io.name();
+//
+//                 if (isFileOrDir(isFile, fName))
+//                 {
+//                     searchType = fileOperation::FINDINSTANCE;
+//                     return fName;
+//                 }
+//             }
+//         }
+//
+//         searchType = fileOperation::NOTFOUND;
+//         return fileName::null;
+//     }
+// }
+//
+//
+// Foam::fileName
+// Foam::fileOperations::masterUncollatedFileOperation::processorsPath
+// (
+//     const IOobject& io,
+//     const word& instance,
+//     const word& processorsDir
+// )
+// {
+//     return
+//         io.rootPath()
+//        /io.time().globalCaseName()
+//        /processorsDir
+//        /instance
+//        /io.db().dbDir()
+//        /io.local();
+// }
+//
+//
+// Foam::fileName
+// Foam::fileOperations::masterUncollatedFileOperation::processorsPath
+// (
+//     const fileName& dir,
+//     const word& processorsDir
+// )
+// {
+//     // Check if directory is processorXXX
+//     word caseName(dir.name());
+//
+//     std::string::size_type pos = caseName.find("processor");
+//     if (pos == 0)
+//     {
+//         return dir.path()/processorsDir;
+//     }
+//     else
+//     {
+//         return fileName::null;
+//     }
+// }
+//
+//
+// //XXXXXX
+// // Check if processorsXXX/fName exists. Rewrites 'processorDDD/' to
+// // - processors/
+// // - processorsNNN/
+// // and checks for it
+// Foam::fileName
+// Foam::fileOperations::masterUncollatedFileOperation::processorsFilePath
+// (
+//     const bool isFile,
+//     const fileName& fName
+// )
+// {
+//     fileName path;
+//     fileName local;
+//     label proci = fileOperations::masterUncollatedFileOperation::
+//     splitProcessorPath
+//     (
+//         fName,
+//         path,
+//         local
+//     );
+//
+//     // Give preference to processors variant
+//     if (proci != -1)
+//     {
+//         // Check processors/
+//         fileName procsName(path/processorsDir/local);
+//         if (isFileOrDir(isFile, procsName))
+//         {
+//             return procsName;
+//         }
+//
+//         // Check for directory starting with processors/
+//         fileNameList dirs(Foam::readDir(path, fileName::DIRECTORY));
+//         forAll(dirs, i)
+//         {
+//             std::string::size_type pos = dirs[i].find(processorsDir);
+//             if (pos == 0)
+//             {
+//                 procsName = path/dirs[i]/local;
+//                 if (isFileOrDir(isFile, procsName))
+//                 {
+//                     return procsName;
+//                 }
+//             }
+//         }
+//     }
+//
+//     return fileName::null;
+// }
+// Foam::fileName
+// Foam::fileOperations::masterUncollatedFileOperation::processorsFilePath
+// (
+//     const bool isFile,
+//     const IOobject& io,
+//     const word& instance
+// )
+// {
+//     // Check processors/ directory
+//     fileName objectPath =
+//         processorsPath(io, instance, processorsDir)/io.name();
+//     if (isFileOrDir(isFile, objectPath))
+//     {
+//         return objectPath;
+//     }
+//
+//
+//     // Check processorsDDD/ directory
+//     const fileName path(io.rootPath()/io.time().globalCaseName());
+//     fileNameList dirs(Foam::readDir(path, fileName::DIRECTORY));
+//     forAll(dirs, i)
+//     {
+//         std::string::size_type pos = dirs[i].find(processorsDir);
+//         if (pos == 0)
+//         {
+//             fileName objectPath =
+//                 processorsPath(io, instance, dirs[i])/io.name();
+//             if (isFileOrDir(isFile, objectPath))
+//             {
+//                 return objectPath;
+//             }
+//         }
+//     }
+//     return fileName::null;
+// }
 //XXXXXXXX
 
 
@@ -398,70 +399,70 @@ Foam::fileOperations::masterUncollatedFileOperation::splitProcessorPath
 }
 
 
-Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::objectPath
-(
-    const IOobject& io,
-    const pathType& searchType,
-    const word& instancePath
-)
-{
-    // Replacement for IOobject::objectPath()
-
-    switch (searchType)
-    {
-        case fileOperation::ABSOLUTE:
-        {
-            return io.instance()/io.name();
-        }
-        break;
-
-        case fileOperation::OBJECT:
-        {
-            return io.path()/io.name();
-        }
-        break;
-
-        case fileOperation::PROCESSORSOBJECT:
-        {
-            return processorsPath(io, io.instance(), processorsDir)/io.name();
-        }
-        break;
-
-        case fileOperation::PARENTOBJECT:
-        {
-            return
-                io.rootPath()/io.time().globalCaseName()
-               /io.instance()/io.db().dbDir()/io.local()/io.name();
-        }
-        break;
-
-        case fileOperation::FINDINSTANCE:
-        {
-            return
-                io.rootPath()/io.caseName()
-               /instancePath/io.db().dbDir()/io.local()/io.name();
-        }
-        break;
-
-        case fileOperation::PROCESSORSFINDINSTANCE:
-        {
-            return processorsPath(io, instancePath, processorsDir)/io.name();
-        }
-        break;
-
-        case fileOperation::NOTFOUND:
-        {
-            return fileName::null;
-        }
-        break;
-
-        default:
-        {
-            NotImplemented;
-            return fileName::null;
-        }
-    }
-}
+// Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::objectPath
+// (
+//     const IOobject& io,
+//     const pathType& searchType,
+//     const word& instancePath
+// )
+// {
+//     // Replacement for IOobject::objectPath()
+//
+//     switch (searchType)
+//     {
+//         case fileOperation::ABSOLUTE:
+//         {
+//             return io.instance()/io.name();
+//         }
+//         break;
+//
+//         case fileOperation::OBJECT:
+//         {
+//             return io.path()/io.name();
+//         }
+//         break;
+//
+//         case fileOperation::PROCESSORSOBJECT:
+//         {
+//             return processorsPath(io, io.instance(), processorsDir)/io.name();
+//         }
+//         break;
+//
+//         case fileOperation::PARENTOBJECT:
+//         {
+//             return
+//                 io.rootPath()/io.time().globalCaseName()
+//                /io.instance()/io.db().dbDir()/io.local()/io.name();
+//         }
+//         break;
+//
+//         case fileOperation::FINDINSTANCE:
+//         {
+//             return
+//                 io.rootPath()/io.caseName()
+//                /instancePath/io.db().dbDir()/io.local()/io.name();
+//         }
+//         break;
+//
+//         case fileOperation::PROCESSORSFINDINSTANCE:
+//         {
+//             return processorsPath(io, instancePath, processorsDir)/io.name();
+//         }
+//         break;
+//
+//         case fileOperation::NOTFOUND:
+//         {
+//             return fileName::null;
+//         }
+//         break;
+//
+//         default:
+//         {
+//             NotImplemented;
+//             return fileName::null;
+//         }
+//     }
+// }
 
 
 bool Foam::fileOperations::masterUncollatedFileOperation::uniformFile
@@ -794,11 +795,12 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePath
 
     if (Pstream::master())
     {
-        objPath = filePathInfo
+        objPath = fileOperations::collatedFileOperation::filePathInfo
         (
             checkGlobal,
             true,
             io,
+            times_,
             searchType,
             newInstancePath
         );
@@ -824,7 +826,12 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePath
         case fileOperation::PROCESSORSFINDINSTANCE:
         {
             // Construct equivalent local path
-            objPath = objectPath(io, searchType, newInstancePath);
+            objPath = fileOperations::collatedFileOperation::objectPath
+            (
+                io,
+                searchType,
+                newInstancePath
+            );
         }
         break;
 
@@ -874,11 +881,12 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::dirPath
 
     if (Pstream::master())
     {
-        objPath = filePathInfo
+        objPath = fileOperations::collatedFileOperation::filePathInfo
         (
             checkGlobal,
             false,
             io,
+            times_,
             searchType,
             newInstancePath
         );
@@ -903,7 +911,12 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::dirPath
         case fileOperation::PROCESSORSFINDINSTANCE:
         {
             // Construct equivalent local path
-            objPath = objectPath(io, searchType, newInstancePath);
+            objPath = fileOperations::collatedFileOperation::objectPath
+            (
+                io,
+                searchType,
+                newInstancePath
+            );
         }
         break;
 
@@ -1173,27 +1186,11 @@ Foam::fileOperations::masterUncollatedFileOperation::readStream
         List<char> data;
         if (!Pstream::parRun())
         {
-            // Analyse the objectpath to find out the processor we're trying
-            // to access
-            fileName path;
-            fileName local;
-            label proci = fileOperations::masterUncollatedFileOperation::
-            splitProcessorPath
+            return fileOperations::collatedFileOperation::readProcStream
             (
-                io.objectPath(),
-                path,
-                local
+                io,
+                isPtr()
             );
-
-            if (proci == -1)
-            {
-                FatalIOErrorInFunction(isPtr())
-                    << "Could not detect processor number"
-                    << " from objectPath:" << io.objectPath()
-                    << exit(FatalIOError);
-            }
-
-            return decomposedBlockData::readBlock(proci, isPtr(), io);
         }
         else
         {
