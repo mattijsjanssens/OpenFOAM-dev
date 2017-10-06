@@ -499,6 +499,23 @@ public:
             labelUList& recvData,
             const label communicator = 0
         );
+
+        //- Exchange data with all processors (in the communicator)
+        //  sendSizes, sendOffsets give (per processor) the slice of
+        //  sendData to send, similarly recvSizes, recvOffsets give the slice
+        //  of recvData to receive
+        static void allToAll
+        (
+            const char* sendData,
+            const UList<int>& sendSizes,
+            const UList<int>& sendOffsets,
+
+            char* recvData,
+            const UList<int>& recvSizes,
+            const UList<int>& recvOffsets,
+
+            const label communicator = 0
+        );
 };
 
 

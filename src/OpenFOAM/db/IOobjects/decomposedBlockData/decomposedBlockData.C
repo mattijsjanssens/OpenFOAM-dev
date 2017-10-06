@@ -31,8 +31,8 @@ License
 #include "IFstream.H"
 #include "IStringStream.H"
 #include "dictionary.H"
-#include <sys/time.h>
 #include "objectRegistry.H"
+#include "SubList.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -592,6 +592,7 @@ bool Foam::decomposedBlockData::writeBlocks
     autoPtr<OSstream>& osPtr,
     List<std::streamoff>& start,
     const UList<char>& data,
+    const labelUList& recvSizes,
     const UPstream::commsTypes commsType,
     const bool syncReturnState
 )
@@ -605,10 +606,6 @@ bool Foam::decomposedBlockData::writeBlocks
     }
 
     bool ok = true;
-
-    labelList recvSizes(Pstream::nProcs(comm));
-    recvSizes[Pstream::myProcNo(comm)] = data.byteSize();
-    Pstream::gatherList(recvSizes, Pstream::msgType(), comm);
 
     if (commsType == UPstream::commsTypes::scheduled)
     {
@@ -661,57 +658,43 @@ bool Foam::decomposedBlockData::writeBlocks
     }
     else
     {
-        if (debug)
-        {
-            struct timeval tv;
-            gettimeofday(&tv, nullptr);
-            Pout<< "Starting sending at:"
-                << 1.0*tv.tv_sec+tv.tv_usec/1e6 << " s"
-                << Foam::endl;
-        }
-
-
-        label startOfRequests = Pstream::nRequests();
-
+        List<int> sendSizes(UPstream::nProcs(comm), 0);
+        List<int> sendOffsets(sendSizes.size(), 0);
         if (!UPstream::master(comm))
         {
-            UOPstream::write
-            (
-                UPstream::commsTypes::nonBlocking,
-                UPstream::masterNo(),
-                data.begin(),
-                data.byteSize(),
-                Pstream::msgType(),
-                comm
-            );
-            Pstream::waitRequests(startOfRequests);
+            sendSizes[UPstream::masterNo()] = data.byteSize();
+            sendOffsets[UPstream::masterNo()] = 0;
+        }
+
+        List<int> recvOffsets(recvSizes.size());
+        List<char> recvData;
+        if (UPstream::master(comm))
+        {
+            recvOffsets[0] = 0;
+            for (label i = 1; i < recvOffsets.size(); i++)
+            {
+                recvOffsets[i] = recvOffsets[i-1]+recvSizes[i-1];
+            }
+            recvData.setSize(recvOffsets.last()+recvSizes.last());
         }
         else
         {
-            List<List<char>> recvBufs(Pstream::nProcs(comm));
-            for (label proci = 1; proci < UPstream::nProcs(comm); proci++)
-            {
-                recvBufs[proci].setSize(recvSizes[proci]);
-                UIPstream::read
-                (
-                    UPstream::commsTypes::nonBlocking,
-                    proci,
-                    recvBufs[proci].begin(),
-                    recvSizes[proci],
-                    Pstream::msgType(),
-                    comm
-                );
-            }
+            recvOffsets = 0;
+        }
 
-            if (debug)
-            {
-                struct timeval tv;
-                gettimeofday(&tv, nullptr);
-                Pout<< "Starting master-only writing at:"
-                    << 1.0*tv.tv_sec+tv.tv_usec/1e6 << " s"
-                    << Foam::endl;
-            }
+        UPstream::allToAll
+        (
+            data.begin(),
+            sendSizes,
+            sendOffsets,
+            recvData.begin(),
+            recvSizes,
+            recvOffsets,
+            comm
+        );
 
+        if (UPstream::master(comm))
+        {
             start.setSize(UPstream::nProcs(comm));
 
             OSstream& os = osPtr();
@@ -723,39 +706,23 @@ bool Foam::decomposedBlockData::writeBlocks
                 os << data;
             }
 
-            if (debug)
-            {
-                struct timeval tv;
-                gettimeofday(&tv, nullptr);
-                Pout<< "Starting slave writing at:"
-                    << 1.0*tv.tv_sec+tv.tv_usec/1e6 << " s"
-                    << Foam::endl;
-            }
-
             // Write slaves
             for (label proci = 1; proci < UPstream::nProcs(comm); proci++)
             {
                 os << nl << nl << "// Processor" << proci << nl;
                 start[proci] = os.stdStream().tellp();
 
-                if (Pstream::finishedRequest(startOfRequests+proci-1))
-                {
-                    os << recvBufs[proci];
-                }
+                os <<
+                    SubList<char>
+                    (
+                        recvData,
+                        recvSizes[proci],
+                        recvOffsets[proci]
+                    );
             }
-
-            Pstream::resetRequests(startOfRequests);
 
             ok = os.good();
         }
-    }
-    if (debug)
-    {
-        struct timeval tv;
-        gettimeofday(&tv, nullptr);
-        Pout<< "Finished master-only writing at:"
-            << 1.0*tv.tv_sec+tv.tv_usec/1e6 << " s"
-            << Foam::endl;
     }
 
     if (syncReturnState)
@@ -868,8 +835,17 @@ bool Foam::decomposedBlockData::writeObject
         osPtr.reset(new OFstream(objectPath(), IOstream::BINARY, ver, cmp));
         IOobject::writeHeader(osPtr());
     }
+
+    labelList sendSizes(Pstream::nProcs(comm_), 0);
+    if (!Pstream::master(comm_))
+    {
+        sendSizes[0] = this->byteSize();
+    }
+    labelList recvSizes(sendSizes.size());
+    UPstream::allToAll(sendSizes, recvSizes, comm_);
+
     List<std::streamoff> start;
-    return writeBlocks(comm_, osPtr, start, *this, commsType_);
+    return writeBlocks(comm_, osPtr, start, *this, recvSizes, commsType_);
 }
 
 

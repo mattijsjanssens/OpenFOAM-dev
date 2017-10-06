@@ -177,6 +177,7 @@ public:
             autoPtr<OSstream>& osPtr,
             List<std::streamoff>& start,
             const UList<char>&,
+            const labelUList& recvSizes,
             const UPstream::commsTypes,
             const bool syncReturnState = true
         );
