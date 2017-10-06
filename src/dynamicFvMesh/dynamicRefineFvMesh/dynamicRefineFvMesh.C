@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -191,7 +191,7 @@ void Foam::dynamicRefineFvMesh::readDict()
                 IOobject::NO_WRITE,
                 false
             )
-        ).subDict(typeName + "Coeffs")
+        ).optionalSubDict(typeName + "Coeffs")
     );
 
     List<Pair<word>> fluxVelocities = List<Pair<word>>
@@ -1202,7 +1202,7 @@ bool Foam::dynamicRefineFvMesh::update()
                 IOobject::NO_WRITE,
                 false
             )
-        ).subDict(typeName + "Coeffs")
+        ).optionalSubDict(typeName + "Coeffs")
     );
 
     label refineInterval = readLabel(refineDict.lookup("refineInterval"));
@@ -1399,7 +1399,8 @@ bool Foam::dynamicRefineFvMesh::writeObject
 (
     IOstream::streamFormat fmt,
     IOstream::versionNumber ver,
-    IOstream::compressionType cmp
+    IOstream::compressionType cmp,
+    const bool valid
 ) const
 {
     // Force refinement data to go to the current time directory.
@@ -1407,8 +1408,8 @@ bool Foam::dynamicRefineFvMesh::writeObject
 
     bool writeOk =
     (
-        dynamicFvMesh::writeObject(fmt, ver, cmp)
-     && meshCutter_.write()
+        dynamicFvMesh::writeObject(fmt, ver, cmp, valid)
+     && meshCutter_.write(valid)
     );
 
     if (dumpLevel_)

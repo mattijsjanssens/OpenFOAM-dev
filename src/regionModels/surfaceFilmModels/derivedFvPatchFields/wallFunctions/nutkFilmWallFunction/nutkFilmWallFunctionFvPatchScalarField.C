@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -28,7 +28,7 @@ License
 #include "volFields.H"
 #include "turbulentFluidThermoModel.H"
 #include "addToRunTimeSelectionTable.H"
-#include "surfaceFilmModel.H"
+#include "surfaceFilmRegionModel.H"
 #include "mappedWallPolyPatch.H"
 #include "mapDistribute.H"
 
@@ -51,14 +51,14 @@ tmp<scalarField> nutkFilmWallFunctionFvPatchScalarField::calcUTau
     tmp<scalarField> tuTau(new scalarField(patch().size(), 0.0));
     scalarField& uTau = tuTau.ref();
 
-    typedef regionModels::surfaceFilmModels::surfaceFilmModel modelType;
+    typedef regionModels::surfaceFilmModels::surfaceFilmRegionModel modelType;
 
     bool foundFilm =
         db().time().foundObject<modelType>("surfaceFilmProperties");
 
     if (!foundFilm)
     {
-        // do nothing on construction - film model doesn't exist yet
+        // Do nothing on construction - film model doesn't exist yet
         return tuTau;
     }
 

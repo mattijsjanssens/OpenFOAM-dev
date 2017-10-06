@@ -85,6 +85,8 @@ class TDACChemistryModel
 {
     // Private member data
 
+        bool variableTimeStep_;
+
         label timeSteps_;
 
         // Mechanism reduction
@@ -108,6 +110,9 @@ class TDACChemistryModel
 
         //- Log file for the average time spent adding tabulated data
         autoPtr<OFstream> cpuAddFile_;
+
+        //- Log file for the average time spent growing tabulated data
+        autoPtr<OFstream> cpuGrowFile_;
 
         //- Log file for the average time spent retrieving tabulated data
         autoPtr<OFstream> cpuRetrieveFile_;
@@ -159,11 +164,11 @@ public:
 
     // Member Functions
 
-        inline label timeSteps() const
-        {
-            return timeSteps_;
-        }
+        //- Return true if the time-step is variable and/or non-uniform
+        inline bool variableTimeStep() const;
 
+        //- Return the number of chemistry evaluations (used by ISAT)
+        inline label timeSteps() const;
 
         //- Create and return a TDAC log file of the given name
         inline autoPtr<OFstream> logFile(const word& name) const;
@@ -281,6 +286,8 @@ public:
             void setTabulationResultsGrow(const label celli);
 
             void setTabulationResultsRetrieve(const label celli);
+
+            inline void resetTabulationResults();
 };
 
 

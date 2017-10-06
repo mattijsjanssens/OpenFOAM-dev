@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -105,7 +105,7 @@ void Foam::fvMeshSubset::doCoupledPatches
 
     if (syncPar && Pstream::parRun())
     {
-        PstreamBuffers pBufs(Pstream::nonBlocking);
+        PstreamBuffers pBufs(Pstream::commsTypes::nonBlocking);
 
         // Send face usage across processor patches
         forAll(oldPatches, oldPatchi)
@@ -585,9 +585,9 @@ void Foam::fvMeshSubset::setCellSubset
         globalPointMap[pointMap_[pointi]] = pointi;
     }
 
-    Pout<< "Number of cells in new mesh: " << nCellsInSet << endl;
-    Pout<< "Number of faces in new mesh: " << globalFaceMap.size() << endl;
-    Pout<< "Number of points in new mesh: " << globalPointMap.size() << endl;
+    //Pout<< "Number of cells in new mesh: " << nCellsInSet << endl;
+    //Pout<< "Number of faces in new mesh: " << globalFaceMap.size() << endl;
+    //Pout<< "Number of points in new mesh: " << globalPointMap.size() << endl;
 
     // Make a new mesh
     pointField newPoints(globalPointMap.size());

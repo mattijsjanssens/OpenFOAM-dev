@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -25,10 +25,11 @@ Class
     Foam::combustionModels::PaSR
 
 Description
-    Partially stirred reactor combustion model.  The model calculates a finite
-    rate, based on both turbulence and chemistry time scales.  Depending on
-    mesh resolution, the Cmix parameter can be used to scale the turbulence
-    mixing time scale.
+    Partially stirred reactor turbulent combustion model.
+
+    This model calculates a finite rate, based on both turbulence and chemistry
+    time scales.  Depending on mesh resolution, the Cmix parameter can be used
+    to scale the turbulence mixing time scale.
 
 SourceFiles
     PaSR.C
@@ -60,9 +61,6 @@ class PaSR
 
         //- Mixing constant
         scalar Cmix_;
-
-        //- Turbulent reaction switch
-        Switch turbulentReaction_;
 
         //- Mixing parameter
         volScalarField kappa_;

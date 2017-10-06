@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -127,6 +127,10 @@ public:
     };
 
 
+    //- Use base tracking data
+    typedef typename ParcelType::trackingData trackingData;
+
+
 protected:
 
     // Protected data
@@ -184,22 +188,31 @@ public:
 
     // Constructors
 
-        //- Construct from owner, position, and cloud owner
+        //- Construct from mesh, coordinates and topology
         //  Other properties initialised as null
         inline SprayParcel
         (
             const polyMesh& mesh,
-            const vector& position,
+            const barycentric& coordinates,
             const label celli,
             const label tetFacei,
             const label tetPti
+        );
+
+        //- Construct from a position and a cell, searching for the rest of the
+        //  required topology. Other properties are initialised as null.
+        inline SprayParcel
+        (
+            const polyMesh& mesh,
+            const vector& position,
+            const label celli
         );
 
         //- Construct from components
         inline SprayParcel
         (
             const polyMesh& mesh,
-            const vector& position,
+            const barycentric& coordinates,
             const label celli,
             const label tetFacei,
             const label tetPti,
@@ -369,47 +382,42 @@ public:
         // Main calculation loop
 
             //- Set cell values
-            template<class TrackData>
-            void setCellValues
-            (
-                TrackData& td,
-                const scalar dt,
-                const label celli
-            );
+            template<class TrackCloudType>
+            void setCellValues(TrackCloudType& cloud, trackingData& td);
 
             //- Correct parcel properties according to atomization model
-            template<class TrackData>
+            template<class TrackCloudType>
             void calcAtomization
             (
-                TrackData& td,
-                const scalar dt,
-                const label celli
+                TrackCloudType& cloud,
+                trackingData& td,
+                const scalar dt
             );
 
             //- Correct parcel properties according to breakup model
-            template<class TrackData>
+            template<class TrackCloudType>
             void calcBreakup
             (
-                TrackData& td,
-                const scalar dt,
-                const label celli
+                TrackCloudType& cloud,
+                trackingData& td,
+                const scalar dt
             );
 
             //- Correct cell values using latest transfer information
-            template<class TrackData>
+            template<class TrackCloudType>
             void cellValueSourceCorrection
             (
-                TrackData& td,
-                const scalar dt,
-                const label celli
+                TrackCloudType& cloud,
+                trackingData& td,
+                const scalar dt
             );
 
             //- Correct surface values due to emitted species
-            template<class TrackData>
+            template<class TrackCloudType>
             void correctSurfaceValues
             (
-                TrackData& td,
-                const label celli,
+                TrackCloudType& cloud,
+                trackingData& td,
                 const scalar T,
                 const scalarField& Cs,
                 scalar& rhos,
@@ -419,28 +427,30 @@ public:
             );
 
             //- Update parcel properties over the time interval
-            template<class TrackData>
+            template<class TrackCloudType>
             void calc
             (
-                TrackData& td,
-                const scalar dt,
-                const label celli
+                TrackCloudType& cloud,
+                trackingData& td,
+                const scalar dt
             );
 
             //- Calculate the chi-factor for flash-boiling for the
             //  atomization model
-            template<class TrackData>
+            template<class TrackCloudType>
             scalar chi
             (
-                TrackData& td,
+                TrackCloudType& cloud,
+                trackingData& td,
                 const scalarField& X
             ) const;
 
             //- Solve the TAB equation
-            template<class TrackData>
+            template<class TrackCloudType>
             void solveTABEq
             (
-                TrackData& td,
+                TrackCloudType& cloud,
+                trackingData& td,
                 const scalar dt
             );
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -127,7 +127,7 @@ void Foam::moleculeCloud::buildCellOccupancy()
 
 void Foam::moleculeCloud::calculatePairForce()
 {
-    PstreamBuffers pBufs(Pstream::nonBlocking);
+    PstreamBuffers pBufs(Pstream::commsTypes::nonBlocking);
 
     // Start sending referred data
     label startOfRequests = Pstream::nRequests();
@@ -359,7 +359,7 @@ void Foam::moleculeCloud::removeHighEnergyOverlaps()
 
     buildCellOccupancy();
 
-    PstreamBuffers pBufs(Pstream::nonBlocking);
+    PstreamBuffers pBufs(Pstream::commsTypes::nonBlocking);
 
     // Start sending referred data
     label startOfRequests = Pstream::nRequests();
@@ -746,17 +746,8 @@ void Foam::moleculeCloud::initialiseMolecules
                                 globalPosition
                             );
 
-                            label cell = -1;
-                            label tetFace = -1;
-                            label tetPt = -1;
-
-                            mesh_.findCellFacePt
-                            (
-                                globalPosition,
-                                cell,
-                                tetFace,
-                                tetPt
-                            );
+                            const label cell =
+                                mesh_.cellTree().findInside(globalPosition);
 
                             if (findIndex(zone, cell) != -1)
                             {
@@ -764,8 +755,6 @@ void Foam::moleculeCloud::initialiseMolecules
                                 (
                                     globalPosition,
                                     cell,
-                                    tetFace,
-                                    tetPt,
                                     id,
                                     tethered,
                                     temperature,
@@ -834,17 +823,11 @@ void Foam::moleculeCloud::initialiseMolecules
                                                 globalPosition
                                             );
 
-                                        label cell = -1;
-                                        label tetFace = -1;
-                                        label tetPt = -1;
-
-                                        mesh_.findCellFacePt
-                                        (
-                                            globalPosition,
-                                            cell,
-                                            tetFace,
-                                            tetPt
-                                        );
+                                        const label cell =
+                                            mesh_.cellTree().findInside
+                                            (
+                                                globalPosition
+                                            );
 
                                         if (findIndex(zone, cell) != -1)
                                         {
@@ -852,8 +835,6 @@ void Foam::moleculeCloud::initialiseMolecules
                                             (
                                                 globalPosition,
                                                 cell,
-                                                tetFace,
-                                                tetPt,
                                                 id,
                                                 tethered,
                                                 temperature,
@@ -913,17 +894,11 @@ void Foam::moleculeCloud::initialiseMolecules
                                                 globalPosition
                                             );
 
-                                        label cell = -1;
-                                        label tetFace = -1;
-                                        label tetPt = -1;
-
-                                        mesh_.findCellFacePt
-                                        (
-                                            globalPosition,
-                                            cell,
-                                            tetFace,
-                                            tetPt
-                                        );
+                                        const label cell =
+                                            mesh_.cellTree().findInside
+                                            (
+                                                globalPosition
+                                            );
 
                                         if (findIndex(zone, cell) != -1)
                                         {
@@ -931,8 +906,6 @@ void Foam::moleculeCloud::initialiseMolecules
                                             (
                                                 globalPosition,
                                                 cell,
-                                                tetFace,
-                                                tetPt,
                                                 id,
                                                 tethered,
                                                 temperature,
@@ -996,26 +969,12 @@ void Foam::moleculeCloud::createMolecule
 (
     const point& position,
     label cell,
-    label tetFace,
-    label tetPt,
     label id,
     bool tethered,
     scalar temperature,
     const vector& bulkVelocity
 )
 {
-    if (cell == -1)
-    {
-        mesh_.findCellFacePt(position, cell, tetFace, tetPt);
-    }
-
-    if (cell == -1)
-    {
-        FatalErrorInFunction
-            << "Position specified does not correspond to a mesh cell." << nl
-            << abort(FatalError);
-    }
-
     point specialPosition(Zero);
 
     label special = 0;
@@ -1068,8 +1027,6 @@ void Foam::moleculeCloud::createMolecule
             mesh_,
             position,
             cell,
-            tetFace,
-            tetPt,
             Q,
             v,
             Zero,
@@ -1162,18 +1119,18 @@ Foam::moleculeCloud::moleculeCloud
 void Foam::moleculeCloud::evolve()
 {
     molecule::trackingData td0(*this, 0);
-    Cloud<molecule>::move(td0, mesh_.time().deltaTValue());
+    Cloud<molecule>::move(*this, td0, mesh_.time().deltaTValue());
 
     molecule::trackingData td1(*this, 1);
-    Cloud<molecule>::move(td1, mesh_.time().deltaTValue());
+    Cloud<molecule>::move(*this, td1, mesh_.time().deltaTValue());
 
     molecule::trackingData td2(*this, 2);
-    Cloud<molecule>::move(td2, mesh_.time().deltaTValue());
+    Cloud<molecule>::move(*this, td2, mesh_.time().deltaTValue());
 
     calculateForce();
 
     molecule::trackingData td3(*this, 3);
-    Cloud<molecule>::move(td3, mesh_.time().deltaTValue());
+    Cloud<molecule>::move(*this, td3, mesh_.time().deltaTValue());
 }
 
 

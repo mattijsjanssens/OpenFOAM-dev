@@ -3,7 +3,7 @@
 # =========                 |
 # \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
 #  \\    /   O peration     |
-#   \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+#   \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
 #    \\/     M anipulation  |
 #------------------------------------------------------------------------------
 # License
@@ -286,8 +286,8 @@ checkNonStandardCodePatterns()
         case "$f" in
         (*.[CH])
             # Directly report the incorrect markers
-            git grep -n --color \
-                -e '> >' -e 'NULL' \
+            git grep -n --color -e '> >' \
+                --or -w -e 'NULL' \
                 $scope"$f"
         ;;
         esac
@@ -314,6 +314,43 @@ MESSAGE
 
 
 #
+# check that header files respect the policy of file names matching the
+# #ifndef/#define bounds
+#
+checkHeaderIfndefNames()
+{
+    echo "$hookName: check header files #ifndef/#define names ..." 1>&2
+
+    badFiles=$(
+    for f in $fileList
+    do
+        # limit to *.H files
+        case "$f" in
+        (*.H)
+            fileName=$(basename $f)
+            correctMangledName=$(basename $f | sed 's=\.=_=')
+
+            if grep -q "#ifndef.*_H" $f
+            then
+              if ! grep "#ifndef.*_H" $f | grep -q $correctMangledName
+              then
+                echo "$(grep -H "#ifndef" $f | sed 's=#=\n\t#=') --> $correctMangledName"
+
+                currentMangled=$(grep "#ifndef.*_H" $f | sed 's=#ifndef\s*==')
+
+                sed -i -e 's='$currentMangled'='$correctMangledName'=' $f
+              fi
+            fi
+        ;;
+        esac
+    done
+    )
+
+    dieOnBadFiles "Some header files were automatically updated to respect #ifndef naming convention; Please check these before pushing"
+}
+
+
+#
 # check that OpenFOAM Foundation copyright is current
 #
 checkCopyright()
@@ -324,8 +361,8 @@ checkCopyright()
     badFiles=$(
     for f in $fileList
     do
-        startYear=`grep "Copyright.*OpenFOAM" $f | sed 's/[^0-9]*\([0-9]*\).*/\1/g'`
-        endYear=`grep "Copyright.*-.*OpenFOAM" $f | sed 's/[^-]*-\([0-9]*\).*/\1/g'`
+        startYear=`grep -m 1 "Copyright.*OpenFOAM" $f | sed 's/[^0-9]*\([0-9]*\).*/\1/g'`
+        endYear=`grep -m 1 "Copyright.*-.*OpenFOAM" $f | sed 's/[^-]*-\([0-9]*\).*/\1/g'`
         #echo "startYear=$startYear endYear=$endYear"
         if [ "$startYear" != "" ]
         then
@@ -370,6 +407,9 @@ checkLineLengthNonDirective
 
 # check for non-standard code patterns
 checkNonStandardCodePatterns
+
+# check if #ifndef/#define bounds are named correctly
+checkHeaderIfndefNames
 
 checkCopyright
 

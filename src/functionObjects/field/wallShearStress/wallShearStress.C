@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2013-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -193,10 +193,7 @@ bool Foam::functionObjects::wallShearStress::execute()
     typedef incompressible::turbulenceModel icoModel;
 
     volVectorField& wallShearStress =
-        const_cast<volVectorField&>
-        (
-            mesh_.lookupObject<volVectorField>(type())
-        );
+        mesh_.lookupObjectRef<volVectorField>(type());
 
     tmp<volSymmTensorField> Reff;
     if (mesh_.foundObject<cmpModel>(turbulenceModel::propertiesName))
@@ -252,9 +249,9 @@ bool Foam::functionObjects::wallShearStress::write()
         if (Pstream::master())
         {
             file() << mesh_.time().value()
-                << token::TAB << pp.name()
-                << token::TAB << minSsp
-                << token::TAB << maxSsp
+                << tab << pp.name()
+                << tab << minSsp
+                << tab << maxSsp
                 << endl;
         }
 

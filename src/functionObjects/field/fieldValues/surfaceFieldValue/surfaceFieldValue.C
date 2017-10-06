@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -65,11 +65,12 @@ template<>
 const char* Foam::NamedEnum
 <
     Foam::functionObjects::fieldValues::surfaceFieldValue::operationType,
-    15
+    17
 >::names[] =
 {
     "none",
     "sum",
+    "weightedSum",
     "sumMag",
     "sumDirection",
     "sumDirectionBalance",
@@ -78,6 +79,7 @@ const char* Foam::NamedEnum
     "areaAverage",
     "weightedAreaAverage",
     "areaIntegrate",
+    "weightedAreaIntegrate",
     "min",
     "max",
     "CoV",
@@ -94,7 +96,7 @@ const Foam::NamedEnum
 const Foam::NamedEnum
 <
     Foam::functionObjects::fieldValues::surfaceFieldValue::operationType,
-    15
+    17
 > Foam::functionObjects::fieldValues::surfaceFieldValue::operationTypeNames_;
 
 
@@ -580,14 +582,14 @@ processValues
         case opSumDirection:
         {
             vector n(dict_.lookup("direction"));
-            return sum(pos(values*(Sf & n))*mag(values));
+            return sum(pos0(values*(Sf & n))*mag(values));
         }
         case opSumDirectionBalance:
         {
             vector n(dict_.lookup("direction"));
             const scalarField nv(values*(Sf & n));
 
-            return sum(pos(nv)*mag(values) - neg(nv)*mag(values));
+            return sum(pos0(nv)*mag(values) - neg(nv)*mag(values));
         }
         default:
         {
@@ -615,7 +617,7 @@ processValues
             n /= mag(n) + ROOTVSMALL;
             const scalarField nv(n & values);
 
-            return sum(pos(nv)*n*(nv));
+            return sum(pos0(nv)*n*(nv));
         }
         case opSumDirectionBalance:
         {
@@ -623,7 +625,7 @@ processValues
             n /= mag(n) + ROOTVSMALL;
             const scalarField nv(n & values);
 
-            return sum(pos(nv)*n*(nv));
+            return sum(pos0(nv)*n*(nv));
         }
         case opAreaNormalAverage:
         {

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -27,6 +27,7 @@ License
 #include "Time.H"
 #include "demandDrivenData.H"
 #include "dictionary.H"
+#include "localIOdictionary.H"
 #include "data.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -71,18 +72,19 @@ void Foam::GeometricField<Type, PatchField, GeoMesh>::readFields
 template<class Type, template<class> class PatchField, class GeoMesh>
 void Foam::GeometricField<Type, PatchField, GeoMesh>::readFields()
 {
-    const IOdictionary dict
+    const localIOdictionary dict
     (
         IOobject
         (
             this->name(),
-            this->time().timeName(),
+            this->instance(),
+            this->local(),
             this->db(),
-            IOobject::NO_READ,
+            IOobject::MUST_READ,
             IOobject::NO_WRITE,
             false
         ),
-        this->readStream(typeName)
+        typeName
     );
 
     this->close();
@@ -105,7 +107,14 @@ bool Foam::GeometricField<Type, PatchField, GeoMesh>::readIfPresent()
             << " suggests that a read constructor for field " << this->name()
             << " would be more appropriate." << endl;
     }
-    else if (this->readOpt() == IOobject::READ_IF_PRESENT && this->headerOk())
+    else if
+    (
+        this->readOpt() == IOobject::READ_IF_PRESENT
+     && this->template typeHeaderOk<GeometricField<Type, PatchField, GeoMesh>>
+        (
+            true
+        )
+    )
     {
         readFields();
 
@@ -142,7 +151,13 @@ bool Foam::GeometricField<Type, PatchField, GeoMesh>::readOldTimeIfPresent()
         this->registerObject()
     );
 
-    if (field0.headerOk())
+    if
+    (
+        field0.template typeHeaderOk<GeometricField<Type, PatchField, GeoMesh>>
+        (
+            true
+        )
+    )
     {
         if (debug)
         {
@@ -699,6 +714,17 @@ Foam::GeometricField<Type, PatchField, GeoMesh>::GeometricField
 #endif
 
 
+template<class Type, template<class> class PatchField, class GeoMesh>
+Foam::tmp<Foam::GeometricField<Type, PatchField, GeoMesh>>
+Foam::GeometricField<Type, PatchField, GeoMesh>::clone() const
+{
+    return tmp<GeometricField<Type, PatchField, GeoMesh>>
+    (
+        new GeometricField<Type, PatchField, GeoMesh>(*this)
+    );
+}
+
+
 // * * * * * * * * * * * * * * * Destructor * * * * * * * * * * * * * * * * * //
 
 template<class Type, template<class> class PatchField, class GeoMesh>
@@ -1112,6 +1138,20 @@ void Foam::GeometricField<Type, PatchField, GeoMesh>::min
 
 
 template<class Type, template<class> class PatchField, class GeoMesh>
+void Foam::GeometricField<Type, PatchField, GeoMesh>::maxMin
+(
+    const dimensioned<Type>& minDt,
+    const dimensioned<Type>& maxDt
+)
+{
+    Foam::max(primitiveFieldRef(), primitiveField(), minDt.value());
+    Foam::max(boundaryFieldRef(), boundaryField(), minDt.value());
+    Foam::min(primitiveFieldRef(), primitiveField(), maxDt.value());
+    Foam::min(boundaryFieldRef(), boundaryField(), maxDt.value());
+}
+
+
+template<class Type, template<class> class PatchField, class GeoMesh>
 void Foam::GeometricField<Type, PatchField, GeoMesh>::negate()
 {
     primitiveFieldRef().negate();
@@ -1164,11 +1204,18 @@ void Foam::GeometricField<Type, PatchField, GeoMesh>::operator=
 
     this->dimensions() = gf.dimensions();
 
-    // Transfer the storage from the tmp
-    primitiveFieldRef().transfer
-    (
-        const_cast<Field<Type>&>(gf.primitiveField())
-    );
+    if (tgf.isTmp())
+    {
+        // Transfer the storage from the tmp
+        primitiveFieldRef().transfer
+        (
+            const_cast<Field<Type>&>(gf.primitiveField())
+        );
+    }
+    else
+    {
+        primitiveFieldRef() = gf.primitiveField();
+    }
 
     boundaryFieldRef() = gf.boundaryField();
 

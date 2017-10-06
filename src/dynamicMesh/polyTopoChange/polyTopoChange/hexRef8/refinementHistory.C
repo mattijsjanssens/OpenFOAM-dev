@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -335,7 +335,6 @@ void Foam::refinementHistory::freeSplitCell(const label index)
 }
 
 
-// Mark entry in splitCells. Recursively mark its parent and subs.
 void Foam::refinementHistory::markSplit
 (
     const label index,
@@ -372,7 +371,6 @@ void Foam::refinementHistory::markSplit
 }
 
 
-// Mark index and all its descendants
 void Foam::refinementHistory::mark
 (
     const label val,
@@ -762,7 +760,6 @@ Foam::refinementHistory::refinementHistory
 }
 
 
-// Construct as copy
 Foam::refinementHistory::refinementHistory
 (
     const IOobject& io,
@@ -783,7 +780,6 @@ Foam::refinementHistory::refinementHistory
 }
 
 
-// Construct from multiple
 Foam::refinementHistory::refinementHistory
 (
     const IOobject& io,
@@ -903,7 +899,6 @@ Foam::refinementHistory::refinementHistory
 }
 
 
-// Construct from Istream
 Foam::refinementHistory::refinementHistory(const IOobject& io, Istream& is)
 :
     regIOobject(io),
@@ -1180,7 +1175,6 @@ void Foam::refinementHistory::updateMesh(const mapPolyMesh& map)
 }
 
 
-// Update numbering for subsetting
 void Foam::refinementHistory::subset
 (
     const labelList& pointMap,
@@ -1435,7 +1429,7 @@ void Foam::refinementHistory::distribute(const mapDistributePolyMesh& map)
 
 
         // Send to neighbours
-        OPstream toNbr(Pstream::blocking, proci);
+        OPstream toNbr(Pstream::commsTypes::blocking, proci);
         toNbr << newSplitCells << newVisibleCells;
     }
 
@@ -1453,7 +1447,7 @@ void Foam::refinementHistory::distribute(const mapDistributePolyMesh& map)
 
     for (label proci = 0; proci < Pstream::nProcs(); proci++)
     {
-        IPstream fromNbr(Pstream::blocking, proci);
+        IPstream fromNbr(Pstream::commsTypes::blocking, proci);
         List<splitCell8> newSplitCells(fromNbr);
         labelList newVisibleCells(fromNbr);
 

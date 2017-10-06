@@ -32,8 +32,8 @@ SourceFile
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef BINARY_NODE_H
-#define BINARY_NODE_H
+#ifndef binaryNode_H
+#define binaryNode_H
 
 #include "chemPointISAT.H"
 
@@ -66,9 +66,6 @@ public:
 
     //- Parent node
     binaryNode<CompType, ThermoType>* parent_;
-
-    //- Switch to allow variable time step (off by default)
-    bool variableTimeStep_;
 
     //- Number of equations in addition to the species eqs.
     label nAdditionalEqns_;
@@ -136,11 +133,6 @@ public:
             chemPointISAT<CompType, ThermoType>* elementLeft,
             chemPointISAT<CompType, ThermoType>* elementRight,
             binaryNode<CompType, ThermoType>* parent
-        );
-        //- Construct from another binary node
-        binaryNode
-        (
-            binaryNode<CompType, ThermoType> *bn
         );
 
 

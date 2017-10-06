@@ -2,8 +2,9 @@
 cd ${0%/*} || exit 1    # Run from this directory
 
 # Parse arguments for library compilation
-. $WM_PROJECT_DIR/wmake/scripts/AllwmakeParseArguments
+. ../wmake/scripts/AllwmakeParseArguments
 
+# Perform various checks
 wmakeCheckPwd "$WM_PROJECT_DIR/src" || {
     echo "Allwmake error: Current directory is not \$WM_PROJECT_DIR/src"
     echo "    The environment variables are inconsistent with the installation."
@@ -31,7 +32,6 @@ wmake $targetType fileFormats
 wmake $targetType surfMesh
 wmake $targetType triSurface
 wmake $targetType meshTools
-wmake $targetType edgeMesh
 
 # Decomposition methods needed by dummyThirdParty
 # (dummy metisDecomp, scotchDecomp etc) needed by e.g. meshTools
@@ -76,8 +76,10 @@ wmake $targetType regionCoupled
 functionObjects/Allwmake $targetType $*
 
 wmake $targetType sixDoFRigidBodyMotion
+wmake $targetType sixDoFRigidBodyState
 wmake $targetType rigidBodyDynamics
 wmake $targetType rigidBodyMeshMotion
+wmake $targetType waves
 
 
 #------------------------------------------------------------------------------

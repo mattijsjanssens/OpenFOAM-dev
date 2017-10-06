@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -54,15 +54,17 @@ bool Foam::faceOnlySet::trackToBoundary
     DynamicList<scalar>& samplingCurveDist
 ) const
 {
-    particle::TrackingData<passiveParticleCloud> trackData(particleCloud);
+    particle::trackingData td(particleCloud);
 
-    const point& trackPt = singleParticle.position();
+    point trackPt = singleParticle.position();
 
     while(true)
     {
         point oldPoint = trackPt;
 
-        singleParticle.trackToFace(end_, trackData);
+        singleParticle.trackToAndHitFace(end_ - start_, 0, particleCloud, td);
+
+        trackPt = singleParticle.position();
 
         if (singleParticle.face() != -1 && mag(oldPoint - trackPt) > smallDist)
         {
@@ -78,7 +80,7 @@ bool Foam::faceOnlySet::trackToBoundary
             // End reached
             return false;
         }
-        else if (singleParticle.onBoundary())
+        else if (singleParticle.onBoundaryFace())
         {
             // Boundary reached
             return true;
@@ -166,6 +168,7 @@ void Foam::faceOnlySet::calcSamples
         // Pout<< "calcSamples : Both start_ and end_ outside domain"
         //     << endl;
 
+        const_cast<polyMesh&>(mesh()).moving(oldMoving);
         return;
     }
 

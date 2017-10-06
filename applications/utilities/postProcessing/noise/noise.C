@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -82,6 +82,7 @@ See also
 #include "argList.H"
 #include "Time.H"
 #include "CSV.H"
+#include "IOdictionary.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -133,7 +134,11 @@ int main(int argc, char *argv[])
     #include "createFields.H"
 
     Info<< "Reading data file" << endl;
-    Function1Types::CSV<scalar> pData("pressure", dict, "Data");
+    FieldFunction1<Function1Types::CSV<scalar>> pData
+    (
+        "pressure",
+        dict.subDict("pressureData")
+    );
 
     // time history data
     const scalarField t(pData.x());

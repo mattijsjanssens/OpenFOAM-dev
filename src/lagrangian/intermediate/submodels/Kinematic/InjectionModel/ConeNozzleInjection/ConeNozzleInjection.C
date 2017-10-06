@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -146,7 +146,7 @@ Foam::ConeNozzleInjection<CloudType>::ConeNozzleInjection
     ),
     sizeDistribution_
     (
-        distributionModels::distributionModel::New
+        distributionModel::New
         (
             this->coeffDict().subDict("sizeDistribution"),
             owner.rndGen()
@@ -257,9 +257,7 @@ void Foam::ConeNozzleInjection<CloudType>::updateMesh()
             );
         }
         default:
-        {
-            // do nothing
-        }
+        {}
     }
 }
 

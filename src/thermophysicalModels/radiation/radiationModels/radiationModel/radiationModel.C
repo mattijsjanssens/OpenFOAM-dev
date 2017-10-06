@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -28,7 +28,7 @@ License
 #include "scatterModel.H"
 #include "sootModel.H"
 #include "fvmSup.H"
-#include "fluidThermo.H"
+#include "basicThermo.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -59,7 +59,7 @@ Foam::IOobject Foam::radiation::radiationModel::createIOobject
         IOobject::NO_WRITE
     );
 
-    if (io.headerOk())
+    if (io.typeHeaderOk<IOdictionary>(true))
     {
         io.readOpt() = IOobject::MUST_READ_IF_MODIFIED;
         return io;
@@ -228,10 +228,10 @@ void Foam::radiation::radiationModel::correct()
 
 Foam::tmp<Foam::fvScalarMatrix> Foam::radiation::radiationModel::Sh
 (
-    fluidThermo& thermo
+    const basicThermo& thermo,
+    const volScalarField& he
 ) const
 {
-    volScalarField& he = thermo.he();
     const volScalarField Cpv(thermo.Cpv());
     const volScalarField T3(pow3(T_));
 

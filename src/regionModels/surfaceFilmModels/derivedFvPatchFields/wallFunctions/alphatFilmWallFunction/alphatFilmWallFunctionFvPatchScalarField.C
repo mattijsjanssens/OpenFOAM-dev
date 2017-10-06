@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -25,7 +25,7 @@ License
 
 #include "alphatFilmWallFunctionFvPatchScalarField.H"
 #include "turbulentFluidThermoModel.H"
-#include "surfaceFilmModel.H"
+#include "surfaceFilmRegionModel.H"
 #include "fvPatchFieldMapper.H"
 #include "volFields.H"
 #include "addToRunTimeSelectionTable.H"
@@ -134,7 +134,7 @@ void alphatFilmWallFunctionFvPatchScalarField::updateCoeffs()
         return;
     }
 
-    typedef regionModels::surfaceFilmModels::surfaceFilmModel modelType;
+    typedef regionModels::surfaceFilmModels::surfaceFilmRegionModel modelType;
 
     // Since we're inside initEvaluate/evaluate there might be processor
     // comms underway. Change the tag we use.
@@ -146,7 +146,7 @@ void alphatFilmWallFunctionFvPatchScalarField::updateCoeffs()
 
     if (!foundFilm)
     {
-        // do nothing on construction - film model doesn't exist yet
+        // Do nothing on construction - film model doesn't exist yet
         return;
     }
 

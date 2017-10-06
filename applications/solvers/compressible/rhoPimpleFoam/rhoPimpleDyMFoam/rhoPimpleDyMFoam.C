@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,10 +22,7 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Application
-    rhoPimpleFoam
-
-Group
-    grpCompressibleSolvers grpMovingMeshSolvers
+    rhoPimpleDyMFoam
 
 Description
     Transient solver for turbulent flow of compressible fluids for HVAC and
@@ -38,10 +35,11 @@ Description
 
 #include "fvCFD.H"
 #include "dynamicFvMesh.H"
-#include "psiThermo.H"
+#include "fluidThermo.H"
 #include "turbulentFluidThermoModel.H"
 #include "bound.H"
 #include "pimpleControl.H"
+#include "pressureControl.H"
 #include "CorrectPhi.H"
 #include "fvOptions.H"
 #include "localEulerDdtScheme.H"
@@ -110,21 +108,26 @@ int main(int argc, char *argv[])
             // Do any mesh changes
             mesh.update();
 
-            if (mesh.changing() && correctPhi)
+            if (mesh.changing())
             {
-                // Calculate absolute flux from the mapped surface velocity
-                phi = mesh.Sf() & rhoUf;
+                MRF.update();
 
-                #include "correctPhi.H"
+                if (correctPhi)
+                {
+                    // Calculate absolute flux from the mapped surface velocity
+                    phi = mesh.Sf() & rhoUf;
 
-                // Make the fluxes relative to the mesh-motion
-                fvc::makeRelative(phi, rho, U);
+                    #include "correctPhi.H"
+
+                    // Make the fluxes relative to the mesh-motion
+                    fvc::makeRelative(phi, rho, U);
+                }
+
+                if (checkMeshCourantNo)
+                {
+                    #include "meshCourantNo.H"
+                }
             }
-        }
-
-        if (mesh.changing() && checkMeshCourantNo)
-        {
-            #include "meshCourantNo.H"
         }
 
         #include "rhoEqn.H"

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2015-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2015-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -31,10 +31,7 @@ Description
 Usage
     Example usage:
     \verbatim
-    buoyancyForceCoeffs
-    {
-        fields          (U);                    // Name of velocity field
-    }
+    fields          (U);                    // Name of velocity field
     \endverbatim
 
 SourceFiles
@@ -98,6 +95,13 @@ public:
     // Member Functions
 
         // Evaluate
+
+            //- Add explicit contribution to incompressible momentum equation
+            virtual void addSup
+            (
+                fvMatrix<vector>& eqn,
+                const label fieldi
+            );
 
             //- Add explicit contribution to compressible momentum equation
             virtual void addSup

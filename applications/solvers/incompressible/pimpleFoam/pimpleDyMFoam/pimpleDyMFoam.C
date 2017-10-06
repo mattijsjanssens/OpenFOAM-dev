@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -67,7 +67,6 @@ int main(int argc, char *argv[])
     {
         #include "readControls.H"
         #include "CourantNo.H"
-
         #include "setDeltaT.H"
 
         runTime++;
@@ -76,20 +75,25 @@ int main(int argc, char *argv[])
 
         mesh.update();
 
-        // Calculate absolute flux from the mapped surface velocity
-        phi = mesh.Sf() & Uf;
-
-        if (mesh.changing() && correctPhi)
+        if (mesh.changing())
         {
-            #include "correctPhi.H"
-        }
+            MRF.update();
 
-        // Make the flux relative to the mesh motion
-        fvc::makeRelative(phi, U);
+            if (correctPhi)
+            {
+                // Calculate absolute flux from the mapped surface velocity
+                phi = mesh.Sf() & Uf;
 
-        if (mesh.changing() && checkMeshCourantNo)
-        {
-            #include "meshCourantNo.H"
+                #include "correctPhi.H"
+
+                // Make the flux relative to the mesh motion
+                fvc::makeRelative(phi, U);
+            }
+
+            if (checkMeshCourantNo)
+            {
+                #include "meshCourantNo.H"
+            }
         }
 
         // --- Pressure-velocity PIMPLE corrector loop

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -318,7 +318,7 @@ void Foam::GAMGSolver::gatherMatrices
 
             IPstream fromSlave
             (
-                Pstream::scheduled,
+                Pstream::commsTypes::scheduled,
                 procIDs[proci],
                 0,          // bufSize
                 Pstream::msgType(),
@@ -387,7 +387,7 @@ void Foam::GAMGSolver::gatherMatrices
 
         OPstream toMaster
         (
-            Pstream::scheduled,
+            Pstream::commsTypes::scheduled,
             procIDs[0],
             0,
             Pstream::msgType(),
@@ -433,13 +433,7 @@ void Foam::GAMGSolver::procAgglomerateMatrix
         interfaceLevelsIntCoeffs_[levelI];
     const lduMesh& coarsestMesh = coarsestMatrix.mesh();
 
-
     label coarseComm = coarsestMesh.comm();
-
-    label oldWarn = UPstream::warnComm;
-    UPstream::warnComm = coarseComm;
-
-
 
     // Gather all matrix coefficients onto agglomProcIDs[0]
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -731,7 +725,6 @@ void Foam::GAMGSolver::procAgglomerateMatrix
         //    }
         //}
     }
-    UPstream::warnComm = oldWarn;
 }
 
 

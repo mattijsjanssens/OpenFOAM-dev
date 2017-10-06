@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -42,11 +42,14 @@ using namespace Foam;
 
 int main(int argc, char *argv[])
 {
-    argList::validArgs.append("CHEMKINFile");
-    argList::validArgs.append("CHEMKINThermodynamicsFile");
-    argList::validArgs.append("CHEMKINTransport");
-    argList::validArgs.append("FOAMChemistryFile");
-    argList::validArgs.append("FOAMThermodynamicsFile");
+    // Increase the precision of the output for JANAF coefficients
+    Ostream::defaultPrecision(10);
+
+    argList::validArgs.append("CHEMKIN file");
+    argList::validArgs.append("CHEMKIN thermodynamics file");
+    argList::validArgs.append("CHEMKIN transport file");
+    argList::validArgs.append("OpenFOAM chemistry file");
+    argList::validArgs.append("OpenFOAM thermodynamics file");
 
     argList::addBoolOption
     (

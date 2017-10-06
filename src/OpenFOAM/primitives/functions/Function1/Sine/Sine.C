@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2016-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -24,7 +24,6 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "Sine.H"
-#include "mathematicalConstants.H"
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
@@ -43,13 +42,12 @@ template<class Type>
 Foam::Function1Types::Sine<Type>::Sine
 (
     const word& entryName,
-    const dictionary& dict,
-    const word& ext
+    const dictionary& dict
 )
 :
     Function1<Type>(entryName)
 {
-    read(dict.subDict(entryName + ext));
+    read(dict);
 }
 
 
@@ -73,17 +71,6 @@ Foam::Function1Types::Sine<Type>::~Sine()
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-
-template<class Type>
-Type Foam::Function1Types::Sine<Type>::value(const scalar t) const
-{
-    return
-        amplitude_->value(t)
-       *sin(constant::mathematical::twoPi*frequency_->value(t)*(t - t0_))
-       *scale_->value(t)
-      + level_->value(t);
-}
-
 
 template<class Type>
 void Foam::Function1Types::Sine<Type>::writeData(Ostream& os) const

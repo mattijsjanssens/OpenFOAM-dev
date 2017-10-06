@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2015-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2015-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -168,11 +168,11 @@ Foam::MultiComponentPhaseModel<BasePhaseModel>::YiEqn
       - fvm::laplacian
         (
             fvc::interpolate(alpha)
-           *fvc::interpolate(this->turbulence().nut()*rho/Sc_),
+           *fvc::interpolate(this->turbulence().muEff()/Sc_),
             Yi
         )
      ==
-        this->R(Yi)
+        alpha*this->R(Yi)
 
       + fvc::ddt(residualAlpha_*rho, Yi)
       - fvm::ddt(residualAlpha_*rho, Yi)

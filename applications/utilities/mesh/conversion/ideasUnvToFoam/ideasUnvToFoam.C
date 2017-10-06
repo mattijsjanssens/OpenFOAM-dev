@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -226,8 +226,6 @@ void readPoints
             (
                 is
             )   << "Points not in order starting at point " << pointi
-                //<< " at line " << is.lineNumber()
-                //<< abort(FatalError);
                 << endl;
         }
 
@@ -465,7 +463,8 @@ void readCells
                 IOWarningInFunction(is)
                     << "Cell type " << feID << " not supported" << endl;
             }
-            is.getLine(line);  // Do nothing
+
+            is.getLine(line);
         }
     }
 
@@ -477,6 +476,13 @@ void readCells
 
     Info<< "Read " << cellVerts.size() << " cells"
         << " and " << boundaryFaces.size() << " boundary faces." << endl;
+
+    if (!cellVerts.size())
+    {
+        WarningInFunction
+            << "There are no cells in the mesh." << endl
+            << "    Note: 2D meshes are not supported."<< endl;
+    }
 }
 
 
