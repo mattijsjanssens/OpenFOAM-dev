@@ -434,6 +434,124 @@ void Foam::UPstream::allToAll
 }
 
 
+void Foam::UPstream::gather
+(
+    const char* sendData,
+    int sendSize,
+
+    char* recvData,
+    const UList<int>& recvSizes,
+    const UList<int>& recvOffsets,
+    const label communicator
+)
+{
+    label np = nProcs(communicator);
+
+    if
+    (
+        UPstream::master(communicator)
+     && (recvSizes.size() != np || recvOffsets.size() != np)
+    )
+    {
+        FatalErrorInFunction
+            << "Size of recvSizes " << recvSizes.size()
+            << " or recvOffsets " << recvOffsets.size()
+            << " is not equal to the number of processors in the domain "
+            << np
+            << Foam::abort(FatalError);
+    }
+
+    if (!UPstream::parRun())
+    {
+        memmove(recvData, sendData, sendSize);
+    }
+    else
+    {
+        if
+        (
+            MPI_Gatherv
+            (
+                sendData,
+                sendSize,
+                MPI_BYTE,
+                recvData,
+                recvSizes.begin(),
+                recvOffsets.begin(),
+                MPI_BYTE,
+                0,
+                MPI_Comm(PstreamGlobals::MPICommunicators_[communicator])
+            )
+        )
+        {
+            FatalErrorInFunction
+                << "MPI_Gatherv failed for sendSize " << sendSize
+                << " recvSizes " << recvSizes
+                << " communicator " << communicator
+                << Foam::abort(FatalError);
+        }
+    }
+}
+
+
+void Foam::UPstream::scatter
+(
+    const char* sendData,
+    const UList<int>& sendSizes,
+    const UList<int>& sendOffsets,
+
+    char* recvData,
+    int recvSize,
+    const label communicator
+)
+{
+    label np = nProcs(communicator);
+
+    if
+    (
+        UPstream::master(communicator)
+     && (sendSizes.size() != np || sendOffsets.size() != np)
+    )
+    {
+        FatalErrorInFunction
+            << "Size of sendSizes " << sendSizes.size()
+            << " or sendOffsets " << sendOffsets.size()
+            << " is not equal to the number of processors in the domain "
+            << np
+            << Foam::abort(FatalError);
+    }
+
+    if (!UPstream::parRun())
+    {
+        memmove(recvData, sendData, recvSize);
+    }
+    else
+    {
+        if
+        (
+            MPI_Scatterv
+            (
+                sendData,
+                sendSizes.begin(),
+                sendOffsets.begin(),
+                MPI_BYTE,
+                recvData,
+                recvSize,
+                MPI_BYTE,
+                0,
+                MPI_Comm(PstreamGlobals::MPICommunicators_[communicator])
+            )
+        )
+        {
+            FatalErrorInFunction
+                << "MPI_Scatterv failed for sendSizes " << sendSizes
+                << " sendOffsets " << sendOffsets
+                << " communicator " << communicator
+                << Foam::abort(FatalError);
+        }
+    }
+}
+
+
 void Foam::UPstream::allocatePstreamCommunicator
 (
     const label parentIndex,

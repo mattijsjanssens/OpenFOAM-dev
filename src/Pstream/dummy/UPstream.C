@@ -92,6 +92,36 @@ void Foam::UPstream::allToAll
 }
 
 
+void Foam::UPstream::gather
+(
+    const char* sendData,
+    int sendSize,
+
+    char* recvData,
+    const UList<int>& recvSizes,
+    const UList<int>& recvOffsets,
+    const label communicator
+)
+{
+    memmove(recvData, sendData, sendSize);
+}
+
+
+void Foam::UPstream::scatter
+(
+    const char* sendData,
+    const UList<int>& sendSizes,
+    const UList<int>& sendOffsets,
+
+    char* recvData,
+    int recvSize,
+    const label communicator
+)
+{
+    memmove(recvData, sendData, recvSize);
+}
+
+
 void Foam::UPstream::allocatePstreamCommunicator
 (
     const label,

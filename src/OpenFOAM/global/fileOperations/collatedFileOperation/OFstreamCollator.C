@@ -92,17 +92,34 @@ bool Foam::OFstreamCollator::writeFile
 
     UList<char> slice(const_cast<char*>(s.data()), label(s.size()));
 
-    // Assuming threaded writing hides any slowness so we might
-    // as well use scheduled communication to send the data to
-    // the master processor in order.
-
-    labelList sendSizes(Pstream::nProcs(comm), 0);
-    if (!Pstream::master(comm))
+    // Determine sizes to receive
+    labelList recvSizes(Pstream::nProcs(comm));
     {
-        sendSizes[0] = slice.byteSize();
+        char* data = reinterpret_cast<char*>(recvSizes.begin());
+
+        List<int> recvOffsets(recvSizes.size());
+        forAll(recvOffsets, proci)
+        {
+            recvOffsets[proci] =
+                reinterpret_cast<char*>(&recvSizes[proci])
+              - data;
+        }
+        label sz = slice.byteSize();
+        UPstream::gather
+        (
+            reinterpret_cast<char*>(&sz),
+            sizeof(sz),
+            data,
+            List<int>(recvSizes.size(), sizeof(label)),
+            recvOffsets,
+            comm
+        );
     }
-    labelList recvSizes(sendSizes.size());
-    UPstream::allToAll(sendSizes, recvSizes, comm);
+
+    // Assuming threaded writing hides any slowness so we
+    // can use scheduled communication to send the data to
+    // the master processor in order. However can be unstable so
+    // default is non-blocking.
 
     List<std::streamoff> start;
     decomposedBlockData::writeBlocks
@@ -124,8 +141,17 @@ bool Foam::OFstreamCollator::writeFile
 
     if (debug)
     {
-        Pout<< "OFstreamCollator : Finished writing " << s.size()
-            << " bytes to " << fName
+        Pout<< "OFstreamCollator : Finished writing " << s.size() << " bytes";
+        if (UPstream::master(comm))
+        {
+            label sum = 0;
+            forAll(recvSizes, i)
+            {
+                sum += recvSizes[i];
+            }
+            Pout<< " (overall " << sum << ")";
+        }
+        Pout<< " to " << fName
             << " using comm " << comm << endl;
     }
 

@@ -33,6 +33,8 @@ License
 #include "dictionary.H"
 #include "objectRegistry.H"
 #include "SubList.H"
+#include "labelPair.H"
+#include "masterUncollatedFileOperation.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -605,13 +607,16 @@ bool Foam::decomposedBlockData::writeBlocks
             << " commsType:" << Pstream::commsTypeNames[commsType] << endl;
     }
 
+    const label nProcs = UPstream::nProcs(comm);
+
+
     bool ok = true;
 
     if (commsType == UPstream::commsTypes::scheduled)
     {
         if (UPstream::master(comm))
         {
-            start.setSize(UPstream::nProcs(comm));
+            start.setSize(nProcs);
 
             OSstream& os = osPtr();
 
@@ -623,7 +628,7 @@ bool Foam::decomposedBlockData::writeBlocks
             }
             // Write slaves
             List<char> elems;
-            for (label proci = 1; proci < UPstream::nProcs(comm); proci++)
+            for (label proci = 1; proci < nProcs; proci++)
             {
                 elems.setSize(recvSizes[proci]);
                 IPstream::read
@@ -658,70 +663,145 @@ bool Foam::decomposedBlockData::writeBlocks
     }
     else
     {
-        List<int> sendSizes(UPstream::nProcs(comm), 0);
-        List<int> sendOffsets(sendSizes.size(), 0);
-        if (!UPstream::master(comm))
-        {
-            sendSizes[UPstream::masterNo()] = data.byteSize();
-            sendOffsets[UPstream::masterNo()] = 0;
-        }
-
-        List<int> recvOffsets(recvSizes.size());
-        List<char> recvData;
+        // Write master data
         if (UPstream::master(comm))
         {
-            recvOffsets[0] = 0;
-            for (label i = 1; i < recvOffsets.size(); i++)
-            {
-                recvOffsets[i] = recvOffsets[i-1]+recvSizes[i-1];
-            }
-            recvData.setSize(recvOffsets.last()+recvSizes.last());
-        }
-        else
-        {
-            recvOffsets = 0;
-        }
-
-        UPstream::allToAll
-        (
-            data.begin(),
-            sendSizes,
-            sendOffsets,
-            recvData.begin(),
-            recvSizes,
-            recvOffsets,
-            comm
-        );
-
-        if (UPstream::master(comm))
-        {
-            start.setSize(UPstream::nProcs(comm));
+            start.setSize(nProcs);
 
             OSstream& os = osPtr();
 
-            // Write master data
+            os << nl << "// Processor" << UPstream::masterNo() << nl;
+            start[UPstream::masterNo()] = os.stdStream().tellp();
+            os << data;
+        }
+
+
+        // Find out how many processor can be received into
+        // masterUncollatedFileOperation::maxMasterFileBufferSize
+
+        // Starting slave processor and number of processors
+        labelPair startAndSize(1, nProcs-1);
+
+        while (startAndSize[1] > 0)
+        {
+            labelPair masterData(startAndSize);
+            if (UPstream::master(comm))
             {
-                os << nl << "// Processor" << UPstream::masterNo() << nl;
-                start[UPstream::masterNo()] = os.stdStream().tellp();
-                os << data;
+                label totalSize = 0;
+                label proci = masterData[0];
+                while
+                (
+                    proci < nProcs
+                 && (
+                        totalSize+recvSizes[proci]
+                      < fileOperations::masterUncollatedFileOperation::
+                            maxMasterFileBufferSize
+                    )
+                )
+                {
+                    totalSize += recvSizes[proci];
+                    proci++;
+                }
+
+                masterData[1] = proci-masterData[0];
             }
 
-            // Write slaves
-            for (label proci = 1; proci < UPstream::nProcs(comm); proci++)
-            {
-                os << nl << nl << "// Processor" << proci << nl;
-                start[proci] = os.stdStream().tellp();
 
-                os <<
-                    SubList<char>
-                    (
-                        recvData,
-                        recvSizes[proci],
-                        recvOffsets[proci]
-                    );
+            // Scatter masterData
+            UPstream::scatter
+            (
+                reinterpret_cast<const char*>(masterData.cdata()),
+                List<int>(nProcs, sizeof(masterData)),
+                List<int>(nProcs, 0),
+                reinterpret_cast<char*>(startAndSize.data()),
+                sizeof(startAndSize),
+                comm
+            );
+
+            if (startAndSize[1] == 0)
+            {
+                break;
             }
 
-            ok = os.good();
+
+            // Calculate master data
+            List<int> sliceSizes;
+            List<int> sliceOffsets;
+            List<char> recvData;
+            if (UPstream::master(comm))
+            {
+                sliceSizes.setSize(nProcs, 0);
+                sliceOffsets.setSize(nProcs, 0);
+
+                int totalSize = 0;
+                for
+                (
+                    label proci = startAndSize[0];
+                    proci < startAndSize[0]+startAndSize[1];
+                    proci++
+                )
+                {
+                    sliceSizes[proci] = int(recvSizes[proci]);
+                    sliceOffsets[proci] = totalSize;
+                    totalSize += sliceSizes[proci];
+                }
+                recvData.setSize(totalSize);
+            }
+
+            int nSend = 0;
+            if
+            (
+               !UPstream::master(comm)
+             && (UPstream::myProcNo(comm) >= startAndSize[0])
+             && (UPstream::myProcNo(comm) < startAndSize[0]+startAndSize[1])
+            )
+            {
+                nSend = data.byteSize();
+            }
+
+
+            UPstream::gather
+            (
+                data.begin(),
+                nSend,
+
+                recvData.begin(),
+                sliceSizes,
+                sliceOffsets,
+                comm
+            );
+
+            if (UPstream::master(comm))
+            {
+                OSstream& os = osPtr();
+
+                // Write slaves
+                for
+                (
+                    label proci = startAndSize[0];
+                    proci < startAndSize[0]+startAndSize[1];
+                    proci++
+                )
+                {
+                    os << nl << nl << "// Processor" << proci << nl;
+                    start[proci] = os.stdStream().tellp();
+
+                    os <<
+                        SubList<char>
+                        (
+                            recvData,
+                            sliceSizes[proci],
+                            sliceOffsets[proci]
+                        );
+                }
+            }
+
+            startAndSize[0] += startAndSize[1];
+        }
+
+        if (UPstream::master(comm))
+        {
+            ok = osPtr().good();
         }
     }
 
@@ -836,13 +916,30 @@ bool Foam::decomposedBlockData::writeObject
         IOobject::writeHeader(osPtr());
     }
 
-    labelList sendSizes(Pstream::nProcs(comm_), 0);
-    if (!Pstream::master(comm_))
+    const label nProcs = Pstream::nProcs(comm_);
+
+    labelList recvSizes(nProcs);
     {
-        sendSizes[0] = this->byteSize();
+        char* data = reinterpret_cast<char*>(recvSizes.begin());
+
+        labelList recvOffsets(nProcs);
+        forAll(recvOffsets, proci)
+        {
+            recvOffsets[proci] =
+                reinterpret_cast<char*>(&recvSizes[proci])
+              - data;
+        }
+        label sz = this->byteSize();
+        UPstream::gather
+        (
+            reinterpret_cast<char*>(&sz),
+            sizeof(label),
+            data,
+            List<int>(recvSizes, sizeof(label)),
+            recvOffsets,
+            comm_
+        );
     }
-    labelList recvSizes(sendSizes.size());
-    UPstream::allToAll(sendSizes, recvSizes, comm_);
 
     List<std::streamoff> start;
     return writeBlocks(comm_, osPtr, start, *this, recvSizes, commsType_);
