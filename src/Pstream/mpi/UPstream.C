@@ -450,9 +450,12 @@ void Foam::UPstream::gather
     if
     (
         UPstream::master(communicator)
-     && (recvSizes.size() != np || recvOffsets.size() != np)
+     && (recvSizes.size() != np || recvOffsets.size() < np)
     )
     {
+        // Note: allow recvOffsets to be e.g. 1 larger than np so we
+        // can easily loop over the result
+
         FatalErrorInFunction
             << "Size of recvSizes " << recvSizes.size()
             << " or recvOffsets " << recvOffsets.size()
