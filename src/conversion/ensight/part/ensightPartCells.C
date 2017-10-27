@@ -58,10 +58,10 @@ void Foam::ensightPartCells::classify
 )
 {
     // References to cell shape models
-    const cellModel& tet   = *(cellModeller::lookup("tet"));
-    const cellModel& pyr   = *(cellModeller::lookup("pyr"));
-    const cellModel& prism = *(cellModeller::lookup("prism"));
-    const cellModel& hex   = *(cellModeller::lookup("hex"));
+    const cellModel& tet   = *(cellModeller().lookup("tet"));
+    const cellModel& pyr   = *(cellModeller().lookup("pyr"));
+    const cellModel& prism = *(cellModeller().lookup("prism"));
+    const cellModel& hex   = *(cellModeller().lookup("hex"));
 
     const cellShapeList& cellShapes = mesh.cellShapes();
 

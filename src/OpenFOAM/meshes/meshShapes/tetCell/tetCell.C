@@ -36,7 +36,7 @@ Foam::cellShape Foam::tetCell::tetCellShape() const
 
     if (!tetModelPtr_)
     {
-        tetModelPtr_ = cellModeller::lookup("tet");
+        tetModelPtr_ = cellModeller().lookup("tet");
     }
 
     const cellModel& tet = *tetModelPtr_;

@@ -60,7 +60,7 @@ inline Foam::cellShape::cellShape
 )
 :
     labelList(l),
-    m(cellModeller::lookup(model))
+    m(cellModeller().lookup(model))
 {
     if (doCollapse)
     {

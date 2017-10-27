@@ -56,11 +56,11 @@ Foam::Istream& Foam::operator>>(Istream& is, cellShape& s)
     // it is allowed to have either a word or a number describing the model
     if (t.isLabel())
     {
-        s.m = cellModeller::lookup(int(t.labelToken()));
+        s.m = cellModeller().lookup(int(t.labelToken()));
     }
     else if (t.isWord())
     {
-        s.m = cellModeller::lookup(t.wordToken());
+        s.m = cellModeller().lookup(t.wordToken());
     }
     else
     {

@@ -27,10 +27,113 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "cellModeller.H"
+#include "IFstream.H"
+#include "fileOperation.H"
+#include "OSspecific.H"
+#include "foamVersion.H"
+
+/* * * * * * * * * * * * * * * Static Member Data  * * * * * * * * * * * * * */
+
+namespace Foam
+{
+    autoPtr<cellModels> cellModels::cellModellerPtr_;
+}
+
+
+// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
+
+Foam::fileName Foam::cellModels::findEtcFile(const fileName& name)
+{
+    // Search for user files in
+    // * ~/.OpenFOAM/VERSION
+    // * ~/.OpenFOAM
+    //
+    fileName searchDir = home()/".OpenFOAM";
+    if (fileHandler().isDir(searchDir))
+    {
+        fileName fullName = searchDir/FOAMversion/name;
+        if (fileHandler().isFile(fullName))
+        {
+            return fullName;
+        }
+
+        fullName = searchDir/name;
+        if (fileHandler().isFile(fullName))
+        {
+            return fullName;
+        }
+    }
+
+    // Search for group (site) files in
+    // * $WM_PROJECT_SITE/VERSION
+    // * $WM_PROJECT_SITE
+    //
+    searchDir = getEnv("WM_PROJECT_SITE");
+    if (searchDir.size())
+    {
+        if (fileHandler().isDir(searchDir))
+        {
+            fileName fullName = searchDir/FOAMversion/name;
+            if (fileHandler().isFile(fullName))
+            {
+                return fullName;
+            }
+
+            fullName = searchDir/name;
+            if (fileHandler().isFile(fullName))
+            {
+                return fullName;
+            }
+        }
+    }
+    else
+    {
+        // Or search for group (site) files in
+        // * $WM_PROJECT_INST_DIR/site/VERSION
+        // * $WM_PROJECT_INST_DIR/site
+        //
+        searchDir = getEnv("WM_PROJECT_INST_DIR");
+        if (fileHandler().isDir(searchDir))
+        {
+            fileName fullName = searchDir/"site"/FOAMversion/name;
+            if (fileHandler().isFile(fullName))
+            {
+                return fullName;
+            }
+
+            fullName = searchDir/"site"/name;
+            if (fileHandler().isFile(fullName))
+            {
+                return fullName;
+            }
+        }
+    }
+
+    // Search for other (shipped) files in
+    // * $WM_PROJECT_DIR/etc
+    //
+    searchDir = getEnv("WM_PROJECT_DIR");
+    if (fileHandler().isDir(searchDir))
+    {
+        fileName fullName = searchDir/"etc"/name;
+        if (fileHandler().isFile(fullName))
+        {
+            return fullName;
+        }
+    }
+    std::cerr
+        << "--> FOAM FATAL ERROR in Foam::findEtcFiles() :"
+           " could not find mandatory file\n    '"
+        << name.c_str() << "'\n\n" << std::endl;
+    ::exit(1);
+}
+
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::cellModeller::cellModeller()
+Foam::cellModels::cellModels()
+:
+    models_(fileHandler().NewIFstream(findEtcFile("cellModels"))()())
 {
     if (modelPtrs_.size())
     {
@@ -79,15 +182,16 @@ Foam::cellModeller::cellModeller()
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-Foam::cellModeller::~cellModeller()
+Foam::cellModels::~cellModels()
 {}
 
 
 // * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
 
-const Foam::cellModel* Foam::cellModeller::lookup(const word& name)
+const Foam::cellModel* Foam::cellModels::lookup(const word& name) const
 {
-    HashTable<const cellModel*>::iterator iter = modelDictionary_.find(name);
+    HashTable<const cellModel*>::const_iterator iter =
+        modelDictionary_.find(name);
 
     if (iter != modelDictionary_.end())
     {
@@ -97,6 +201,16 @@ const Foam::cellModel* Foam::cellModeller::lookup(const word& name)
     {
         return nullptr;
     }
+}
+
+
+const Foam::cellModels& Foam::cellModeller()
+{
+    if (!cellModels::cellModellerPtr_.valid())
+    {
+        cellModels::cellModellerPtr_.reset(new cellModels());
+    }
+    return cellModels::cellModellerPtr_();
 }
 
 

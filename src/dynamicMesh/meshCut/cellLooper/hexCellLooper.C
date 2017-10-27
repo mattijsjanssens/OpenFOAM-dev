@@ -153,7 +153,7 @@ void Foam::hexCellLooper::makeFace
 Foam::hexCellLooper::hexCellLooper(const polyMesh& mesh)
 :
     geomCellLooper(mesh),
-    hex_(*(cellModeller::lookup("hex")))
+    hex_(*(cellModeller().lookup("hex")))
 {}
 
 

@@ -221,10 +221,10 @@ void Foam::fluentFvMesh::writeFluentMesh() const
         << "(12 (1 1 "
         << nCells() << " 1 0)(" << std::endl;
 
-    const cellModel& hex = *(cellModeller::lookup("hex"));
-    const cellModel& prism = *(cellModeller::lookup("prism"));
-    const cellModel& pyr = *(cellModeller::lookup("pyr"));
-    const cellModel& tet = *(cellModeller::lookup("tet"));
+    const cellModel& hex = *(cellModeller().lookup("hex"));
+    const cellModel& prism = *(cellModeller().lookup("prism"));
+    const cellModel& pyr = *(cellModeller().lookup("pyr"));
+    const cellModel& tet = *(cellModeller().lookup("tet"));
 
     const cellShapeList& cells = cellShapes();
 

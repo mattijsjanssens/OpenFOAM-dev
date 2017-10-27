@@ -241,6 +241,12 @@ Strictly speaking, we only need the cellModeller for adding boundaries.
 
 void Foam::meshReaders::STARCD::readCells(const fileName& inputName)
 {
+    const cellModel* unknownModel = cellModeller().lookup("unknown");
+    const cellModel* tetModel = cellModeller().lookup("tet");
+    const cellModel* pyrModel = cellModeller().lookup("pyr");
+    const cellModel* prismModel = cellModeller().lookup("prism");
+    const cellModel* hexModel = cellModeller().lookup("hex");
+
     const word fileSignature = "PROSTAR_CELL";
     label nFluids = 0, nSolids = 0, nBaffles = 0, nShells = 0;
     label maxId = 0;
@@ -632,6 +638,11 @@ etc,
 
 void Foam::meshReaders::STARCD::readBoundary(const fileName& inputName)
 {
+    const cellModel* tetModel = cellModeller().lookup("tet");
+    const cellModel* pyrModel = cellModeller().lookup("pyr");
+    const cellModel* prismModel = cellModeller().lookup("prism");
+    const cellModel* hexModel = cellModeller().lookup("hex");
+
     const word fileSignature = "PROSTAR_BOUNDARY";
     label nPatches = 0, nFaces = 0, nBafflePatches = 0, maxId = 0;
     label lineLabel, starCellId, cellFaceId, starRegion, configNumber;

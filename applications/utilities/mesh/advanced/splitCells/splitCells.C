@@ -384,7 +384,7 @@ void collectCuts
     const vectorField& faceAreas = mesh.faceAreas();
 
     // Hex shape
-    const cellModel& hex = *(cellModeller::lookup("hex"));
+    const cellModel& hex = *(cellModeller().lookup("hex"));
 
     // cut handling functions
     edgeVertex ev(mesh);

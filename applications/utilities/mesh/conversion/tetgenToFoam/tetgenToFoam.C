@@ -274,7 +274,7 @@ int main(int argc, char *argv[])
 
 
 
-    const cellModel& tet = *(cellModeller::lookup("tet"));
+    const cellModel& tet = *(cellModeller().lookup("tet"));
 
     labelList tetPoints(4);
 

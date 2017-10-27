@@ -195,12 +195,13 @@ Foam::fileOperations::collatedFileOperation::collatedFileOperation
         {
             Info<< "         Threading activated "
                    "since maxThreadFileBufferSize > 0." << nl
-                << "         Requires thread support enabled in MPI, "
-                   "otherwise the simulation" << nl
-                << "         may \"hang\".  If thread support cannot be "
-                   "enabled, deactivate threading" << nl
-                << "         by setting maxThreadFileBufferSize to 0 in "
-                   "$FOAM_ETC/controlDict"
+                << "         Requires large enough buffer to collect all data"
+                    " or thread support " << nl
+                << "         enabled in MPI. If thread support cannot be "
+                   "enabled, deactivate" << nl
+                << "         threading by setting maxThreadFileBufferSize "
+                    "to 0 in" << nl
+                << "         $FOAM_ETC/controlDict"
                 << endl;
         }
 

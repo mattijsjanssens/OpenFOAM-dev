@@ -32,32 +32,32 @@ License
 
 // Cell shape models
 const Foam::cellModel* Foam::sammMesh::unknownPtr_ =
-    Foam::cellModeller::lookup("unknown");
+    Foam::cellModeller().lookup("unknown");
 const Foam::cellModel* Foam::sammMesh::hexPtr_ =
-    Foam::cellModeller::lookup("hex");
+    Foam::cellModeller().lookup("hex");
 const Foam::cellModel* Foam::sammMesh::wedgePtr_ =
-    Foam::cellModeller::lookup("wedge");
+    Foam::cellModeller().lookup("wedge");
 const Foam::cellModel* Foam::sammMesh::prismPtr_ =
-    Foam::cellModeller::lookup("prism");
+    Foam::cellModeller().lookup("prism");
 const Foam::cellModel* Foam::sammMesh::pyrPtr_ =
-    Foam::cellModeller::lookup("pyr");
+    Foam::cellModeller().lookup("pyr");
 const Foam::cellModel* Foam::sammMesh::tetPtr_ =
-    Foam::cellModeller::lookup("tet");
+    Foam::cellModeller().lookup("tet");
 const Foam::cellModel* Foam::sammMesh::tetWedgePtr_ =
-    Foam::cellModeller::lookup("tetWedge");
+    Foam::cellModeller().lookup("tetWedge");
 
 const Foam::cellModel* Foam::sammMesh::sammTrim1Ptr_ =
-    Foam::cellModeller::lookup("sammTrim1");
+    Foam::cellModeller().lookup("sammTrim1");
 const Foam::cellModel* Foam::sammMesh::sammTrim2Ptr_ =
-    Foam::cellModeller::lookup("sammTrim2");
+    Foam::cellModeller().lookup("sammTrim2");
 const Foam::cellModel* Foam::sammMesh::sammTrim3Ptr_ =
-    Foam::cellModeller::lookup("sammTrim3");
+    Foam::cellModeller().lookup("sammTrim3");
 const Foam::cellModel* Foam::sammMesh::sammTrim4Ptr_ =
-    Foam::cellModeller::lookup("sammTrim4");
+    Foam::cellModeller().lookup("sammTrim4");
 const Foam::cellModel* Foam::sammMesh::sammTrim5Ptr_ =
-    Foam::cellModeller::lookup("sammTrim5");
+    Foam::cellModeller().lookup("sammTrim5");
 const Foam::cellModel* Foam::sammMesh::sammTrim8Ptr_ =
-    Foam::cellModeller::lookup("hexagonalPrism");
+    Foam::cellModeller().lookup("hexagonalPrism");
 
 // lookup table giving OpenFOAM face number when looked up with shape index
 // (first index) and STAR face number

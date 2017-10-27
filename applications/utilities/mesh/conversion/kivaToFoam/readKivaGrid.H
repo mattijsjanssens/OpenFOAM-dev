@@ -102,7 +102,7 @@ cellShapeList cellShapes(nPoints);
 
 labelList cellZoning(nPoints, -1);
 
-const cellModel& hex = *(cellModeller::lookup("hex"));
+const cellModel& hex = *(cellModeller().lookup("hex"));
 labelList hexLabels(8);
 label activeCells = 0;
 

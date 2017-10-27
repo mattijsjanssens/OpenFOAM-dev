@@ -542,7 +542,7 @@ int main(int argc, char *argv[])
 
     cellShapeList cellShapes(nMeshCells);
 
-    const cellModel& hex = *(cellModeller::lookup("hex"));
+    const cellModel& hex = *(cellModeller().lookup("hex"));
 
     label nCreatedCells = 0;
 

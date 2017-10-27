@@ -73,7 +73,7 @@ void Foam::rotatedBoxToCell::combine(topoSet& set, const bool add) const
         boxVerts[i] = i;
     }
 
-    const cellModel& hex = *(cellModeller::lookup("hex"));
+    const cellModel& hex = *(cellModeller().lookup("hex"));
 
     // Get outwards pointing faces.
     faceList boxFaces(cellShape(hex, boxVerts).faces());

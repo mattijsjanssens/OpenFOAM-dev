@@ -106,11 +106,11 @@ void Foam::ensightMesh::correct()
     {
         const cellShapeList& cellShapes = mesh_.cellShapes();
 
-        const cellModel& tet = *(cellModeller::lookup("tet"));
-        const cellModel& pyr = *(cellModeller::lookup("pyr"));
-        const cellModel& prism = *(cellModeller::lookup("prism"));
-        const cellModel& wedge = *(cellModeller::lookup("wedge"));
-        const cellModel& hex = *(cellModeller::lookup("hex"));
+        const cellModel& tet = *(cellModeller().lookup("tet"));
+        const cellModel& pyr = *(cellModeller().lookup("pyr"));
+        const cellModel& prism = *(cellModeller().lookup("prism"));
+        const cellModel& wedge = *(cellModeller().lookup("wedge"));
+        const cellModel& hex = *(cellModeller().lookup("hex"));
 
 
 
@@ -486,7 +486,7 @@ Foam::cellShapeList Foam::ensightMesh::map
 
     label offset = hexes.size();
 
-    const cellModel& hex = *(cellModeller::lookup("hex"));
+    const cellModel& hex = *(cellModeller().lookup("hex"));
     labelList hexLabels(8);
 
     forAll(wedges, i)

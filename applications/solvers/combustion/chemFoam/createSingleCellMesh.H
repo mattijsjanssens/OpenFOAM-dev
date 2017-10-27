@@ -13,7 +13,7 @@ points[5] = vector(1, 0, 1);
 points[6] = vector(1, 1, 1);
 points[7] = vector(0, 1, 1);
 
-const cellModel& hexa = *(cellModeller::lookup("hex"));
+const cellModel& hexa = *(cellModeller().lookup("hex"));
 faceList faces = hexa.modelFaces();
 
 fvMesh mesh
