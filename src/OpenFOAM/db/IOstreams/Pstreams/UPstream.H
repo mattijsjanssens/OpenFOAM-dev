@@ -184,6 +184,9 @@ private:
         //- By default this is not a parallel run
         static bool parRun_;
 
+        //- Have support for threads?
+        static bool haveThreads_;
+
         //- Standard transfer message type
         static int msgType_;
 
@@ -211,7 +214,7 @@ private:
     // Private Member Functions
 
         //- Set data for parallel running
-        static void setParRun(const label nProcs);
+        static void setParRun(const label nProcs, const bool haveThreads);
 
         //- Calculate linear communication schedule
         static List<commsStruct> calcLinearComm(const label nProcs);
@@ -395,6 +398,12 @@ public:
         static bool& parRun()
         {
             return parRun_;
+        }
+
+        //- Have support for threads
+        static bool haveThreads()
+        {
+            return haveThreads_;
         }
 
         //- Number of processes in parallel run

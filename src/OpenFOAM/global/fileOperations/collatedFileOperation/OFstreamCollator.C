@@ -430,6 +430,16 @@ bool Foam::OFstreamCollator::write
                 << " using communicator " << comm_ << endl;
         }
 
+        if (!UPstream::haveThreads)
+        {
+            FatalErrorInFunction
+                << "mpi does not seem to have thread support."
+                << "Please increase the buffer size 'maxThreadFileBufferSize'"
+                << " to at least " << totalSize
+                << " to be able to do the collating before threading."
+                << exit(FatalError);
+        }
+
         if (Pstream::master())
         {
             waitForBufferSpace(data.size());
