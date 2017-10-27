@@ -121,11 +121,6 @@ forAll(Y, i)
 }
 fields.add(thermo.he());
 
-Switch solvePrimaryRegion
-(
-    pimple.dict().lookupOrDefault<Switch>("solvePrimaryRegion", true)
-);
-
 volScalarField Qdot
 (
     IOobject
@@ -144,3 +139,4 @@ volScalarField Qdot
 #include "createRadiationModel.H"
 #include "createClouds.H"
 #include "createSurfaceFilmModel.H"
+#include "createFvOptions.H"
