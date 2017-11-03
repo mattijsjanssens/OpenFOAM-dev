@@ -65,6 +65,45 @@ namespace fileOperations
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
+void Foam::fileOperations::masterUncollatedFileOperation::cacheProcessorDirs
+(
+    const IOobject& io
+) const
+{
+    // Trigger caching of processor directory presence (on master)
+    if (!haveProcessorDir_.valid())
+    {
+        processorDir_ = io.time().path();
+        if (Pstream::master())
+        {
+            haveProcessorDir_ = Foam::isDir(processorDir_);
+        }
+        Pstream::scatter(haveProcessorDir_);
+        if (debug)
+        {
+            Pout<< "masterUncollatedFileOperation::cacheProcessorDirs :"
+                << " Detected processorDDD/ : " << haveProcessorDir_
+                << "  actual path:" << processorDir_ << endl;
+        }
+    }
+    if (!haveCollatedDir_.valid())
+    {
+        collatedDir_ = processorsCasePath(io);
+        if (Pstream::master())
+        {
+            haveCollatedDir_ = Foam::isDir(collatedDir_);
+        }
+        Pstream::scatter(haveCollatedDir_);
+        if (debug)
+        {
+            Pout<< "masterUncollatedFileOperation::cacheProcessorDirs :"
+                << " Detected processors/ : " << haveCollatedDir_
+                << " actual path:" << collatedDir_ << endl;
+        }
+    }
+}
+
+
 Foam::word
 Foam::fileOperations::masterUncollatedFileOperation::findInstancePath
 (
@@ -455,6 +494,12 @@ masterUncollatedFileOperation
 (
     const bool verbose
 )
+:
+    fileOperation(),
+    processorDir_("UNSET"),
+    haveProcessorDir_(Switch::INVALID),
+    collatedDir_("UNSET"),
+    haveCollatedDir_(Switch::INVALID)
 {
     if (verbose)
     {
@@ -534,6 +579,14 @@ Foam::fileName::Type Foam::fileOperations::masterUncollatedFileOperation::type
     const bool followLink
 ) const
 {
+    if (fName.find(processorDir_) == 0 && !haveProcessorDir_)
+    {
+        return fileName::UNDEFINED;
+    }
+    else if (fName.find(collatedDir_) == 0 && !haveCollatedDir_)
+    {
+        return fileName::UNDEFINED;
+    }
     return fileName::Type(masterOp<label, typeOp>(fName, typeOp(followLink)));
 }
 
@@ -545,6 +598,14 @@ bool Foam::fileOperations::masterUncollatedFileOperation::exists
     const bool followLink
 ) const
 {
+    if (fName.find(processorDir_) == 0 && !haveProcessorDir_)
+    {
+        return false;
+    }
+    else if (fName.find(collatedDir_) == 0 && !haveCollatedDir_)
+    {
+        return false;
+    }
     return masterOp<bool, existsOp>(fName, existsOp(checkGzip, followLink));
 }
 
@@ -555,6 +616,14 @@ bool Foam::fileOperations::masterUncollatedFileOperation::isDir
     const bool followLink
 ) const
 {
+    if (fName.find(processorDir_) == 0 && !haveProcessorDir_)
+    {
+        return false;
+    }
+    else if (fName.find(collatedDir_) == 0 && !haveCollatedDir_)
+    {
+        return false;
+    }
     return masterOp<bool, isDirOp>(fName, isDirOp(followLink));
 }
 
@@ -566,6 +635,14 @@ bool Foam::fileOperations::masterUncollatedFileOperation::isFile
     const bool followLink
 ) const
 {
+    if (fName.find(processorDir_) == 0 && !haveProcessorDir_)
+    {
+        return false;
+    }
+    else if (fName.find(collatedDir_) == 0 && !haveCollatedDir_)
+    {
+        return false;
+    }
     return masterOp<bool, isFileOp>(fName, isFileOp(checkGzip, followLink));
 }
 
@@ -698,8 +775,12 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePath
             << " checkGlobal:" << checkGlobal << endl;
     }
 
+    // Trigger caching of processor directory presence (on master)
+    cacheProcessorDirs(io);
+
     // Trigger caching of times
     (void)findTimes(io.time().path(), io.time().constant());
+
 
     // Determine master filePath and scatter
 
@@ -719,12 +800,12 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePath
         );
     }
 
+    // Scatter the information about where the master found the object
     {
         label masterType(searchType);
         Pstream::scatter(masterType);
         searchType = pathType(masterType);
     }
-
     Pstream::scatter(newInstancePath);
 
 
@@ -748,11 +829,24 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePath
         {
             // Retest all processors separately since some processors might
             // have the file and some not (e.g. lagrangian data)
-            objPath = masterOp<fileName, fileOrNullOp>
-            (
-                io.objectPath(),
-                fileOrNullOp(true)
-            );
+
+            objPath = io.objectPath();
+            if (objPath.find(processorDir_) == 0 && !haveProcessorDir_)
+            {
+                objPath = "";
+            }
+            else if (objPath.find(collatedDir_) == 0 && !haveCollatedDir_)
+            {
+                objPath = "";
+            }
+            else
+            {
+                objPath = masterOp<fileName, fileOrNullOp>
+                (
+                    objPath,
+                    fileOrNullOp(true)
+                );
+            }
         }
         break;
     }
@@ -780,6 +874,9 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::dirPath
             << " objectPath:" << io.objectPath()
             << " checkGlobal:" << checkGlobal << endl;
     }
+
+    // Trigger caching of processor directory presence (on master)
+    cacheProcessorDirs(io);
 
     // Determine master dirPath and scatter
 
@@ -827,11 +924,23 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::dirPath
         {
             // Retest all processors separately since some processors might
             // have the file and some not (e.g. lagrangian data)
-            objPath = masterOp<fileName, fileOrNullOp>
-            (
-                io.objectPath(),
-                fileOrNullOp(false)
-            );
+            objPath = io.objectPath();
+            if (objPath.find(processorDir_) == 0 && !haveProcessorDir_)
+            {
+                objPath = "";
+            }
+            else if (objPath.find(collatedDir_) == 0 && !haveCollatedDir_)
+            {
+                objPath = "";
+            }
+            else
+            {
+                objPath = masterOp<fileName, fileOrNullOp>
+                (
+                    objPath,
+                    fileOrNullOp(false)
+                );
+            }
         }
         break;
     }
@@ -1036,6 +1145,7 @@ Foam::fileOperations::masterUncollatedFileOperation::readStream
     {
         Pout<< "masterUncollatedFileOperation::readStream:"
             << " object : " << io.name()
+            << " global : " << io.global()
             << " fName : " << fName << " valid:" << valid << endl;
     }
 
@@ -1148,11 +1258,53 @@ Foam::fileOperations::masterUncollatedFileOperation::readStream
 
         PstreamBuffers pBufs(Pstream::commsTypes::nonBlocking);
 
+        const bool uniform = uniformFile(filePaths);
+
         if (Pstream::master())
         {
-            //const bool uniform = uniformFile(filePaths);
+//XXXXXX
+            if (uniform && !fName.empty())
+            {
+                // Read on master and send to all processors (including master
+                // for simplicity)
+                DynamicList<label> validProcs(Pstream::nProcs());
+                for (label proci = 0; proci < Pstream::nProcs(); proci++)
+                {
+                    if (procValid[proci])
+                    {
+                        validProcs.append(proci);
+                    }
+                }
+                if (debug)
+                {
+                    Pout<< "masterUncollatedFileOperation::readStream:"
+                        << " For uniform file " << fName
+                        << " sending to " << validProcs << endl;
+                }
 
-            if (valid)
+                if (Foam::exists(fName+".gz", false))
+                {
+                    readAndSend
+                    (
+                        fName,
+                        IOstream::compressionType::COMPRESSED,
+                        validProcs,
+                        pBufs
+                    );
+                }
+                else
+                {
+                    readAndSend
+                    (
+                        fName,
+                        IOstream::compressionType::UNCOMPRESSED,
+                        validProcs,
+                        pBufs
+                    );
+                }
+            }
+//XXXXXX
+            else if (valid)
             {
                 if (fName.empty())
                 {
@@ -1219,10 +1371,11 @@ Foam::fileOperations::masterUncollatedFileOperation::readStream
         labelList recvSizes;
         pBufs.finishedSends(recvSizes);
 
-        // isPtr will be valid on master. Else the information is in the
-        // PstreamBuffers
+        // isPtr will be valid on master and will be the unbuffered
+        // IFstream. Else the information is in the PstreamBuffers (and
+        // the special case of a uniform file)
 
-        if (Pstream::master())
+        if (Pstream::master() && !uniform)
         {
             if (!isPtr.valid())
             {
