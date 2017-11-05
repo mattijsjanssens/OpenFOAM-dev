@@ -52,7 +52,7 @@ cellShape extrudedTriangleCellShape
 
     if (!prismModelPtr_)
     {
-        prismModelPtr_ = cellModeller().lookup("prism");
+        prismModelPtr_ = cellModeller::lookup("prism");
     }
 
     const cellModel& prism = *prismModelPtr_;

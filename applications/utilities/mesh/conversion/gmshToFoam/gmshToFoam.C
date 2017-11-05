@@ -423,10 +423,10 @@ void readCells
 {
     Info<< "Starting to read cells at line " << inFile.lineNumber() << endl;
 
-    const cellModel& hex = *(cellModeller().lookup("hex"));
-    const cellModel& prism = *(cellModeller().lookup("prism"));
-    const cellModel& pyr = *(cellModeller().lookup("pyr"));
-    const cellModel& tet = *(cellModeller().lookup("tet"));
+    const cellModel& hex = *(cellModeller::lookup("hex"));
+    const cellModel& prism = *(cellModeller::lookup("prism"));
+    const cellModel& pyr = *(cellModeller::lookup("pyr"));
+    const cellModel& tet = *(cellModeller::lookup("tet"));
 
     face triPoints(3);
     face quadPoints(4);

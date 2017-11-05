@@ -697,10 +697,10 @@ int main(int argc, char *argv[])
         cellLookup[cellMap[celli] ] = celli;
     }
 
-    const cellModel& hex = *(cellModeller().lookup("hex"));
-    const cellModel& prism = *(cellModeller().lookup("prism"));
-    const cellModel& pyr = *(cellModeller().lookup("pyr"));
-    const cellModel& tet = *(cellModeller().lookup("tet"));
+    const cellModel& hex = *(cellModeller::lookup("hex"));
+    const cellModel& prism = *(cellModeller::lookup("prism"));
+    const cellModel& pyr = *(cellModeller::lookup("pyr"));
+    const cellModel& tet = *(cellModeller::lookup("tet"));
 
     labelList labelsHex(8);
     labelList labelsPrism(6);

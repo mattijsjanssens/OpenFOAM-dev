@@ -95,31 +95,21 @@ Foam::dictionary& Foam::debug::controlDict()
 {
     if (!controlDictPtr_)
     {
-        string controlDictString(getEnv("FOAM_CONTROLDICT"));
-        if (!controlDictString.empty())
+        fileNameList controlDictFiles = findEtcFiles("controlDict", true);
+        controlDictPtr_ = new dictionary();
+        forAllReverse(controlDictFiles, cdfi)
         {
-            // Read from environment
-            IStringStream is(controlDictString);
-            controlDictPtr_ = new dictionary(is);
-        }
-        else
-        {
-            fileNameList controlDictFiles = findEtcFiles("controlDict", true);
-            controlDictPtr_ = new dictionary();
-            forAllReverse(controlDictFiles, cdfi)
-            {
-                IFstream ifs(controlDictFiles[cdfi]);
+            IFstream ifs(controlDictFiles[cdfi]);
 
-                if (!ifs.good())
-                {
-                    SafeFatalIOErrorInFunction
-                    (
-                        ifs,
-                        "Cannot open controlDict"
-                    );
-                }
-                controlDictPtr_->merge(dictionary(ifs));
+            if (!ifs.good())
+            {
+                SafeFatalIOErrorInFunction
+                (
+                    ifs,
+                    "Cannot open controlDict"
+                );
             }
+            controlDictPtr_->merge(dictionary(ifs));
         }
     }
 

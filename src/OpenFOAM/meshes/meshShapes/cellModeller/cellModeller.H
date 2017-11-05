@@ -22,13 +22,15 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::cellModels
+    Foam::cellModeller
 
 Description
     A static collection of cell models, and a means of looking them up.
 
 SourceFiles
     cellModeller.C
+    cellModellerIO.C
+    globalCellModeller.C
 
 \*---------------------------------------------------------------------------*/
 
@@ -45,62 +47,46 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                        Class cellModels Declaration
+                        Class cellModeller Declaration
 \*---------------------------------------------------------------------------*/
 
-class cellModels
+class cellModeller
 {
     // Private data
 
         //- PtrList of models
-        PtrList<cellModel> models_;
+        static PtrList<cellModel> models_;
 
         //- List of model pointers
-        List<cellModel*> modelPtrs_;
+        static List<cellModel*> modelPtrs_;
 
         //- HashTable of model pointers
-        HashTable<const cellModel*> modelDictionary_;
-
-
-    // Private member functions
-
-        //- Version of findEtcFile that uses fileHandler
-        static fileName findEtcFile(const fileName& name);
+        static HashTable<const cellModel*> modelDictionary_;
 
 
 public:
 
-        //- Static singleton
-        static autoPtr<cellModels> cellModellerPtr_;
-
     // Constructors
 
         //- Construct from central "cellModels" file
-        cellModels();
+        cellModeller();
 
     //- Destructor
-    ~cellModels();
+    ~cellModeller();
 
 
     // Member functions
 
         //- Look up a model by name and return a pointer to the model or nullptr
-        const cellModel* lookup(const word&) const;
+        static const cellModel* lookup(const word&);
 
         //- Look up a model by index and return a pointer to the model or
         //  nullptr
-        const cellModel* lookup(const label i) const
+        static const cellModel* lookup(const label i)
         {
             return modelPtrs_[i];
         }
 };
-
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-// Global declarations: defined in fileOperation.C
-
-//- Get cellModels
-const cellModels& cellModeller();
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

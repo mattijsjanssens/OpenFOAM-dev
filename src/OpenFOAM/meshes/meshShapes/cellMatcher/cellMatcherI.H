@@ -87,7 +87,7 @@ inline const Foam::cellModel& Foam::cellMatcher::model() const
 {
     if (cellModelPtr_ == nullptr)
     {
-        cellModelPtr_ = cellModeller().lookup(cellModelName_);
+        cellModelPtr_ = cellModeller::lookup(cellModelName_);
     }
     return *cellModelPtr_;
 }

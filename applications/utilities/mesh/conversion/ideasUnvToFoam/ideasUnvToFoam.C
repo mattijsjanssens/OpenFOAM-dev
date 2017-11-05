@@ -284,9 +284,9 @@ void readCells
     labelList unvToFoam(invert(maxUnvPoint+1, unvPointID));
 
 
-    const cellModel& hex = *(cellModeller().lookup("hex"));
-    const cellModel& prism = *(cellModeller().lookup("prism"));
-    const cellModel& tet = *(cellModeller().lookup("tet"));
+    const cellModel& hex = *(cellModeller::lookup("hex"));
+    const cellModel& prism = *(cellModeller::lookup("prism"));
+    const cellModel& tet = *(cellModeller::lookup("tet"));
 
     labelHashSet skippedElements;
 

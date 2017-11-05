@@ -121,7 +121,7 @@ int main(int argc, char *argv[])
 
     Info<< "nTets:" << nTets << endl;
 
-    const cellModel& tet = *(cellModeller().lookup("tet"));
+    const cellModel& tet = *(cellModeller::lookup("tet"));
 
     cellShapeList cells(nTets);
 

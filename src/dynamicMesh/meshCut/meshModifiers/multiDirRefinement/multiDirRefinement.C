@@ -189,7 +189,7 @@ void Foam::multiDirRefinement::addCells
 
 Foam::labelList Foam::multiDirRefinement::splitOffHex(const primitiveMesh& mesh)
 {
-    const cellModel& hex = *(cellModeller().lookup("hex"));
+    const cellModel& hex = *(cellModeller::lookup("hex"));
 
     const cellShapeList& cellShapes = mesh.cellShapes();
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -21,68 +21,34 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
+Description
+    cellModeller global initializations
+
 \*---------------------------------------------------------------------------*/
 
-#include "meshWriter.H"
 #include "cellModeller.H"
+#include "etcFiles.H"
+#include "IFstream.H"
 
-// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * * Static data * * * * * * * * * * * * * * * * //
 
-Foam::string Foam::meshWriter::defaultMeshName = "meshExport";
-
-
-const Foam::cellModel* Foam::meshWriter::unknownModel = Foam::cellModeller::
-lookup
+Foam::PtrList<Foam::cellModel> Foam::cellModeller::models_
 (
-    "unknown"
+    IFstream(findEtcFile("cellModels", true))()
 );
 
+Foam::List<Foam::cellModel*> Foam::cellModeller::modelPtrs_;
 
-const Foam::cellModel* Foam::meshWriter::tetModel = Foam::cellModeller::
-lookup
-(
-    "tet"
-);
+Foam::HashTable<const Foam::cellModel*> Foam::cellModeller::modelDictionary_;
 
 
-const Foam::cellModel* Foam::meshWriter::pyrModel = Foam::cellModeller::
-lookup
-(
-    "pyr"
-);
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-
-const Foam::cellModel* Foam::meshWriter::prismModel = Foam::cellModeller::
-lookup
-(
-    "prism"
-);
-
-
-const Foam::cellModel* Foam::meshWriter::hexModel = Foam::cellModeller::
-lookup
-(
-    "hex"
-);
-
-
-// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
-
-Foam::meshWriter::meshWriter(const polyMesh& mesh, const scalar scaleFactor)
-:
-    mesh_(mesh),
-    scaleFactor_(scaleFactor),
-    writeBoundary_(true),
-    boundaryRegion_(),
-    cellTable_(),
-    cellTableId_()
-{}
-
-
-// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
-
-Foam::meshWriter::~meshWriter()
-{}
-
+namespace Foam
+{
+    // Construct a dummy cellModeller which reads the models and fills
+    // the above tables
+    cellModeller globalCellModeller_;
+}
 
 // ************************************************************************* //

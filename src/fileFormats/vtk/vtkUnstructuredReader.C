@@ -104,10 +104,10 @@ void Foam::vtkUnstructuredReader::extractCells
     const labelList& cellVertData
 )
 {
-    const cellModel& hex = *(cellModeller().lookup("hex"));
-    const cellModel& prism = *(cellModeller().lookup("prism"));
-    const cellModel& pyr = *(cellModeller().lookup("pyr"));
-    const cellModel& tet = *(cellModeller().lookup("tet"));
+    const cellModel& hex = *(cellModeller::lookup("hex"));
+    const cellModel& prism = *(cellModeller::lookup("prism"));
+    const cellModel& pyr = *(cellModeller::lookup("pyr"));
+    const cellModel& tet = *(cellModeller::lookup("tet"));
 
     labelList tetPoints(4);
     labelList pyrPoints(5);

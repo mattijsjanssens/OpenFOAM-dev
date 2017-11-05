@@ -53,10 +53,10 @@ cellShape create3DCellShape
         reinterpret_cast<const cellModel*>(0)
     );
 
-    fluentCellModelLookup[2] = cellModeller().lookup("tet");
-    fluentCellModelLookup[4] = cellModeller().lookup("hex");
-    fluentCellModelLookup[5] = cellModeller().lookup("pyr");
-    fluentCellModelLookup[6] = cellModeller().lookup("prism");
+    fluentCellModelLookup[2] = cellModeller::lookup("tet");
+    fluentCellModelLookup[4] = cellModeller::lookup("hex");
+    fluentCellModelLookup[5] = cellModeller::lookup("pyr");
+    fluentCellModelLookup[6] = cellModeller::lookup("prism");
 
     static label faceMatchingOrder[7][6] =
     {

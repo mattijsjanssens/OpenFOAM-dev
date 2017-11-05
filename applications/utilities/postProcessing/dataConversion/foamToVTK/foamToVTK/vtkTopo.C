@@ -49,12 +49,12 @@ Foam::vtkTopo::vtkTopo(const polyMesh& mesh)
     addPointCellLabels_(),
     superCells_()
 {
-    const cellModel& tet = *(cellModeller().lookup("tet"));
-    const cellModel& pyr = *(cellModeller().lookup("pyr"));
-    const cellModel& prism = *(cellModeller().lookup("prism"));
-    const cellModel& wedge = *(cellModeller().lookup("wedge"));
-    const cellModel& tetWedge = *(cellModeller().lookup("tetWedge"));
-    const cellModel& hex = *(cellModeller().lookup("hex"));
+    const cellModel& tet = *(cellModeller::lookup("tet"));
+    const cellModel& pyr = *(cellModeller::lookup("pyr"));
+    const cellModel& prism = *(cellModeller::lookup("prism"));
+    const cellModel& wedge = *(cellModeller::lookup("wedge"));
+    const cellModel& tetWedge = *(cellModeller::lookup("tetWedge"));
+    const cellModel& hex = *(cellModeller::lookup("hex"));
 
     const cellShapeList& cellShapes = mesh_.cellShapes();
 

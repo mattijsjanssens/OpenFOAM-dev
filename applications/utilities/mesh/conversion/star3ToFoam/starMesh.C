@@ -36,32 +36,32 @@ const Foam::scalar Foam::starMesh::cpMergePointTol_ = 1e-4;
 
 // Cell shape models
 const Foam::cellModel* Foam::starMesh::unknownPtr_ =
-    Foam::cellModeller().lookup("unknown");
+    Foam::cellModeller::lookup("unknown");
 const Foam::cellModel* Foam::starMesh::tetPtr_ =
-    Foam::cellModeller().lookup("tet");
+    Foam::cellModeller::lookup("tet");
 const Foam::cellModel* Foam::starMesh::pyrPtr_ =
-    Foam::cellModeller().lookup("pyr");
+    Foam::cellModeller::lookup("pyr");
 const Foam::cellModel* Foam::starMesh::tetWedgePtr_ =
-    Foam::cellModeller().lookup("tetWedge");
+    Foam::cellModeller::lookup("tetWedge");
 const Foam::cellModel* Foam::starMesh::prismPtr_ =
-    Foam::cellModeller().lookup("prism");
+    Foam::cellModeller::lookup("prism");
 const Foam::cellModel* Foam::starMesh::wedgePtr_ =
-    Foam::cellModeller().lookup("wedge");
+    Foam::cellModeller::lookup("wedge");
 const Foam::cellModel* Foam::starMesh::hexPtr_ =
-    Foam::cellModeller().lookup("hex");
+    Foam::cellModeller::lookup("hex");
 
 const Foam::cellModel* Foam::starMesh::sammTrim1Ptr_ =
-    Foam::cellModeller().lookup("sammTrim1");
+    Foam::cellModeller::lookup("sammTrim1");
 const Foam::cellModel* Foam::starMesh::sammTrim2Ptr_ =
-    Foam::cellModeller().lookup("sammTrim2");
+    Foam::cellModeller::lookup("sammTrim2");
 const Foam::cellModel* Foam::starMesh::sammTrim3Ptr_ =
-    Foam::cellModeller().lookup("sammTrim3");
+    Foam::cellModeller::lookup("sammTrim3");
 const Foam::cellModel* Foam::starMesh::sammTrim4Ptr_ =
-    Foam::cellModeller().lookup("sammTrim4");
+    Foam::cellModeller::lookup("sammTrim4");
 const Foam::cellModel* Foam::starMesh::sammTrim5Ptr_ =
-    Foam::cellModeller().lookup("sammTrim5");
+    Foam::cellModeller::lookup("sammTrim5");
 const Foam::cellModel* Foam::starMesh::sammTrim8Ptr_ =
-    Foam::cellModeller().lookup("hexagonalPrism");
+    Foam::cellModeller::lookup("hexagonalPrism");
 
 // Regular cell point addressing
 // SAMM point addressing

@@ -240,6 +240,13 @@ protected:
 
     // Protected member data
 
+        //- Pointers to cell shape models
+        static const cellModel* unknownModel;
+        static const cellModel* tetModel;
+        static const cellModel* pyrModel;
+        static const cellModel* prismModel;
+        static const cellModel* hexModel;
+
         //- Referenced filename
         fileName geometryFile_;
 

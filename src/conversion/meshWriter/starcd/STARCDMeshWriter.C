@@ -218,11 +218,6 @@ void Foam::meshWriters::STARCD::writePoints(const fileName& prefix) const
 
 void Foam::meshWriters::STARCD::writeCells(const fileName& prefix) const
 {
-    const cellModel* tetModel = cellModeller().lookup("tet");
-    const cellModel* pyrModel = cellModeller().lookup("pyr");
-    const cellModel* prismModel = cellModeller().lookup("prism");
-    const cellModel* hexModel = cellModeller().lookup("hex");
-
     OFstream os(prefix + ".cel");
     writeHeader(os, "CELL");
 
@@ -365,11 +360,6 @@ void Foam::meshWriters::STARCD::writeCells(const fileName& prefix) const
 
 void Foam::meshWriters::STARCD::writeBoundary(const fileName& prefix) const
 {
-    const cellModel* tetModel = cellModeller().lookup("tet");
-    const cellModel* pyrModel = cellModeller().lookup("pyr");
-    const cellModel* prismModel = cellModeller().lookup("prism");
-    const cellModel* hexModel = cellModeller().lookup("hex");
-
     OFstream os(prefix + ".bnd");
     writeHeader(os, "BOUNDARY");
 

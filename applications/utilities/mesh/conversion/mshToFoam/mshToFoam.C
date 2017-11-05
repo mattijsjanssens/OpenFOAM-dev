@@ -84,8 +84,8 @@ int main(int argc, char *argv[])
 
     cellShapeList cells(nCells);
 
-    const cellModel& tet = *(cellModeller().lookup("tet"));
-    const cellModel& hex = *(cellModeller().lookup("hex"));
+    const cellModel& tet = *(cellModeller::lookup("tet"));
+    const cellModel& hex = *(cellModeller::lookup("hex"));
 
     labelList tetPoints(4);
     labelList hexPoints(8);

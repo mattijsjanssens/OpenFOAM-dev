@@ -94,7 +94,7 @@ void Foam::blockMesh::createPoints() const
 void Foam::blockMesh::createCells() const
 {
     const blockList& blocks = *this;
-    const cellModel& hex = *(cellModeller().lookup("hex"));
+    const cellModel& hex = *(cellModeller::lookup("hex"));
 
     if (verboseOutput)
     {

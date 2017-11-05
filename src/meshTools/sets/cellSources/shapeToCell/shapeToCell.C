@@ -76,7 +76,7 @@ void Foam::shapeToCell::combine(topoSet& set, const bool add) const
     }
     else
     {
-        const cellModel& wantedModel = *(cellModeller().lookup(type_));
+        const cellModel& wantedModel = *(cellModeller::lookup(type_));
 
         const cellShapeList& cellShapes = mesh_.cellShapes();
 
@@ -103,7 +103,7 @@ Foam::shapeToCell::shapeToCell
     topoSetSource(mesh),
     type_(type)
 {
-    if (!cellModeller().lookup(type_) && (type_ != "splitHex"))
+    if (!cellModeller::lookup(type_) && (type_ != "splitHex"))
     {
         FatalErrorInFunction
             << "Illegal cell type " << type_ << exit(FatalError);
@@ -121,7 +121,7 @@ Foam::shapeToCell::shapeToCell
     topoSetSource(mesh),
     type_(dict.lookup("type"))
 {
-    if (!cellModeller().lookup(type_) && (type_ != "splitHex"))
+    if (!cellModeller::lookup(type_) && (type_ != "splitHex"))
     {
         FatalErrorInFunction
             << "Illegal cell type " << type_ << exit(FatalError);
@@ -139,7 +139,7 @@ Foam::shapeToCell::shapeToCell
     topoSetSource(mesh),
     type_(checkIs(is))
 {
-    if (!cellModeller().lookup(type_) && (type_ != "splitHex"))
+    if (!cellModeller::lookup(type_) && (type_ != "splitHex"))
     {
         FatalErrorInFunction
             << "Illegal cell type " << type_ << exit(FatalError);

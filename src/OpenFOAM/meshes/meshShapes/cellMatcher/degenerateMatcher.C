@@ -72,7 +72,7 @@ Foam::cellShape Foam::degenerateMatcher::match
     }
     else
     {
-        return cellShape(*(cellModeller().lookup(0)), labelList(0));
+        return cellShape(*(cellModeller::lookup(0)), labelList(0));
     }
 }
 

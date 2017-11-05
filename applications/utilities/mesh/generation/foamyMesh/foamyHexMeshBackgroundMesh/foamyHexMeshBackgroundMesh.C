@@ -251,7 +251,7 @@ autoPtr<polyMesh> generateHexMesh
     }
 
 
-    const cellModel& hex = *(cellModeller().lookup("hex"));
+    const cellModel& hex = *(cellModeller::lookup("hex"));
     cellShapeList cellShapes(nCells[0]*nCells[1]*nCells[2]);
 
     labelList hexPoints(8);
