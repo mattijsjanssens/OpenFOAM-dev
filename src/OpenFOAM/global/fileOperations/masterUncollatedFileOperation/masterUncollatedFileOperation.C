@@ -1262,11 +1262,8 @@ Foam::fileOperations::masterUncollatedFileOperation::readStream
 
         if (Pstream::master())
         {
-//XXXXXX
-            if (uniform && !fName.empty())
+            if (uniform)
             {
-                // Read on master and send to all processors (including master
-                // for simplicity)
                 DynamicList<label> validProcs(Pstream::nProcs());
                 for (label proci = 0; proci < Pstream::nProcs(); proci++)
                 {
@@ -1275,6 +1272,9 @@ Foam::fileOperations::masterUncollatedFileOperation::readStream
                         validProcs.append(proci);
                     }
                 }
+
+                // Read on master and send to all processors (including master
+                // for simplicity)
                 if (debug)
                 {
                     Pout<< "masterUncollatedFileOperation::readStream:"
@@ -1303,66 +1303,68 @@ Foam::fileOperations::masterUncollatedFileOperation::readStream
                     );
                 }
             }
-//XXXXXX
-            else if (valid)
+            else
             {
-                if (fName.empty())
+                if (valid)
                 {
-                    FatalErrorInFunction
-                        << "cannot find file " << io.objectPath()
-                        << exit(FatalError);
-                }
-                else
-                {
-                    autoPtr<IFstream> ifsPtr(new IFstream(fName));
-
-                    // Read header
-                    if (!io.readHeader(ifsPtr()))
+                    if (fName.empty())
                     {
-                        FatalIOErrorInFunction(ifsPtr())
-                            << "problem while reading header for object "
-                            << io.name() << exit(FatalIOError);
-                    }
-
-                    // Open master (steal from ifsPtr)
-                    isPtr.reset(ifsPtr.ptr());
-                }
-            }
-
-            // Read slave files
-            for (label proci = 1; proci < Pstream::nProcs(); proci++)
-            {
-                if (debug)
-                {
-                    Pout<< "masterUncollatedFileOperation::readStream:"
-                        << " For processor " << proci
-                        << " opening " << filePaths[proci] << endl;
-                }
-
-                if (procValid[proci] && !filePaths[proci].empty())
-                {
-                    // Note: handle compression ourselves since size cannot
-                    // be determined without actually uncompressing
-
-                    if (Foam::exists(filePaths[proci]+".gz", false))
-                    {
-                        readAndSend
-                        (
-                            filePaths[proci],
-                            IOstream::compressionType::COMPRESSED,
-                            labelList(1, proci),
-                            pBufs
-                        );
+                        FatalErrorInFunction
+                            << "cannot find file " << io.objectPath()
+                            << exit(FatalError);
                     }
                     else
                     {
-                        readAndSend
-                        (
-                            filePaths[proci],
-                            IOstream::compressionType::UNCOMPRESSED,
-                            labelList(1, proci),
-                            pBufs
-                        );
+                        autoPtr<IFstream> ifsPtr(new IFstream(fName));
+
+                        // Read header
+                        if (!io.readHeader(ifsPtr()))
+                        {
+                            FatalIOErrorInFunction(ifsPtr())
+                                << "problem while reading header for object "
+                                << io.name() << exit(FatalIOError);
+                        }
+
+                        // Open master (steal from ifsPtr)
+                        isPtr.reset(ifsPtr.ptr());
+                    }
+                }
+
+                // Read slave files
+                for (label proci = 1; proci < Pstream::nProcs(); proci++)
+                {
+                    if (debug)
+                    {
+                        Pout<< "masterUncollatedFileOperation::readStream:"
+                            << " For processor " << proci
+                            << " opening " << filePaths[proci] << endl;
+                    }
+
+                    if (procValid[proci] && !filePaths[proci].empty())
+                    {
+                        // Note: handle compression ourselves since size cannot
+                        // be determined without actually uncompressing
+
+                        if (Foam::exists(filePaths[proci]+".gz", false))
+                        {
+                            readAndSend
+                            (
+                                filePaths[proci],
+                                IOstream::compressionType::COMPRESSED,
+                                labelList(1, proci),
+                                pBufs
+                            );
+                        }
+                        else
+                        {
+                            readAndSend
+                            (
+                                filePaths[proci],
+                                IOstream::compressionType::UNCOMPRESSED,
+                                labelList(1, proci),
+                                pBufs
+                            );
+                        }
                     }
                 }
             }

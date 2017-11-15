@@ -26,6 +26,7 @@ License
 #include "OFstreamCollator.H"
 #include "OFstream.H"
 #include "decomposedBlockData.H"
+#include "masterUncollatedFileOperation.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -111,7 +112,12 @@ bool Foam::OFstreamCollator::writeFile
         recvSizes,
         haveSlaveData,
         slaveData,
-        UPstream::commsTypes::nonBlocking,  //scheduled,
+        (
+            fileOperations::masterUncollatedFileOperation::
+                maxMasterFileBufferSize == 0
+          ? UPstream::commsTypes::scheduled
+          : UPstream::commsTypes::nonBlocking
+        ),
         false       // do not reduce return state
     );
 
