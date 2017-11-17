@@ -70,35 +70,38 @@ void Foam::fileOperations::masterUncollatedFileOperation::cacheProcessorDirs
     const IOobject& io
 ) const
 {
-    // Trigger caching of processor directory presence (on master)
-    if (!haveProcessorDir_.valid())
+    if (Pstream::parRun())
     {
-        processorDir_ = io.time().path();
-        if (Pstream::master())
+        // Trigger caching of processor directory presence (on master)
+        if (!haveProcessorDir_.valid())
         {
-            haveProcessorDir_ = Foam::isDir(processorDir_);
+            processorDir_ = io.time().path();
+            if (Pstream::master())
+            {
+                haveProcessorDir_ = Foam::isDir(processorDir_);
+            }
+            Pstream::scatter(haveProcessorDir_);
+            if (debug)
+            {
+                Pout<< "masterUncollatedFileOperation::cacheProcessorDirs :"
+                    << " Detected processorDDD/ : " << haveProcessorDir_
+                    << "  actual path:" << processorDir_ << endl;
+            }
         }
-        Pstream::scatter(haveProcessorDir_);
-        if (debug)
+        if (!haveCollatedDir_.valid())
         {
-            Pout<< "masterUncollatedFileOperation::cacheProcessorDirs :"
-                << " Detected processorDDD/ : " << haveProcessorDir_
-                << "  actual path:" << processorDir_ << endl;
-        }
-    }
-    if (!haveCollatedDir_.valid())
-    {
-        collatedDir_ = processorsCasePath(io);
-        if (Pstream::master())
-        {
-            haveCollatedDir_ = Foam::isDir(collatedDir_);
-        }
-        Pstream::scatter(haveCollatedDir_);
-        if (debug)
-        {
-            Pout<< "masterUncollatedFileOperation::cacheProcessorDirs :"
-                << " Detected processors/ : " << haveCollatedDir_
-                << " actual path:" << collatedDir_ << endl;
+            collatedDir_ = processorsCasePath(io);
+            if (Pstream::master())
+            {
+                haveCollatedDir_ = Foam::isDir(collatedDir_);
+            }
+            Pstream::scatter(haveCollatedDir_);
+            if (debug)
+            {
+                Pout<< "masterUncollatedFileOperation::cacheProcessorDirs :"
+                    << " Detected processors/ : " << haveCollatedDir_
+                    << " actual path:" << collatedDir_ << endl;
+            }
         }
     }
 }
@@ -1174,6 +1177,13 @@ Foam::fileOperations::masterUncollatedFileOperation::readStream
                 {
                     isCollated = true;
                 }
+                else if (!Pstream::parRun())
+                {
+                    // Short circuit: non-collated format. No parallel bits.
+                    // Copy header and return.
+                    io = headerIO;
+                    return isPtr;
+                }
             }
 
             if (!isCollated)
@@ -1604,6 +1614,9 @@ Foam::instantList Foam::fileOperations::masterUncollatedFileOperation::findTimes
             times = fileOperation::findTimes(directory, constantName);
         }
         Pstream::scatter(times);
+
+        // Note: do we also cache if no times have been found since it might
+        //       indicate a directory that is being filled later on ...
 
         instantList* tPtr = new instantList(times.xfer());
 
