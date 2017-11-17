@@ -132,6 +132,12 @@ Foam::word Foam::Time::findInstance
     // continue searching from here
     for (; instanceI >= 0; --instanceI)
     {
+        // Shortcut: if actual directory is the timeName we've already tested it
+        if (ts[instanceI].name() == timeName())
+        {
+            continue;
+        }
+
         IOobject io
         (
             name,           // name might be empty!
@@ -192,33 +198,7 @@ Foam::word Foam::Time::findInstance
         }
     }
 
-
-    // not in any of the time directories, try constant
-
-    // Note. This needs to be a hard-coded constant, rather than the
-    // constant function of the time, because the latter points to
-    // the case constant directory in parallel cases
-
-    IOobject io
-    (
-        name,
-        constant(),
-        dir,
-        *this
-    );
-
-    if (exists(io))
-    {
-        if (debug)
-        {
-            InfoInFunction
-                << "Found constant match for \"" << name
-                << "\" in " << constant()/dir
-                << endl;
-        }
-
-        return constant();
-    }
+    // times() already includes the constant() so no need to re-test it
 
     if (rOpt == IOobject::MUST_READ || rOpt == IOobject::MUST_READ_IF_MODIFIED)
     {

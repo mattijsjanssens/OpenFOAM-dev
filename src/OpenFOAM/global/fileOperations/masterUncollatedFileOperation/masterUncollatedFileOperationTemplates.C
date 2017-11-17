@@ -70,7 +70,9 @@ Type Foam::fileOperations::masterUncollatedFileOperation::masterOp
 {
     if (IFstream::debug)
     {
-        Pout<< "masterUncollatedFileOperation : Operation on " << fName << endl;
+        Pout<< "masterUncollatedFileOperation::masterOp : Operation "
+            << typeid(fileOp).name()
+            << " on " << fName << endl;
     }
     if (Pstream::parRun())
     {

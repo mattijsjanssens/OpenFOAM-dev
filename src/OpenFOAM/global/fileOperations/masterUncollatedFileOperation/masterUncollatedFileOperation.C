@@ -219,7 +219,7 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePathInfo
                instant(io.instance())
            );
 
-           if (newInstancePath.size())
+           if (newInstancePath.size() && newInstancePath != io.instance())
            {
                // 1. Try processors equivalent
 

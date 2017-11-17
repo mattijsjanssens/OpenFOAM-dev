@@ -139,9 +139,11 @@ Foam::instantList Foam::fileOperation::sortTimes
 
 bool Foam::fileOperation::isFileOrDir(const bool isFile, const fileName& f)
 {
+    const fileName::Type fTyp = Foam::type(f);
+
     return
-        (isFile && Foam::isFile(f))
-     || (!isFile && Foam::isDir(f));
+        (isFile && fTyp == fileName::FILE)
+     || (!isFile && fTyp == fileName::DIRECTORY);
 }
 
 
