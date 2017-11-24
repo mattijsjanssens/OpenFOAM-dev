@@ -64,10 +64,6 @@ protected:
         mutable fileName processorDir_;
         mutable Switch haveProcessorDir_;
 
-        //- Detected collated "processors" directory
-        mutable fileName collatedDir_;
-        mutable Switch haveCollatedDir_;
-
         //- Cached times for a given directory
         mutable HashPtrTable<instantList> times_;
 
@@ -391,12 +387,12 @@ protected:
         ) const;
 
         //- Construct filePath
-        static fileName objectPath
+        fileName objectPath
         (
             const IOobject&,
             const pathType&,
             const word&
-        );
+        ) const;
 
         //- Read file contents and send to processors
         static void readAndSend
@@ -679,27 +675,6 @@ public:
 
             //- Callback for time change
             virtual void setTime(const Time&) const;
-
-            //- root+casename with any 'processorXXX' replaced by 'processsors'
-            static fileName processorsCasePath(const IOobject&);
-
-            //- Like io.path with provided instance and any 'processorXXX'
-            //  replaced by 'processsors'
-            static fileName processorsPath(const IOobject&, const word&);
-
-            //- Operating on fileName: replace processorXXX with processors
-            static fileName processorsPath(const fileName&);
-
-            //- Split fileName into part before processor and part after.
-            //  Returns -1 or processor number. Use with care.
-            //  - path/"processor" + Foam::name(proci)/local reconstructs input
-            //  - path/"processors"/local reconstructs processors equivalence
-            static label splitProcessorPath
-            (
-                const fileName&,
-                fileName& path,
-                fileName& local
-            );
 
             //- Return cached times
             const HashPtrTable<instantList>& times() const

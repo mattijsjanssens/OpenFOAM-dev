@@ -36,6 +36,7 @@ Class
 #include "instantList.H"
 #include "fileMonitor.H"
 #include "labelList.H"
+#include "Switch.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -60,6 +61,13 @@ protected:
         //- file-change monitor for all registered files
         mutable autoPtr<fileMonitor> monitorPtr_;
 
+        //- Detected collated "processors" directory
+        mutable fileName collatedDir_;
+        mutable Switch haveCollatedDir_;
+
+        //- Name of processors dir
+        word processorsDir_;
+
 
    // Protected Member Functions
 
@@ -71,12 +79,13 @@ protected:
         //- Helper: check for file (isFile) or directory (!isFile)
         static bool isFileOrDir(const bool isFile, const fileName&);
 
+
 public:
 
     // Static data
 
         //- Return the processors directory name (usually "processors")
-        static word processorsDir;
+        static word processorsBaseDir;
 
         //- Default fileHandler
         static word defaultFileHandler;
@@ -393,6 +402,10 @@ public:
 
         // Other
 
+            //- Set number of processor directories/results. Only used in
+            //  decomposePar
+            virtual void setNProcs(const label nProcs);
+
             //- Get number of processor directories/results. Used for e.g.
             //  reconstructPar, argList checking
             virtual label nProcs
@@ -407,6 +420,30 @@ public:
             //- Callback for time change
             virtual void setTime(const Time&) const
             {}
+
+            //- root+casename with any 'processorXXX' replaced by 'processsors'
+            fileName processorsCasePath(const IOobject&) const;
+
+            //- Like io.path with provided instance and any 'processorXXX'
+            //  replaced by 'processsors'
+            fileName processorsPath(const IOobject&, const word&) const;
+
+            //- Operating on fileName: replace processorXXX with processors
+            fileName processorsPath(const fileName&) const;
+
+            //- Split fileName into part before 'processor' and part after.
+            //  Returns -1 or processor number and optionally number
+            //  of processors. Use with care.
+            //  - path/"processor"+Foam::name(proci)/local reconstructs input
+            //  - path/"processors"+Foam::name(nProcs)/local reconstructs
+            //    collated processors equivalence
+            static label splitProcessorPath
+            (
+                const fileName&,
+                fileName& path,
+                fileName& local,
+                label& nProcs
+            );
 };
 
 

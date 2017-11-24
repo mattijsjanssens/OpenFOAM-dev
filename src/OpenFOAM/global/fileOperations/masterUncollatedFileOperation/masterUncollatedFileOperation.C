@@ -205,153 +205,51 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePathInfo
             }
         }
 
-       // Check for approximately same time. E.g. if time = 1e-2 and
-       // directory is 0.01 (due to different time formats)
-       HashPtrTable<instantList>::const_iterator pathFnd
+        // Check for approximately same time. E.g. if time = 1e-2 and
+        // directory is 0.01 (due to different time formats)
+        HashPtrTable<instantList>::const_iterator pathFnd
         (
             times_.find
             (
                 io.time().path()
             )
         );
-       if (pathFnd != times_.end())
-       {
-           newInstancePath = findInstancePath
-           (
-               *pathFnd(),
-               instant(io.instance())
-           );
+        if (pathFnd != times_.end())
+        {
+            newInstancePath = findInstancePath
+            (
+                *pathFnd(),
+                instant(io.instance())
+            );
 
-           if (newInstancePath.size() && newInstancePath != io.instance())
-           {
-               // 1. Try processors equivalent
+            if (newInstancePath.size() && newInstancePath != io.instance())
+            {
+                // 1. Try processors equivalent
 
-               fileName fName =
-                   processorsPath(io, newInstancePath)
-                  /io.name();
-               if (isFileOrDir(isFile, fName))
-               {
-                   searchType = fileOperation::PROCESSORSFINDINSTANCE;
-                   return fName;
-               }
+                fileName fName =
+                    processorsPath(io, newInstancePath)
+                   /io.name();
+                if (isFileOrDir(isFile, fName))
+                {
+                    searchType = fileOperation::PROCESSORSFINDINSTANCE;
+                    return fName;
+                }
 
-               fName =
+                fName =
                    io.rootPath()/io.caseName()
                   /newInstancePath/io.db().dbDir()/io.local()/io.name();
 
-               if (isFileOrDir(isFile, fName))
-               {
-                   searchType = fileOperation::FINDINSTANCE;
-                   return fName;
-               }
-           }
-       }
+                if (isFileOrDir(isFile, fName))
+                {
+                    searchType = fileOperation::FINDINSTANCE;
+                    return fName;
+                }
+            }
+        }
 
         searchType = fileOperation::NOTFOUND;
         return fileName::null;
     }
-}
-
-
-Foam::fileName
-Foam::fileOperations::masterUncollatedFileOperation::processorsCasePath
-(
-    const IOobject& io
-)
-{
-    return
-        io.rootPath()
-       /io.time().globalCaseName()
-       /processorsDir;
-}
-
-
-Foam::fileName
-Foam::fileOperations::masterUncollatedFileOperation::processorsPath
-(
-    const IOobject& io,
-    const word& instance
-)
-{
-    return
-        processorsCasePath(io)
-       /instance
-       /io.db().dbDir()
-       /io.local();
-}
-
-
-Foam::fileName
-Foam::fileOperations::masterUncollatedFileOperation::processorsPath
-(
-    const fileName& dir
-)
-{
-    // Check if directory is processorXXX
-    word caseName(dir.name());
-
-    std::string::size_type pos = caseName.find("processor");
-    if (pos == 0)
-    {
-        return dir.path()/processorsDir;
-    }
-    else
-    {
-        return fileName::null;
-    }
-}
-
-
-Foam::label
-Foam::fileOperations::masterUncollatedFileOperation::splitProcessorPath
-(
-    const fileName& objectPath,
-    fileName& path,
-    fileName& local
-)
-{
-    // Search for processor at start of line or /processor
-    std::string::size_type pos = objectPath.find("processor");
-    if (pos == string::npos)
-    {
-        return -1;
-    }
-
-    if (pos == 0)
-    {
-        path = "";
-        local = objectPath.substr(pos+9);
-    }
-    else if (objectPath[pos-1] != '/')
-    {
-        return -1;
-    }
-    else
-    {
-        path = objectPath.substr(0, pos-1);
-        local = objectPath.substr(pos+9);
-    }
-
-    pos = local.find('/');
-    if (pos == string::npos)
-    {
-        // processorXXX without local
-        label proci;
-        if (Foam::read(local.c_str(), proci))
-        {
-            local.clear();
-            return proci;
-        }
-        return -1;
-    }
-    string procName(local.substr(0, pos));
-    label proci;
-    if (Foam::read(procName.c_str(), proci))
-    {
-        local = local.substr(pos+1);
-        return proci;
-    }
-    return -1;
 }
 
 
@@ -360,7 +258,7 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::objectPath
     const IOobject& io,
     const pathType& searchType,
     const word& instancePath
-)
+) const
 {
     // Replacement for IOobject::objectPath()
 
@@ -457,6 +355,12 @@ void Foam::fileOperations::masterUncollatedFileOperation::readAndSend
 
         IFstream is(filePath, IOstream::streamFormat::BINARY);
 
+        if (!is.good())
+        {
+            FatalIOErrorInFunction(filePath) << "Cannot open file " << filePath
+                << exit(FatalIOError);
+        }
+
         std::ostringstream stringStr;
         stringStr << is.stdStream().rdbuf();
         string buf(stringStr.str());
@@ -471,6 +375,13 @@ void Foam::fileOperations::masterUncollatedFileOperation::readAndSend
     {
         off_t count(Foam::fileSize(filePath));
         IFstream is(filePath, IOstream::streamFormat::BINARY);
+
+        if (!is.good())
+        {
+            FatalIOErrorInFunction(filePath) << "Cannot open file " << filePath
+                << exit(FatalIOError);
+        }
+
 
         if (debug)
         {
@@ -500,9 +411,7 @@ masterUncollatedFileOperation
 :
     fileOperation(),
     processorDir_("UNSET"),
-    haveProcessorDir_(Switch::INVALID),
-    collatedDir_("UNSET"),
-    haveCollatedDir_(Switch::INVALID)
+    haveProcessorDir_(Switch::INVALID)
 {
     if (verbose)
     {
@@ -1212,12 +1121,13 @@ Foam::fileOperations::masterUncollatedFileOperation::readStream
             // to access
             fileName path;
             fileName local;
-            label proci = fileOperations::masterUncollatedFileOperation::
-            splitProcessorPath
+            label nProcs;
+            label proci = splitProcessorPath
             (
                 io.objectPath(),
                 path,
-                local
+                local,
+                nProcs
             );
 
             if (proci == -1)
@@ -1304,6 +1214,13 @@ Foam::fileOperations::masterUncollatedFileOperation::readStream
                 }
                 else
                 {
+                    if (fName.empty())
+                    {
+                        FatalIOErrorInFunction(fName)
+                            << "cannot find file " << io.objectPath()
+                            << exit(FatalIOError);
+                    }
+
                     readAndSend
                     (
                         fName,
@@ -1319,25 +1236,23 @@ Foam::fileOperations::masterUncollatedFileOperation::readStream
                 {
                     if (fName.empty())
                     {
-                        FatalErrorInFunction
+                        FatalIOErrorInFunction(fName)
                             << "cannot find file " << io.objectPath()
-                            << exit(FatalError);
+                            << exit(FatalIOError);
                     }
-                    else
+
+                    autoPtr<IFstream> ifsPtr(new IFstream(fName));
+
+                    // Read header
+                    if (!io.readHeader(ifsPtr()))
                     {
-                        autoPtr<IFstream> ifsPtr(new IFstream(fName));
-
-                        // Read header
-                        if (!io.readHeader(ifsPtr()))
-                        {
-                            FatalIOErrorInFunction(ifsPtr())
-                                << "problem while reading header for object "
-                                << io.name() << exit(FatalIOError);
-                        }
-
-                        // Open master (steal from ifsPtr)
-                        isPtr.reset(ifsPtr.ptr());
+                        FatalIOErrorInFunction(ifsPtr())
+                            << "problem while reading header for object "
+                            << io.name() << exit(FatalIOError);
                     }
+
+                    // Open master (steal from ifsPtr)
+                    isPtr.reset(ifsPtr.ptr());
                 }
 
                 // Read slave files
@@ -1590,19 +1505,13 @@ Foam::instantList Foam::fileOperations::masterUncollatedFileOperation::findTimes
     const word& constantName
 ) const
 {
-    if (debug)
-    {
-        Pout<< "masterUncollatedFileOperation::findTimes:"
-            << " Finding times in directory " << directory << endl;
-    }
-
     HashPtrTable<instantList>::const_iterator iter = times_.find(directory);
     if (iter != times_.end())
     {
         if (debug)
         {
             Pout<< "masterUncollatedFileOperation::findTimes:"
-                << " Found cached times:" << *iter() << endl;
+                << " Found " << iter()->size() << " cached times" << endl;
         }
         return *iter();
     }

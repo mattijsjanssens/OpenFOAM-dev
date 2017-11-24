@@ -28,7 +28,6 @@ License
 #include "IFstream.H"
 #include "OFstream.H"
 #include "addToRunTimeSelectionTable.H"
-#include "masterUncollatedFileOperation.H"
 #include "decomposedBlockData.H"
 #include "dummyISstream.H"
 
@@ -102,12 +101,7 @@ Foam::fileName Foam::fileOperations::uncollatedFileOperation::filePathInfo
             // Check if parallel "procesors" directory
             if (io.time().processorCase())
             {
-                fileName path = fileOperations::masterUncollatedFileOperation::
-                processorsPath
-                (
-                    io,
-                    io.instance()
-                );
+                fileName path = processorsPath(io, io.instance());
                 fileName objectPath = path/io.name();
 
                 if (isFileOrDir(isFile, objectPath))
@@ -538,13 +532,8 @@ Foam::fileOperations::uncollatedFileOperation::readStream
         // to access
         fileName path;
         fileName local;
-        label proci = fileOperations::masterUncollatedFileOperation::
-        splitProcessorPath
-        (
-            io.objectPath(),
-            path,
-            local
-        );
+        label nProcs;
+        label proci = splitProcessorPath(io.objectPath(), path, local, nProcs);
 
         if (proci == -1)
         {

@@ -28,11 +28,11 @@ License
 #include "regIOobject.H"
 #include "argList.H"
 #include "HashSet.H"
-#include "masterUncollatedFileOperation.H"
 #include "objectRegistry.H"
 #include "decomposedBlockData.H"
 #include "polyMesh.H"
 #include "registerSwitch.H"
+#include "Time.H"
 
 /* * * * * * * * * * * * * * * Static Member Data  * * * * * * * * * * * * * */
 
@@ -55,7 +55,7 @@ namespace Foam
         )
     );
 
-    word fileOperation::processorsDir = "processors";
+    word fileOperation::processorsBaseDir = "processors";
 }
 
 
@@ -150,6 +150,10 @@ bool Foam::fileOperation::isFileOrDir(const bool isFile, const fileName& f)
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 Foam::fileOperation::fileOperation()
+:
+    collatedDir_("UNSET"),
+    haveCollatedDir_(Switch::INVALID),
+    processorsDir_(processorsBaseDir)
 {}
 
 
@@ -255,30 +259,40 @@ bool Foam::fileOperation::writeObject
 }
 
 
-//Foam::fileName Foam::fileOperation::objectPath(const fileName& fName) const
-//{
-//    return fName;
-//}
-
-
 Foam::fileName Foam::fileOperation::filePath(const fileName& fName) const
 {
     fileName path;
     fileName local;
-    label proci = fileOperations::masterUncollatedFileOperation::
-    splitProcessorPath
-    (
-        fName,
-        path,
-        local
-    );
+    label nProcs;
+    label proci = splitProcessorPath(fName, path, local, nProcs);
 
-    fileName procsName(path/processorsDir/local);
-
-    // Give preference to processors variant
-    if (proci != -1 && exists(procsName))
+    if (nProcs != -1)
     {
-        return procsName;
+        WarningInFunction << "Filename is already adapted:" << fName
+            << endl;
+    }
+
+    if (proci != -1)
+    {
+        // Processor-local file name
+        fileName procsName;
+        if (Pstream::parRun())
+        {
+            procsName = fileName(path/processorsDir_/local);
+        }
+        else if (haveCollatedDir_)
+        {
+            procsName = path/collatedDir_.name()/local;
+        }
+
+        if (exists(procsName))
+        {
+            return procsName;
+        }
+        else
+        {
+            return fileName::null;
+        }
     }
     else if (exists(fName))
     {
@@ -414,13 +428,7 @@ Foam::instantList Foam::fileOperation::findTimes
     instantList times = sortTimes(dirEntries, constantName);
 
     // Check if directory is processorXXX
-    fileName procsDir
-    (
-        fileOperations::masterUncollatedFileOperation::processorsPath
-        (
-            directory
-        )
-    );
+    fileName procsDir(processorsPath(directory));
 
     if (!procsDir.empty() && procsDir != directory)
     {
@@ -538,19 +546,9 @@ Foam::fileNameList Foam::fileOperation::readObjects
     else
     {
         // Get processors equivalent of path
+        fileName procsPath(filePath(path));
 
-        fileName prefix;
-        fileName postfix;
-        label proci = fileOperations::masterUncollatedFileOperation::
-        splitProcessorPath
-        (
-            path,
-            prefix,
-            postfix
-        );
-        fileName procsPath(prefix/processorsDir/postfix);
-
-        if (proci != -1 && Foam::isDir(procsPath))
+        if (!procsPath.empty())
         {
             newInstance = instance;
             objectNames = Foam::readDir(procsPath, fileName::FILE);
@@ -560,46 +558,221 @@ Foam::fileNameList Foam::fileOperation::readObjects
 }
 
 
+void Foam::fileOperation::setNProcs(const label nProcs)
+{}
+
+
 Foam::label Foam::fileOperation::nProcs
 (
     const fileName& dir,
     const fileName& local
 ) const
 {
-    if (Foam::isDir(dir/processorsDir))
+    label nProcs = 0;
+    if (Pstream::master())
     {
-        fileName pointsFile
-        (
-            dir
-           /processorsDir
-           /"constant"
-           /local
-           /polyMesh::meshSubDir
-           /"points"
-        );
+        fileNameList dirNames(Foam::readDir(dir, fileName::Type::DIRECTORY));
 
-        if (Foam::isFile(pointsFile))
+        // Detect any processorsXXX or processorXXX
+        label maxProc = -1;
+        forAll(dirNames, i)
         {
-            return decomposedBlockData::numBlocks(pointsFile);
+            fileName path, local;
+            label n;
+            maxProc = max
+            (
+                maxProc,
+                splitProcessorPath(dirNames[i], path, local, n)
+            );
+            if (n != -1)
+            {
+                // Direct detection of processorsXXX
+                maxProc = n-1;
+                break;
+            }
+        }
+        nProcs = maxProc+1;
+
+
+        if (nProcs == 0 && Foam::isDir(dir/processorsBaseDir))
+        {
+            fileName pointsFile
+            (
+                dir
+               /processorsBaseDir
+               /"constant"
+               /local
+               /polyMesh::meshSubDir
+               /"points"
+            );
+
+            if (Foam::isFile(pointsFile))
+            {
+                nProcs = decomposedBlockData::numBlocks(pointsFile);
+            }
+            else
+            {
+                WarningInFunction << "Cannot read file " << pointsFile
+                    << " to determine the number of decompositions."
+                    << " Returning 1" << endl;
+            }
+        }
+    }
+    Pstream::scatter(nProcs);
+    return nProcs;
+}
+
+
+Foam::fileName Foam::fileOperation::processorsCasePath(const IOobject& io) const
+{
+    if (haveCollatedDir_)
+    {
+        return
+            io.rootPath()
+           /io.time().globalCaseName()
+           /collatedDir_.name();
+    }
+    else
+    {
+        return
+            io.rootPath()
+           /io.time().globalCaseName()
+           /processorsDir_;
+    }
+}
+
+
+Foam::fileName Foam::fileOperation::processorsPath
+(
+    const IOobject& io,
+    const word& instance
+) const
+{
+    return
+        processorsCasePath(io)
+       /instance
+       /io.db().dbDir()
+       /io.local();
+}
+
+
+Foam::fileName Foam::fileOperation::processorsPath(const fileName& dir) const
+{
+    // Check if directory is processorXXX
+    word caseName(dir.name());
+
+    std::string::size_type pos = caseName.find("processor");
+    if (pos == 0)
+    {
+        if (caseName.size() <= 9 || caseName[9] == 's')
+        {
+            WarningInFunction << "Directory " << dir
+                << " does not end in old-style processorDDD" << endl;
+        }
+
+        if (haveCollatedDir_)
+        {
+            return dir.path()/collatedDir_.name();
         }
         else
         {
-            WarningInFunction << "Cannot read file " << pointsFile
-                << " to determine the number of decompositions."
-                << " Falling back to looking for processor.*" << endl;
+            return dir.path()/processorsDir_;
         }
     }
-
-    label nProcs = 0;
-    while
-    (
-        isDir(dir/(word("processor") + name(nProcs)))
-    )
+    else
     {
-        ++nProcs;
+        return fileName::null;
+    }
+}
+
+
+Foam::label Foam::fileOperation::splitProcessorPath
+(
+    const fileName& objectPath,
+    fileName& path,
+    fileName& local,
+    label& nProcs
+)
+{
+    // Potentially detected number of processors
+    nProcs = -1;
+
+    // Search for processor at start of line or /processor
+    std::string::size_type pos = objectPath.find("processor");
+    if (pos == string::npos)
+    {
+        return -1;
     }
 
-    return nProcs;
+    if (pos == 0)
+    {
+        path = "";
+        local = objectPath.substr(pos+9);
+    }
+    else if (objectPath[pos-1] != '/')
+    {
+        return -1;
+    }
+    else
+    {
+        path = objectPath.substr(0, pos-1);
+        local = objectPath.substr(pos+9);
+    }
+
+    if (local.size() && local[0] == 's')
+    {
+        // "processsorsXXX"
+
+        local = local.substr(pos+1);
+
+        if (local.empty())
+        {
+            return -1;
+        }
+
+        label n;
+        pos = local.find('/');
+        if (pos == string::npos)
+        {
+            // processorsXXX without local
+            if (Foam::read(local.c_str(), n))
+            {
+                local.clear();
+                nProcs = n;
+            }
+        }
+        else
+        {
+            string procName(local.substr(0, pos));
+            if (Foam::read(procName.c_str(), n))
+            {
+                nProcs = n;
+            }
+            local = local.substr(pos+1);
+        }
+        return -1;
+    }
+
+    pos = local.find('/');
+    if (pos == string::npos)
+    {
+        // processorXXX without local
+        label proci;
+        if (Foam::read(local.c_str(), proci))
+        {
+            local.clear();
+            return proci;
+        }
+        return -1;
+    }
+    string procName(local.substr(0, pos));
+    label proci;
+    if (Foam::read(procName.c_str(), proci))
+    {
+        local = local.substr(pos+1);
+        return proci;
+    }
+    return -1;
 }
 
 

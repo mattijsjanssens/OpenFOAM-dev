@@ -123,6 +123,12 @@ public:
                 IOstream::compressionType compression=IOstream::UNCOMPRESSED,
                 const bool valid = true
             ) const;
+
+        // Other
+
+            //- Set number of processor directories/results. Only used in
+            //  decomposePar
+            virtual void setNProcs(const label nProcs);
 };
 
 

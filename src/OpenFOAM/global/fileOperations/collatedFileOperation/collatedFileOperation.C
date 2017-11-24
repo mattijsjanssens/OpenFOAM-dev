@@ -76,7 +76,8 @@ bool Foam::fileOperations::collatedFileOperation::appendObject
 
     fileName prefix;
     fileName postfix;
-    label proci = splitProcessorPath(io.objectPath(), prefix, postfix);
+    label nProcs;
+    label proci = splitProcessorPath(io.objectPath(), prefix, postfix, nProcs);
 
     if (debug)
     {
@@ -178,6 +179,13 @@ Foam::fileOperations::collatedFileOperation::collatedFileOperation
     masterUncollatedFileOperation(false),
     writer_(maxThreadFileBufferSize)
 {
+    // Default output directory
+    if (Pstream::nProcs() > 1)
+    {
+        processorsDir_ = processorsBaseDir+Foam::name(Pstream::nProcs());
+    }
+
+
     if (verbose)
     {
         Info<< "I/O    : " << typeName
@@ -409,6 +417,19 @@ bool Foam::fileOperations::collatedFileOperation::writeObject
 
             return true;
         }
+    }
+}
+
+
+void Foam::fileOperations::collatedFileOperation::setNProcs(const label nProcs)
+{
+    // Changed number of decompositions. Adapt the output directory
+    processorsDir_ = processorsBaseDir+Foam::name(nProcs);
+
+    if (debug)
+    {
+        Pout<< "setNProcs:"
+            << " : Setting output directory to " << processorsDir_ << endl;
     }
 }
 
