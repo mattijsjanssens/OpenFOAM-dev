@@ -272,27 +272,13 @@ Foam::fileName Foam::fileOperation::filePath(const fileName& fName) const
             << endl;
     }
 
-    if (proci != -1)
-    {
-        // Processor-local file name
-        fileName procsName;
-        if (Pstream::parRun())
-        {
-            procsName = fileName(path/processorsDir_/local);
-        }
-        else if (haveCollatedDir_)
-        {
-            procsName = path/collatedDir_.name()/local;
-        }
+    // Processor-local file name
+    fileName procsName(path/processorsDir_/local);
 
-        if (exists(procsName))
-        {
-            return procsName;
-        }
-        else
-        {
-            return fileName::null;
-        }
+    // Give preference to processors variant
+    if (proci != -1 && exists(procsName))
+    {
+        return procsName;
     }
     else if (exists(fName))
     {
