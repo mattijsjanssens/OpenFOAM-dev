@@ -374,6 +374,8 @@ int main(int argc, char *argv[])
                 )
             ).lookup("numberOfSubdomains")
         );
+        // Give file handler a chance to determine the output directory
+        const_cast<fileOperation&>(fileHandler()).setNProcs(nDomains);
 
         if (decomposeFieldsOnly)
         {

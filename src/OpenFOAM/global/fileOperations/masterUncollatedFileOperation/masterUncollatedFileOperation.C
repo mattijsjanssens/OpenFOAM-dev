@@ -90,7 +90,7 @@ void Foam::fileOperations::masterUncollatedFileOperation::cacheProcessorDirs
         }
         if (!haveCollatedDir_.valid())
         {
-            collatedDir_ = processorsCasePath(io);
+            collatedDir_ = processorsCasePath(io, processorsDir_);
             if (Pstream::master())
             {
                 haveCollatedDir_ = Foam::isDir(collatedDir_);
@@ -163,11 +163,26 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePathInfo
         // 1. Check processors/
         if (io.time().processorCase())
         {
-            fileName objectPath = processorsPath(io, io.instance())/io.name();
+            // 1a. Check processorsDDD/
+            fileName objectPath =
+                processorsPath(io, io.instance(), processorsDir_)/io.name();
             if (isFileOrDir(isFile, objectPath))
             {
                 searchType = fileOperation::PROCESSORSOBJECT;
                 return objectPath;
+            }
+
+            // 1b. Check processors/
+            if (processorsBaseDir != processorsDir_)
+            {
+                fileName objectPath =
+                    processorsPath(io, io.instance(), processorsBaseDir)
+                   /io.name();
+                if (isFileOrDir(isFile, objectPath))
+                {
+                    searchType = fileOperation::PROCESSORSBASEOBJECT;
+                    return objectPath;
+                }
             }
         }
         {
@@ -227,13 +242,27 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePathInfo
                 // 1. Try processors equivalent
 
                 fileName fName =
-                    processorsPath(io, newInstancePath)
+                    processorsPath(io, newInstancePath, processorsDir_)
                    /io.name();
                 if (isFileOrDir(isFile, fName))
                 {
-                    searchType = fileOperation::PROCESSORSFINDINSTANCE;
+                    searchType = fileOperation::PROCESSORSINSTANCE;
                     return fName;
                 }
+
+                if (processorsBaseDir != processorsDir_)
+                {
+                    fName =
+                        processorsPath(io, newInstancePath, processorsBaseDir)
+                       /io.name();
+                    if (isFileOrDir(isFile, fName))
+                    {
+                        searchType = fileOperation::PROCESSORSBASEINSTANCE;
+                        return fName;
+                    }
+                }
+
+                // 2. Check local
 
                 fName =
                    io.rootPath()/io.caseName()
@@ -276,9 +305,19 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::objectPath
         }
         break;
 
+        case fileOperation::PROCESSORSBASEOBJECT:
+        {
+            return
+                processorsPath(io, io.instance(), processorsBaseDir)
+               /io.name();
+        }
+        break;
+
         case fileOperation::PROCESSORSOBJECT:
         {
-            return processorsPath(io, io.instance())/io.name();
+            return
+                processorsPath(io, io.instance(), processorsDir_)
+               /io.name();
         }
         break;
 
@@ -298,9 +337,19 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::objectPath
         }
         break;
 
-        case fileOperation::PROCESSORSFINDINSTANCE:
+        case fileOperation::PROCESSORSBASEINSTANCE:
         {
-            return processorsPath(io, instancePath)/io.name();
+            return
+                processorsPath(io, instancePath, processorsBaseDir)
+               /io.name();
+        }
+        break;
+
+        case fileOperation::PROCESSORSINSTANCE:
+        {
+            return
+                processorsPath(io, instancePath, processorsDir_)
+               /io.name();
         }
         break;
 
@@ -411,7 +460,9 @@ masterUncollatedFileOperation
 :
     fileOperation(),
     processorDir_("UNSET"),
-    haveProcessorDir_(Switch::INVALID)
+    haveProcessorDir_(Switch::INVALID),
+    collatedDir_("UNSET"),
+    haveCollatedDir_(Switch::INVALID)
 {
     if (verbose)
     {
@@ -726,10 +777,12 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePath
     switch (searchType)
     {
         case fileOperation::ABSOLUTE:
+        case fileOperation::PROCESSORSBASEOBJECT:
         case fileOperation::PROCESSORSOBJECT:
         case fileOperation::PARENTOBJECT:
         case fileOperation::FINDINSTANCE:
-        case fileOperation::PROCESSORSFINDINSTANCE:
+        case fileOperation::PROCESSORSBASEINSTANCE:
+        case fileOperation::PROCESSORSINSTANCE:
         {
             // Construct equivalent local path
             objPath = objectPath(io, searchType, newInstancePath);
@@ -821,10 +874,12 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::dirPath
     switch (searchType)
     {
         case fileOperation::ABSOLUTE:
+        case fileOperation::PROCESSORSBASEOBJECT:
         case fileOperation::PROCESSORSOBJECT:
         case fileOperation::PARENTOBJECT:
         case fileOperation::FINDINSTANCE:
-        case fileOperation::PROCESSORSFINDINSTANCE:
+        case fileOperation::PROCESSORSBASEINSTANCE:
+        case fileOperation::PROCESSORSINSTANCE:
         {
             // Construct equivalent local path
             objPath = objectPath(io, searchType, newInstancePath);

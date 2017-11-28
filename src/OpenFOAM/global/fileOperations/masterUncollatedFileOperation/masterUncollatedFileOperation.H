@@ -64,6 +64,10 @@ protected:
         mutable fileName processorDir_;
         mutable Switch haveProcessorDir_;
 
+        //- Detected collated "processors" directory
+        mutable fileName collatedDir_;
+        mutable Switch haveCollatedDir_;
+
         //- Cached times for a given directory
         mutable HashPtrTable<instantList> times_;
 

@@ -137,6 +137,80 @@ Foam::instantList Foam::fileOperation::sortTimes
 }
 
 
+void Foam::fileOperation::mergeTimes
+(
+    const instantList& extraTimes,
+    const word& constantName,
+    instantList& times
+)
+{
+    if (extraTimes.size())
+    {
+        bool haveConstant =
+        (
+            times.size() > 0
+         && times[0].name() == constantName
+        );
+
+        bool haveExtraConstant =
+        (
+            extraTimes.size() > 0
+         && extraTimes[0].name() == constantName
+        );
+
+        // Combine times
+        instantList combinedTimes(times.size()+extraTimes.size());
+        label sz = 0;
+        label extrai = 0;
+        if (haveExtraConstant)
+        {
+            extrai = 1;
+            if (!haveConstant)
+            {
+                combinedTimes[sz++] = extraTimes[0];    // constant
+            }
+        }
+        forAll(times, i)
+        {
+            combinedTimes[sz++] = times[i];
+        }
+        for (; extrai < extraTimes.size(); extrai++)
+        {
+            combinedTimes[sz++] = extraTimes[extrai];
+        }
+        combinedTimes.setSize(sz);
+        times.transfer(combinedTimes);
+
+        // Sort
+        if (times.size() > 1)
+        {
+            label starti = 0;
+            if (times[0].name() == constantName)
+            {
+                starti = 1;
+            }
+            std::sort(&times[starti], times.end(), instant::less());
+
+            // Filter out duplicates
+            label newi = starti+1;
+            for (label i = newi; i < times.size(); i++)
+            {
+                if (times[i].value() != times[i-1].value())
+                {
+                    if (newi != i)
+                    {
+                        times[newi] = times[i];
+                    }
+                    newi++;
+                }
+            }
+
+            times.setSize(newi);
+        }
+    }
+}
+
+
 bool Foam::fileOperation::isFileOrDir(const bool isFile, const fileName& f)
 {
     const fileName::Type fTyp = Foam::type(f);
@@ -151,8 +225,6 @@ bool Foam::fileOperation::isFileOrDir(const bool isFile, const fileName& f)
 
 Foam::fileOperation::fileOperation()
 :
-    collatedDir_("UNSET"),
-    haveCollatedDir_(Switch::INVALID),
     processorsDir_(processorsBaseDir)
 {}
 
@@ -272,15 +344,27 @@ Foam::fileName Foam::fileOperation::filePath(const fileName& fName) const
             << endl;
     }
 
-    // Processor-local file name
-    fileName procsName(path/processorsDir_/local);
-
     // Give preference to processors variant
-    if (proci != -1 && exists(procsName))
+    if (proci != -1)
     {
-        return procsName;
+        // Processor-local file name
+        fileName namedProcsName(path/processorsDir_/local);
+
+        if (exists(namedProcsName))
+        {
+            return namedProcsName;
+        }
+        if (processorsBaseDir != processorsDir_)
+        {
+            fileName procsName(path/processorsBaseDir/local);
+            if (exists(procsName))
+            {
+                return procsName;
+            }
+        }
     }
-    else if (exists(fName))
+
+    if (exists(fName))
     {
         return fName;
     }
@@ -413,87 +497,38 @@ Foam::instantList Foam::fileOperation::findTimes
 
     instantList times = sortTimes(dirEntries, constantName);
 
-    // Check if directory is processorXXX
-    fileName procsDir(processorsPath(directory));
+    // Check if directory is processorsDDD
+    fileName namedProcsDir(processorsPath(directory, processorsDir_));
 
-    if (!procsDir.empty() && procsDir != directory)
+    if (!namedProcsDir.empty() && namedProcsDir != directory)
     {
         fileNameList extraEntries
         (
             Foam::readDir
             (
-                procsDir,
+                namedProcsDir,
                 fileName::DIRECTORY
             )
         );
-
-        instantList extraTimes = sortTimes(extraEntries, constantName);
-
-        if (extraTimes.size())
-        {
-            bool haveConstant =
-            (
-                times.size() > 0
-             && times[0].name() == constantName
-            );
-
-            bool haveExtraConstant =
-            (
-                extraTimes.size() > 0
-             && extraTimes[0].name() == constantName
-            );
-
-            // Combine times
-            instantList combinedTimes(times.size()+extraTimes.size());
-            label sz = 0;
-            label extrai = 0;
-            if (haveExtraConstant)
-            {
-                extrai = 1;
-                if (!haveConstant)
-                {
-                    combinedTimes[sz++] = extraTimes[0];    // constant
-                }
-            }
-            forAll(times, i)
-            {
-                combinedTimes[sz++] = times[i];
-            }
-            for (; extrai < extraTimes.size(); extrai++)
-            {
-                combinedTimes[sz++] = extraTimes[extrai];
-            }
-            combinedTimes.setSize(sz);
-            times.transfer(combinedTimes);
-
-            // Sort
-            if (times.size() > 1)
-            {
-                label starti = 0;
-                if (times[0].name() == constantName)
-                {
-                    starti = 1;
-                }
-                std::sort(&times[starti], times.end(), instant::less());
-
-                // Filter out duplicates
-                label newi = starti+1;
-                for (label i = newi; i < times.size(); i++)
-                {
-                    if (times[i].value() != times[i-1].value())
-                    {
-                        if (newi != i)
-                        {
-                            times[newi] = times[i];
-                        }
-                        newi++;
-                    }
-                }
-
-                times.setSize(newi);
-            }
-        }
+        mergeTimes(sortTimes(extraEntries, constantName), constantName, times);
     }
+
+    // Check if directory is processors
+    fileName unnamedProcsDir(processorsPath(directory, processorsBaseDir));
+
+    if (!unnamedProcsDir.empty() && namedProcsDir != unnamedProcsDir)
+    {
+        fileNameList extraEntries
+        (
+            Foam::readDir
+            (
+                unnamedProcsDir,
+                fileName::DIRECTORY
+            )
+        );
+        mergeTimes(sortTimes(extraEntries, constantName), constantName, times);
+    }
+
 
     if (debug)
     {
@@ -559,7 +594,7 @@ Foam::label Foam::fileOperation::nProcs
     {
         fileNameList dirNames(Foam::readDir(dir, fileName::Type::DIRECTORY));
 
-        // Detect any processorsXXX or processorXXX
+        // Detect any processorsDDD or processorDDD
         label maxProc = -1;
         forAll(dirNames, i)
         {
@@ -572,7 +607,7 @@ Foam::label Foam::fileOperation::nProcs
             );
             if (n != -1)
             {
-                // Direct detection of processorsXXX
+                // Direct detection of processorsDDD
                 maxProc = n-1;
                 break;
             }
@@ -609,42 +644,38 @@ Foam::label Foam::fileOperation::nProcs
 }
 
 
-Foam::fileName Foam::fileOperation::processorsCasePath(const IOobject& io) const
+Foam::fileName Foam::fileOperation::processorsCasePath
+(
+    const IOobject& io,
+    const word& procsDir
+) const
 {
-    if (haveCollatedDir_)
-    {
-        return
-            io.rootPath()
-           /io.time().globalCaseName()
-           /collatedDir_.name();
-    }
-    else
-    {
-        return
-            io.rootPath()
-           /io.time().globalCaseName()
-           /processorsDir_;
-    }
+    return io.rootPath()/io.time().globalCaseName()/procsDir;
 }
 
 
 Foam::fileName Foam::fileOperation::processorsPath
 (
     const IOobject& io,
-    const word& instance
+    const word& instance,
+    const word& procsDir
 ) const
 {
     return
-        processorsCasePath(io)
+        processorsCasePath(io, procsDir)
        /instance
        /io.db().dbDir()
        /io.local();
 }
 
 
-Foam::fileName Foam::fileOperation::processorsPath(const fileName& dir) const
+Foam::fileName Foam::fileOperation::processorsPath
+(
+    const fileName& dir,
+    const word& procsDir
+) const
 {
-    // Check if directory is processorXXX
+    // Check if directory is processorDDD
     word caseName(dir.name());
 
     std::string::size_type pos = caseName.find("processor");
@@ -656,14 +687,7 @@ Foam::fileName Foam::fileOperation::processorsPath(const fileName& dir) const
                 << " does not end in old-style processorDDD" << endl;
         }
 
-        if (haveCollatedDir_)
-        {
-            return dir.path()/collatedDir_.name();
-        }
-        else
-        {
-            return dir.path()/processorsDir_;
-        }
+        return dir.path()/procsDir;
     }
     else
     {
@@ -707,7 +731,7 @@ Foam::label Foam::fileOperation::splitProcessorPath
 
     if (local.size() && local[0] == 's')
     {
-        // "processsorsXXX"
+        // "processsorsDDD"
 
         local = local.substr(pos+1);
 
@@ -720,7 +744,7 @@ Foam::label Foam::fileOperation::splitProcessorPath
         pos = local.find('/');
         if (pos == string::npos)
         {
-            // processorsXXX without local
+            // processorsDDD without local
             if (Foam::read(local.c_str(), n))
             {
                 local.clear();
@@ -742,7 +766,7 @@ Foam::label Foam::fileOperation::splitProcessorPath
     pos = local.find('/');
     if (pos == string::npos)
     {
-        // processorXXX without local
+        // processorDDD without local
         label proci;
         if (Foam::read(local.c_str(), proci))
         {

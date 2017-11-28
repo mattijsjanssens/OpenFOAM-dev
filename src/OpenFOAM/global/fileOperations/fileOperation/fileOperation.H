@@ -61,11 +61,7 @@ protected:
         //- file-change monitor for all registered files
         mutable autoPtr<fileMonitor> monitorPtr_;
 
-        //- Detected collated "processors" directory
-        mutable fileName collatedDir_;
-        mutable Switch haveCollatedDir_;
-
-        //- Name of processors dir
+        //- Actual name of processors dir
         word processorsDir_;
 
 
@@ -75,6 +71,14 @@ protected:
 
         //- Sort directory entries according to time value
         static instantList sortTimes(const fileNameList&, const word&);
+
+        //- Merge two times
+        static void mergeTimes
+        (
+            const instantList& extraTimes,
+            const word& constantName,
+            instantList& times
+        );
 
         //- Helper: check for file (isFile) or directory (!isFile)
         static bool isFileOrDir(const bool isFile, const fileName&);
@@ -99,10 +103,14 @@ public:
             NOTFOUND,               // not found
             ABSOLUTE,               // instance is absolute directory
             OBJECT,                 // objectPath exists
-            PROCESSORSOBJECT,       // objectPath exists in processors/
+            PROCESSORSBASEOBJECT,   // objectPath exists in processorsBaseDir
+                                    // (usually 'processors')
+            PROCESSORSOBJECT,       // objectPath exists in processorsDir
+                                    // (usually 'processorsDDD')
             PARENTOBJECT,           // parent of object path
             FINDINSTANCE,           // file found in time directory
-            PROCESSORSFINDINSTANCE  // as above but in processors/
+            PROCESSORSBASEINSTANCE, // as above but in processors/
+            PROCESSORSINSTANCE      // as above but in processorsDDD/
         };
 
 
@@ -421,15 +429,25 @@ public:
             virtual void setTime(const Time&) const
             {}
 
-            //- root+casename with any 'processorXXX' replaced by 'processsors'
-            fileName processorsCasePath(const IOobject&) const;
+            //- Generate path (like io.path) from root+casename with any
+            //  'processorXXX' replaced by procDir (usually 'processsors')
+            fileName processorsCasePath
+            (
+                const IOobject&,
+                const word& procDir
+            ) const;
 
-            //- Like io.path with provided instance and any 'processorXXX'
-            //  replaced by 'processsors'
-            fileName processorsPath(const IOobject&, const word&) const;
+            //- Generate path (like io.path) with provided instance and any
+            //  'processorXXX' replaced by procDir (usually 'processsors')
+            fileName processorsPath
+            (
+                const IOobject&,
+                const word& instance,
+                const word& procDir
+            ) const;
 
-            //- Operating on fileName: replace processorXXX with processors
-            fileName processorsPath(const fileName&) const;
+            //- Operating on fileName: replace processorXXX with procDir
+            fileName processorsPath(const fileName&, const word& procDir) const;
 
             //- Split fileName into part before 'processor' and part after.
             //  Returns -1 or processor number and optionally number

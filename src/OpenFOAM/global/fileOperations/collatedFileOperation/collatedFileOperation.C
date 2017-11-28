@@ -328,7 +328,7 @@ bool Foam::fileOperations::collatedFileOperation::writeObject
     else
     {
         // Construct the equivalent processors/ directory
-        fileName path(processorsPath(io, inst));
+        fileName path(processorsPath(io, inst, processorsDir_));
 
         mkDir(path);
         fileName pathName(path/io.name());
@@ -374,7 +374,7 @@ bool Foam::fileOperations::collatedFileOperation::writeObject
         else if (!Pstream::parRun())
         {
             // Special path for e.g. decomposePar. Append to
-            // processors/ file
+            // processorsDDD/ file
             if (debug)
             {
                 Pout<< "writeObject:"

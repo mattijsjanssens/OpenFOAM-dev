@@ -101,12 +101,25 @@ Foam::fileName Foam::fileOperations::uncollatedFileOperation::filePathInfo
             // Check if parallel "procesors" directory
             if (io.time().processorCase())
             {
-                fileName path = processorsPath(io, io.instance());
+                fileName path =
+                    processorsPath(io, io.instance(), processorsDir_);
                 fileName objectPath = path/io.name();
 
                 if (isFileOrDir(isFile, objectPath))
                 {
                     return objectPath;
+                }
+
+                if (processorsBaseDir != processorsDir_)
+                {
+                    fileName path =
+                        processorsPath(io, io.instance(), processorsBaseDir);
+                    fileName objectPath = path/io.name();
+
+                    if (isFileOrDir(isFile, objectPath))
+                    {
+                        return objectPath;
+                    }
                 }
             }
 
