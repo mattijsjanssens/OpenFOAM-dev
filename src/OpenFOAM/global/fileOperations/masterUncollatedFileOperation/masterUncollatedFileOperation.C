@@ -73,37 +73,69 @@ void Foam::fileOperations::masterUncollatedFileOperation::cacheProcessorPaths
     if (Pstream::parRun())
     {
         // Trigger caching of processor directory presence (on master)
-        if (!haveProcessorPath_.valid())
+        if (!missingPaths_.valid())
         {
-            processorPath_ = io.time().path();
-            if (Pstream::master())
+            // Collect paths to test
+            DynamicList<fileName> testPaths(3);
+            testPaths.append(io.time().path());
+            testPaths.append(processorsCasePath(io, processorsDir()));
+            if (processorsBaseDir != processorsDir())
             {
-                haveProcessorPath_ = Foam::isDir(processorPath_);
+                testPaths.append(processorsCasePath(io, processorsBaseDir));
             }
-            Pstream::scatter(haveProcessorPath_);
-            if (debug)
+
+            // Do test on master
+            missingPaths_ = new fileNameList(0);
+
+            forAll(testPaths, i)
             {
-                Pout<< "masterUncollatedFileOperation::cacheProcessorDirs :"
-                    << " Detected processorDDD/ : " << haveProcessorPath_
-                    << "  actual path:" << processorPath_ << endl;
-            }
-        }
-        if (!haveCollatedPath_.valid())
-        {
-            collatedPath_ = processorsCasePath(io, processorsDir());
-            if (Pstream::master())
-            {
-                haveCollatedPath_ = Foam::isDir(collatedPath_);
-            }
-            Pstream::scatter(haveCollatedPath_);
-            if (debug)
-            {
-                Pout<< "masterUncollatedFileOperation::cacheProcessorDirs :"
-                    << " Detected processors/ : " << haveCollatedPath_
-                    << " actual path:" << collatedPath_ << endl;
+                const fileName& dir = testPaths[i];
+                bool masterHasDir = false;
+                if (Pstream::master())
+                {
+                    // Use raw test, bypassing caching
+                    masterHasDir = Foam::isDir(dir);
+                }
+                Pstream::scatter(masterHasDir);
+                if (debug)
+                {
+                    Pout<< "masterUncollatedFileOperation::cacheProcessorDirs :"
+                        << " test for " << dir
+                        << " master result:" << Switch(masterHasDir) << endl;
+                }
+                if (!masterHasDir)
+                {
+                    missingPaths_().append(dir);
+                }
             }
         }
     }
+}
+
+
+bool Foam::fileOperations::masterUncollatedFileOperation::missingDir
+(
+    const fileName& path
+) const
+{
+    // Check in our list of directories that we've already checked the
+    // state of
+    if (missingPaths_.valid())
+    {
+        const fileNameList& dirs = missingPaths_();
+
+        forAll(dirs, i)
+        {
+            const fileName& d = dirs[i];
+            fileName::size_type len = d.size();
+
+            if (path.find(d) == 0 && (path.size() == len || path[len] == '/'))
+            {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 
@@ -147,7 +179,7 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePathInfo
     {
         fileName objectPath = io.instance()/io.name();
 
-        if (isFileOrDir(isFile, objectPath))
+        if (!missingDir(objectPath) && isFileOrDir(isFile, objectPath))
         {
             searchType = fileOperation::ABSOLUTE;
             return objectPath;
@@ -166,7 +198,7 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePathInfo
             // 1a. Check processorsDDD/
             fileName objectPath =
                 processorsPath(io, io.instance(), processorsDir())/io.name();
-            if (isFileOrDir(isFile, objectPath))
+            if (!missingDir(objectPath) && isFileOrDir(isFile, objectPath))
             {
                 searchType = fileOperation::PROCESSORSOBJECT;
                 return objectPath;
@@ -178,7 +210,7 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePathInfo
                 fileName objectPath =
                     processorsPath(io, io.instance(), processorsBaseDir)
                    /io.name();
-                if (isFileOrDir(isFile, objectPath))
+                if (!missingDir(objectPath) && isFileOrDir(isFile, objectPath))
                 {
                     searchType = fileOperation::PROCESSORSBASEOBJECT;
                     return objectPath;
@@ -187,12 +219,12 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePathInfo
         }
         {
             // 2. Check local
-            fileName localObjectPath = io.objectPath();
+            fileName localPath = io.objectPath();
 
-            if (isFileOrDir(isFile, localObjectPath))
+            if (!missingDir(localPath) && isFileOrDir(isFile, localPath))
             {
                 searchType = fileOperation::OBJECT;
-                return localObjectPath;
+                return localPath;
             }
         }
 
@@ -209,14 +241,14 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePathInfo
             )
         )
         {
-            fileName parentObjectPath =
+            fileName parentPath =
                 io.rootPath()/io.time().globalCaseName()
                /io.instance()/io.db().dbDir()/io.local()/io.name();
 
-            if (isFileOrDir(isFile, parentObjectPath))
+            if (!missingDir(parentPath) && isFileOrDir(isFile, parentPath))
             {
                 searchType = fileOperation::PARENTOBJECT;
-                return parentObjectPath;
+                return parentPath;
             }
         }
 
@@ -244,7 +276,7 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePathInfo
                 fileName fName =
                     processorsPath(io, newInstancePath, processorsDir())
                    /io.name();
-                if (isFileOrDir(isFile, fName))
+                if (!missingDir(fName) && isFileOrDir(isFile, fName))
                 {
                     searchType = fileOperation::PROCESSORSINSTANCE;
                     return fName;
@@ -255,7 +287,7 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePathInfo
                     fName =
                         processorsPath(io, newInstancePath, processorsBaseDir)
                        /io.name();
-                    if (isFileOrDir(isFile, fName))
+                    if (!missingDir(fName) && isFileOrDir(isFile, fName))
                     {
                         searchType = fileOperation::PROCESSORSBASEINSTANCE;
                         return fName;
@@ -268,7 +300,7 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePathInfo
                    io.rootPath()/io.caseName()
                   /newInstancePath/io.db().dbDir()/io.local()/io.name();
 
-                if (isFileOrDir(isFile, fName))
+                if (!missingDir(fName) && isFileOrDir(isFile, fName))
                 {
                     searchType = fileOperation::FINDINSTANCE;
                     return fName;
@@ -458,11 +490,7 @@ masterUncollatedFileOperation
     const bool verbose
 )
 :
-    fileOperation(),
-    processorPath_("UNSET"),
-    haveProcessorPath_(Switch::INVALID),
-    collatedPath_("UNSET"),
-    haveCollatedPath_(Switch::INVALID)
+    fileOperation()
 {
     if (verbose)
     {
@@ -532,6 +560,10 @@ mode_t Foam::fileOperations::masterUncollatedFileOperation::mode
     const bool followLink
 ) const
 {
+    if (missingDir(fName))
+    {
+        return 0;
+    }
     return masterOp<mode_t, modeOp>(fName, modeOp(followLink));
 }
 
@@ -542,11 +574,7 @@ Foam::fileName::Type Foam::fileOperations::masterUncollatedFileOperation::type
     const bool followLink
 ) const
 {
-    if (fName.find(processorPath_) == 0 && !haveProcessorPath_)
-    {
-        return fileName::UNDEFINED;
-    }
-    else if (fName.find(collatedPath_) == 0 && !haveCollatedPath_)
+    if (missingDir(fName))
     {
         return fileName::UNDEFINED;
     }
@@ -561,11 +589,7 @@ bool Foam::fileOperations::masterUncollatedFileOperation::exists
     const bool followLink
 ) const
 {
-    if (fName.find(processorPath_) == 0 && !haveProcessorPath_)
-    {
-        return false;
-    }
-    else if (fName.find(collatedPath_) == 0 && !haveCollatedPath_)
+    if (missingDir(fName))
     {
         return false;
     }
@@ -579,11 +603,7 @@ bool Foam::fileOperations::masterUncollatedFileOperation::isDir
     const bool followLink
 ) const
 {
-    if (fName.find(processorPath_) == 0 && !haveProcessorPath_)
-    {
-        return false;
-    }
-    else if (fName.find(collatedPath_) == 0 && !haveCollatedPath_)
+    if (missingDir(fName))
     {
         return false;
     }
@@ -598,11 +618,7 @@ bool Foam::fileOperations::masterUncollatedFileOperation::isFile
     const bool followLink
 ) const
 {
-    if (fName.find(processorPath_) == 0 && !haveProcessorPath_)
-    {
-        return false;
-    }
-    else if (fName.find(collatedPath_) == 0 && !haveCollatedPath_)
+    if (missingDir(fName))
     {
         return false;
     }
@@ -684,11 +700,18 @@ Foam::fileNameList Foam::fileOperations::masterUncollatedFileOperation::readDir
     const bool followLink
 ) const
 {
-    return masterOp<fileNameList, readDirOp>
-    (
-        dir,
-        readDirOp(type, filtergz, followLink)
-    );
+    if (missingDir(dir))
+    {
+        return fileNameList();
+    }
+    else
+    {
+        return masterOp<fileNameList, readDirOp>
+        (
+            dir,
+            readDirOp(type, filtergz, followLink)
+        );
+    }
 }
 
 
@@ -796,11 +819,7 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePath
             // have the file and some not (e.g. lagrangian data)
 
             objPath = io.objectPath();
-            if (objPath.find(processorPath_) == 0 && !haveProcessorPath_)
-            {
-                objPath = "";
-            }
-            else if (objPath.find(collatedPath_) == 0 && !haveCollatedPath_)
+            if (missingDir(objPath))
             {
                 objPath = "";
             }
@@ -892,11 +911,7 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::dirPath
             // Retest all processors separately since some processors might
             // have the file and some not (e.g. lagrangian data)
             objPath = io.objectPath();
-            if (objPath.find(processorPath_) == 0 && !haveProcessorPath_)
-            {
-                objPath = "";
-            }
-            else if (objPath.find(collatedPath_) == 0 && !haveCollatedPath_)
+            if (missingDir(objPath))
             {
                 objPath = "";
             }
