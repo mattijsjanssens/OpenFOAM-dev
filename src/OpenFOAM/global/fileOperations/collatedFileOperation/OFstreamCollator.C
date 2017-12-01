@@ -157,12 +157,13 @@ void* Foam::OFstreamCollator::writeAll(void *threadarg)
     {
         writeData* ptr = nullptr;
 
-        lockMutex(handler.mutex_);
-        if (handler.objects_.size())
         {
-            ptr = handler.objects_.pop();
+            std::lock_guard<std::mutex> guard(handler.mutex_);
+            if (handler.objects_.size())
+            {
+                ptr = handler.objects_.pop();
+            }
         }
-        unlockMutex(handler.mutex_);
 
         if (!ptr)
         {
@@ -202,9 +203,10 @@ void* Foam::OFstreamCollator::writeAll(void *threadarg)
         Pout<< "OFstreamCollator : Exiting write thread " << endl;
     }
 
-    lockMutex(handler.mutex_);
-    handler.threadRunning_ = false;
-    unlockMutex(handler.mutex_);
+    {
+        std::lock_guard<std::mutex> guard(handler.mutex_);
+        handler.threadRunning_ = false;
+    }
 
     return nullptr;
 }
@@ -217,12 +219,13 @@ void Foam::OFstreamCollator::waitForBufferSpace(const off_t wantedSize) const
         // Count files to be written
         off_t totalSize = 0;
 
-        lockMutex(mutex_);
-        forAllConstIter(FIFOStack<writeData*>, objects_, iter)
         {
-            totalSize += iter()->size();
+            std::lock_guard<std::mutex> guard(mutex_);
+            forAllConstIter(FIFOStack<writeData*>, objects_, iter)
+            {
+                totalSize += iter()->size();
+            }
         }
-        unlockMutex(mutex_);
 
         if (totalSize == 0 || (totalSize+wantedSize) <= maxBufferSize_)
         {
@@ -231,13 +234,12 @@ void Foam::OFstreamCollator::waitForBufferSpace(const off_t wantedSize) const
 
         if (debug)
         {
-            lockMutex(mutex_);
+            std::lock_guard<std::mutex> guard(mutex_);
             Pout<< "OFstreamCollator : Waiting for buffer space."
                 << " Currently in use:" << totalSize
                 << " limit:" << maxBufferSize_
                 << " files:" << objects_.size()
                 << endl;
-            unlockMutex(mutex_);
         }
 
         sleep(5);
@@ -250,18 +252,6 @@ void Foam::OFstreamCollator::waitForBufferSpace(const off_t wantedSize) const
 Foam::OFstreamCollator::OFstreamCollator(const off_t maxBufferSize)
 :
     maxBufferSize_(maxBufferSize),
-    mutex_
-    (
-        maxBufferSize_ > 0
-      ? allocateMutex()
-      : -1
-    ),
-    thread_
-    (
-        maxBufferSize_ > 0
-      ? allocateThread()
-      : -1
-    ),
     threadRunning_(false),
     comm_
     (
@@ -278,23 +268,16 @@ Foam::OFstreamCollator::OFstreamCollator(const off_t maxBufferSize)
 
 Foam::OFstreamCollator::~OFstreamCollator()
 {
-    if (threadRunning_)
+    if (thread_.valid())
     {
         if (debug)
         {
             Pout<< "~OFstreamCollator : Waiting for write thread" << endl;
         }
+        thread_().join();
+        thread_.clear();
+    }
 
-        joinThread(thread_);
-    }
-    if (thread_ != -1)
-    {
-        freeThread(thread_);
-    }
-    if (mutex_ != -1)
-    {
-        freeMutex(mutex_);
-    }
     if (comm_ != -1)
     {
         UPstream::freeCommunicator(comm_);
@@ -406,24 +389,33 @@ bool Foam::OFstreamCollator::write
             fileAndData.slaveData_
         );
 
-        // Append to thread buffer
-        lockMutex(mutex_);
-        objects_.push(fileAndDataPtr.ptr());
-        unlockMutex(mutex_);
-
-        // Start thread if not running
-        lockMutex(mutex_);
-        if (!threadRunning_)
         {
-            createThread(thread_, writeAll, this);
-            if (debug)
+            std::lock_guard<std::mutex> guard(mutex_);
+
+            // Append to thread buffer
+            objects_.push(fileAndDataPtr.ptr());
+
+            // Start thread if not running
+            if (!threadRunning_)
             {
-                Pout<< "OFstreamCollator : Started write thread "
-                    << thread_ << endl;
+                if (thread_.valid())
+                {
+                    if (debug)
+                    {
+                        Pout<< "OFstreamCollator : Waiting for write thread"
+                            << endl;
+                    }
+                    thread_().join();
+                }
+
+                if (debug)
+                {
+                    Pout<< "OFstreamCollator : Starting write thread" << endl;
+                }
+                thread_.reset(new std::thread(writeAll, this));
+                threadRunning_ = true;
             }
-            threadRunning_ = true;
         }
-        unlockMutex(mutex_);
 
         return true;
     }
@@ -432,7 +424,6 @@ bool Foam::OFstreamCollator::write
         if (debug)
         {
             Pout<< "OFstreamCollator : thread gather and write of " << fName
-                << " in thread " << thread_
                 << " using communicator " << comm_ << endl;
         }
 
@@ -451,38 +442,48 @@ bool Foam::OFstreamCollator::write
             waitForBufferSpace(data.size());
         }
 
-        lockMutex(mutex_);
-        // Push all file info on buffer. Note that no slave data provided
-        // so it will trigger communication inside the thread
-        objects_.push
-        (
-            new writeData
-            (
-                comm_,
-                typeName,
-                fName,
-                data,
-                recvSizes,
-                false,          // Have no slave data; collect in thread
-                fmt,
-                ver,
-                cmp,
-                append
-            )
-        );
-        unlockMutex(mutex_);
-
-        lockMutex(mutex_);
-        if (!threadRunning_)
         {
-            createThread(thread_, writeAll, this);
-            if (debug)
+            std::lock_guard<std::mutex> guard(mutex_);
+
+            // Push all file info on buffer. Note that no slave data provided
+            // so it will trigger communication inside the thread
+            objects_.push
+            (
+                new writeData
+                (
+                    comm_,
+                    typeName,
+                    fName,
+                    data,
+                    recvSizes,
+                    false,          // Have no slave data; collect in thread
+                    fmt,
+                    ver,
+                    cmp,
+                    append
+                )
+            );
+
+            if (!threadRunning_)
             {
-                Pout<< "OFstreamCollator : Started write thread " << endl;
+                if (thread_.valid())
+                {
+                    if (debug)
+                    {
+                        Pout<< "OFstreamCollator : Waiting for write thread"
+                            << endl;
+                    }
+                    thread_().join();
+                }
+
+                if (debug)
+                {
+                    Pout<< "OFstreamCollator : Starting write thread" << endl;
+                }
+                thread_.reset(new std::thread(writeAll, this));
+                threadRunning_ = true;
             }
-            threadRunning_ = true;
         }
-        unlockMutex(mutex_);
 
         return true;
     }

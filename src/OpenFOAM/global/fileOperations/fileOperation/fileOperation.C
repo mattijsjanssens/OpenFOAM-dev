@@ -333,10 +333,10 @@ Foam::fileName Foam::fileOperation::filePath(const fileName& fName) const
 {
     fileName path;
     fileName local;
-    label nProcs;
-    label proci = splitProcessorPath(fName, path, local, nProcs);
+    label numProcs;
+    label proci = splitProcessorPath(fName, path, local, numProcs);
 
-    if (nProcs != -1)
+    if (numProcs != -1)
     {
         WarningInFunction << "Filename is already adapted:" << fName
             << endl;
@@ -345,6 +345,15 @@ Foam::fileName Foam::fileOperation::filePath(const fileName& fName) const
     // Give preference to processors variant
     if (proci != -1)
     {
+        if (!Pstream::parRun())
+        {
+            // E.g. checkMesh -case processor0
+            // Can be slow since only called at startup?
+            label n = nProcs(path, local);
+
+            // Set number of processors
+            const_cast<fileOperation&>(*this).setNProcs(n);
+        }
         // Processor-local file name
         fileName namedProcsName(path/processorsDir()/local);
 

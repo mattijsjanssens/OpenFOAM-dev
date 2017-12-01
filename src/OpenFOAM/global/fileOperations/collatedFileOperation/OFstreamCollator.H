@@ -51,6 +51,8 @@ SourceFiles
 #ifndef OFstreamCollator_H
 #define OFstreamCollator_H
 
+#include <thread>
+#include <mutex>
 #include "IOstream.H"
 #include "labelList.H"
 #include "FIFOStack.H"
@@ -123,16 +125,17 @@ class OFstreamCollator
 
     // Private data
 
+        //- Total amount of storage to use for object stack below
         const off_t maxBufferSize_;
 
-        //pthread_mutex_t mutex_;
-        label mutex_;
+        mutable std::mutex mutex_;
 
-        //pthread_t thread_;
-        label thread_;
+        autoPtr<std::thread> thread_;
 
+        //- Stack of files to write + contents
         FIFOStack<writeData*> objects_;
 
+        //- Whether thread is running (and not exited)
         bool threadRunning_;
 
         //- Communicator to use for all parallel ops
