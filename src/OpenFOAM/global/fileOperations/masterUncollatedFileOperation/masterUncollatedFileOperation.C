@@ -532,6 +532,14 @@ mode_t Foam::fileOperations::masterUncollatedFileOperation::mode
     const bool followLink
 ) const
 {
+    if (fName.find(processorPath_) == 0 && !haveProcessorPath_)
+    {
+        return 0;
+    }
+    else if (fName.find(collatedPath_) == 0 && !haveCollatedPath_)
+    {
+        return 0;
+    }
     return masterOp<mode_t, modeOp>(fName, modeOp(followLink));
 }
 
@@ -684,11 +692,22 @@ Foam::fileNameList Foam::fileOperations::masterUncollatedFileOperation::readDir
     const bool followLink
 ) const
 {
-    return masterOp<fileNameList, readDirOp>
-    (
-        dir,
-        readDirOp(type, filtergz, followLink)
-    );
+    if (dir.find(processorPath_) == 0 && !haveProcessorPath_)
+    {
+        return fileNameList();
+    }
+    else if (dir.find(collatedPath_) == 0 && !haveCollatedPath_)
+    {
+        return fileNameList();
+    }
+    else
+    {
+        return masterOp<fileNameList, readDirOp>
+        (
+            dir,
+            readDirOp(type, filtergz, followLink)
+        );
+    }
 }
 
 
