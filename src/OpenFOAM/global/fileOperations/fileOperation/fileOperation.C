@@ -224,8 +224,6 @@ bool Foam::fileOperation::isFileOrDir(const bool isFile, const fileName& f)
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 Foam::fileOperation::fileOperation()
-:
-    processorsDir_(processorsBaseDir)
 {}
 
 
@@ -348,13 +346,13 @@ Foam::fileName Foam::fileOperation::filePath(const fileName& fName) const
     if (proci != -1)
     {
         // Processor-local file name
-        fileName namedProcsName(path/processorsDir_/local);
+        fileName namedProcsName(path/processorsDir()/local);
 
         if (exists(namedProcsName))
         {
             return namedProcsName;
         }
-        if (processorsBaseDir != processorsDir_)
+        if (processorsBaseDir != processorsDir())
         {
             fileName procsName(path/processorsBaseDir/local);
             if (exists(procsName))
@@ -498,7 +496,7 @@ Foam::instantList Foam::fileOperation::findTimes
     instantList times = sortTimes(dirEntries, constantName);
 
     // Check if directory is processorsDDD
-    fileName namedProcsDir(processorsPath(directory, processorsDir_));
+    fileName namedProcsDir(processorsPath(directory, processorsDir()));
 
     if (!namedProcsDir.empty() && namedProcsDir != directory)
     {

@@ -61,9 +61,6 @@ protected:
         //- file-change monitor for all registered files
         mutable autoPtr<fileMonitor> monitorPtr_;
 
-        //- Actual name of processors dir
-        word processorsDir_;
-
 
    // Protected Member Functions
 
@@ -409,6 +406,13 @@ public:
 
 
         // Other
+
+            //- Actual name of processors dir (for use in mode PROCESSORSOBJECT,
+            //  PROCESSORSINSTANCE)
+            virtual const word& processorsDir() const
+            {
+                return processorsBaseDir;
+            }
 
             //- Set number of processor directories/results. Only used in
             //  decomposePar

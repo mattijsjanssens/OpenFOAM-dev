@@ -64,6 +64,9 @@ class collatedFileOperation
         //- Threaded writer
         mutable OFstreamCollator writer_;
 
+        //- Actual name of processors dir
+        word processorsDir_;
+
 
    // Private Member Functions
 
@@ -125,6 +128,12 @@ public:
             ) const;
 
         // Other
+
+            //- Actual name of processors dir
+            virtual const word& processorsDir() const
+            {
+                return processorsDir_;
+            }
 
             //- Set number of processor directories/results. Only used in
             //  decomposePar

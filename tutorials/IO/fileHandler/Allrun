@@ -12,7 +12,7 @@ runParallel `getApplication` -fileHandler collated
 runApplication reconstructPar -latestTime -fileHandler collated
 
 #- Delete collated files
-rm -rf processors
+rm -rf processors*
 
 #- Test writing uncollated format
 runApplication -s uncollated decomposePar -fileHandler uncollated

@@ -61,12 +61,12 @@ protected:
     // Protected data
 
         //- Detected old-style "processorDDD" directory
-        mutable fileName processorDir_;
-        mutable Switch haveProcessorDir_;
+        mutable fileName processorPath_;
+        mutable Switch haveProcessorPath_;
 
-        //- Detected collated "processors" directory
-        mutable fileName collatedDir_;
-        mutable Switch haveCollatedDir_;
+        //- Detected collated "processors" (or "processorsDDD") directory
+        mutable fileName collatedPath_;
+        mutable Switch haveCollatedPath_;
 
         //- Cached times for a given directory
         mutable HashPtrTable<instantList> times_;
@@ -369,7 +369,7 @@ protected:
         ) const;
 
         //- Detect presence of processor directories
-        void cacheProcessorDirs(const IOobject&) const;
+        void cacheProcessorPaths(const IOobject&) const;
 
         //- Equivalent of Time::findInstance
         static word findInstancePath

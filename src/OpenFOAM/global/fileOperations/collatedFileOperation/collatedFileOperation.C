@@ -177,15 +177,14 @@ Foam::fileOperations::collatedFileOperation::collatedFileOperation
 )
 :
     masterUncollatedFileOperation(false),
-    writer_(maxThreadFileBufferSize)
+    writer_(maxThreadFileBufferSize),
+    processorsDir_
+    (
+        Pstream::nProcs() > 1
+      ? processorsBaseDir+Foam::name(Pstream::nProcs())
+      : processorsBaseDir
+    )
 {
-    // Default output directory
-    if (Pstream::nProcs() > 1)
-    {
-        processorsDir_ = processorsBaseDir+Foam::name(Pstream::nProcs());
-    }
-
-
     if (verbose)
     {
         Info<< "I/O    : " << typeName
@@ -328,7 +327,7 @@ bool Foam::fileOperations::collatedFileOperation::writeObject
     else
     {
         // Construct the equivalent processors/ directory
-        fileName path(processorsPath(io, inst, processorsDir_));
+        fileName path(processorsPath(io, inst, processorsDir()));
 
         mkDir(path);
         fileName pathName(path/io.name());

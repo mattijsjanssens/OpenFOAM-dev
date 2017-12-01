@@ -102,7 +102,7 @@ Foam::fileName Foam::fileOperations::uncollatedFileOperation::filePathInfo
             if (io.time().processorCase())
             {
                 fileName path =
-                    processorsPath(io, io.instance(), processorsDir_);
+                    processorsPath(io, io.instance(), processorsDir());
                 fileName objectPath = path/io.name();
 
                 if (isFileOrDir(isFile, objectPath))
@@ -110,7 +110,7 @@ Foam::fileName Foam::fileOperations::uncollatedFileOperation::filePathInfo
                     return objectPath;
                 }
 
-                if (processorsBaseDir != processorsDir_)
+                if (processorsBaseDir != processorsDir())
                 {
                     fileName path =
                         processorsPath(io, io.instance(), processorsBaseDir);
