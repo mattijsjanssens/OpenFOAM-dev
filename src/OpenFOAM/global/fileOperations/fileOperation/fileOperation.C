@@ -338,8 +338,7 @@ Foam::fileName Foam::fileOperation::filePath(const fileName& fName) const
 
     if (numProcs != -1)
     {
-        WarningInFunction << "Filename is already adapted:" << fName
-            << endl;
+        WarningInFunction << "Filename is already adapted:" << fName << endl;
     }
 
     // Give preference to processors variant
@@ -352,7 +351,10 @@ Foam::fileName Foam::fileOperation::filePath(const fileName& fName) const
             label n = nProcs(path, local);
 
             // Set number of processors
-            const_cast<fileOperation&>(*this).setNProcs(n);
+            if (n > 0)
+            {
+                const_cast<fileOperation&>(*this).setNProcs(n);
+            }
         }
         // Processor-local file name
         fileName namedProcsName(path/processorsDir()/local);
