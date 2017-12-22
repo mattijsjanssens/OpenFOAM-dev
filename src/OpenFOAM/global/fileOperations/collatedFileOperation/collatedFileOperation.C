@@ -57,6 +57,15 @@ namespace fileOperations
         float,
         collatedFileOperation::maxThreadFileBufferSize
     );
+
+    // Mark as needing threaded mpi
+    addNamedToRunTimeSelectionTable
+    (
+        fileOperationInitialise,
+        collatedFileOperationInitialise,
+        word,
+        collated
+    );
 }
 }
 

@@ -402,6 +402,26 @@ Foam::argList::argList
     args_(argc),
     options_(argc)
 {
+    // Check for fileHandler
+    word handlerType(getEnv("FOAM_FILEHANDLER"));
+    for (int argI = 0; argI < argc; ++argI)
+    {
+        if (argv[argI][0] == '-')
+        {
+            const char *optionName = &argv[argI][1];
+            if (string(optionName) == "fileHandler")
+            {
+                handlerType = argv[argI+1];
+                break;
+            }
+        }
+    }
+    if (handlerType.empty())
+    {
+        handlerType = fileOperation::defaultFileHandler;
+    }
+
+
     // Check if this run is a parallel run by searching for any parallel option
     // If found call runPar which might filter argv
     for (int argI = 0; argI < argc; ++argI)
@@ -412,6 +432,11 @@ Foam::argList::argList
 
             if (validParOptions.found(optionName))
             {
+                //bool needsThread =
+                //fileOperations::fileOperationInitialise::New
+                //(
+                //    handlerType
+                //).needsThreading();
                 parRunControl_.runPar(argc, argv);
                 break;
             }

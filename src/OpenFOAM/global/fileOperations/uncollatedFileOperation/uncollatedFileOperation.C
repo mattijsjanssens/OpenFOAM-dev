@@ -30,6 +30,7 @@ License
 #include "addToRunTimeSelectionTable.H"
 #include "decomposedBlockData.H"
 #include "dummyISstream.H"
+#include "unthreadedInitialise.H"
 
 /* * * * * * * * * * * * * * * Static Member Data  * * * * * * * * * * * * * */
 
@@ -39,6 +40,15 @@ namespace fileOperations
 {
     defineTypeNameAndDebug(uncollatedFileOperation, 0);
     addToRunTimeSelectionTable(fileOperation, uncollatedFileOperation, word);
+
+    // Mark as not needing threaded mpi
+    addNamedToRunTimeSelectionTable
+    (
+        fileOperationInitialise,
+        unthreadedInitialise,
+        word,
+        uncollated
+    );
 }
 }
 

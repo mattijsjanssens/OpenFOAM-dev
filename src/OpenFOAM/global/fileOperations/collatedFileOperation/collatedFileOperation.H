@@ -43,6 +43,7 @@ SourceFiles
 
 #include "masterUncollatedFileOperation.H"
 #include "OFstreamCollator.H"
+#include "fileOperationInitialise.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -138,6 +139,40 @@ public:
             //- Set number of processor directories/results. Only used in
             //  decomposePar
             virtual void setNProcs(const label nProcs);
+};
+
+
+/*---------------------------------------------------------------------------*\
+               Class collatedFileOperationInitialise Declaration
+\*---------------------------------------------------------------------------*/
+
+class collatedFileOperationInitialise
+:
+    public fileOperationInitialise
+{
+public:
+
+    // Constructors
+
+        //- Construct from components
+        collatedFileOperationInitialise(int& argc, char**& argv)
+        {}
+
+
+    //- Destructor
+    virtual ~collatedFileOperationInitialise()
+    {}
+
+
+    // Member Functions
+
+        //- Needs threading
+        virtual bool needsThreading() const
+        {
+            return
+                collatedFileOperation::maxThreadFileBufferSize
+              > 0;
+        }
 };
 
 

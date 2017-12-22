@@ -34,6 +34,7 @@ License
 #include "registerSwitch.H"
 #include "dummyISstream.H"
 #include "SubList.H"
+#include "unthreadedInitialise.H"
 
 /* * * * * * * * * * * * * * * Static Member Data  * * * * * * * * * * * * * */
 
@@ -58,6 +59,15 @@ namespace fileOperations
         "maxMasterFileBufferSize",
         float,
         masterUncollatedFileOperation::maxMasterFileBufferSize
+    );
+
+    // Mark as not needing threaded mpi
+    addNamedToRunTimeSelectionTable
+    (
+        fileOperationInitialise,
+        unthreadedInitialise,
+        word,
+        masterUncollated
     );
 }
 }

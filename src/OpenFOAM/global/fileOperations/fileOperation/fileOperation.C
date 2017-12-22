@@ -742,7 +742,7 @@ Foam::label Foam::fileOperation::splitProcessorPath
     {
         // "processsorsDDD"
 
-        local = local.substr(pos+1);
+        local = local.substr(1);
 
         if (local.empty())
         {
