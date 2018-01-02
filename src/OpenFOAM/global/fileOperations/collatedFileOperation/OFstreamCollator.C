@@ -253,12 +253,33 @@ Foam::OFstreamCollator::OFstreamCollator(const off_t maxBufferSize)
 :
     maxBufferSize_(maxBufferSize),
     threadRunning_(false),
-    comm_
+    localComm_(UPstream::worldComm),
+    threadComm_
     (
         UPstream::allocateCommunicator
         (
-            UPstream::worldComm,
-            identity(UPstream::nProcs(UPstream::worldComm))
+            localComm_,
+            identity(UPstream::nProcs(localComm_))
+        )
+    )
+{}
+
+
+Foam::OFstreamCollator::OFstreamCollator
+(
+    const off_t maxBufferSize,
+    const label comm
+)
+:
+    maxBufferSize_(maxBufferSize),
+    threadRunning_(false),
+    localComm_(comm),
+    threadComm_
+    (
+        UPstream::allocateCommunicator
+        (
+            localComm_,
+            identity(UPstream::nProcs(localComm_))
         )
     )
 {}
@@ -278,9 +299,9 @@ Foam::OFstreamCollator::~OFstreamCollator()
         thread_.clear();
     }
 
-    if (comm_ != -1)
+    if (threadComm_ != -1)
     {
-        UPstream::freeCommunicator(comm_);
+        UPstream::freeCommunicator(threadComm_);
     }
 }
 
@@ -301,7 +322,7 @@ bool Foam::OFstreamCollator::write
     // Determine (on master) sizes to receive. Note: do NOT use thread
     // communicator
     labelList recvSizes;
-    decomposedBlockData::gather(Pstream::worldComm, data.size(), recvSizes);
+    decomposedBlockData::gather(localComm_, data.size(), recvSizes);
     off_t totalSize = 0;
     label maxLocalSize = 0;
     {
@@ -310,8 +331,8 @@ bool Foam::OFstreamCollator::write
             totalSize += recvSizes[proci];
             maxLocalSize = max(maxLocalSize, recvSizes[proci]);
         }
-        Pstream::scatter(totalSize, Pstream::msgType(), Pstream::worldComm);
-        Pstream::scatter(maxLocalSize, Pstream::msgType(), Pstream::worldComm);
+        Pstream::scatter(totalSize, Pstream::msgType(), localComm_);
+        Pstream::scatter(maxLocalSize, Pstream::msgType(), localComm_);
     }
 
     if (maxBufferSize_ == 0 || maxLocalSize > maxBufferSize_)
@@ -319,13 +340,13 @@ bool Foam::OFstreamCollator::write
         if (debug)
         {
             Pout<< "OFstreamCollator : non-thread gather and write of " << fName
-                << " using worldComm" << endl;
+                << " using local comm " << localComm_ << endl;
         }
         // Direct collating and writing (so master blocks until all written!)
         const List<char> dummySlaveData;
         return writeFile
         (
-            UPstream::worldComm,
+            localComm_,
             typeName,
             fName,
             data,
@@ -359,12 +380,12 @@ bool Foam::OFstreamCollator::write
         (
             new writeData
             (
-                comm_,      // Note: comm not actually used anymore
+                threadComm_,        // Note: comm not actually used anymore
                 typeName,
                 fName,
                 data,
                 recvSizes,
-                true,       // have slave data (collected below)
+                true,               // have slave data (collected below)
                 fmt,
                 ver,
                 cmp,
@@ -378,12 +399,12 @@ bool Foam::OFstreamCollator::write
         List<int> slaveOffsets;
         decomposedBlockData::gatherSlaveData
         (
-            Pstream::worldComm,         // Note: using simulation thread
+            localComm_,
             slice,
             recvSizes,
 
-            1,                          // startProc,
-            Pstream::nProcs()-1,        // n procs
+            1,                              // startProc,
+            Pstream::nProcs(localComm_)-1,  // n procs
 
             slaveOffsets,
             fileAndData.slaveData_
@@ -424,7 +445,7 @@ bool Foam::OFstreamCollator::write
         if (debug)
         {
             Pout<< "OFstreamCollator : thread gather and write of " << fName
-                << " using communicator " << comm_ << endl;
+                << " using communicator " << threadComm_ << endl;
         }
 
         if (!UPstream::haveThreads())
@@ -451,7 +472,7 @@ bool Foam::OFstreamCollator::write
             (
                 new writeData
                 (
-                    comm_,
+                    threadComm_,
                     typeName,
                     fName,
                     data,

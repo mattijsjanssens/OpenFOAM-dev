@@ -138,8 +138,11 @@ class OFstreamCollator
         //- Whether thread is running (and not exited)
         bool threadRunning_;
 
-        //- Communicator to use for all parallel ops
-        label comm_;
+        //- Communicator to use for all parallel ops (in simulation thread)
+        label localComm_;
+
+        //- Communicator to use for all parallel ops (in write thread)
+        label threadComm_;
 
 
     // Private Member Functions
@@ -178,6 +181,10 @@ public:
 
         //- Construct from buffer size. 0 = do not use thread
         OFstreamCollator(const off_t maxBufferSize);
+
+        //- Construct from buffer size (0 = do not use thread) and local
+        //  thread
+        OFstreamCollator(const off_t maxBufferSize, const label comm);
 
 
     //- Destructor

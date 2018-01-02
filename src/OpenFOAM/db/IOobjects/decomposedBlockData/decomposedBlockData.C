@@ -602,7 +602,7 @@ void Foam::decomposedBlockData::gather
 
     List<int> recvOffsets;
     List<int> recvSizes;
-    if (UPstream::master())
+    if (UPstream::master(comm))
     {
         recvOffsets.setSize(nProcs);
         forAll(recvOffsets, proci)
@@ -948,7 +948,7 @@ bool Foam::decomposedBlockData::writeData(Ostream& os) const
     );
 
     IOobject io(*this);
-    if (Pstream::master())
+    if (Pstream::master(comm_))
     {
         IStringStream is(name(), str);
         io.readHeader(is);
@@ -958,7 +958,7 @@ bool Foam::decomposedBlockData::writeData(Ostream& os) const
 
     // version
     string versionString(os.version().str());
-    Pstream::scatter(versionString);
+    Pstream::scatter(versionString, Pstream::msgType(), comm_);
 
     // stream
     string formatString;
@@ -966,21 +966,21 @@ bool Foam::decomposedBlockData::writeData(Ostream& os) const
         OStringStream os;
         os << os.format();
         formatString  = os.str();
-        Pstream::scatter(formatString);
+        Pstream::scatter(formatString, Pstream::msgType(), comm_);
     }
 
     //word masterName(name());
-    //Pstream::scatter(masterName);
+    //Pstream::scatter(masterName, Pstream::msgType(), comm_);
 
-    Pstream::scatter(io.headerClassName());
-    Pstream::scatter(io.note());
+    Pstream::scatter(io.headerClassName(), Pstream::msgType(), comm_);
+    Pstream::scatter(io.note(), Pstream::msgType(), comm_);
     //Pstream::scatter(io.instance(), Pstream::msgType(), comm);
     //Pstream::scatter(io.local(), Pstream::msgType(), comm);
 
     fileName masterLocation(instance()/db().dbDir()/local());
-    Pstream::scatter(masterLocation);
+    Pstream::scatter(masterLocation, Pstream::msgType(), comm_);
 
-    if (!Pstream::master())
+    if (!Pstream::master(comm_))
     {
         writeHeader
         (
@@ -996,7 +996,7 @@ bool Foam::decomposedBlockData::writeData(Ostream& os) const
 
     os.writeQuoted(str, false);
 
-    if (!Pstream::master())
+    if (!Pstream::master(comm_))
     {
         IOobject::writeEndDivider(os);
     }
