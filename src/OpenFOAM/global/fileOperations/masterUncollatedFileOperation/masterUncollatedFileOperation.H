@@ -351,7 +351,7 @@ protected:
     // Private Member Functions
 
         template<class Type>
-        Type scatterList(const UList<Type>&) const;
+        Type scatterList(const UList<Type>&, const int, const label comm) const;
 
         template<class Type, class fileOp>
         Type masterOp(const fileName&, const fileOp& fop) const;
@@ -426,6 +426,9 @@ public:
 
         //- Construct null
         masterUncollatedFileOperation(const bool verbose);
+
+        //- Construct from communicator
+        masterUncollatedFileOperation(const label comm, const bool verbose);
 
 
     //- Destructor

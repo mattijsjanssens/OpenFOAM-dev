@@ -427,7 +427,7 @@ bool Foam::OFstreamCollator::write
                 << " using communicator " << comm_ << endl;
         }
 
-        if (!UPstream::haveThreads)
+        if (!UPstream::haveThreads())
         {
             FatalErrorInFunction
                 << "mpi does not seem to have thread support."

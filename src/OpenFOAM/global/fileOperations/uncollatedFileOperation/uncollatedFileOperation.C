@@ -111,8 +111,10 @@ Foam::fileName Foam::fileOperations::uncollatedFileOperation::filePathInfo
             // Check if parallel "procesors" directory
             if (io.time().processorCase())
             {
+                const word actualProcsDir(processorsDir(io));
+
                 fileName path =
-                    processorsPath(io, io.instance(), processorsDir());
+                    processorsPath(io, io.instance(), actualProcsDir);
                 fileName objectPath = path/io.name();
 
                 if (isFileOrDir(isFile, objectPath))
@@ -120,7 +122,7 @@ Foam::fileName Foam::fileOperations::uncollatedFileOperation::filePathInfo
                     return objectPath;
                 }
 
-                if (processorsBaseDir != processorsDir())
+                if (processorsBaseDir != actualProcsDir)
                 {
                     fileName path =
                         processorsPath(io, io.instance(), processorsBaseDir);
@@ -170,6 +172,8 @@ Foam::fileOperations::uncollatedFileOperation::uncollatedFileOperation
 (
     const bool verbose
 )
+:
+    fileOperation(Pstream::worldComm)
 {
     if (verbose)
     {
@@ -553,10 +557,7 @@ Foam::fileOperations::uncollatedFileOperation::readStream
     {
         // Analyse the objectpath to find out the processor we're trying
         // to access
-        fileName path;
-        fileName local;
-        label nProcs;
-        label proci = splitProcessorPath(io.objectPath(), path, local, nProcs);
+        label proci = detectProcessorPath(io.objectPath());
 
         if (proci == -1)
         {

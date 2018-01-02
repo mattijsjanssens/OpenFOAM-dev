@@ -83,10 +83,7 @@ bool Foam::fileOperations::collatedFileOperation::appendObject
 {
     // Append to processors/ file
 
-    fileName prefix;
-    fileName postfix;
-    label nProcs;
-    label proci = splitProcessorPath(io.objectPath(), prefix, postfix, nProcs);
+    label proci = detectProcessorPath(io.objectPath());
 
     if (debug)
     {
@@ -336,7 +333,7 @@ bool Foam::fileOperations::collatedFileOperation::writeObject
     else
     {
         // Construct the equivalent processors/ directory
-        fileName path(processorsPath(io, inst, processorsDir()));
+        fileName path(processorsPath(io, inst, processorsDir(io)));
 
         mkDir(path);
         fileName pathName(path/io.name());

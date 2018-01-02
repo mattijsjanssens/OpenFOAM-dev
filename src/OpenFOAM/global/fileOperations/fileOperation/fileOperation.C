@@ -223,7 +223,9 @@ bool Foam::fileOperation::isFileOrDir(const bool isFile, const fileName& f)
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::fileOperation::fileOperation()
+Foam::fileOperation::fileOperation(label comm)
+:
+    comm_(comm)
 {}
 
 
@@ -333,8 +335,10 @@ Foam::fileName Foam::fileOperation::filePath(const fileName& fName) const
 {
     fileName path;
     fileName local;
+    label gStart;
+    label gSz;
     label numProcs;
-    label proci = splitProcessorPath(fName, path, local, numProcs);
+    label proci = splitProcessorPath(fName, path, local, gStart, gSz, numProcs);
 
     if (numProcs != -1)
     {
@@ -356,14 +360,18 @@ Foam::fileName Foam::fileOperation::filePath(const fileName& fName) const
                 const_cast<fileOperation&>(*this).setNProcs(n);
             }
         }
+
+        // Get actual output directory name
+        const word procDir(processorsDir(fName));
+
         // Processor-local file name
-        fileName namedProcsName(path/processorsDir()/local);
+        fileName namedProcsName(path/procDir/local);
 
         if (exists(namedProcsName))
         {
             return namedProcsName;
         }
-        if (processorsBaseDir != processorsDir())
+        if (processorsBaseDir != procDir)
         {
             fileName procsName(path/processorsBaseDir/local);
             if (exists(procsName))
@@ -507,7 +515,7 @@ Foam::instantList Foam::fileOperation::findTimes
     instantList times = sortTimes(dirEntries, constantName);
 
     // Check if directory is processorsDDD
-    fileName namedProcsDir(processorsPath(directory, processorsDir()));
+    fileName namedProcsDir(processorsPath(directory, processorsDir(directory)));
 
     if (!namedProcsDir.empty() && namedProcsDir != directory)
     {
@@ -599,7 +607,7 @@ Foam::label Foam::fileOperation::nProcs
 ) const
 {
     label nProcs = 0;
-    if (Pstream::master())
+    if (Pstream::master(comm_))
     {
         fileNameList dirNames(Foam::readDir(dir, fileName::Type::DIRECTORY));
 
@@ -608,11 +616,11 @@ Foam::label Foam::fileOperation::nProcs
         forAll(dirNames, i)
         {
             fileName path, local;
-            label n;
+            label start, size, n;
             maxProc = max
             (
                 maxProc,
-                splitProcessorPath(dirNames[i], path, local, n)
+                splitProcessorPath(dirNames[i], path, local, start, size, n)
             );
             if (n != -1)
             {
@@ -648,7 +656,7 @@ Foam::label Foam::fileOperation::nProcs
             }
         }
     }
-    Pstream::scatter(nProcs);
+    Pstream::scatter(nProcs, Pstream::msgType(), comm_);
     return nProcs;
 }
 
@@ -710,9 +718,20 @@ Foam::label Foam::fileOperation::splitProcessorPath
     const fileName& objectPath,
     fileName& path,
     fileName& local,
+
+    label& groupStart,
+    label& groupSize,
+
     label& nProcs
 )
 {
+    path.clear();
+    local.clear();
+
+    // Potentially detected start of number of processors in local group
+    groupStart = -1;
+    groupSize = 0;
+
     // Potentially detected number of processors
     nProcs = -1;
 
@@ -723,75 +742,91 @@ Foam::label Foam::fileOperation::splitProcessorPath
         return -1;
     }
 
-    if (pos == 0)
+    // "processorDDD"
+    // "processorsNNN"
+    // "processorsAAtoBBofCC"
+
+
+    if (pos > 0 && objectPath[pos-1] != '/')
     {
-        path = "";
-        local = objectPath.substr(pos+9);
+        // Directory not starting with "processor" e.g. "somenamewithprocessor"
+        return -1;
     }
-    else if (objectPath[pos-1] != '/')
+
+    // Strip leading directory
+    if (pos > 0)
     {
+        path = objectPath.substr(0, pos-1);
+    }
+    fileName f(objectPath.substr(pos+9));
+
+    // Strip trailing local directory
+    pos = f.find('/');
+    if (pos != string::npos)
+    {
+        local = f.substr(pos+1);
+        f = f.substr(0, pos);
+    }
+
+    if (f.size() && f[0] == 's')
+    {
+        // "processsorsDDD"
+
+        f = f.substr(1);
+
+        // Detect "processors1to1ofN"
+        {
+            std::string::size_type toPos = f.find("to");
+            std::string::size_type ofPos = f.find("of");
+            if (toPos != string::npos && ofPos != string::npos)
+            {
+                string fromName(f.substr(0, toPos));
+                string toName(f.substr(toPos+2, ofPos-toPos-2));
+                string nProcsName(f.substr(ofPos+2, f.size()-ofPos-2));
+
+                label groupEnd = -1;
+                if
+                (
+                    Foam::read(fromName.c_str(), groupStart)
+                 && Foam::read(toName.c_str(), groupEnd)
+                 && Foam::read(nProcsName.c_str(), nProcs)
+                )
+                {
+                    groupSize = groupEnd-groupStart+1;
+                    return -1;
+                }
+            }
+        }
+
+        // Detect "processorsN"
+        label n;
+        if (Foam::read(f.c_str(), n))
+        {
+            nProcs = n;
+        }
         return -1;
     }
     else
     {
-        path = objectPath.substr(0, pos-1);
-        local = objectPath.substr(pos+9);
-    }
-
-    if (local.size() && local[0] == 's')
-    {
-        // "processsorsDDD"
-
-        local = local.substr(1);
-
-        if (local.empty())
+        // Detect "processorN"
+        label proci;
+        if (Foam::read(f.c_str(), proci))
         {
-            return -1;
-        }
-
-        label n;
-        pos = local.find('/');
-        if (pos == string::npos)
-        {
-            // processorsDDD without local
-            if (Foam::read(local.c_str(), n))
-            {
-                local.clear();
-                nProcs = n;
-            }
+            return proci;
         }
         else
         {
-            string procName(local.substr(0, pos));
-            if (Foam::read(procName.c_str(), n))
-            {
-                nProcs = n;
-            }
-            local = local.substr(pos+1);
+            return -1;
         }
-        return -1;
     }
+}
 
-    pos = local.find('/');
-    if (pos == string::npos)
-    {
-        // processorDDD without local
-        label proci;
-        if (Foam::read(local.c_str(), proci))
-        {
-            local.clear();
-            return proci;
-        }
-        return -1;
-    }
-    string procName(local.substr(0, pos));
-    label proci;
-    if (Foam::read(procName.c_str(), proci))
-    {
-        local = local.substr(pos+1);
-        return proci;
-    }
-    return -1;
+
+Foam::label Foam::fileOperation::detectProcessorPath(const fileName& fName)
+{
+    fileName path, local;
+    label start, size, nProcs;
+    return splitProcessorPath(fName, path, local, start, size, nProcs);
 }
 
 

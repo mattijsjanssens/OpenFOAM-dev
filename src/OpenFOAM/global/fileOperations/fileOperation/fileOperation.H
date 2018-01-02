@@ -58,6 +58,9 @@ protected:
 
     // Protected data
 
+        //- Communicator to use
+        const label comm_;
+
         //- file-change monitor for all registered files
         mutable autoPtr<fileMonitor> monitorPtr_;
 
@@ -122,7 +125,7 @@ public:
     // Constructors
 
         //- Construct null
-        fileOperation();
+        fileOperation(const label comm);
 
 
     // Declare run-time constructor selection table
@@ -409,7 +412,14 @@ public:
 
             //- Actual name of processors dir (for use in mode PROCESSORSOBJECT,
             //  PROCESSORSINSTANCE)
-            virtual const word& processorsDir() const
+            virtual word processorsDir(const IOobject& io) const
+            {
+                return processorsBaseDir;
+            }
+
+            //- Actual name of processors dir (for use in mode PROCESSORSOBJECT,
+            //  PROCESSORSINSTANCE)
+            virtual word processorsDir(const fileName&) const
             {
                 return processorsBaseDir;
             }
@@ -464,8 +474,13 @@ public:
                 const fileName&,
                 fileName& path,
                 fileName& local,
+                label& groupStart,
+                label& groupSize,
                 label& nProcs
             );
+
+            //- Detect processor number from '/aa/bb/processorDDD/cc'
+            static label detectProcessorPath(const fileName&);
 };
 
 

@@ -31,14 +31,16 @@ License
 template<class Type>
 Type Foam::fileOperations::masterUncollatedFileOperation::scatterList
 (
-    const UList<Type>& masterLst
+    const UList<Type>& masterLst,
+    const int tag,
+    const label comm
 ) const
 {
     // TBD: more efficient scatter
-    PstreamBuffers pBufs(UPstream::commsTypes::nonBlocking);
-    if (Pstream::master())
+    PstreamBuffers pBufs(UPstream::commsTypes::nonBlocking, tag, comm);
+    if (Pstream::master(comm))
     {
-        for (label proci = 1; proci < Pstream::nProcs(); proci++)
+        for (label proci = 1; proci < Pstream::nProcs(comm); proci++)
         {
             UOPstream os(proci, pBufs);
             os << masterLst[proci];
@@ -48,9 +50,9 @@ Type Foam::fileOperations::masterUncollatedFileOperation::scatterList
 
     Type myResult;
 
-    if (Pstream::master())
+    if (Pstream::master(comm))
     {
-        myResult = masterLst[Pstream::myProcNo()];
+        myResult = masterLst[Pstream::myProcNo(comm)];
     }
     else
     {
@@ -93,7 +95,7 @@ Type Foam::fileOperations::masterUncollatedFileOperation::masterOp
             }
         }
 
-        return scatterList(result);
+        return scatterList(result, Pstream::msgType(), Pstream::worldComm);
     }
     else
     {
@@ -138,7 +140,7 @@ Type Foam::fileOperations::masterUncollatedFileOperation::masterOp
             }
         }
 
-        return scatterList(result);
+        return scatterList(result, Pstream::msgType(), Pstream::worldComm);
     }
     else
     {

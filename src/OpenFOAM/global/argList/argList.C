@@ -34,6 +34,7 @@ License
 #include "regIOobject.H"
 #include "dynamicCode.H"
 #include "fileOperation.H"
+#include "fileOperationInitialise.H"
 
 #include <cctype>
 
@@ -432,12 +433,14 @@ Foam::argList::argList
 
             if (validParOptions.found(optionName))
             {
-                //bool needsThread =
-                //fileOperations::fileOperationInitialise::New
-                //(
-                //    handlerType
-                //).needsThreading();
-                parRunControl_.runPar(argc, argv);
+                bool needsThread =
+                fileOperations::fileOperationInitialise::New
+                (
+                    handlerType,
+                    argc,
+                    argv
+                )().needsThreading();
+                parRunControl_.runPar(argc, argv, needsThread);
                 break;
             }
         }

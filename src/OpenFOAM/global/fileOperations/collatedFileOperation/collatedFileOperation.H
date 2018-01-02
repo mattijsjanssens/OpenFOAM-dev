@@ -131,7 +131,13 @@ public:
         // Other
 
             //- Actual name of processors dir
-            virtual const word& processorsDir() const
+            virtual word processorsDir(const IOobject&) const
+            {
+                return processorsDir_;
+            }
+
+            //- Actual name of processors dir
+            virtual word processorsDir(const fileName&) const
             {
                 return processorsDir_;
             }
