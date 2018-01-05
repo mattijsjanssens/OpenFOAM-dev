@@ -100,12 +100,14 @@ bool Foam::fileOperations::collatedFileOperation::appendObject
             << exit(FatalError);
     }
 
+    const bool isMaster = (proci == 0);
+
 
     // Create string from all data to write
     string buf;
     {
         OStringStream os(fmt, ver);
-        if (proci == 0)
+        if (isMaster)
         {
             if (!io.writeHeader(os))
             {
@@ -119,7 +121,7 @@ bool Foam::fileOperations::collatedFileOperation::appendObject
             return false;
         }
 
-        if (proci == 0)
+        if (isMaster)
         {
             IOobject::writeEndDivider(os);
         }
@@ -127,8 +129,6 @@ bool Foam::fileOperations::collatedFileOperation::appendObject
         buf = os.str();
     }
 
-
-    bool append = (proci > 0);
 
     // Note: cannot do append + compression. This is a limitation
     // of ogzstream (or rather most compressed formats)
@@ -139,7 +139,7 @@ bool Foam::fileOperations::collatedFileOperation::appendObject
         IOstream::BINARY,
         ver,
         IOstream::UNCOMPRESSED, // no compression
-        append
+        !isMaster
     );
 
     if (!os.good())
@@ -149,7 +149,7 @@ bool Foam::fileOperations::collatedFileOperation::appendObject
             << exit(FatalIOError);
     }
 
-    if (proci == 0)
+    if (isMaster)
     {
         IOobject::writeBanner(os)
             << "FoamFile\n{\n"
@@ -182,15 +182,31 @@ Foam::fileOperations::collatedFileOperation::collatedFileOperation
     const bool verbose
 )
 :
-    masterUncollatedFileOperation(false),
-    writer_(maxThreadFileBufferSize),
-    processorsDir_
-    (
-        Pstream::nProcs() > 1
-      ? processorsBaseDir+Foam::name(Pstream::nProcs())
-      : processorsBaseDir
-    )
+    masterUncollatedFileOperation(false),   // use worldComm for now
+    writer_(maxThreadFileBufferSize)
 {
+    if (Pstream::parRun())
+    {
+        const List<int>& procs(UPstream::procID(comm_));
+
+        processorsDir_ =
+            processorsBaseDir
+          + Foam::name(Pstream::nProcs());
+
+        if (procs.size() != Pstream::nProcs())
+        {
+            processorsDir_ +=
+              + "_"
+              + Foam::name(procs[0])
+              + "-"
+              + Foam::name(procs.last());
+        }
+    }
+    else
+    {
+        processorsDir_ = processorsBaseDir;
+    }
+
     if (verbose)
     {
         Info<< "I/O    : " << typeName
@@ -406,7 +422,7 @@ bool Foam::fileOperations::collatedFileOperation::writeObject
             {
                 return false;
             }
-            if (Pstream::master() && !io.writeHeader(os))
+            if (Pstream::master(comm_) && !io.writeHeader(os))
             {
                 return false;
             }
@@ -415,7 +431,7 @@ bool Foam::fileOperations::collatedFileOperation::writeObject
             {
                 return false;
             }
-            if (Pstream::master())
+            if (Pstream::master(comm_))
             {
                 IOobject::writeEndDivider(os);
             }

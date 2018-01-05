@@ -744,7 +744,7 @@ Foam::label Foam::fileOperation::splitProcessorPath
 
     // "processorDDD"
     // "processorsNNN"
-    // "processorsAAtoBBofCC"
+    // "processorsNNN_AA-BB"
 
 
     if (pos > 0 && objectPath[pos-1] != '/')
@@ -770,19 +770,19 @@ Foam::label Foam::fileOperation::splitProcessorPath
 
     if (f.size() && f[0] == 's')
     {
-        // "processsorsDDD"
+        // "processsorsNNN"
 
         f = f.substr(1);
 
-        // Detect "processors1to1ofN"
+        // Detect "processorsNNN_AA-BB"
         {
-            std::string::size_type toPos = f.find("to");
-            std::string::size_type ofPos = f.find("of");
-            if (toPos != string::npos && ofPos != string::npos)
+            std::string::size_type fromStart = f.find("_");
+            std::string::size_type toStart = f.find("-");
+            if (fromStart != string::npos && toStart != string::npos)
             {
-                string fromName(f.substr(0, toPos));
-                string toName(f.substr(toPos+2, ofPos-toPos-2));
-                string nProcsName(f.substr(ofPos+2, f.size()-ofPos-2));
+                string nProcsName(f.substr(0, fromStart));
+                string fromName(f.substr(fromStart+1, toStart-(fromStart+1)));
+                string toName(f.substr(toStart+1));
 
                 label groupEnd = -1;
                 if
