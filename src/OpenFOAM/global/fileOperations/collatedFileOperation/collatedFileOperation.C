@@ -257,6 +257,88 @@ Foam::fileOperations::collatedFileOperation::collatedFileOperation
 }
 
 
+Foam::fileOperations::collatedFileOperation::collatedFileOperation
+(
+    const label comm,
+    const bool verbose
+)
+:
+    masterUncollatedFileOperation(comm, false),
+    writer_(maxThreadFileBufferSize, comm)
+{
+    if (Pstream::parRun())
+    {
+        const List<int>& procs(UPstream::procID(comm_));
+
+        processorsDir_ =
+            processorsBaseDir
+          + Foam::name(Pstream::nProcs());
+
+        if (procs.size() != Pstream::nProcs())
+        {
+            processorsDir_ +=
+              + "_"
+              + Foam::name(procs[0])
+              + "-"
+              + Foam::name(procs.last());
+        }
+    }
+    else
+    {
+        processorsDir_ = processorsBaseDir;
+    }
+
+    if (verbose)
+    {
+        Info<< "I/O    : " << typeName
+            << " (output directory " << processorsDir_
+            << ", maxThreadFileBufferSize " << maxThreadFileBufferSize
+            << ')' << endl;
+
+        if (maxThreadFileBufferSize == 0)
+        {
+            Info<< "         Threading not activated "
+                   "since maxThreadFileBufferSize = 0." << nl
+                << "         Writing may run slowly for large file sizes."
+                << endl;
+        }
+        else
+        {
+            Info<< "         Threading activated "
+                   "since maxThreadFileBufferSize > 0." << nl
+                << "         Requires large enough buffer to collect all data"
+                    " or thread support " << nl
+                << "         enabled in MPI. If thread support cannot be "
+                   "enabled, deactivate" << nl
+                << "         threading by setting maxThreadFileBufferSize "
+                    "to 0 in" << nl
+                << "         $FOAM_ETC/controlDict"
+                << endl;
+        }
+
+        if
+        (
+            regIOobject::fileModificationChecking
+         == regIOobject::inotifyMaster
+        )
+        {
+            WarningInFunction
+                << "Resetting fileModificationChecking to inotify" << endl;
+        }
+
+        if
+        (
+            regIOobject::fileModificationChecking
+         == regIOobject::timeStampMaster
+        )
+        {
+            WarningInFunction
+                << "Resetting fileModificationChecking to timeStamp" << endl;
+        }
+    }
+}
+
+
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
 Foam::fileOperations::collatedFileOperation::~collatedFileOperation()

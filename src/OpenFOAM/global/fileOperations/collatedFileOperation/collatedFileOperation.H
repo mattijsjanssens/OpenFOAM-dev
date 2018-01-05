@@ -60,7 +60,9 @@ class collatedFileOperation
 :
     public masterUncollatedFileOperation
 {
-    // Private data
+protected:
+
+    // Protected data
 
         //- Threaded writer
         mutable OFstreamCollator writer_;
@@ -100,6 +102,9 @@ public:
 
         //- Construct null
         collatedFileOperation(const bool verbose);
+
+        //- Construct from user communicator
+        collatedFileOperation(const label comm, const bool verbose);
 
 
     //- Destructor
