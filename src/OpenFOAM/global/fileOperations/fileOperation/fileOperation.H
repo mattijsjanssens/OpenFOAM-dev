@@ -61,6 +61,9 @@ protected:
         //- Communicator to use
         const label comm_;
 
+        //- Detected processors directory
+        mutable autoPtr<fileName> procsDir_;
+
         //- file-change monitor for all registered files
         mutable autoPtr<fileMonitor> monitorPtr_;
 
@@ -82,6 +85,9 @@ protected:
 
         //- Helper: check for file (isFile) or directory (!isFile)
         static bool isFileOrDir(const bool isFile, const fileName&);
+
+        //- Detect presence of processorsDDD
+        void cacheProcessorsPath(const fileName& fName) const;
 
 
 public:
