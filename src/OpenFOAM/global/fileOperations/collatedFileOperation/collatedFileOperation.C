@@ -183,30 +183,14 @@ Foam::fileOperations::collatedFileOperation::collatedFileOperation
 )
 :
     masterUncollatedFileOperation(false),   // use worldComm for now
-    writer_(maxThreadFileBufferSize)
+    writer_(maxThreadFileBufferSize),
+    processorsDir_
+    (
+        Pstream::nProcs() > 1
+      ? processorsBaseDir+Foam::name(Pstream::nProcs())
+      : processorsBaseDir
+    )
 {
-    if (Pstream::parRun())
-    {
-        const List<int>& procs(UPstream::procID(comm_));
-
-        processorsDir_ =
-            processorsBaseDir
-          + Foam::name(Pstream::nProcs());
-
-        if (procs.size() != Pstream::nProcs())
-        {
-            processorsDir_ +=
-              + "_"
-              + Foam::name(procs[0])
-              + "-"
-              + Foam::name(procs.last());
-        }
-    }
-    else
-    {
-        processorsDir_ = processorsBaseDir;
-    }
-
     if (verbose)
     {
         Info<< "I/O    : " << typeName
@@ -360,6 +344,7 @@ Foam::fileName Foam::fileOperations::collatedFileOperation::objectPath
         (
             io,
             fileOperation::PROCESSORSOBJECT,
+            processorsDir(io),
             io.instance()
         );
     }
@@ -369,6 +354,7 @@ Foam::fileName Foam::fileOperations::collatedFileOperation::objectPath
         (
             io,
             fileOperation::OBJECT,
+            word::null,
             io.instance()
         );
     }

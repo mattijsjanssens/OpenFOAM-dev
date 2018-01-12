@@ -333,6 +333,11 @@ bool Foam::fileOperation::writeObject
 
 Foam::fileName Foam::fileOperation::filePath(const fileName& fName) const
 {
+    if (debug)
+    {
+        Pout<< "fileOperation::filePath :" << " fName:" << fName << endl;
+    }
+
     fileName path;
     fileName local;
     label gStart;
@@ -348,11 +353,12 @@ Foam::fileName Foam::fileOperation::filePath(const fileName& fName) const
     // Give preference to processors variant
     if (proci != -1)
     {
+        label n = Pstream::nProcs();
         if (!Pstream::parRun())
         {
             // E.g. checkMesh -case processor0
             // Can be slow since only called at startup?
-            label n = nProcs(path, local);
+            n = nProcs(path, local);
 
             // Set number of processors
             if (n > 0)
@@ -369,6 +375,10 @@ Foam::fileName Foam::fileOperation::filePath(const fileName& fName) const
 
         if (exists(namedProcsName))
         {
+            if (debug)
+            {
+                Pout<< "fileOperation::filePath : " << namedProcsName << endl;
+            }
             return namedProcsName;
         }
         if (processorsBaseDir != procDir)
@@ -376,6 +386,24 @@ Foam::fileName Foam::fileOperation::filePath(const fileName& fName) const
             fileName procsName(path/processorsBaseDir/local);
             if (exists(procsName))
             {
+                if (debug)
+                {
+                    Pout<< "fileOperation::filePath :" << procsName << endl;
+                }
+                return procsName;
+            }
+        }
+        // Try processorDDD
+        word collatedProcDir(processorsBaseDir+Foam::name(n));
+        if (collatedProcDir != procDir)
+        {
+            fileName procsName(path/collatedProcDir/local);
+            if (exists(procsName))
+            {
+                if (debug)
+                {
+                    Pout<< "fileOperation::filePath :" << procsName << endl;
+                }
                 return procsName;
             }
         }
@@ -383,10 +411,18 @@ Foam::fileName Foam::fileOperation::filePath(const fileName& fName) const
 
     if (exists(fName))
     {
+        if (debug)
+        {
+            Pout<< "fileOperation::filePath : " << fName << endl;
+        }
         return fName;
     }
     else
     {
+        if (debug)
+        {
+            Pout<< "fileOperation::filePath : not found" << endl;
+        }
         return fileName::null;
     }
 }

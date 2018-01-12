@@ -102,7 +102,8 @@ public:
         {
             NOTFOUND,               // not found
             ABSOLUTE,               // instance is absolute directory
-            OBJECT,                 // objectPath exists
+            OBJECT,                 // io.objectPath() exists
+            WRITEOBJECT,            // write path exists
             PROCESSORSBASEOBJECT,   // objectPath exists in processorsBaseDir
                                     // (usually 'processors')
             PROCESSORSOBJECT,       // objectPath exists in processorsDir

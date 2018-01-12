@@ -177,15 +177,18 @@ Foam::fileOperations::masterUncollatedFileOperation::findInstancePath
 }
 
 
-Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePathInfo
+Foam::fileName
+Foam::fileOperations::masterUncollatedFileOperation::filePathInfo
 (
     const bool checkGlobal,
     const bool isFile,
     const IOobject& io,
     pathType& searchType,
+    word& procsDir,
     word& newInstancePath
 ) const
 {
+    procsDir = word::null;
     newInstancePath = word::null;
 
     if (io.instance().isAbsolute())
@@ -205,38 +208,87 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePathInfo
     }
     else
     {
+        // 1. Check the writing fileName
+        fileName writePath(fileOperation::objectPath(io, io.headerClassName()));
+
+        if (!missingDir(writePath) && isFileOrDir(isFile, writePath))
+        {
+            searchType = fileOperation::WRITEOBJECT;
+            return writePath;
+        }
+
+        // 2. Check processors/
         const word actualProcsDir(processorsDir(io));
 
-        // 1. Check processors/
         if (io.time().processorCase())
         {
-            // 1a. Check processorsDDD/
+            // 2a. Check processorsDDD/
             fileName objectPath =
                 processorsPath(io, io.instance(), actualProcsDir)/io.name();
-            if (!missingDir(objectPath) && isFileOrDir(isFile, objectPath))
+            if
+            (
+                objectPath != writePath
+            && !missingDir(objectPath)
+            &&  isFileOrDir(isFile, objectPath)
+            )
             {
+                procsDir = actualProcsDir;
                 searchType = fileOperation::PROCESSORSOBJECT;
                 return objectPath;
             }
 
-            // 1b. Check processors/
+            // 2b. Check processors/
             if (processorsBaseDir != actualProcsDir)
             {
                 fileName objectPath =
                     processorsPath(io, io.instance(), processorsBaseDir)
                    /io.name();
-                if (!missingDir(objectPath) && isFileOrDir(isFile, objectPath))
+                if
+                (
+                    objectPath != writePath
+                && !missingDir(objectPath)
+                &&  isFileOrDir(isFile, objectPath)
+                )
                 {
+                    procsDir = processorsBaseDir;
                     searchType = fileOperation::PROCESSORSBASEOBJECT;
+                    return objectPath;
+                }
+            }
+
+            // 2c. Check processorsNNN/
+            const word oldProcsDir
+            (
+                processorsBaseDir+Foam::name(Pstream::nProcs())
+            );
+            if (oldProcsDir != actualProcsDir)
+            {
+                fileName objectPath =
+                    processorsPath(io, io.instance(), oldProcsDir)
+                   /io.name();
+                if
+                (
+                    objectPath != writePath
+                && !missingDir(objectPath)
+                &&  isFileOrDir(isFile, objectPath)
+                )
+                {
+                    procsDir = oldProcsDir;
+                    searchType = fileOperation::PROCESSORSOBJECT;
                     return objectPath;
                 }
             }
         }
         {
-            // 2. Check local
+            // 3. Check local
             fileName localPath = io.objectPath();
 
-            if (!missingDir(localPath) && isFileOrDir(isFile, localPath))
+            if
+            (
+                localPath != writePath
+            && !missingDir(localPath)
+            &&  isFileOrDir(isFile, localPath)
+            )
             {
                 searchType = fileOperation::OBJECT;
                 return localPath;
@@ -294,6 +346,7 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePathInfo
                 if (!missingDir(fName) && isFileOrDir(isFile, fName))
                 {
                     searchType = fileOperation::PROCESSORSINSTANCE;
+                    procsDir = actualProcsDir;
                     return fName;
                 }
 
@@ -305,9 +358,27 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePathInfo
                     if (!missingDir(fName) && isFileOrDir(isFile, fName))
                     {
                         searchType = fileOperation::PROCESSORSBASEINSTANCE;
+                        procsDir = processorsBaseDir;
                         return fName;
                     }
                 }
+                const word oldProcsDir
+                (
+                    processorsBaseDir+Foam::name(Pstream::nProcs())
+                );
+                if (oldProcsDir != actualProcsDir)
+                {
+                    fName =
+                        processorsPath(io, newInstancePath, oldProcsDir)
+                       /io.name();
+                    if (!missingDir(fName) &&  isFileOrDir(isFile, fName))
+                    {
+                        searchType = fileOperation::PROCESSORSINSTANCE;
+                        procsDir = oldProcsDir;
+                        return fName;
+                    }
+                }
+
 
                 // 2. Check local
 
@@ -333,6 +404,7 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::objectPath
 (
     const IOobject& io,
     const pathType& searchType,
+    const word& processorsDir,
     const word& instancePath
 ) const
 {
@@ -352,6 +424,12 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::objectPath
         }
         break;
 
+        case fileOperation::WRITEOBJECT:
+        {
+            return fileOperation::objectPath(io, io.headerClassName());
+        }
+        break;
+
         case fileOperation::PROCESSORSBASEOBJECT:
         {
             return
@@ -363,7 +441,7 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::objectPath
         case fileOperation::PROCESSORSOBJECT:
         {
             return
-                processorsPath(io, io.instance(), processorsDir(io))
+                processorsPath(io, io.instance(), processorsDir)
                /io.name();
         }
         break;
@@ -395,7 +473,7 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::objectPath
         case fileOperation::PROCESSORSINSTANCE:
         {
             return
-                processorsPath(io, instancePath, processorsDir(io))
+                processorsPath(io, instancePath, processorsDir)
                /io.name();
         }
         break;
@@ -829,9 +907,10 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePath
 
     fileName objPath;
     pathType searchType = NOTFOUND;
+    word procsDir;
     word newInstancePath;
 
-    if (Pstream::master())  //comm_))
+    if (Pstream::master(comm_))
     {
         objPath = filePathInfo
         (
@@ -839,6 +918,7 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePath
             true,
             io,
             searchType,
+            procsDir,
             newInstancePath
         );
     }
@@ -846,10 +926,11 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePath
     // Scatter the information about where the master found the object
     {
         label masterType(searchType);
-        Pstream::scatter(masterType);   //, Pstream::msgType(), comm_);
+        Pstream::scatter(masterType, Pstream::msgType(), comm_);
         searchType = pathType(masterType);
     }
-    Pstream::scatter(newInstancePath);  //, Pstream::msgType(), comm_);
+    Pstream::scatter(procsDir, Pstream::msgType(), comm_);
+    Pstream::scatter(newInstancePath, Pstream::msgType(), comm_);
 
 
     // Use the master type to determine if additional information is
@@ -857,6 +938,7 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePath
     switch (searchType)
     {
         case fileOperation::ABSOLUTE:
+        case fileOperation::WRITEOBJECT:
         case fileOperation::PROCESSORSBASEOBJECT:
         case fileOperation::PROCESSORSOBJECT:
         case fileOperation::PARENTOBJECT:
@@ -865,7 +947,7 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePath
         case fileOperation::PROCESSORSINSTANCE:
         {
             // Construct equivalent local path
-            objPath = objectPath(io, searchType, newInstancePath);
+            objPath = objectPath(io, searchType, procsDir, newInstancePath);
         }
         break;
 
@@ -923,6 +1005,7 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::dirPath
 
     fileName objPath;
     pathType searchType = NOTFOUND;
+    word procsDir;
     word newInstancePath;
 
     if (Pstream::master())  //comm_))
@@ -933,6 +1016,7 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::dirPath
             false,
             io,
             searchType,
+            procsDir,
             newInstancePath
         );
     }
@@ -942,6 +1026,7 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::dirPath
         Pstream::scatter(masterType);   //, Pstream::msgType(), comm_);
         searchType = pathType(masterType);
     }
+    Pstream::scatter(procsDir);         //, Pstream::msgType(), comm_);
     Pstream::scatter(newInstancePath);  //, Pstream::msgType(), comm_);
 
 
@@ -950,6 +1035,7 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::dirPath
     switch (searchType)
     {
         case fileOperation::ABSOLUTE:
+        case fileOperation::WRITEOBJECT:
         case fileOperation::PROCESSORSBASEOBJECT:
         case fileOperation::PROCESSORSOBJECT:
         case fileOperation::PARENTOBJECT:
@@ -958,7 +1044,7 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::dirPath
         case fileOperation::PROCESSORSINSTANCE:
         {
             // Construct equivalent local path
-            objPath = objectPath(io, searchType, newInstancePath);
+            objPath = objectPath(io, searchType, procsDir, newInstancePath);
         }
         break;
 

@@ -378,24 +378,30 @@ protected:
             const instant& t
         );
 
-        //- Search for object; return info on how it was found
+        //- Search (locally!) for object; return info on how it was found.
+        //  Does not do any parallel communication.
         //    checkGlobal : also check undecomposed case
         //    isFile      : true:check for file  false:check for directory
-        fileName filePathInfo
+        // searchType    : how was found
+        // processorsDir : name of processor directory
+        // instance      : instance
+        virtual fileName filePathInfo
         (
             const bool checkGlobal,
             const bool isFile,
             const IOobject&,
-            pathType&,
-            word&
+            pathType& searchType,
+            word& processorsDir,
+            word& instance
         ) const;
 
         //- Construct filePath
         fileName objectPath
         (
             const IOobject&,
-            const pathType&,
-            const word&
+            const pathType& searchType,
+            const word& processorsDir,
+            const word& instancePath
         ) const;
 
         //- Read file contents and send to processors
