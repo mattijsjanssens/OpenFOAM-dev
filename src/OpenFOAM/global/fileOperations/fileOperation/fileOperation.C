@@ -223,12 +223,6 @@ bool Foam::fileOperation::isFileOrDir(const bool isFile, const fileName& f)
 
 void Foam::fileOperation::cacheProcessorsPath(const fileName& fName) const
 {
-    if (procsDir_.valid())
-    {
-        // Already done detection
-        return;
-    }
-
     fileName path;
     fileName local;
     label gStart;
@@ -241,6 +235,12 @@ void Foam::fileOperation::cacheProcessorsPath(const fileName& fName) const
         // So we have a processor case. Read the directory to find out
         // - name (if any) of collated processors directory
         // - number of processors
+
+        if (procsDir_.valid())
+        {
+            // Already done detection
+            return;
+        }
 
         if (debug)
         {
@@ -273,7 +273,7 @@ void Foam::fileOperation::cacheProcessorsPath(const fileName& fName) const
         // for this. In parallel this is the number of ranks in the
         // communicator, for serial this has to be done by searching
 
-        label n = Pstream::nProcs(comm_);
+        label n = Pstream::nProcs();    //comm_);
         if (!Pstream::parRun())
         {
             // E.g. checkMesh -case processor0
@@ -299,16 +299,25 @@ void Foam::fileOperation::cacheProcessorsPath(const fileName& fName) const
         }
 
 
-        // Nothing detected
-        if (!procsDir_.valid())
-        {
-            procsDir_.reset(new fileName(""));
-        }
+        // Nothing detected. Leave for next time round.
+        //if (!procsDir_.valid())
+        //{
+        //    procsDir_.reset(new fileName(""));
+        //}
 
         if (debug)
         {
-            Pout<< "fileOperation::cacheProcessorsPath : detected:"
-                << procsDir_() << endl;
+            if (procsDir_.valid())
+            {
+                Pout<< "fileOperation::cacheProcessorsPath : Detected:"
+                    << procsDir_() << endl;
+            }
+            else
+            {
+                Pout<< "fileOperation::cacheProcessorsPath :"
+                    << " Did not detect any processors dir for fName:"
+                    << fName << endl;
+            }
         }
     }
 }
@@ -534,7 +543,7 @@ Foam::fileName Foam::fileOperation::filePath(const fileName& fName) const
     {
         if (debug)
         {
-            Pout<< "fileOperation::filePath : not found" << endl;
+            Pout<< "fileOperation::filePath : Not found" << endl;
         }
         return fileName::null;
     }
@@ -647,8 +656,8 @@ Foam::instantList Foam::fileOperation::findTimes
 {
     if (debug)
     {
-        Pout<< FUNCTION_NAME
-            << " : Finding times in directory " << directory << endl;
+        Pout<< "fileOperation::findTimes : Finding times in directory "
+            << directory << endl;
     }
 
     // Read directory entries into a list
@@ -764,8 +773,7 @@ Foam::instantList Foam::fileOperation::findTimes
 
     if (debug)
     {
-        Pout<< FUNCTION_NAME
-            << " : Found times:" << times << endl;
+        Pout<< "fileOperation::findTimes : Found times:" << times << endl;
     }
     return times;
 }

@@ -87,8 +87,8 @@ bool Foam::fileOperations::collatedFileOperation::appendObject
 
     if (debug)
     {
-        Pout<< "writeObject:" << " : For local object : "
-            << io.name()
+        Pout<< "collatedFileOperation::writeObject :"
+            << " For local object : " << io.name()
             << " appending processor " << proci
             << " data to " << pathName << endl;
     }
@@ -380,8 +380,8 @@ bool Foam::fileOperations::collatedFileOperation::writeObject
 
         if (debug)
         {
-            Pout<< "writeObject:"
-                << " : For object : " << io.name()
+            Pout<< "collatedFileOperation::writeObject :"
+                << " For object : " << io.name()
                 << " falling back to master-only output to " << io.path()
                 << endl;
         }
@@ -426,7 +426,8 @@ bool Foam::fileOperations::collatedFileOperation::writeObject
         {
             if (debug)
             {
-                Pout<< "writeObject:" << " : For global object : " << io.name()
+                Pout<< "collatedFileOperation::writeObject :"
+                    << " For global object : " << io.name()
                     << " falling back to master-only output to " << pathName
                     << endl;
             }
@@ -466,8 +467,8 @@ bool Foam::fileOperations::collatedFileOperation::writeObject
             // processorsDDD/ file
             if (debug)
             {
-                Pout<< "writeObject:"
-                    << " : For object : " << io.name()
+                Pout<< "collatedFileOperation::writeObject :"
+                    << " For object : " << io.name()
                     << " appending to " << pathName << endl;
             }
 
@@ -477,8 +478,8 @@ bool Foam::fileOperations::collatedFileOperation::writeObject
         {
             if (debug)
             {
-                Pout<< "writeObject:"
-                    << " : For object : " << io.name()
+                Pout<< "collatedFileOperation::writeObject :"
+                    << " For object : " << io.name()
                     << " starting collating output to " << pathName << endl;
             }
 
@@ -517,8 +518,8 @@ void Foam::fileOperations::collatedFileOperation::setNProcs(const label nProcs)
 
     if (debug)
     {
-        Pout<< "setNProcs:"
-            << " : Setting output directory to " << processorsDir_ << endl;
+        Pout<< "collatedFileOperation::setNProcs :"
+            << " Setting output directory to " << processorsDir_ << endl;
     }
 }
 

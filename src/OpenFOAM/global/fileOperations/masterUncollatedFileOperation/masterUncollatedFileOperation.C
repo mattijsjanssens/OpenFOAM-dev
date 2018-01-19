@@ -113,7 +113,7 @@ void Foam::fileOperations::masterUncollatedFileOperation::cacheProcessorPaths
                 if (debug)
                 {
                     Pout<< "masterUncollatedFileOperation::cacheProcessorDirs :"
-                        << " test for " << dir
+                        << " Test for " << dir
                         << " master result:" << Switch(masterHasDir) << endl;
                 }
                 if (!masterHasDir)
@@ -557,8 +557,8 @@ void Foam::fileOperations::masterUncollatedFileOperation::readAndSend
     {
         if (debug)
         {
-            Pout<< "masterUncollatedFileOperation::readAndSend:"
-                << " opening compressed " << filePath << endl;
+            Pout<< "masterUncollatedFileOperation::readAndSend :"
+                << " Opening compressed " << filePath << endl;
         }
 
         IFstream is(filePath, IOstream::streamFormat::BINARY);
@@ -593,7 +593,7 @@ void Foam::fileOperations::masterUncollatedFileOperation::readAndSend
 
         if (debug)
         {
-            Pout<< "masterUncollatedFileOperation::readStream:"
+            Pout<< "masterUncollatedFileOperation::readStream :"
                 << " From " << filePath <<  " reading " << label(count)
                 << " bytes" << endl;
         }
@@ -1210,7 +1210,7 @@ bool Foam::fileOperations::masterUncollatedFileOperation::readHeader
 
     if (debug)
     {
-        Pout<< "masterUncollatedFileOperation::readHeader:" << endl
+        Pout<< "masterUncollatedFileOperation::readHeader :" << endl
             << "    objectPath:" << io.objectPath() << endl
             << "    fName     :" << fName << endl;
     }
@@ -1290,7 +1290,7 @@ bool Foam::fileOperations::masterUncollatedFileOperation::readHeader
 
     if (debug)
     {
-        Pout<< "masterUncollatedFileOperation::readHeader:" << " ok:" << ok
+        Pout<< "masterUncollatedFileOperation::readHeader :" << " ok:" << ok
             << " class:" << io.headerClassName() << endl;
     }
     return ok;
@@ -1308,7 +1308,7 @@ Foam::fileOperations::masterUncollatedFileOperation::readStream
 {
     if (debug)
     {
-        Pout<< "masterUncollatedFileOperation::readStream:"
+        Pout<< "masterUncollatedFileOperation::readStream :"
             << " object : " << io.name()
             << " global : " << io.global()
             << " fName : " << fName << " valid:" << valid << endl;
@@ -1346,8 +1346,8 @@ Foam::fileOperations::masterUncollatedFileOperation::readStream
                     // Copy header and return.
                     if (debug)
                     {
-                        Pout<< "masterUncollatedFileOperation::readStream:"
-                            << " for object : " << io.name()
+                        Pout<< "masterUncollatedFileOperation::readStream :"
+                            << " For object : " << io.name()
                             << " doing straight IFstream input from "
                             << fName << endl;
                     }
@@ -1370,10 +1370,25 @@ Foam::fileOperations::masterUncollatedFileOperation::readStream
     {
         if (debug)
         {
-            Pout<< "masterUncollatedFileOperation::readStream:"
-                << " for object : " << io.name()
+            Pout<< "masterUncollatedFileOperation::readStream :"
+                << " For object : " << io.name()
                 << " starting collating input from " << fName << endl;
         }
+
+
+        // Analyse the file path (on (co)master) to see the processors type
+        fileName path, local;
+        label groupStart, groupSize, nProcs;
+        splitProcessorPath
+        (
+            fName,
+            path,
+            local,
+            groupStart,
+            groupSize,
+            nProcs
+        );
+
 
         List<char> data;
         if (!Pstream::parRun())
@@ -1393,20 +1408,15 @@ Foam::fileOperations::masterUncollatedFileOperation::readStream
             // Analyse the fileName for any processor subset. Note: this
             // should really be part of filePath() which should return
             // both file and index in file.
+            if (groupStart != -1 && groupSize > 0)
             {
-                fileName p, l;
-                label start, size, nProcs;
-                splitProcessorPath(isPtr().name(), p, l, start, size, nProcs);
-                if (start != -1 && size > 0)
-                {
-                    proci = proci-start;
-                }
+                proci = proci-groupStart;
             }
 
             if (debug)
             {
-                Pout<< "masterUncollatedFileOperation::readStream:"
-                    << " for object : " << io.name()
+                Pout<< "masterUncollatedFileOperation::readStream :"
+                    << " For object : " << io.name()
                     << " starting input from block " << proci
                     << " of " << isPtr().name() << endl;
             }
@@ -1434,29 +1444,36 @@ Foam::fileOperations::masterUncollatedFileOperation::readStream
             bool bigSize = sz > off_t(maxMasterFileBufferSize);
             Pstream::scatter(bigSize);
 
-            if (UPstream::master(comm_) && !isPtr.valid() && !fName.empty())
+            // Are we reading from single-master file ('processors256') or
+            // from multi-master files ('processors256_0-9')
+            label readComm = -1;
+            if (groupStart != -1 && groupSize > 0)
             {
-                // In multi-master mode also open the file on the other
-                // masters
-                isPtr.reset(new IFstream(fName));
-
-                if (isPtr().good())
+                readComm = comm_;
+                if (UPstream::master(comm_) && !isPtr.valid() && !fName.empty())
                 {
-                    // Read header data (on copy)
-                    IOobject headerIO(io);
-                    headerIO.readHeader(isPtr());
+                    // In multi-master mode also open the file on the other
+                    // masters
+                    isPtr.reset(new IFstream(fName));
 
-                    // Co-master does not have header but does need to set the
-                    // stream
-                    //isPtr().version(IStringStream(versionString)());
-                    //isPtr().format(formatString);
+                    if (isPtr().good())
+                    {
+                        // Read header data (on copy)
+                        IOobject headerIO(io);
+                        headerIO.readHeader(isPtr());
+                    }
                 }
+            }
+            else
+            {
+                // Single master so read on world
+                readComm = Pstream::worldComm;
             }
 
             // Read my data
             return decomposedBlockData::readBlocks
             (
-                comm_,
+                readComm,
                 fName,
                 isPtr,
                 io,
@@ -1472,8 +1489,8 @@ Foam::fileOperations::masterUncollatedFileOperation::readStream
     {
         if (debug)
         {
-            Pout<< "masterUncollatedFileOperation::readStream:"
-                << " for object : " << io.name()
+            Pout<< "masterUncollatedFileOperation::readStream :"
+                << " For object : " << io.name()
                 << " starting separated input from " << fName << endl;
         }
 
@@ -1516,7 +1533,7 @@ Foam::fileOperations::masterUncollatedFileOperation::readStream
                     // master for simplicity)
                     if (debug)
                     {
-                        Pout<< "masterUncollatedFileOperation::readStream:"
+                        Pout<< "masterUncollatedFileOperation::readStream :"
                             << " For uniform file " << fName
                             << " sending to " << validProcs << endl;
                     }
@@ -1585,7 +1602,7 @@ Foam::fileOperations::masterUncollatedFileOperation::readStream
                 {
                     if (debug)
                     {
-                        Pout<< "masterUncollatedFileOperation::readStream:"
+                        Pout<< "masterUncollatedFileOperation::readStream :"
                             << " For processor " << proci
                             << " opening " << filePaths[proci] << endl;
                     }
@@ -1652,7 +1669,7 @@ Foam::fileOperations::masterUncollatedFileOperation::readStream
 
                 if (debug)
                 {
-                    Pout<< "masterUncollatedFileOperation::readStream:"
+                    Pout<< "masterUncollatedFileOperation::readStream :"
                         << " Done reading " << buf.size() << " bytes" << endl;
                 }
                 isPtr.reset(new IStringStream(fName, buf));
@@ -1689,8 +1706,8 @@ bool Foam::fileOperations::masterUncollatedFileOperation::read
     {
         if (debug)
         {
-            Pout<< "masterUncollatedFileOperation::read:"
-                << "reading global object " << io.name() << endl;
+            Pout<< "masterUncollatedFileOperation::read :"
+                << " Reading global object " << io.name() << endl;
         }
 
         bool ok = false;
@@ -1765,8 +1782,8 @@ bool Foam::fileOperations::masterUncollatedFileOperation::read
     {
         if (debug)
         {
-            Pout<< "masterUncollatedFileOperation::read:"
-                << "reading local object " << io.name() << endl;
+            Pout<< "masterUncollatedFileOperation::read :"
+                << " Reading local object " << io.name() << endl;
         }
 
         ok = io.readData(io.readStream(typeName));
@@ -1790,7 +1807,7 @@ bool Foam::fileOperations::masterUncollatedFileOperation::writeObject
 
     if (debug)
     {
-        Pout<< "masterUncollatedFileOperation::writeObject:"
+        Pout<< "masterUncollatedFileOperation::writeObject :"
             << " io:" << pathName << " valid:" << valid << endl;
     }
 
@@ -1844,7 +1861,7 @@ Foam::instantList Foam::fileOperations::masterUncollatedFileOperation::findTimes
     {
         if (debug)
         {
-            Pout<< "masterUncollatedFileOperation::findTimes:"
+            Pout<< "masterUncollatedFileOperation::findTimes :"
                 << " Found " << iter()->size() << " cached times" << endl;
         }
         return *iter();
@@ -1867,7 +1884,7 @@ Foam::instantList Foam::fileOperations::masterUncollatedFileOperation::findTimes
 
         if (debug)
         {
-            Pout<< "masterUncollatedFileOperation::findTimes:"
+            Pout<< "masterUncollatedFileOperation::findTimes :"
                 << " Caching times:" << *tPtr << nl
                 << "    for directory:" << directory << endl;
         }
@@ -1886,7 +1903,7 @@ void Foam::fileOperations::masterUncollatedFileOperation::setTime
     {
         if (debug)
         {
-            Pout<< "masterUncollatedFileOperation::setTime:"
+            Pout<< "masterUncollatedFileOperation::setTime :"
                 << " Caching time " << tm.timeName()
                 << " for case:" << tm.path() << endl;
         }
@@ -1957,7 +1974,7 @@ Foam::fileOperations::masterUncollatedFileOperation::NewIFstream
             {
                 if (debug)
                 {
-                    Pout<< "masterUncollatedFileOperation::NewIFstream:"
+                    Pout<< "masterUncollatedFileOperation::NewIFstream :"
                         << " Opening global file " << filePath << endl;
                 }
 
@@ -2014,7 +2031,7 @@ Foam::fileOperations::masterUncollatedFileOperation::NewIFstream
         {
             if (debug)
             {
-                Pout<< "masterUncollatedFileOperation::NewIFstream:"
+                Pout<< "masterUncollatedFileOperation::NewIFstream :"
                     << " Reading " << filePath
                     << " from processor " << Pstream::masterNo() << endl;
             }
@@ -2025,7 +2042,7 @@ Foam::fileOperations::masterUncollatedFileOperation::NewIFstream
 
             if (debug)
             {
-                Pout<< "masterUncollatedFileOperation::NewIFstream:"
+                Pout<< "masterUncollatedFileOperation::NewIFstream :"
                     << " Done reading " << buf.size() << " bytes" << endl;
             }
 

@@ -37,7 +37,7 @@ Description
 
 bool Foam::Time::exists(IOobject& io)
 {
-    // Generate filename for object
+    // Generate output filename for object
     fileName objPath(fileHandler().objectPath(io, word::null));
 
     // Test for either directory or a (valid) file & IOobject
@@ -55,9 +55,26 @@ bool Foam::Time::exists(IOobject& io)
 
     if (!ok)
     {
-        // Re-test with raw objectPath. This is for backwards
+//         // Re-test with raw objectPath. This is for backwards
+//         // compatibility
+//         fileName originalPath(io.objectPath());
+//         if (originalPath != objPath)
+//         {
+//             // Test for either directory or a (valid) file & IOobject
+//             if (io.name().empty())
+//             {
+//                 ok = fileHandler().isDir(originalPath);
+//             }
+//             else
+//             {
+//                 ok =
+//                     fileHandler().isFile(originalPath)
+//                  && io.typeHeaderOk<IOList<label>>(false);
+//             }
+//         }
+        // Re-test with searched for objectPath. This is for backwards
         // compatibility
-        fileName originalPath(io.objectPath());
+        fileName originalPath(fileHandler().filePath(io.objectPath()));
         if (originalPath != objPath)
         {
             // Test for either directory or a (valid) file & IOobject
