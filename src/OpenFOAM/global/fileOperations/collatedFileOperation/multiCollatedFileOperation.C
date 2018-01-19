@@ -1,0 +1,221 @@
+/*---------------------------------------------------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     |
+    \\  /    A nd           | Copyright (C) 2017-2018 OpenFOAM Foundation
+     \\/     M anipulation  |
+-------------------------------------------------------------------------------
+License
+    This file is part of OpenFOAM.
+
+    OpenFOAM is free software: you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
+
+\*---------------------------------------------------------------------------*/
+
+#include "multiCollatedFileOperation.H"
+#include "addToRunTimeSelectionTable.H"
+#include "PackedBoolList.H"
+
+/* * * * * * * * * * * * * * * Static Member Data  * * * * * * * * * * * * * */
+
+namespace Foam
+{
+namespace fileOperations
+{
+    defineTypeNameAndDebug(multiCollatedFileOperation, 0);
+    addToRunTimeSelectionTable
+    (
+        fileOperation,
+        multiCollatedFileOperation,
+        word
+    );
+
+    // Mark as needing threaded mpi
+    addNamedToRunTimeSelectionTable
+    (
+        fileOperationInitialise,
+        multiCollatedFileOperationInitialise,
+        word,
+        multiCollated
+    );
+}
+}
+
+
+// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
+
+Foam::labelList Foam::fileOperations::multiCollatedFileOperation::writeRanks()
+{
+    labelList writeRanks;
+    if (!Pstream::parRun())
+    {
+        string writeRanksString(getEnv("writeRanks"));
+        if (!writeRanksString.empty())
+        {
+            IStringStream is(writeRanksString);
+            is >> writeRanks;
+        }
+    }
+    return writeRanks;
+}
+
+
+Foam::labelList Foam::fileOperations::multiCollatedFileOperation::subRanks
+(
+    const label n
+)
+{
+    DynamicList<label> subRanks(64);
+
+    string writeRanksString(getEnv("writeRanks"));
+    if (!writeRanksString.empty())
+    {
+        IStringStream is(writeRanksString);
+        labelList writeRanks(is);
+
+        if (findIndex(writeRanks, 0) == -1)
+        {
+            FatalErrorInFunction
+                << "Rank 0 (master) should be in the write ranks. Currently "
+                << writeRanks << exit(FatalError);
+        }
+
+        // The lowest numbered rank is the writer
+        PackedBoolList isWriter(n);
+        isWriter.set(writeRanks);
+
+        for (label proci = Pstream::myProcNo(); proci >= 0; --proci)
+        {
+            if (isWriter[proci])
+            {
+                // Found my master. Collect all processors with same master
+                subRanks.append(proci);
+                for
+                (
+                    label rank = proci+1;
+                    rank < n && !isWriter[rank];
+                    ++rank
+                )
+                {
+                    subRanks.append(rank);
+                }
+                break;
+            }
+        }
+    }
+    else
+    {
+        // Normal operation: one lowest rank per hostname is the writer
+        const string myHostName(hostName());
+
+        stringList hosts(Pstream::nProcs());
+        hosts[Pstream::myProcNo()] = myHostName;
+        Pstream::gatherList(hosts);
+        Pstream::scatterList(hosts);
+
+        // Collect procs with same hostname
+        forAll(hosts, proci)
+        {
+            if (hosts[proci] == myHostName)
+            {
+                subRanks.append(proci);
+            }
+        }
+    }
+    return subRanks;
+}
+
+
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+Foam::fileOperations::multiCollatedFileOperation::multiCollatedFileOperation
+(
+    const bool verbose
+)
+:
+    collatedFileOperation
+    (
+        UPstream::allocateCommunicator
+        (
+            UPstream::worldComm,
+            subRanks(Pstream::nProcs())
+        ),
+        writeRanks(),   // For serial operation: know processor directories
+        verbose
+    )
+{
+    if (verbose)
+    {
+        // Print a bit of information
+        stringList writers(Pstream::nProcs());
+        if (Pstream::master(comm_))
+        {
+            writers[Pstream::myProcNo()] = hostName()+"."+name(pid());
+        }
+        Pstream::gatherList(writers);
+
+        Info<< "         Writers:" << endl;
+        forAll(writers, proci)
+        {
+            if (!writers[proci].empty())
+            {
+                Info<< "             " << writers[proci] << endl;
+            }
+        }
+    }
+}
+
+
+Foam::fileOperations::multiCollatedFileOperationInitialise::
+multiCollatedFileOperationInitialise(int& argc, char**& argv)
+:
+    collatedFileOperationInitialise(argc, argv)
+{
+    // Filter out any of my arguments
+    const string s("-writeRanks");
+
+    int index = -1;
+    for (int i=1; i<argc-1; i++)
+    {
+        if (argv[i] == s)
+        {
+            index = i;
+            setEnv("writeRanks", argv[i+1], true);
+            break;
+        }
+    }
+
+    if (index != -1)
+    {
+        for (int i=index+2; i<argc; i++)
+        {
+            argv[i-2] = argv[i];
+        }
+        argc -= 2;
+    }
+}
+
+
+// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
+
+Foam::fileOperations::multiCollatedFileOperation::~multiCollatedFileOperation()
+{
+    if (comm_ != -1)
+    {
+        UPstream::freeCommunicator(comm_);
+    }
+}
+
+
+// ************************************************************************* //

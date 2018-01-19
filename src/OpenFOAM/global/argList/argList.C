@@ -422,6 +422,14 @@ Foam::argList::argList
         handlerType = fileOperation::defaultFileHandler;
     }
 
+    // Detect any parallel options
+    bool needsThread = fileOperations::fileOperationInitialise::New
+    (
+        handlerType,
+        argc,
+        argv
+    )().needsThreading();
+
 
     // Check if this run is a parallel run by searching for any parallel option
     // If found call runPar which might filter argv
@@ -433,13 +441,6 @@ Foam::argList::argList
 
             if (validParOptions.found(optionName))
             {
-                bool needsThread =
-                fileOperations::fileOperationInitialise::New
-                (
-                    handlerType,
-                    argc,
-                    argv
-                )().needsThreading();
                 parRunControl_.runPar(argc, argv, needsThread);
                 break;
             }

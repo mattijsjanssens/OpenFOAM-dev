@@ -184,6 +184,7 @@ Foam::fileOperations::collatedFileOperation::collatedFileOperation
 :
     masterUncollatedFileOperation(false),   // use worldComm for now
     writer_(maxThreadFileBufferSize),
+    nProcs_(Pstream::nProcs()),
     processorsDir_
     (
         Pstream::nProcs() > 1
@@ -244,11 +245,14 @@ Foam::fileOperations::collatedFileOperation::collatedFileOperation
 Foam::fileOperations::collatedFileOperation::collatedFileOperation
 (
     const label comm,
+    const labelList& writeRanks,
     const bool verbose
 )
 :
     masterUncollatedFileOperation(comm, false),
-    writer_(maxThreadFileBufferSize, comm)
+    nProcs_(Pstream::nProcs()),
+    writer_(maxThreadFileBufferSize, comm),
+    writeRanks_(writeRanks)
 {
     if (Pstream::parRun())
     {
@@ -511,8 +515,62 @@ bool Foam::fileOperations::collatedFileOperation::writeObject
 }
 
 
+Foam::word Foam::fileOperations::collatedFileOperation::processorsDir
+(
+    const fileName& fName
+) const
+{
+    if (Pstream::parRun())
+    {
+        // Already pre-computed in the constructor
+        //return processorsDir_;
+
+        const List<int>& procs(UPstream::procID(comm_));
+
+        word procDir(processorsBaseDir+Foam::name(Pstream::nProcs()));
+
+        if (procs.size() != Pstream::nProcs())
+        {
+            procDir +=
+              + "_"
+              + Foam::name(procs[0])
+              + "-"
+              + Foam::name(procs.last());
+        }
+        return procDir;
+    }
+    else
+    {
+        if (writeRanks_.size())
+        {
+            // Detect current processor number
+            label proci = detectProcessorPath(fName);
+
+            if (proci != -1)
+            {
+                return
+            }
+        }
+
+        //return processorsDir_;
+        return processorsBaseDir+Foam::name(nProcs_);
+    }
+}
+
+
+Foam::word Foam::fileOperations::collatedFileOperation::processorsDir
+(
+    const IOobject& io
+) const
+{
+    return processorsDir(io.objectPath());
+}
+
+
 void Foam::fileOperations::collatedFileOperation::setNProcs(const label nProcs)
 {
+    nProcs_ = nProcs;
+
     // Changed number of decompositions. Adapt the output directory
     processorsDir_ = processorsBaseDir+Foam::name(nProcs);
 

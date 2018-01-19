@@ -11,6 +11,7 @@ $(fileOps)/fileOperationInitialise/fileOperationInitialise.C
 $(fileOps)/uncollatedFileOperation/uncollatedFileOperation.C
 $(fileOps)/masterUncollatedFileOperation/masterUncollatedFileOperation.C
 $(fileOps)/collatedFileOperation/collatedFileOperation.C
+$(fileOps)/collatedFileOperation/multiCollatedFileOperation.C
 $(fileOps)/collatedFileOperation/threadedCollatedOFstream.C
 $(fileOps)/collatedFileOperation/OFstreamCollator.C
 

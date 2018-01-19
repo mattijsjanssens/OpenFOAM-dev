@@ -67,6 +67,15 @@ protected:
         //- Threaded writer
         mutable OFstreamCollator writer_;
 
+        // For non-parallel operation
+
+            //- Number of processors (overall)
+            label nProcs_;
+
+            //- Ranks of writers
+            const labelList writeRanks_;
+
+
         //- Actual name of processors dir
         word processorsDir_;
 
@@ -104,7 +113,12 @@ public:
         collatedFileOperation(const bool verbose);
 
         //- Construct from user communicator
-        collatedFileOperation(const label comm, const bool verbose);
+        collatedFileOperation
+        (
+            const label comm,
+            const labelList& writeRanks,
+            const bool verbose
+        );
 
 
     //- Destructor
@@ -136,16 +150,16 @@ public:
         // Other
 
             //- Actual name of processors dir
-            virtual word processorsDir(const IOobject&) const
-            {
-                return processorsDir_;
-            }
+            virtual word processorsDir(const IOobject&) const;
+//             {
+//                 return processorsDir_;
+//             }
 
             //- Actual name of processors dir
-            virtual word processorsDir(const fileName&) const
-            {
-                return processorsDir_;
-            }
+            virtual word processorsDir(const fileName&) const;
+//             {
+//                 return processorsDir_;
+//             }
 
             //- Set number of processor directories/results. Only used in
             //  decomposePar
