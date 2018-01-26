@@ -321,140 +321,241 @@ bool Foam::fileOperation::isFileOrDir(const bool isFile, const fileName& f)
 //        }
 //    }
 //}
-void Foam::fileOperation::cacheProcessorsPath(const fileName& fName) const
+// void Foam::fileOperation::cacheProcessorsPath(const fileName& fName) const
+// {
+//     fileName path;
+//     fileName origProcDir;
+//     fileName local;
+//     label gStart;
+//     label gSz;
+//     label numProcs;
+//     label proci = splitProcessorPath
+//     (
+//         fName,
+//         path,
+//         origProcDir,
+//         local,
+//         gStart,
+//         gSz,
+//         numProcs
+//     );
+// 
+//     if (proci != -1)
+//     {
+//         // So we have a processor case. Read the directory to find out
+//         // - name (if any) of collated processors directory
+//         // - number of processors
+// 
+//         if (procsDirs_.found(path/origProcDir))
+//         {
+//             // Already done detection
+//             return;
+//         }
+// 
+//         if (debug)
+//         {
+//             Pout<< "fileOperation::cacheProcessorsPath :" << " fName:" << fName
+//                 << " detecting any processors in:" << path/origProcDir
+//                 << endl;
+//         }
+// 
+// 
+//         // Try processorsDDD so we need to know the number of processors
+//         // for this. In parallel this is the number of ranks in the
+//         // communicator, for serial this has to be done by searching
+// 
+//         label n = Pstream::nProcs();    //comm_);
+//         if (!Pstream::parRun())
+//         {
+//             // E.g. checkMesh -case processor0
+//             // Can be slow since only called at startup?
+//             n = nProcs(path, local);
+// 
+//             // Set number of processors
+//             if (n > 0)
+//             {
+//                 const_cast<fileOperation&>(*this).setNProcs(n);
+//             }
+//         }
+// 
+//         // Get actual output directory name
+//         const word procDir(processorsDir(fName));
+// 
+// Pout<< "** 1trying " << path/procDir << endl;
+// 
+//         // Processor-local file name
+//         if (isDir(path/procDir))
+//         {
+//             Pout<< "Caching " << procDir
+//                 << " for path:" << path/origProcDir << endl;
+//             procsDirs_.insert
+//             (
+//                 path/origProcDir,
+//                 Tuple2<fileName, label>(procDir, proci-gStart)
+//             );
+//         }
+//         else
+//         {
+//             // Try processors
+// Pout<< "** 2trying " << path/processorsBaseDir << endl;
+// 
+//             if
+//             (
+//                 processorsBaseDir != procDir
+//              && isDir(path/processorsBaseDir)
+//             )
+//             {
+//                 Pout<< "Caching " << processorsBaseDir
+//                     << " for path:" << path/origProcDir << endl;
+//                 procsDirs_.insert
+//                 (
+//                     path/origProcDir,
+//                     Tuple2<fileName, label>(processorsBaseDir, proci-gStart)
+//                 );
+//             }
+//         }
+// 
+// 
+//         word collatedProcDir(processorsBaseDir+Foam::name(n));
+// Pout<< "** 3trying " << path/collatedProcDir << endl;
+//         if
+//         (
+//            //!procsDir_.valid()
+//             collatedProcDir != procDir
+//          && isDir(path/collatedProcDir)
+//         )
+//         {
+//             //procsDir_.reset(new fileName(collatedProcDir));
+//             Pout<< "Caching collated " << collatedProcDir
+//                 << " for path:" << path/origProcDir << endl;
+//             procsDirs_.insert
+//             (
+//                 path/origProcDir,
+//                 Tuple2<fileName, label>(collatedProcDir, proci-gStart)
+//             );
+//         }
+// 
+// 
+//         // Nothing detected. Leave for next time round.
+//         //if (!procsDir_.valid())
+//         //{
+//         //    procsDir_.reset(new fileName(""));
+//         //}
+// 
+//         if (debug)
+//         {
+//             if (procsDirs_.found(path/origProcDir))
+//             {
+//                 Pout<< "fileOperation::cacheProcessorsPath : Detected:"
+//                     << procsDirs_[path/origProcDir] << endl;
+//             }
+//             else
+//             {
+//                 Pout<< "fileOperation::cacheProcessorsPath :"
+//                     << " Did not detect any processors dir for fName:"
+//                     << fName << endl;
+//             }
+//         }
+//     }
+// }
+
+
+Foam::tmpNrc<Foam::dirIndexList>
+Foam::fileOperation::lookupProcessorsPath(const fileName& fName) const
 {
+    // If path is local to a processor (e.g. contains 'processor2')
+    // find the corresponding actual processor directory (e.g. 'processors4')
+    // and index (2)
+
     fileName path;
+    fileName pDir;
     fileName local;
     label gStart;
     label gSz;
     label numProcs;
-    label proci = splitProcessorPath(fName, path, local, gStart, gSz, numProcs);
+    label proci =
+        splitProcessorPath(fName, path, pDir, local, gStart, gSz, numProcs);
 
     if (proci != -1)
     {
-        // So we have a processor case. Read the directory to find out
-        // - name (if any) of collated processors directory
-        // - number of processors
-
-        if (procsDirs_.found(path))
-        {
-            // Already done detection
-            return;
-        }
-
-        if (debug)
-        {
-            Pout<< "fileOperation::cacheProcessorsPath :" << " fName:" << fName
-                << " detecting any processors in:" << path
-                << endl;
-        }
-
-
-        // Try processorsDDD so we need to know the number of processors
-        // for this. In parallel this is the number of ranks in the
-        // communicator, for serial this has to be done by searching
-
-        label n = Pstream::nProcs();    //comm_);
-        if (!Pstream::parRun())
-        {
-            // E.g. checkMesh -case processor0
-            // Can be slow since only called at startup?
-            n = nProcs(path, local);
-
-            // Set number of processors
-            if (n > 0)
-            {
-                const_cast<fileOperation&>(*this).setNProcs(n);
-            }
-        }
-
-        // Get actual output directory name
-        const word procDir(processorsDir(fName));
-
-Pout<< "** 1trying " << path/procDir << endl;
-
-        // Processor-local file name
-        if (isDir(path/procDir))
-        {
-            procsDirs_.insert(path, procDir);
-        }
-        else
-        {
-            // Try processors
-Pout<< "** 2trying " << path/processorsBaseDir << endl;
-
-            if
-            (
-                processorsBaseDir != procDir
-             && isDir(path/processorsBaseDir)
-            )
-            {
-                procsDirs_.insert(path, processorsBaseDir);
-            }
-        }
-
-
-        word collatedProcDir(processorsBaseDir+Foam::name(n));
-Pout<< "** 3trying " << path/collatedProcDir << endl;
-        if
-        (
-           //!procsDir_.valid()
-            collatedProcDir != procDir
-         && isDir(path/collatedProcDir)
-        )
-        {
-            //procsDir_.reset(new fileName(collatedProcDir));
-            procsDirs_.insert(path, collatedProcDir);
-        }
-
-
-        // Nothing detected. Leave for next time round.
-        //if (!procsDir_.valid())
-        //{
-        //    procsDir_.reset(new fileName(""));
-        //}
-
-        if (debug)
-        {
-            if (procsDirs_.found(path))
-            {
-                Pout<< "fileOperation::cacheProcessorsPath : Detected:"
-                    << procsDirs_[path] << endl;
-            }
-            else
-            {
-                Pout<< "fileOperation::cacheProcessorsPath :"
-                    << " Did not detect any processors dir for fName:"
-                    << fName << endl;
-            }
-        }
-    }
-}
-
-
-Foam::fileName Foam::fileOperation::lookupProcessorsPath
-(
-    const fileName& fName
-) const
-{
-    fileName path;
-    fileName local;
-    label gStart;
-    label gSz;
-    label numProcs;
-    label proci = splitProcessorPath(fName, path, local, gStart, gSz, numProcs);
-
-    fileName procDir;
-    if (proci != -1)
-    {
-        HashTable<fileName>::const_iterator iter = procsDirs_.find(path);
+        HashTable<dirIndexList>::const_iterator iter =
+            procsDirs_.find(path/pDir);
 
         if (iter != procsDirs_.end())
         {
-            procDir = iter();
+            return iter();
+        }
+
+        // Read all directories to see any beginning with processor
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+        DynamicList<dirIndex> procDirs;
+
+        fileNameList dirNames(readDir(path, fileName::Type::DIRECTORY));
+
+        // Extract info from processorsDDD or processorDDD:
+        // - highest processor number
+        // - directory+offset containing data for proci
+        label maxProc = -1;
+
+        forAll(dirNames, i)
+        {
+            const fileName& dirN = dirNames[i];
+
+            // Analyse directory name
+            fileName rp, rd, rl;
+            label rStart, rSize, rNum;
+            label readProci =
+                splitProcessorPath(dirN, rp, rd, rl, rStart, rSize, rNum);
+            maxProc = max(maxProc, readProci);
+
+            if (proci == readProci)
+            {
+                // Found "processorDDD". No need for index.
+                procDirs.append(dirIndex(dirN, -1));
+            }
+            else if (proci >= rStart && proci < rStart+rSize)
+            {
+                // "processorsDDD_start-end"
+                // Found the file that contains the data for proci
+                procDirs.append(dirIndex(dirN, proci-rStart));
+            }
+            if (rNum != -1)
+            {
+                // Direct detection of processorsDDD
+                maxProc = rNum-1;
+
+                if (rStart == -1)
+                {
+                    // "processorsDDD"
+                    procDirs.append(dirIndex(dirN, proci));
+                }
+            }
+        }
+        if (!Pstream::parRun())
+        {
+            // If (as a side effect) we found the number of decompositions
+            // use it
+            if (maxProc != -1)
+            {
+                const_cast<fileOperation&>(*this).setNProcs(maxProc+1);
+            }
+        }
+
+        if (procDirs.size())
+        {
+            procsDirs_.insert(path/pDir, procDirs);
+
+            if (debug)
+            {
+                Pout<< "fileOperation::lookupProcessorsPath : For:" << path/pDir
+                    << " detected:" << procDirs << endl;
+            }
+
+            return procDirs;
         }
     }
-    return procDir;
+    return List<dirIndex>(1, dirIndex(fileName::null, -1));
 }
 
 
@@ -463,7 +564,6 @@ Foam::fileName Foam::fileOperation::lookupProcessorsPath
 Foam::fileOperation::fileOperation(label comm)
 :
     comm_(comm)
-    //procsDir_(nullptr)
 {}
 
 
@@ -577,11 +677,15 @@ Foam::fileName Foam::fileOperation::filePath(const fileName& fName) const
     }
 
     fileName path;
+    fileName pDir;
     fileName local;
     label gStart;
     label gSz;
     label numProcs;
-    label proci = splitProcessorPath(fName, path, local, gStart, gSz, numProcs);
+    label proci =
+        splitProcessorPath(fName, path, pDir, local, gStart, gSz, numProcs);
+
+Pout<< "fName:" << fName << " proci:" << proci << endl;
 
     if (numProcs != -1)
     {
@@ -592,7 +696,7 @@ Foam::fileName Foam::fileOperation::filePath(const fileName& fName) const
     if (proci != -1)
     {
         // Read directories to see actual name of processor directory
-        cacheProcessorsPath(fName);
+        //cacheProcessorsPath(fName);
 
 //         label n = Pstream::nProcs();
 //         if (!Pstream::parRun())
@@ -652,9 +756,14 @@ Foam::fileName Foam::fileOperation::filePath(const fileName& fName) const
 //         }
 
         // Try (cached) collated file name
-        fileName procDir(lookupProcessorsPath(fName));
-        if (!procDir.empty())
+        //fileName procDir(lookupProcessorsPath(fName).first());
+        //if (!procDir.empty())
+
+        tmpNrc<dirIndexList> procDirs(lookupProcessorsPath(fName));
+        forAll(procDirs(), i)
         {
+            const fileName& procDir = procDirs()[i].first();
+
             fileName collatedName(path/procDir/local);
             if (exists(collatedName))
             {
@@ -810,11 +919,14 @@ Foam::instantList Foam::fileOperation::findTimes
 
 
     // Check for any collated processors directories
-    cacheProcessorsPath(directory);
+    //cacheProcessorsPath(directory);
 
-    fileName procDir(lookupProcessorsPath(directory));
-    if (!procDir.empty())
+    //fileName procDir(lookupProcessorsPath(directory)[0].first());
+    //if (!procDir.empty())
+    tmpNrc<dirIndexList> procDirs(lookupProcessorsPath(directory));
+    forAll(procDirs(), i)
     {
+        const fileName& procDir = procDirs()[i].first();
         fileName collDir(processorsPath(directory, procDir));
         if (!collDir.empty() && collDir != directory)
         {
@@ -975,12 +1087,14 @@ Foam::label Foam::fileOperation::nProcs
         label maxProc = -1;
         forAll(dirNames, i)
         {
-            fileName path, local;
+            const fileName& dirN = dirNames[i];
+
+            fileName path, pDir, local;
             label start, size, n;
             maxProc = max
             (
                 maxProc,
-                splitProcessorPath(dirNames[i], path, local, start, size, n)
+                splitProcessorPath(dirN, path, pDir, local, start, size, n)
             );
             if (n != -1)
             {
@@ -1077,6 +1191,7 @@ Foam::label Foam::fileOperation::splitProcessorPath
 (
     const fileName& objectPath,
     fileName& path,
+    fileName& procDir,
     fileName& local,
 
     label& groupStart,
@@ -1086,6 +1201,7 @@ Foam::label Foam::fileOperation::splitProcessorPath
 )
 {
     path.clear();
+    procDir.clear();
     local.clear();
 
     // Potentially detected start of number of processors in local group
@@ -1113,20 +1229,31 @@ Foam::label Foam::fileOperation::splitProcessorPath
         return -1;
     }
 
+    procDir = objectPath;
+
     // Strip leading directory
     if (pos > 0)
     {
         path = objectPath.substr(0, pos-1);
+        procDir = objectPath.substr(pos);
     }
-    fileName f(objectPath.substr(pos+9));
 
     // Strip trailing local directory
-    pos = f.find('/');
+    pos = procDir.find('/');
     if (pos != string::npos)
     {
-        local = f.substr(pos+1);
-        f = f.substr(0, pos);
+        local = procDir.substr(pos+1);
+        procDir = procDir.substr(0, pos);
     }
+
+    // Now procDir is e.g.
+    // - processor0
+    // - processors0
+    // - processorBananas
+
+    // Look for number after "processor"
+
+    fileName f(procDir.substr(9));
 
     if (f.size() && f[0] == 's')
     {
@@ -1184,9 +1311,9 @@ Foam::label Foam::fileOperation::splitProcessorPath
 
 Foam::label Foam::fileOperation::detectProcessorPath(const fileName& fName)
 {
-    fileName path, local;
+    fileName path, pDir, local;
     label start, size, nProcs;
-    return splitProcessorPath(fName, path, local, start, size, nProcs);
+    return splitProcessorPath(fName, path, pDir, local, start, size, nProcs);
 }
 
 

@@ -72,15 +72,19 @@ protected:
             //- Number of processors (overall)
             label nProcs_;
 
-            //- Ranks of writers
-            const labelList writeRanks_;
+            //- Ranks of IO handlers
+            const labelList ioRanks_;
 
 
-        //- Actual name of processors dir
-        word processorsDir_;
+//         //- Actual name of output processors dir (parallel only)
+//         word processorsDir_;
 
 
    // Private Member Functions
+
+        //- Is proci master of communicator (in parallel) or master of
+        //  the io ranks (non-parallel)
+        bool isMasterRank(const label proci) const;
 
         //- Append to processors/ file
         bool appendObject
@@ -116,7 +120,7 @@ public:
         collatedFileOperation
         (
             const label comm,
-            const labelList& writeRanks,
+            const labelList& ioRanks,
             const bool verbose
         );
 

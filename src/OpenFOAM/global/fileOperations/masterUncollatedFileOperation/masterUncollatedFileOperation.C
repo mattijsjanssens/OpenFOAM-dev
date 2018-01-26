@@ -75,83 +75,6 @@ namespace fileOperations
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-void Foam::fileOperations::masterUncollatedFileOperation::cacheProcessorPaths
-(
-    const IOobject& io
-) const
-{
-    if (Pstream::parRun())
-    {
-        // Trigger caching of processor directory presence (on master)
-        if (!missingPaths_.valid())
-        {
-            // Collect paths to test
-            DynamicList<fileName> testPaths(3);
-            testPaths.append(io.time().path());
-
-            const word actualProcsDir(processorsDir(io));
-
-            testPaths.append(processorsCasePath(io, actualProcsDir));
-            if (processorsBaseDir != actualProcsDir)
-            {
-                testPaths.append(processorsCasePath(io, processorsBaseDir));
-            }
-
-            // Do test on master
-            missingPaths_ = new fileNameList(0);
-
-            forAll(testPaths, i)
-            {
-                const fileName& dir = testPaths[i];
-                bool masterHasDir = false;
-                if (Pstream::master())  //comm_))
-                {
-                    // Use raw test, bypassing caching
-                    masterHasDir = Foam::isDir(dir);
-                }
-                Pstream::scatter(masterHasDir); //, Pstream::msgType(), comm_);
-                if (debug)
-                {
-                    Pout<< "masterUncollatedFileOperation::cacheProcessorDirs :"
-                        << " Test for " << dir
-                        << " master result:" << Switch(masterHasDir) << endl;
-                }
-                if (!masterHasDir)
-                {
-                    missingPaths_().append(dir);
-                }
-            }
-        }
-    }
-}
-
-
-bool Foam::fileOperations::masterUncollatedFileOperation::missingDir
-(
-    const fileName& path
-) const
-{
-    // Check in our list of directories that we've already checked the
-    // state of
-    if (missingPaths_.valid())
-    {
-        const fileNameList& dirs = missingPaths_();
-
-        forAll(dirs, i)
-        {
-            const fileName& d = dirs[i];
-            fileName::size_type len = d.size();
-
-            if (path.find(d) == 0 && (path.size() == len || path[len] == '/'))
-            {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
-
 Foam::word
 Foam::fileOperations::masterUncollatedFileOperation::findInstancePath
 (
@@ -195,7 +118,7 @@ Foam::fileOperations::masterUncollatedFileOperation::filePathInfo
     {
         fileName objPath = io.instance()/io.name();
 
-        if (!missingDir(objPath) && isFileOrDir(isFile, objPath))
+        if (isFileOrDir(isFile, objPath))
         {
             searchType = fileOperation::ABSOLUTE;
             return objPath;
@@ -211,11 +134,10 @@ Foam::fileOperations::masterUncollatedFileOperation::filePathInfo
         // 1. Check the writing fileName
         fileName writePath(fileOperation::objectPath(io, io.headerClassName()));
 
-DebugVar(io.objectPath());
-DebugVar(writePath);
-
-        if (!missingDir(writePath) && isFileOrDir(isFile, writePath))
+        if (isFileOrDir(isFile, writePath))
         {
+Pout<< "filePathInfo : found writePath:" << writePath << endl;
+
             searchType = fileOperation::WRITEOBJECT;
             return writePath;
         }
@@ -282,9 +204,12 @@ DebugVar(writePath);
 //                 }
 //             }
 
-            fileName pDir(lookupProcessorsPath(io.objectPath()));
-            if (!pDir.empty())
+            //fileName pDir(lookupProcessorsPath(io.objectPath()).first());
+            //if (!pDir.empty())
+            tmpNrc<dirIndexList> pDirs(lookupProcessorsPath(io.objectPath()));
+            forAll(pDirs(), i)
             {
+                const fileName& pDir = pDirs()[i].first();
                 fileName objPath =
                     processorsPath(io, io.instance(), pDir)
                    /io.name();
@@ -294,6 +219,9 @@ DebugVar(writePath);
                 &&  isFileOrDir(isFile, objPath)
                 )
                 {
+Pout<< "filePathInfo : from cached pDir:" << pDir
+    << " found objPath:" << objPath << endl;
+
                     procsDir = pDir;
                     searchType = fileOperation::PROCESSORSOBJECT;
                     return objPath;
@@ -307,10 +235,11 @@ DebugVar(writePath);
             if
             (
                 localPath != writePath
-            && !missingDir(localPath)
             &&  isFileOrDir(isFile, localPath)
             )
             {
+Pout<< "filePathInfo : founf unchanged objectPath:" << localPath << endl;
+
                 searchType = fileOperation::OBJECT;
                 return localPath;
             }
@@ -333,8 +262,10 @@ DebugVar(writePath);
                 io.rootPath()/io.time().globalCaseName()
                /io.instance()/io.db().dbDir()/io.local()/io.name();
 
-            if (!missingDir(parentPath) && isFileOrDir(isFile, parentPath))
+            if (isFileOrDir(isFile, parentPath))
             {
+Pout<< "filePathInfo : found parent " << parentPath << endl;
+
                 searchType = fileOperation::PARENTOBJECT;
                 return parentPath;
             }
@@ -400,16 +331,23 @@ DebugVar(writePath);
 //                     }
 //                 }
 
-                fileName pDir(lookupProcessorsPath(io.objectPath()));
-                if (!pDir.empty())
+                //fileName pDir(lookupProcessorsPath(io.objectPath()).first());
+                //if (!pDir.empty())
+                tmpNrc<dirIndexList> pDirs(lookupProcessorsPath(io.objectPath()));
+                forAll(pDirs(), i)
                 {
+                    const fileName& pDir = pDirs()[i].first();
+
                     fileName fName
                     (
                         processorsPath(io, newInstancePath, pDir)
                        /io.name()
                     );
-                    if (!missingDir(fName) && isFileOrDir(isFile, fName))
+                    if (isFileOrDir(isFile, fName))
                     {
+Pout<< "filePathInfo : from cached pDir:" << pDir
+    << " found *instance*:" << fName << endl;
+
                         searchType = fileOperation::PROCESSORSINSTANCE;
                         procsDir = pDir;
                         return fName;
@@ -425,8 +363,9 @@ DebugVar(writePath);
                    io.rootPath()/io.caseName()
                   /newInstancePath/io.db().dbDir()/io.local()/io.name()
                 );
-                if (!missingDir(fName) && isFileOrDir(isFile, fName))
+                if (isFileOrDir(isFile, fName))
                 {
+Pout<< "filePathInfo : founf *instance* objectPath:" << fName << endl;
                     searchType = fileOperation::FINDINSTANCE;
                     return fName;
                 }
@@ -734,10 +673,10 @@ mode_t Foam::fileOperations::masterUncollatedFileOperation::mode
     const bool followLink
 ) const
 {
-    if (missingDir(fName))
-    {
-        return 0;
-    }
+//     if (missingDir(fName))
+//     {
+//         return 0;
+//     }
     return masterOp<mode_t, modeOp>(fName, modeOp(followLink));
 }
 
@@ -748,10 +687,10 @@ Foam::fileName::Type Foam::fileOperations::masterUncollatedFileOperation::type
     const bool followLink
 ) const
 {
-    if (missingDir(fName))
-    {
-        return fileName::UNDEFINED;
-    }
+//     if (missingDir(fName))
+//     {
+//         return fileName::UNDEFINED;
+//     }
     return fileName::Type(masterOp<label, typeOp>(fName, typeOp(followLink)));
 }
 
@@ -763,10 +702,10 @@ bool Foam::fileOperations::masterUncollatedFileOperation::exists
     const bool followLink
 ) const
 {
-    if (missingDir(fName))
-    {
-        return false;
-    }
+//     if (missingDir(fName))
+//     {
+//         return false;
+//     }
     return masterOp<bool, existsOp>(fName, existsOp(checkGzip, followLink));
 }
 
@@ -777,10 +716,10 @@ bool Foam::fileOperations::masterUncollatedFileOperation::isDir
     const bool followLink
 ) const
 {
-    if (missingDir(fName))
-    {
-        return false;
-    }
+//     if (missingDir(fName))
+//     {
+//         return false;
+//     }
     return masterOp<bool, isDirOp>(fName, isDirOp(followLink));
 }
 
@@ -792,10 +731,10 @@ bool Foam::fileOperations::masterUncollatedFileOperation::isFile
     const bool followLink
 ) const
 {
-    if (missingDir(fName))
-    {
-        return false;
-    }
+//     if (missingDir(fName))
+//     {
+//         return false;
+//     }
     return masterOp<bool, isFileOp>(fName, isFileOp(checkGzip, followLink));
 }
 
@@ -874,11 +813,11 @@ Foam::fileNameList Foam::fileOperations::masterUncollatedFileOperation::readDir
     const bool followLink
 ) const
 {
-    if (missingDir(dir))
-    {
-        return fileNameList();
-    }
-    else
+//     if (missingDir(dir))
+//     {
+//         return fileNameList();
+//     }
+//     else
     {
         return masterOp<fileNameList, readDirOp>
         (
@@ -935,11 +874,15 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePath
             << " checkGlobal:" << checkGlobal << endl;
     }
 
-    // Trigger caching of processors directory presence
-    cacheProcessorsPath(io.objectPath());
+//     // Trigger caching of processors directory presence
+//     cacheProcessorsPath(io.objectPath());
+// 
+//     // Trigger caching of processor directory presence (on master)
+//     cacheProcessorPaths(io);
 
-    // Trigger caching of processor directory presence (on master)
-    cacheProcessorPaths(io);
+    // Now that we have an IOobject path use it to detect & cache precence
+    // of processor directory naming
+    (void)lookupProcessorsPath(io.objectPath());
 
     // Trigger caching of times
     (void)findTimes(io.time().path(), io.time().constant());
@@ -1008,11 +951,11 @@ Pout<< "masterUncollatedFileOperation::filePathInfo :"
             // have the file and some not (e.g. lagrangian data)
 
             objPath = io.objectPath();
-            if (missingDir(objPath))
-            {
-                objPath = "";
-            }
-            else
+//             if (missingDir(objPath))
+//             {
+//                 objPath = "";
+//             }
+//             else
             {
                 objPath = masterOp<fileName, fileOrNullOp>
                 (
@@ -1048,11 +991,11 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::dirPath
             << " checkGlobal:" << checkGlobal << endl;
     }
 
-    // Trigger caching of processors directory presence
-    cacheProcessorsPath(io.objectPath());
-
-    // Trigger caching of processor directory presence (on master)
-    cacheProcessorPaths(io);
+//     // Trigger caching of processors directory presence
+//     cacheProcessorsPath(io.objectPath());
+// 
+//     // Trigger caching of processor directory presence (on master)
+//     cacheProcessorPaths(io);
 
     // Determine master dirPath and scatter
 
@@ -1061,7 +1004,7 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::dirPath
     word procsDir;
     word newInstancePath;
 
-    if (Pstream::master())  //comm_))
+    if (Pstream::master(comm_))
     {
         objPath = filePathInfo
         (
@@ -1076,11 +1019,11 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::dirPath
 
     {
         label masterType(searchType);
-        Pstream::scatter(masterType);   //, Pstream::msgType(), comm_);
+        Pstream::scatter(masterType, Pstream::msgType(), comm_);
         searchType = pathType(masterType);
     }
-    Pstream::scatter(procsDir);         //, Pstream::msgType(), comm_);
-    Pstream::scatter(newInstancePath);  //, Pstream::msgType(), comm_);
+    Pstream::scatter(procsDir, Pstream::msgType(), comm_);
+    Pstream::scatter(newInstancePath, Pstream::msgType(), comm_);
 
 
     // Use the master type to determine if additional information is
@@ -1107,11 +1050,11 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::dirPath
             // Retest all processors separately since some processors might
             // have the file and some not (e.g. lagrangian data)
             objPath = io.objectPath();
-            if (missingDir(objPath))
-            {
-                objPath = "";
-            }
-            else
+//             if (missingDir(objPath))
+//             {
+//                 objPath = "";
+//             }
+//             else
             {
                 objPath = masterOp<fileName, fileOrNullOp>
                 (
@@ -1152,6 +1095,9 @@ Foam::fileOperations::masterUncollatedFileOperation::readObjects
 
     fileNameList objectNames;
     newInstance = word::null;
+
+    // Note: readObjects uses WORLD to make sure order of objects is the
+    //       same everywhere
 
     if (Pstream::master())  //comm_))
     {
@@ -1390,12 +1336,13 @@ Foam::fileOperations::masterUncollatedFileOperation::readStream
 
 
         // Analyse the file path (on (co)master) to see the processors type
-        fileName path, local;
+        fileName path, procDir, local;
         label groupStart, groupSize, nProcs;
         splitProcessorPath
         (
             fName,
             path,
+            procDir,
             local,
             groupStart,
             groupSize,

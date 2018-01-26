@@ -25,7 +25,12 @@ Class
     Foam::fileOperations::multiCollatedFileOperation
 
 Description
-    Version of collatedFileOperation with multiple writers, one per hostname
+    Version of collatedFileOperation with multiple read/write ranks. In parallel
+    uses the hosthame and the lowest rank per hostname becomes the IO rank.
+    In serial it will use the master rank unless the FOAM_IORANKS environment
+    variable has been set, e.g.
+
+    FOAM_IORANKS='(0 2)' decomposePar -fileHandler multiCollated
 
 See also
     collatedFileOperation
@@ -57,9 +62,9 @@ class multiCollatedFileOperation
 {
    // Private Member Functions
 
-        //- Get the ranks that are writers (through command line argument;
+        //- Get the ranks that do IO (through command line argument;
         //  non-parallel only)
-        static labelList writeRanks();
+        static labelList ioRanks();
 
         //- Get the list of processors part of this set
         static labelList subRanks(const label n);

@@ -55,19 +55,19 @@ namespace fileOperations
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-Foam::labelList Foam::fileOperations::multiCollatedFileOperation::writeRanks()
+Foam::labelList Foam::fileOperations::multiCollatedFileOperation::ioRanks()
 {
-    labelList writeRanks;
+    labelList ioRanks;
     if (!Pstream::parRun())
     {
-        string writeRanksString(getEnv("FOAM_IORANKS"));
-        if (!writeRanksString.empty())
+        string ioRanksString(getEnv("FOAM_IORANKS"));
+        if (!ioRanksString.empty())
         {
-            IStringStream is(writeRanksString);
-            is >> writeRanks;
+            IStringStream is(ioRanksString);
+            is >> ioRanks;
         }
     }
-    return writeRanks;
+    return ioRanks;
 }
 
 
@@ -78,33 +78,33 @@ Foam::labelList Foam::fileOperations::multiCollatedFileOperation::subRanks
 {
     DynamicList<label> subRanks(64);
 
-    string writeRanksString(getEnv("FOAM_IORANKS"));
-    if (!writeRanksString.empty())
+    string ioRanksString(getEnv("FOAM_IORANKS"));
+    if (!ioRanksString.empty())
     {
-        IStringStream is(writeRanksString);
-        labelList writeRanks(is);
+        IStringStream is(ioRanksString);
+        labelList ioRanks(is);
 
-        if (findIndex(writeRanks, 0) == -1)
+        if (findIndex(ioRanks, 0) == -1)
         {
             FatalErrorInFunction
-                << "Rank 0 (master) should be in the write ranks. Currently "
-                << writeRanks << exit(FatalError);
+                << "Rank 0 (master) should be in the IO ranks. Currently "
+                << ioRanks << exit(FatalError);
         }
 
-        // The lowest numbered rank is the writer
-        PackedBoolList isWriter(n);
-        isWriter.set(writeRanks);
+        // The lowest numbered rank is the IO rank
+        PackedBoolList isIOrank(n);
+        isIOrank.set(ioRanks);
 
         for (label proci = Pstream::myProcNo(); proci >= 0; --proci)
         {
-            if (isWriter[proci])
+            if (isIOrank[proci])
             {
                 // Found my master. Collect all processors with same master
                 subRanks.append(proci);
                 for
                 (
                     label rank = proci+1;
-                    rank < n && !isWriter[rank];
+                    rank < n && !isIOrank[rank];
                     ++rank
                 )
                 {
@@ -151,26 +151,26 @@ Foam::fileOperations::multiCollatedFileOperation::multiCollatedFileOperation
             UPstream::worldComm,
             subRanks(Pstream::nProcs())
         ),
-        writeRanks(),   // For serial operation: know processor directories
+        ioRanks(),  // For serial operation: know processor directories
         verbose
     )
 {
     if (verbose)
     {
         // Print a bit of information
-        stringList writers(Pstream::nProcs());
+        stringList ioRanks(Pstream::nProcs());
         if (Pstream::master(comm_))
         {
-            writers[Pstream::myProcNo()] = hostName()+"."+name(pid());
+            ioRanks[Pstream::myProcNo()] = hostName()+"."+name(pid());
         }
-        Pstream::gatherList(writers);
+        Pstream::gatherList(ioRanks);
 
-        Info<< "         Writers:" << endl;
-        forAll(writers, proci)
+        Info<< "         IO nodes:" << endl;
+        forAll(ioRanks, proci)
         {
-            if (!writers[proci].empty())
+            if (!ioRanks[proci].empty())
             {
-                Info<< "             " << writers[proci] << endl;
+                Info<< "             " << ioRanks[proci] << endl;
             }
         }
     }

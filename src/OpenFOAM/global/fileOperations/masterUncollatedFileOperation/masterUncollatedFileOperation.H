@@ -60,10 +60,6 @@ protected:
 
     // Protected data
 
-        //- Cached non-presence of certain directories (usually processorDDD/,
-        //  processors/)
-        mutable autoPtr<fileNameList> missingPaths_;
-
         //- Cached times for a given directory
         mutable HashPtrTable<instantList> times_;
 
@@ -363,13 +359,6 @@ protected:
             const fileName&,
             const fileOp& fop
         ) const;
-
-        //- Detect presence of processor directories
-        void cacheProcessorPaths(const IOobject&) const;
-
-        //- Check cache for directory missing. Can only decide for sure if
-        //  directory is missing. If it isn't it needs to be tested for
-        bool missingDir(const fileName& path) const;
 
         //- Equivalent of Time::findInstance
         static word findInstancePath

@@ -37,6 +37,7 @@ Class
 #include "fileMonitor.H"
 #include "labelList.H"
 #include "Switch.H"
+#include "tmpNrc.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -47,6 +48,9 @@ class IOobject;
 class regIOobject;
 class objectRegistry;
 class Time;
+
+typedef Tuple2<fileName, label> dirIndex;
+typedef List<dirIndex> dirIndexList;
 
 /*---------------------------------------------------------------------------*\
                          Class fileOperation Declaration
@@ -61,9 +65,8 @@ protected:
         //- Communicator to use
         const label comm_;
 
-        //- Detected processors directory
-        //mutable autoPtr<fileName> procsDir_;
-        mutable HashTable<fileName> procsDirs_;
+        //- Detected processors directories
+        mutable HashTable<dirIndexList> procsDirs_;
 
         //- file-change monitor for all registered files
         mutable autoPtr<fileMonitor> monitorPtr_;
@@ -92,7 +95,7 @@ protected:
 
         //- Lookup name of processorsDDD using cache. Return empty fileName
         //  if not found
-        fileName lookupProcessorsPath(const fileName& fName) const;
+        tmpNrc<dirIndexList> lookupProcessorsPath(const fileName&) const;
 
 
 public:
@@ -485,6 +488,7 @@ public:
             (
                 const fileName&,
                 fileName& path,
+                fileName& procDir,
                 fileName& local,
                 label& groupStart,
                 label& groupSize,

@@ -72,6 +72,33 @@ namespace fileOperations
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
+bool Foam::fileOperations::collatedFileOperation::isMasterRank
+(
+    const label proci
+)
+const
+{
+    if (Pstream::parRun())
+    {
+        return Pstream::master(comm_);
+    }
+    else
+    {
+        // Use any IO ranks
+        if (ioRanks_.size())
+        {
+            // Find lowest IO rank
+            return findIndex(ioRanks_, proci) != -1;
+        }
+        else
+        {
+            // Assume all in single communicator
+            return proci == 0;
+        }
+    }
+}
+
+
 bool Foam::fileOperations::collatedFileOperation::appendObject
 (
     const regIOobject& io,
@@ -100,7 +127,8 @@ bool Foam::fileOperations::collatedFileOperation::appendObject
             << exit(FatalError);
     }
 
-    const bool isMaster = (proci == 0);
+    //const bool isMaster = (proci == 0);
+    const bool isMaster = isMasterRank(proci);
 
 
     // Create string from all data to write
@@ -184,13 +212,13 @@ Foam::fileOperations::collatedFileOperation::collatedFileOperation
 :
     masterUncollatedFileOperation(false),   // use worldComm for now
     writer_(maxThreadFileBufferSize),
-    nProcs_(Pstream::nProcs()),
-    processorsDir_
-    (
-        Pstream::nProcs() > 1
-      ? processorsBaseDir+Foam::name(Pstream::nProcs())
-      : processorsBaseDir
-    )
+    nProcs_(Pstream::nProcs())
+//     processorsDir_
+//     (
+//         Pstream::nProcs() > 1
+//       ? processorsBaseDir+Foam::name(Pstream::nProcs())
+//       : processorsBaseDir
+//     )
 {
     if (verbose)
     {
@@ -245,44 +273,41 @@ Foam::fileOperations::collatedFileOperation::collatedFileOperation
 Foam::fileOperations::collatedFileOperation::collatedFileOperation
 (
     const label comm,
-    const labelList& writeRanks,
+    const labelList& ioRanks,
     const bool verbose
 )
 :
     masterUncollatedFileOperation(comm, false),
     writer_(maxThreadFileBufferSize, comm),
     nProcs_(Pstream::nProcs()),
-    writeRanks_(writeRanks)
+    ioRanks_(ioRanks)
 {
-DebugVar(writeRanks_);
-
-    if (Pstream::parRun())
-    {
-        const List<int>& procs(UPstream::procID(comm_));
-
-        processorsDir_ =
-            processorsBaseDir
-          + Foam::name(Pstream::nProcs());
-
-        if (procs.size() != Pstream::nProcs())
-        {
-            processorsDir_ +=
-              + "_"
-              + Foam::name(procs[0])
-              + "-"
-              + Foam::name(procs.last());
-        }
-    }
-    else
-    {
-        processorsDir_ = processorsBaseDir;
-    }
+//     if (Pstream::parRun())
+//     {
+//         const List<int>& procs(UPstream::procID(comm_));
+// 
+//         processorsDir_ =
+//             processorsBaseDir
+//           + Foam::name(Pstream::nProcs());
+// 
+//         if (procs.size() != Pstream::nProcs())
+//         {
+//             processorsDir_ +=
+//               + "_"
+//               + Foam::name(procs[0])
+//               + "-"
+//               + Foam::name(procs.last());
+//         }
+//     }
+//     else
+//     {
+//         processorsDir_ = processorsBaseDir;
+//     }
 
     if (verbose)
     {
         Info<< "I/O    : " << typeName
-            << " (output directory " << processorsDir_
-            << ", maxThreadFileBufferSize " << maxThreadFileBufferSize
+            << " (maxThreadFileBufferSize " << maxThreadFileBufferSize
             << ')' << endl;
 
         if (maxThreadFileBufferSize == 0)
@@ -344,8 +369,6 @@ Foam::fileName Foam::fileOperations::collatedFileOperation::objectPath
 ) const
 {
     // Replacement for objectPath
-DebugVar(io.time().processorCase());
-
     if (io.time().processorCase())
     {
         return masterUncollatedFileOperation::objectPath
@@ -547,34 +570,28 @@ Foam::word Foam::fileOperations::collatedFileOperation::processorsDir
     {
         word procDir(processorsBaseDir+Foam::name(nProcs_));
 
-        if (writeRanks_.size())
+        if (ioRanks_.size())
         {
             // Detect current processor number
             label proci = detectProcessorPath(fName);
 
-DebugVar(proci);
-
             if (proci != -1)
             {
-                // Find lowest write rank
+                // Find lowest io rank
                 label minProc = 0;
                 label maxProc = nProcs_-1;
-                forAll(writeRanks_, i)
+                forAll(ioRanks_, i)
                 {
-                    if (writeRanks_[i] <= proci)
+                    if (ioRanks_[i] <= proci)
                     {
-                        minProc = writeRanks_[i];
+                        minProc = ioRanks_[i];
                     }
                     else
                     {
-                        maxProc = writeRanks_[i]-1;
+                        maxProc = ioRanks_[i]-1;
                         break;
                     }
                 }
-
-DebugVar(minProc);
-DebugVar(maxProc);
-
 
                 procDir += 
                   + "_"
@@ -602,13 +619,13 @@ void Foam::fileOperations::collatedFileOperation::setNProcs(const label nProcs)
 {
     nProcs_ = nProcs;
 
-    // Changed number of decompositions. Adapt the output directory
-    processorsDir_ = processorsBaseDir+Foam::name(nProcs);
+//     // Changed number of decompositions. Adapt the output directory
+//     processorsDir_ = processorsBaseDir+Foam::name(nProcs);
 
     if (debug)
     {
         Pout<< "collatedFileOperation::setNProcs :"
-            << " Setting output directory to " << processorsDir_ << endl;
+            << " Setting number of processors to " << nProcs_ << endl;
     }
 }
 
