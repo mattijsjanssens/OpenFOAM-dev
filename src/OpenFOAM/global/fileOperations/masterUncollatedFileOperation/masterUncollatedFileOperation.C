@@ -136,76 +136,13 @@ Foam::fileOperations::masterUncollatedFileOperation::filePathInfo
 
         if (isFileOrDir(isFile, writePath))
         {
-Pout<< "filePathInfo : found writePath:" << writePath << endl;
-
             searchType = fileOperation::WRITEOBJECT;
             return writePath;
         }
 
-//         // 2. Check processors/
-//         const word actualProcsDir(processorsDir(io));
-
+        // 2. Check processors/
         if (io.time().processorCase())
         {
-//             // 2a. Check processorsDDD/
-//             fileName objPath =
-//                 processorsPath(io, io.instance(), actualProcsDir)/io.name();
-//             if
-//             (
-//                 objPath != writePath
-//             && !missingDir(objPath)
-//             &&  isFileOrDir(isFile, objPath)
-//             )
-//             {
-//                 procsDir = actualProcsDir;
-//                 searchType = fileOperation::PROCESSORSOBJECT;
-//                 return objPath;
-//             }
-// 
-//             // 2b. Check processors/
-//             if (processorsBaseDir != actualProcsDir)
-//             {
-//                 fileName objPath =
-//                     processorsPath(io, io.instance(), processorsBaseDir)
-//                    /io.name();
-//                 if
-//                 (
-//                     objPath != writePath
-//                 && !missingDir(objPath)
-//                 &&  isFileOrDir(isFile, objPath)
-//                 )
-//                 {
-//                     procsDir = processorsBaseDir;
-//                     searchType = fileOperation::PROCESSORSBASEOBJECT;
-//                     return objPath;
-//                 }
-//             }
-// 
-//             // 2c. Check processorsNNN/
-//             const word oldProcsDir
-//             (
-//                 processorsBaseDir+Foam::name(Pstream::nProcs())
-//             );
-//             if (oldProcsDir != actualProcsDir)
-//             {
-//                 fileName objPath =
-//                     processorsPath(io, io.instance(), oldProcsDir)
-//                    /io.name();
-//                 if
-//                 (
-//                     objPath != writePath
-//                 && !missingDir(objPath)
-//                 &&  isFileOrDir(isFile, objPath)
-//                 )
-//                 {
-//                     procsDir = oldProcsDir;
-//                     searchType = fileOperation::PROCESSORSOBJECT;
-//                     return objPath;
-//                 }
-//             }
-
-            //fileName pDir(lookupProcessorsPath(io.objectPath()).first());
-            //if (!pDir.empty())
             tmpNrc<dirIndexList> pDirs(lookupProcessorsPath(io.objectPath()));
             forAll(pDirs(), i)
             {
@@ -213,15 +150,8 @@ Pout<< "filePathInfo : found writePath:" << writePath << endl;
                 fileName objPath =
                     processorsPath(io, io.instance(), pDir)
                    /io.name();
-                if
-                (
-                    objPath != writePath
-                &&  isFileOrDir(isFile, objPath)
-                )
+                if (objPath != writePath && isFileOrDir(isFile, objPath))
                 {
-Pout<< "filePathInfo : from cached pDir:" << pDir
-    << " found objPath:" << objPath << endl;
-
                     procsDir = pDir;
                     searchType = fileOperation::PROCESSORSOBJECT;
                     return objPath;
@@ -238,8 +168,6 @@ Pout<< "filePathInfo : from cached pDir:" << pDir
             &&  isFileOrDir(isFile, localPath)
             )
             {
-Pout<< "filePathInfo : founf unchanged objectPath:" << localPath << endl;
-
                 searchType = fileOperation::OBJECT;
                 return localPath;
             }
@@ -264,8 +192,6 @@ Pout<< "filePathInfo : founf unchanged objectPath:" << localPath << endl;
 
             if (isFileOrDir(isFile, parentPath))
             {
-Pout<< "filePathInfo : found parent " << parentPath << endl;
-
                 searchType = fileOperation::PARENTOBJECT;
                 return parentPath;
             }
@@ -291,48 +217,6 @@ Pout<< "filePathInfo : found parent " << parentPath << endl;
             if (newInstancePath.size() && newInstancePath != io.instance())
             {
                 // 1. Try processors equivalent
-
-//                 fileName fName =
-//                     processorsPath(io, newInstancePath, actualProcsDir)
-//                    /io.name();
-//                 if (!missingDir(fName) && isFileOrDir(isFile, fName))
-//                 {
-//                     searchType = fileOperation::PROCESSORSINSTANCE;
-//                     procsDir = actualProcsDir;
-//                     return fName;
-//                 }
-// 
-//                 if (processorsBaseDir != actualProcsDir)
-//                 {
-//                     fName =
-//                         processorsPath(io, newInstancePath, processorsBaseDir)
-//                        /io.name();
-//                     if (!missingDir(fName) && isFileOrDir(isFile, fName))
-//                     {
-//                         searchType = fileOperation::PROCESSORSBASEINSTANCE;
-//                         procsDir = processorsBaseDir;
-//                         return fName;
-//                     }
-//                 }
-//                 const word oldProcsDir
-//                 (
-//                     processorsBaseDir+Foam::name(Pstream::nProcs())
-//                 );
-//                 if (oldProcsDir != actualProcsDir)
-//                 {
-//                     fName =
-//                         processorsPath(io, newInstancePath, oldProcsDir)
-//                        /io.name();
-//                     if (!missingDir(fName) &&  isFileOrDir(isFile, fName))
-//                     {
-//                         searchType = fileOperation::PROCESSORSINSTANCE;
-//                         procsDir = oldProcsDir;
-//                         return fName;
-//                     }
-//                 }
-
-                //fileName pDir(lookupProcessorsPath(io.objectPath()).first());
-                //if (!pDir.empty())
                 tmpNrc<dirIndexList> pDirs(lookupProcessorsPath(io.objectPath()));
                 forAll(pDirs(), i)
                 {
@@ -345,9 +229,6 @@ Pout<< "filePathInfo : found parent " << parentPath << endl;
                     );
                     if (isFileOrDir(isFile, fName))
                     {
-Pout<< "filePathInfo : from cached pDir:" << pDir
-    << " found *instance*:" << fName << endl;
-
                         searchType = fileOperation::PROCESSORSINSTANCE;
                         procsDir = pDir;
                         return fName;
@@ -355,9 +236,7 @@ Pout<< "filePathInfo : from cached pDir:" << pDir
                 }
 
 
-
                 // 2. Check local
-
                 fileName fName
                 (
                    io.rootPath()/io.caseName()
@@ -365,7 +244,6 @@ Pout<< "filePathInfo : from cached pDir:" << pDir
                 );
                 if (isFileOrDir(isFile, fName))
                 {
-Pout<< "filePathInfo : founf *instance* objectPath:" << fName << endl;
                     searchType = fileOperation::FINDINSTANCE;
                     return fName;
                 }
@@ -874,14 +752,8 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePath
             << " checkGlobal:" << checkGlobal << endl;
     }
 
-//     // Trigger caching of processors directory presence
-//     cacheProcessorsPath(io.objectPath());
-// 
-//     // Trigger caching of processor directory presence (on master)
-//     cacheProcessorPaths(io);
-
-    // Now that we have an IOobject path use it to detect & cache precence
-    // of processor directory naming
+    // Now that we have an IOobject path use it to detect & cache
+    // processor directory naming
     (void)lookupProcessorsPath(io.objectPath());
 
     // Trigger caching of times
@@ -906,14 +778,6 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePath
             procsDir,
             newInstancePath
         );
-
-Pout<< "masterUncollatedFileOperation::filePathInfo :"
-    << " objectPath:" << io.objectPath()
-    << " objPath:" << objPath
-    << " searchType:" << searchType
-    << " procsDir:" << procsDir
-    << endl;
-
     }
 
     // Scatter the information about where the master found the object
@@ -991,11 +855,9 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::dirPath
             << " checkGlobal:" << checkGlobal << endl;
     }
 
-//     // Trigger caching of processors directory presence
-//     cacheProcessorsPath(io.objectPath());
-// 
-//     // Trigger caching of processor directory presence (on master)
-//     cacheProcessorPaths(io);
+    // Now that we have an IOobject path use it to detect & cache
+    // processor directory naming
+    (void)lookupProcessorsPath(io.objectPath());
 
     // Determine master dirPath and scatter
 

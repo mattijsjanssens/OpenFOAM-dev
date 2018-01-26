@@ -87,7 +87,7 @@ const
         // Use any IO ranks
         if (ioRanks_.size())
         {
-            // Find lowest IO rank
+            // Find myself in IO rank
             return findIndex(ioRanks_, proci) != -1;
         }
         else
@@ -127,7 +127,6 @@ bool Foam::fileOperations::collatedFileOperation::appendObject
             << exit(FatalError);
     }
 
-    //const bool isMaster = (proci == 0);
     const bool isMaster = isMasterRank(proci);
 
 
