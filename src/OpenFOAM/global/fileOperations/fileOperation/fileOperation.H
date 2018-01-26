@@ -62,7 +62,8 @@ protected:
         const label comm_;
 
         //- Detected processors directory
-        mutable autoPtr<fileName> procsDir_;
+        //mutable autoPtr<fileName> procsDir_;
+        mutable HashTable<fileName> procsDirs_;
 
         //- file-change monitor for all registered files
         mutable autoPtr<fileMonitor> monitorPtr_;
@@ -88,6 +89,10 @@ protected:
 
         //- Detect presence of processorsDDD
         void cacheProcessorsPath(const fileName& fName) const;
+
+        //- Lookup name of processorsDDD using cache. Return empty fileName
+        //  if not found
+        fileName lookupProcessorsPath(const fileName& fName) const;
 
 
 public:

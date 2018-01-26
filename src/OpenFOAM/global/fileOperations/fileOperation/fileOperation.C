@@ -221,6 +221,106 @@ bool Foam::fileOperation::isFileOrDir(const bool isFile, const fileName& f)
 }
 
 
+//void Foam::fileOperation::cacheProcessorsPath(const fileName& fName) const
+//{
+//    fileName path;
+//    fileName local;
+//    label gStart;
+//    label gSz;
+//    label numProcs;
+//    label proci = splitProcessorPath(fName, path, local, gStart, gSz, numProcs);
+//
+//    if (proci != -1)
+//    {
+//        // So we have a processor case. Read the directory to find out
+//        // - name (if any) of collated processors directory
+//        // - number of processors
+//
+//        if (procsDir_.valid())
+//        {
+//            // Already done detection
+//            return;
+//        }
+//
+//        if (debug)
+//        {
+//            Pout<< "fileOperation::cacheProcessorsPath :" << " fName:" << fName
+//                << endl;
+//        }
+//
+//        // Get actual output directory name
+//        const word procDir(processorsDir(fName));
+//
+//        // Processor-local file name
+//        if (isDir(path/procDir))
+//        {
+//            procsDir_.reset(new fileName(procDir));
+//        }
+//        else
+//        {
+//            // Try processors
+//            if
+//            (
+//                processorsBaseDir != procDir
+//             && isDir(path/processorsBaseDir)
+//            )
+//            {
+//                procsDir_.reset(new fileName(processorsBaseDir));
+//            }
+//        }
+//
+//        // Try processorsDDD so we need to know the number of processors
+//        // for this. In parallel this is the number of ranks in the
+//        // communicator, for serial this has to be done by searching
+//
+//        label n = Pstream::nProcs();    //comm_);
+//        if (!Pstream::parRun())
+//        {
+//            // E.g. checkMesh -case processor0
+//            // Can be slow since only called at startup?
+//            n = nProcs(path, local);
+//
+//            // Set number of processors
+//            if (n > 0)
+//            {
+//                const_cast<fileOperation&>(*this).setNProcs(n);
+//            }
+//        }
+//
+//        word collatedProcDir(processorsBaseDir+Foam::name(n));
+//        if
+//        (
+//           !procsDir_.valid()
+//         && collatedProcDir != procDir
+//         && isDir(path/collatedProcDir)
+//        )
+//        {
+//            procsDir_.reset(new fileName(collatedProcDir));
+//        }
+//
+//
+//        // Nothing detected. Leave for next time round.
+//        //if (!procsDir_.valid())
+//        //{
+//        //    procsDir_.reset(new fileName(""));
+//        //}
+//
+//        if (debug)
+//        {
+//            if (procsDir_.valid())
+//            {
+//                Pout<< "fileOperation::cacheProcessorsPath : Detected:"
+//                    << procsDir_() << endl;
+//            }
+//            else
+//            {
+//                Pout<< "fileOperation::cacheProcessorsPath :"
+//                    << " Did not detect any processors dir for fName:"
+//                    << fName << endl;
+//            }
+//        }
+//    }
+//}
 void Foam::fileOperation::cacheProcessorsPath(const fileName& fName) const
 {
     fileName path;
@@ -236,7 +336,7 @@ void Foam::fileOperation::cacheProcessorsPath(const fileName& fName) const
         // - name (if any) of collated processors directory
         // - number of processors
 
-        if (procsDir_.valid())
+        if (procsDirs_.found(path))
         {
             // Already done detection
             return;
@@ -245,29 +345,10 @@ void Foam::fileOperation::cacheProcessorsPath(const fileName& fName) const
         if (debug)
         {
             Pout<< "fileOperation::cacheProcessorsPath :" << " fName:" << fName
+                << " detecting any processors in:" << path
                 << endl;
         }
 
-        // Get actual output directory name
-        const word procDir(processorsDir(fName));
-
-        // Processor-local file name
-        if (isDir(path/procDir))
-        {
-            procsDir_.reset(new fileName(procDir));
-        }
-        else
-        {
-            // Try processors
-            if
-            (
-                processorsBaseDir != procDir
-             && isDir(path/processorsBaseDir)
-            )
-            {
-                procsDir_.reset(new fileName(processorsBaseDir));
-            }
-        }
 
         // Try processorsDDD so we need to know the number of processors
         // for this. In parallel this is the number of ranks in the
@@ -287,15 +368,43 @@ void Foam::fileOperation::cacheProcessorsPath(const fileName& fName) const
             }
         }
 
+        // Get actual output directory name
+        const word procDir(processorsDir(fName));
+
+Pout<< "** 1trying " << path/procDir << endl;
+
+        // Processor-local file name
+        if (isDir(path/procDir))
+        {
+            procsDirs_.insert(path, procDir);
+        }
+        else
+        {
+            // Try processors
+Pout<< "** 2trying " << path/processorsBaseDir << endl;
+
+            if
+            (
+                processorsBaseDir != procDir
+             && isDir(path/processorsBaseDir)
+            )
+            {
+                procsDirs_.insert(path, processorsBaseDir);
+            }
+        }
+
+
         word collatedProcDir(processorsBaseDir+Foam::name(n));
+Pout<< "** 3trying " << path/collatedProcDir << endl;
         if
         (
-           !procsDir_.valid()
-         && collatedProcDir != procDir
+           //!procsDir_.valid()
+            collatedProcDir != procDir
          && isDir(path/collatedProcDir)
         )
         {
-            procsDir_.reset(new fileName(collatedProcDir));
+            //procsDir_.reset(new fileName(collatedProcDir));
+            procsDirs_.insert(path, collatedProcDir);
         }
 
 
@@ -307,10 +416,10 @@ void Foam::fileOperation::cacheProcessorsPath(const fileName& fName) const
 
         if (debug)
         {
-            if (procsDir_.valid())
+            if (procsDirs_.found(path))
             {
                 Pout<< "fileOperation::cacheProcessorsPath : Detected:"
-                    << procsDir_() << endl;
+                    << procsDirs_[path] << endl;
             }
             else
             {
@@ -323,12 +432,38 @@ void Foam::fileOperation::cacheProcessorsPath(const fileName& fName) const
 }
 
 
+Foam::fileName Foam::fileOperation::lookupProcessorsPath
+(
+    const fileName& fName
+) const
+{
+    fileName path;
+    fileName local;
+    label gStart;
+    label gSz;
+    label numProcs;
+    label proci = splitProcessorPath(fName, path, local, gStart, gSz, numProcs);
+
+    fileName procDir;
+    if (proci != -1)
+    {
+        HashTable<fileName>::const_iterator iter = procsDirs_.find(path);
+
+        if (iter != procsDirs_.end())
+        {
+            procDir = iter();
+        }
+    }
+    return procDir;
+}
+
+
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 Foam::fileOperation::fileOperation(label comm)
 :
-    comm_(comm),
-    procsDir_(nullptr)
+    comm_(comm)
+    //procsDir_(nullptr)
 {}
 
 
@@ -517,9 +652,10 @@ Foam::fileName Foam::fileOperation::filePath(const fileName& fName) const
 //         }
 
         // Try (cached) collated file name
-        if (procsDir_.valid() && !procsDir_().empty())
+        fileName procDir(lookupProcessorsPath(fName));
+        if (!procDir.empty())
         {
-            fileName collatedName(path/procsDir_()/local);
+            fileName collatedName(path/procDir/local);
             if (exists(collatedName))
             {
                 if (debug)
@@ -676,9 +812,10 @@ Foam::instantList Foam::fileOperation::findTimes
     // Check for any collated processors directories
     cacheProcessorsPath(directory);
 
-    if (procsDir_.valid() && !procsDir_().empty())
+    fileName procDir(lookupProcessorsPath(directory));
+    if (!procDir.empty())
     {
-        fileName collDir(processorsPath(directory, procsDir_()));
+        fileName collDir(processorsPath(directory, procDir));
         if (!collDir.empty() && collDir != directory)
         {
             fileNameList extraEntries

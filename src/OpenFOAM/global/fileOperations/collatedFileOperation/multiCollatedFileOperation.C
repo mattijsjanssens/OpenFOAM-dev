@@ -60,7 +60,7 @@ Foam::labelList Foam::fileOperations::multiCollatedFileOperation::writeRanks()
     labelList writeRanks;
     if (!Pstream::parRun())
     {
-        string writeRanksString(getEnv("writeRanks"));
+        string writeRanksString(getEnv("FOAM_IORANKS"));
         if (!writeRanksString.empty())
         {
             IStringStream is(writeRanksString);
@@ -78,7 +78,7 @@ Foam::labelList Foam::fileOperations::multiCollatedFileOperation::subRanks
 {
     DynamicList<label> subRanks(64);
 
-    string writeRanksString(getEnv("writeRanks"));
+    string writeRanksString(getEnv("FOAM_IORANKS"));
     if (!writeRanksString.empty())
     {
         IStringStream is(writeRanksString);
@@ -183,7 +183,7 @@ multiCollatedFileOperationInitialise(int& argc, char**& argv)
     collatedFileOperationInitialise(argc, argv)
 {
     // Filter out any of my arguments
-    const string s("-writeRanks");
+    const string s("-ioRanks");
 
     int index = -1;
     for (int i=1; i<argc-1; i++)
@@ -191,7 +191,7 @@ multiCollatedFileOperationInitialise(int& argc, char**& argv)
         if (argv[i] == s)
         {
             index = i;
-            setEnv("writeRanks", argv[i+1], true);
+            setEnv("FOAM_IORANKS", argv[i+1], true);
             break;
         }
     }

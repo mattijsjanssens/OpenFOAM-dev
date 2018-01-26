@@ -193,12 +193,12 @@ Foam::fileOperations::masterUncollatedFileOperation::filePathInfo
 
     if (io.instance().isAbsolute())
     {
-        fileName objectPath = io.instance()/io.name();
+        fileName objPath = io.instance()/io.name();
 
-        if (!missingDir(objectPath) && isFileOrDir(isFile, objectPath))
+        if (!missingDir(objPath) && isFileOrDir(isFile, objPath))
         {
             searchType = fileOperation::ABSOLUTE;
-            return objectPath;
+            return objPath;
         }
         else
         {
@@ -210,6 +210,9 @@ Foam::fileOperations::masterUncollatedFileOperation::filePathInfo
     {
         // 1. Check the writing fileName
         fileName writePath(fileOperation::objectPath(io, io.headerClassName()));
+
+DebugVar(io.objectPath());
+DebugVar(writePath);
 
         if (!missingDir(writePath) && isFileOrDir(isFile, writePath))
         {
@@ -223,36 +226,36 @@ Foam::fileOperations::masterUncollatedFileOperation::filePathInfo
         if (io.time().processorCase())
         {
 //             // 2a. Check processorsDDD/
-//             fileName objectPath =
+//             fileName objPath =
 //                 processorsPath(io, io.instance(), actualProcsDir)/io.name();
 //             if
 //             (
-//                 objectPath != writePath
-//             && !missingDir(objectPath)
-//             &&  isFileOrDir(isFile, objectPath)
+//                 objPath != writePath
+//             && !missingDir(objPath)
+//             &&  isFileOrDir(isFile, objPath)
 //             )
 //             {
 //                 procsDir = actualProcsDir;
 //                 searchType = fileOperation::PROCESSORSOBJECT;
-//                 return objectPath;
+//                 return objPath;
 //             }
 // 
 //             // 2b. Check processors/
 //             if (processorsBaseDir != actualProcsDir)
 //             {
-//                 fileName objectPath =
+//                 fileName objPath =
 //                     processorsPath(io, io.instance(), processorsBaseDir)
 //                    /io.name();
 //                 if
 //                 (
-//                     objectPath != writePath
-//                 && !missingDir(objectPath)
-//                 &&  isFileOrDir(isFile, objectPath)
+//                     objPath != writePath
+//                 && !missingDir(objPath)
+//                 &&  isFileOrDir(isFile, objPath)
 //                 )
 //                 {
 //                     procsDir = processorsBaseDir;
 //                     searchType = fileOperation::PROCESSORSBASEOBJECT;
-//                     return objectPath;
+//                     return objPath;
 //                 }
 //             }
 // 
@@ -263,36 +266,37 @@ Foam::fileOperations::masterUncollatedFileOperation::filePathInfo
 //             );
 //             if (oldProcsDir != actualProcsDir)
 //             {
-//                 fileName objectPath =
+//                 fileName objPath =
 //                     processorsPath(io, io.instance(), oldProcsDir)
 //                    /io.name();
 //                 if
 //                 (
-//                     objectPath != writePath
-//                 && !missingDir(objectPath)
-//                 &&  isFileOrDir(isFile, objectPath)
+//                     objPath != writePath
+//                 && !missingDir(objPath)
+//                 &&  isFileOrDir(isFile, objPath)
 //                 )
 //                 {
 //                     procsDir = oldProcsDir;
 //                     searchType = fileOperation::PROCESSORSOBJECT;
-//                     return objectPath;
+//                     return objPath;
 //                 }
 //             }
 
-            if (procsDir_.valid() && !procsDir_().empty())
+            fileName pDir(lookupProcessorsPath(io.objectPath()));
+            if (!pDir.empty())
             {
-                fileName objectPath =
-                    processorsPath(io, io.instance(), procsDir_())
+                fileName objPath =
+                    processorsPath(io, io.instance(), pDir)
                    /io.name();
                 if
                 (
-                    objectPath != writePath
-                &&  isFileOrDir(isFile, objectPath)
+                    objPath != writePath
+                &&  isFileOrDir(isFile, objPath)
                 )
                 {
-                    procsDir = procsDir_();
+                    procsDir = pDir;
                     searchType = fileOperation::PROCESSORSOBJECT;
-                    return objectPath;
+                    return objPath;
                 }
             }
         }
@@ -396,17 +400,18 @@ Foam::fileOperations::masterUncollatedFileOperation::filePathInfo
 //                     }
 //                 }
 
-                if (procsDir_.valid() && !procsDir_().empty())
+                fileName pDir(lookupProcessorsPath(io.objectPath()));
+                if (!pDir.empty())
                 {
                     fileName fName
                     (
-                        processorsPath(io, newInstancePath, procsDir_())
+                        processorsPath(io, newInstancePath, pDir)
                        /io.name()
                     );
                     if (!missingDir(fName) && isFileOrDir(isFile, fName))
                     {
                         searchType = fileOperation::PROCESSORSINSTANCE;
-                        procsDir = procsDir_();
+                        procsDir = pDir;
                         return fName;
                     }
                 }
@@ -958,6 +963,14 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePath
             procsDir,
             newInstancePath
         );
+
+Pout<< "masterUncollatedFileOperation::filePathInfo :"
+    << " objectPath:" << io.objectPath()
+    << " objPath:" << objPath
+    << " searchType:" << searchType
+    << " procsDir:" << procsDir
+    << endl;
+
     }
 
     // Scatter the information about where the master found the object

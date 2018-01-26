@@ -250,10 +250,12 @@ Foam::fileOperations::collatedFileOperation::collatedFileOperation
 )
 :
     masterUncollatedFileOperation(comm, false),
-    nProcs_(Pstream::nProcs()),
     writer_(maxThreadFileBufferSize, comm),
+    nProcs_(Pstream::nProcs()),
     writeRanks_(writeRanks)
 {
+DebugVar(writeRanks_);
+
     if (Pstream::parRun())
     {
         const List<int>& procs(UPstream::procID(comm_));
@@ -342,6 +344,8 @@ Foam::fileName Foam::fileOperations::collatedFileOperation::objectPath
 ) const
 {
     // Replacement for objectPath
+DebugVar(io.time().processorCase());
+
     if (io.time().processorCase())
     {
         return masterUncollatedFileOperation::objectPath
@@ -541,19 +545,46 @@ Foam::word Foam::fileOperations::collatedFileOperation::processorsDir
     }
     else
     {
+        word procDir(processorsBaseDir+Foam::name(nProcs_));
+
         if (writeRanks_.size())
         {
             // Detect current processor number
             label proci = detectProcessorPath(fName);
 
+DebugVar(proci);
+
             if (proci != -1)
             {
-                return
+                // Find lowest write rank
+                label minProc = 0;
+                label maxProc = nProcs_-1;
+                forAll(writeRanks_, i)
+                {
+                    if (writeRanks_[i] <= proci)
+                    {
+                        minProc = writeRanks_[i];
+                    }
+                    else
+                    {
+                        maxProc = writeRanks_[i]-1;
+                        break;
+                    }
+                }
+
+DebugVar(minProc);
+DebugVar(maxProc);
+
+
+                procDir += 
+                  + "_"
+                  + Foam::name(minProc)
+                  + "-"
+                  + Foam::name(maxProc);
             }
         }
 
-        //return processorsDir_;
-        return processorsBaseDir+Foam::name(nProcs_);
+        return procDir;
     }
 }
 
