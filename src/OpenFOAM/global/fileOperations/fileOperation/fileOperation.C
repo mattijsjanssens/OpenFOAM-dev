@@ -105,10 +105,6 @@ Foam::instantList Foam::fileOperation::sortTimes
     // Read and parse all the entries in the directory
     forAll(dirEntries, i)
     {
-        //IStringStream timeStream(dirEntries[i]);
-        //token timeToken(timeStream);
-
-        //if (timeToken.isNumber() && timeStream.eof())
         scalar timeValue;
         if (readScalar(dirEntries[i].c_str(), timeValue))
         {

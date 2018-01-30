@@ -212,12 +212,6 @@ Foam::fileOperations::collatedFileOperation::collatedFileOperation
     masterUncollatedFileOperation(false),   // use worldComm for now
     writer_(maxThreadFileBufferSize),
     nProcs_(Pstream::nProcs())
-//     processorsDir_
-//     (
-//         Pstream::nProcs() > 1
-//       ? processorsBaseDir+Foam::name(Pstream::nProcs())
-//       : processorsBaseDir
-//     )
 {
     if (verbose)
     {
@@ -281,28 +275,6 @@ Foam::fileOperations::collatedFileOperation::collatedFileOperation
     nProcs_(Pstream::nProcs()),
     ioRanks_(ioRanks)
 {
-//     if (Pstream::parRun())
-//     {
-//         const List<int>& procs(UPstream::procID(comm_));
-// 
-//         processorsDir_ =
-//             processorsBaseDir
-//           + Foam::name(Pstream::nProcs());
-// 
-//         if (procs.size() != Pstream::nProcs())
-//         {
-//             processorsDir_ +=
-//               + "_"
-//               + Foam::name(procs[0])
-//               + "-"
-//               + Foam::name(procs.last());
-//         }
-//     }
-//     else
-//     {
-//         processorsDir_ = processorsBaseDir;
-//     }
-
     if (verbose)
     {
         Info<< "I/O    : " << typeName
@@ -548,9 +520,6 @@ Foam::word Foam::fileOperations::collatedFileOperation::processorsDir
 {
     if (Pstream::parRun())
     {
-        // Already pre-computed in the constructor
-        //return processorsDir_;
-
         const List<int>& procs(UPstream::procID(comm_));
 
         word procDir(processorsBaseDir+Foam::name(Pstream::nProcs()));
@@ -617,9 +586,6 @@ Foam::word Foam::fileOperations::collatedFileOperation::processorsDir
 void Foam::fileOperations::collatedFileOperation::setNProcs(const label nProcs)
 {
     nProcs_ = nProcs;
-
-//     // Changed number of decompositions. Adapt the output directory
-//     processorsDir_ = processorsBaseDir+Foam::name(nProcs);
 
     if (debug)
     {

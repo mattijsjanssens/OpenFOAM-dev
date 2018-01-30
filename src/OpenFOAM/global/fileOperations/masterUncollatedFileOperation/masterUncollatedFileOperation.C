@@ -217,7 +217,10 @@ Foam::fileOperations::masterUncollatedFileOperation::filePathInfo
             if (newInstancePath.size() && newInstancePath != io.instance())
             {
                 // 1. Try processors equivalent
-                tmpNrc<dirIndexList> pDirs(lookupProcessorsPath(io.objectPath()));
+                tmpNrc<dirIndexList> pDirs
+                (
+                    lookupProcessorsPath(io.objectPath())
+                );
                 forAll(pDirs(), i)
                 {
                     const fileName& pDir = pDirs()[i].first();
@@ -952,7 +955,7 @@ Foam::fileOperations::masterUncollatedFileOperation::readObjects
     {
         Pout<< "masterUncollatedFileOperation::readObjects :"
             << " db:" << db.objectPath()
-            << " instance:" << instance << endl;
+            << " local:" << local << " instance:" << instance << endl;
     }
 
     fileNameList objectNames;
@@ -1064,7 +1067,12 @@ bool Foam::fileOperations::masterUncollatedFileOperation::readHeader
             }
         }
         Pstream::scatter(ok, Pstream::msgType(), Pstream::worldComm);
-        Pstream::scatter(io.headerClassName(), Pstream::msgType(), Pstream::worldComm);
+        Pstream::scatter
+        (
+            io.headerClassName(),
+            Pstream::msgType(),
+            Pstream::worldComm
+        );
         Pstream::scatter(io.note(), Pstream::msgType(), Pstream::worldComm);
     }
     else
@@ -1105,7 +1113,12 @@ bool Foam::fileOperations::masterUncollatedFileOperation::readHeader
             }
         }
         ok = scatterList(result, Pstream::msgType(), Pstream::worldComm);
-        io.headerClassName() = scatterList(headerClassName, Pstream::msgType(), Pstream::worldComm);
+        io.headerClassName() = scatterList
+        (
+            headerClassName,
+            Pstream::msgType(),
+            Pstream::worldComm
+        );
         io.note() = scatterList(note, Pstream::msgType(), Pstream::worldComm);
     }
 
@@ -1337,7 +1350,7 @@ Foam::fileOperations::masterUncollatedFileOperation::readStream
             {
                 if (valid)
                 {
-                    DynamicList<label> validProcs(Pstream::nProcs());   //comm_));
+                    DynamicList<label> validProcs(Pstream::nProcs()); //comm_));
                     for
                     (
                         label proci = 0;
@@ -1808,7 +1821,12 @@ Foam::fileOperations::masterUncollatedFileOperation::NewIFstream
                 );
 
                 labelList procs(Pstream::nProcs(Pstream::worldComm)-1);
-                for (label proci = 1; proci < Pstream::nProcs(Pstream::worldComm); proci++)
+                for
+                (
+                    label proci = 1;
+                    proci < Pstream::nProcs(Pstream::worldComm);
+                    proci++
+                )
                 {
                     procs[proci-1] = proci;
                 }
@@ -1817,7 +1835,12 @@ Foam::fileOperations::masterUncollatedFileOperation::NewIFstream
             }
             else
             {
-                for (label proci = 1; proci < Pstream::nProcs(Pstream::worldComm); proci++)
+                for
+                (
+                    label proci = 1;
+                    proci < Pstream::nProcs(Pstream::worldComm);
+                    proci++
+                )
                 {
                     IOstream::compressionType cmp
                     (

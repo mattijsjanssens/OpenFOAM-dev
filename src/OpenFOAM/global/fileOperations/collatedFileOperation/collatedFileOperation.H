@@ -76,10 +76,6 @@ protected:
             const labelList ioRanks_;
 
 
-//         //- Actual name of output processors dir (parallel only)
-//         word processorsDir_;
-
-
    // Private Member Functions
 
         //- Is proci master of communicator (in parallel) or master of
@@ -155,15 +151,9 @@ public:
 
             //- Actual name of processors dir
             virtual word processorsDir(const IOobject&) const;
-//             {
-//                 return processorsDir_;
-//             }
 
             //- Actual name of processors dir
             virtual word processorsDir(const fileName&) const;
-//             {
-//                 return processorsDir_;
-//             }
 
             //- Set number of processor directories/results. Only used in
             //  decomposePar

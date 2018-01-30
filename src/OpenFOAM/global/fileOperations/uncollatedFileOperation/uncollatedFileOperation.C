@@ -111,26 +111,19 @@ Foam::fileName Foam::fileOperations::uncollatedFileOperation::filePathInfo
             // Check if parallel "procesors" directory
             if (io.time().processorCase())
             {
-                const word actualProcsDir(processorsDir(io));
-
-                fileName path =
-                    processorsPath(io, io.instance(), actualProcsDir);
-                fileName objectPath = path/io.name();
-
-                if (isFileOrDir(isFile, objectPath))
+                tmpNrc<dirIndexList> pDirs
+                (
+                    lookupProcessorsPath(io.objectPath())
+                );
+                forAll(pDirs(), i)
                 {
-                    return objectPath;
-                }
-
-                if (processorsBaseDir != actualProcsDir)
-                {
-                    fileName path =
-                        processorsPath(io, io.instance(), processorsBaseDir);
-                    fileName objectPath = path/io.name();
-
-                    if (isFileOrDir(isFile, objectPath))
+                    const fileName& pDir = pDirs()[i].first();
+                    fileName objPath =
+                        processorsPath(io, io.instance(), pDir)
+                       /io.name();
+                    if (objPath != objectPath && isFileOrDir(isFile, objPath))
                     {
-                        return objectPath;
+                        return objPath;
                     }
                 }
             }
@@ -565,6 +558,26 @@ Foam::fileOperations::uncollatedFileOperation::readStream
                 << "could not detect processor number"
                 << " from objectPath:" << io.objectPath()
                 << exit(FatalIOError);
+        }
+
+        // Analyse the fileName for any processor subset. Note: this
+        // should really be part of filePath() which should return
+        // both file and index in file.
+        fileName path, procDir, local;
+        label groupStart, groupSize, nProcs;
+        splitProcessorPath
+        (
+            fName,
+            path,
+            procDir,
+            local,
+            groupStart,
+            groupSize,
+            nProcs
+        );
+        if (groupStart != -1 && groupSize > 0)
+        {
+            proci = proci-groupStart;
         }
 
         // Read data and return as stream
