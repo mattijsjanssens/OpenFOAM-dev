@@ -56,6 +56,7 @@ SourceFiles
 #include "IOstream.H"
 #include "labelList.H"
 #include "FIFOStack.H"
+#include "SubList.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -80,8 +81,7 @@ class OFstreamCollator
             const string data_;
             const labelList sizes_;
 
-            const bool haveSlaveData_;
-            List<char> slaveData_;
+            PtrList<List<char>> slaveData_;
 
             const IOstream::streamFormat format_;
             const IOstream::versionNumber version_;
@@ -95,7 +95,6 @@ class OFstreamCollator
                 const fileName& pathName,
                 const string& data,
                 const labelList& sizes,
-                const bool haveSlaveData,
                 IOstream::streamFormat format,
                 IOstream::versionNumber version,
                 IOstream::compressionType compression,
@@ -107,7 +106,6 @@ class OFstreamCollator
                 pathName_(pathName),
                 data_(data),
                 sizes_(sizes),
-                haveSlaveData_(haveSlaveData),
                 slaveData_(0),
                 format_(format),
                 version_(version),
@@ -118,7 +116,12 @@ class OFstreamCollator
             //- (approximate) size of master + any optional slave data
             off_t size() const
             {
-                return data_.size() + slaveData_.size();
+                off_t sz = data_.size();
+                forAll(slaveData_, i)
+                {
+                    sz += slaveData_[i].size();
+                }
+                return sz;
             }
         };
 
@@ -155,8 +158,7 @@ class OFstreamCollator
             const fileName& fName,
             const string& masterData,
             const labelUList& recvSizes,
-            const bool haveSlaveData,       // (does master) have slave data
-            const UList<char>& slaveData,   // (on master) all slave data
+            const PtrList<SubList<char>>& slaveData,
             IOstream::streamFormat fmt,
             IOstream::versionNumber ver,
             IOstream::compressionType cmp,
