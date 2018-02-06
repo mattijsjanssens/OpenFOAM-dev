@@ -550,7 +550,11 @@ Foam::word Foam::fileOperations::collatedFileOperation::processorsDir
                 label maxProc = nProcs_-1;
                 forAll(ioRanks_, i)
                 {
-                    if (ioRanks_[i] <= proci)
+                    if (ioRanks_[i] >= nProcs_)
+                    {
+                        break;
+                    }
+                    else if (ioRanks_[i] <= proci)
                     {
                         minProc = ioRanks_[i];
                     }
@@ -560,7 +564,6 @@ Foam::word Foam::fileOperations::collatedFileOperation::processorsDir
                         break;
                     }
                 }
-
                 procDir += 
                   + "_"
                   + Foam::name(minProc)
