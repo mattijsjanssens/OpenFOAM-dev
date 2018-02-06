@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2012-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2012-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -50,25 +50,25 @@ const Foam::Vector<Foam::vector> Foam::triad::vsType::one
 template<>
 const Foam::Vector<Foam::vector> Foam::triad::vsType::max
 (
-    triad::uniform(vector::uniform(VGREAT))
+    triad::uniform(vector::uniform(vGreat))
 );
 
 template<>
 const Foam::Vector<Foam::vector> Foam::triad::vsType::min
 (
-    triad::uniform(vector::uniform(-VGREAT))
+    triad::uniform(vector::uniform(-vGreat))
 );
 
 template<>
 const Foam::Vector<Foam::vector> Foam::triad::vsType::rootMax
 (
-    triad::uniform(vector::uniform(ROOTVGREAT))
+    triad::uniform(vector::uniform(rootVGreat))
 );
 
 template<>
 const Foam::Vector<Foam::vector> Foam::triad::vsType::rootMin
 (
-    triad::uniform(vector::uniform(-ROOTVGREAT))
+    triad::uniform(vector::uniform(-rootVGreat))
 );
 
 const Foam::triad Foam::triad::I
@@ -80,7 +80,7 @@ const Foam::triad Foam::triad::I
 
 const Foam::triad Foam::triad::unset
 (
-    triad::uniform(vector::uniform(VGREAT))
+    triad::uniform(vector::uniform(vGreat))
 );
 
 
@@ -132,9 +132,18 @@ void Foam::triad::orthogonalize()
     {
         for (int i=0; i<2; i++)
         {
-            scalar o01 = mag(operator[](0) & operator[](1));
-            scalar o02 = mag(operator[](0) & operator[](2));
-            scalar o12 = mag(operator[](1) & operator[](2));
+            const scalar o01
+            (
+                (set(0) && set(1)) ? mag(operator[](0) & operator[](1)) : vGreat
+            );
+            const scalar o02
+            (
+                (set(0) && set(2)) ? mag(operator[](0) & operator[](2)) : vGreat
+            );
+            const scalar o12
+            (
+                (set(1) && set(2)) ? mag(operator[](1) & operator[](2)) : vGreat
+            );
 
             if (o01 < o02 && o01 < o12)
             {
@@ -407,7 +416,7 @@ Foam::scalar Foam::diff(const triad& A, const triad& B)
 
         scalar cosPhi =
             (tmpA[dir] & tmpB[dir])
-           /(mag(tmpA[dir])*mag(tmpA[dir]) + SMALL);
+           /(mag(tmpA[dir])*mag(tmpA[dir]) + small);
 
         cosPhi = min(max(cosPhi, -1), 1);
 

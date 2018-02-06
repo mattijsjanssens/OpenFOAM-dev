@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -878,11 +878,11 @@ Foam::polyMesh::cellTree() const
     {
         treeBoundBox overallBb(points());
 
-        Random rndGen(261782);
+        static Random rndGen(261782);
 
         overallBb = overallBb.extend(rndGen, 1e-4);
-        overallBb.min() -= point(ROOTVSMALL, ROOTVSMALL, ROOTVSMALL);
-        overallBb.max() += point(ROOTVSMALL, ROOTVSMALL, ROOTVSMALL);
+        overallBb.min() -= point(rootVSmall, rootVSmall, rootVSmall);
+        overallBb.max() += point(rootVSmall, rootVSmall, rootVSmall);
 
         cellTreePtr_.reset
         (

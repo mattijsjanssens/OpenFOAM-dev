@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -30,42 +30,27 @@ License
 
 void Foam::plane::calcPntAndVec(const scalarList& C)
 {
-    if (mag(C[0]) > VSMALL)
-    {
-        point_ = vector((-C[3]/C[0]), 0, 0);
-    }
-    else
-    {
-        if (mag(C[1]) > VSMALL)
-        {
-            point_ = vector(0, (-C[3]/C[1]), 0);
-        }
-        else
-        {
-            if (mag(C[2]) > VSMALL)
-            {
-                point_ = vector(0, 0, (-C[3]/C[2]));
-            }
-            else
-            {
-                FatalErrorInFunction
-                    << "At least one plane coefficient must have a value"
-                    << abort(FatalError);
-            }
-        }
-    }
-
     normal_ = vector(C[0], C[1], C[2]);
-    scalar magUnitVector(mag(normal_));
 
-    if (magUnitVector < VSMALL)
+    const scalar magNormal = mag(normal_);
+
+    if (magNormal == 0)
     {
         FatalErrorInFunction
-            << "Plane normal defined with zero length"
+            << "Plane normal has zero length"
             << abort(FatalError);
     }
 
-    normal_ /= magUnitVector;
+    normal_ /= magNormal;
+
+    if (magNormal < mag(C[3])*vSmall)
+    {
+        FatalErrorInFunction
+            << "Plane is too far from the origin"
+            << abort(FatalError);
+    }
+
+    point_ = - C[3]/magNormal*normal_;
 }
 
 
@@ -82,9 +67,9 @@ void Foam::plane::calcPntAndVec
 
     if
     (
-        mag(line12) < VSMALL
-     || mag(line23) < VSMALL
-     || mag(point3-point1) < VSMALL
+        mag(line12) < vSmall
+     || mag(line23) < vSmall
+     || mag(point3-point1) < vSmall
     )
     {
         FatalErrorInFunction
@@ -95,7 +80,7 @@ void Foam::plane::calcPntAndVec
     normal_ = line12 ^ line23;
     scalar magUnitVector(mag(normal_));
 
-    if (magUnitVector < VSMALL)
+    if (magUnitVector < vSmall)
     {
         FatalErrorInFunction
             << "Plane normal defined with zero length" << nl
@@ -116,7 +101,7 @@ Foam::plane::plane(const vector& normalVector)
 {
     scalar magUnitVector(mag(normal_));
 
-    if (magUnitVector > VSMALL)
+    if (magUnitVector > vSmall)
     {
         normal_ /= magUnitVector;
     }
@@ -136,7 +121,7 @@ Foam::plane::plane(const point& basePoint, const vector& normalVector)
 {
     scalar magUnitVector(mag(normal_));
 
-    if (magUnitVector > VSMALL)
+    if (magUnitVector > vSmall)
     {
         normal_ /= magUnitVector;
     }
@@ -230,7 +215,7 @@ Foam::plane::plane(Istream& is)
 {
     scalar magUnitVector(mag(normal_));
 
-    if (magUnitVector > VSMALL)
+    if (magUnitVector > vSmall)
     {
         normal_ /= magUnitVector;
     }
@@ -322,9 +307,10 @@ Foam::scalar Foam::plane::normalIntersect
     const vector& dir
 ) const
 {
-    scalar denom = stabilise((dir & normal_), VSMALL);
+    const scalar num = (point_ - pnt0) & normal_;
+    const scalar den = dir & normal_;
 
-    return ((point_ - pnt0) & normal_)/denom;
+    return mag(den) > mag(num)*vSmall ? num/den : vGreat;
 }
 
 

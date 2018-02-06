@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2017 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2017-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -67,6 +67,36 @@ Usage
     }
     \endverbatim
 
+    Example usage with graduated onset:
+    \verbatim
+    verticalDamping1
+    {
+        type            verticalDamping;
+
+        selectionMode   all;
+
+        // Define the line along which to apply the graduation
+        origin          (1200 0 0);
+        direction       (1 0 0);
+
+        // Or, define multiple lines
+        //origins         ((1200 0 0) (1200 -300 0) (1200 300 0));
+        //directions      ((1 0 0) (0 -1 0) (0 1 0));
+
+        ramp
+        {
+            type        halfCosineRamp;
+            start       0;
+            duration    600;
+        }
+
+        lambda          [0 0 -1 0 0 0 0] 1; // Damping coefficient
+
+        timeStart       0;
+        duration        1e6;
+    }
+    \endverbatim
+
 SourceFiles
     verticalDamping.C
 
@@ -81,6 +111,9 @@ SourceFiles
 
 namespace Foam
 {
+
+template<class Type> class Function1;
+
 namespace fv
 {
 
@@ -98,6 +131,15 @@ private:
 
         //- Damping coefficient [1/s]
         dimensionedScalar lambda_;
+
+        //- The ramping function
+        autoPtr<Function1<scalar>> ramp_;
+
+        //- Origins of the ramping coordinate
+        vectorField origins_;
+
+        //- Directions of increasing ramping coordinate
+        vectorField directions_;
 
 
     // Private Member Functions

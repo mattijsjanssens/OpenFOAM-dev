@@ -19,8 +19,7 @@ forAll(phases, phasei)
             1.0
            /(
                UEqns[phasei].A()
-             + max(phase.residualAlpha() - alpha, scalar(0))
-              *phase.rho()/runTime.deltaT()
+             + byDt(max(phase.residualAlpha() - alpha, scalar(0))*phase.rho())
             )
         )
     );
@@ -118,8 +117,8 @@ while (pimple.correct())
             rAUs[phasei]
            *(
                 UEqns[phasei].H()
-              + max(phase.residualAlpha() - alpha, scalar(0))
-               *phase.rho()*phase.U().oldTime()/runTime.deltaT()
+              + byDt(max(phase.residualAlpha() - alpha, scalar(0))*phase.rho())
+               *phase.U().oldTime()
             );
     }
 
@@ -207,12 +206,12 @@ while (pimple.correct())
               + phiCorrCoeff
                *fvc::interpolate
                 (
-                    alpha.oldTime()*phase.rho()().oldTime()*rAUs[phasei]
+                    byDt(alpha.oldTime()*phase.rho()().oldTime()*rAUs[phasei])
                 )
                *(
                    MRF.absolute(phase.phi().oldTime())
                  - fvc::flux(phase.U().oldTime())
-                )/runTime.deltaT()
+                )
               - phigFs[phasei]
             )
         );
@@ -228,21 +227,15 @@ while (pimple.correct())
 
             const phasePair& pair(fluid.phasePairs()[KdIter.key()]);
 
-            const phaseModel* phase1 = &pair.phase1();
-            const phaseModel* phase2 = &pair.phase2();
-
-            forAllConstIter(phasePair, pair, iter)
+            if (pair.contains(phase))
             {
-                if (phase1 == &phase)
-                {
-                    phiHbyAs[phasei] +=
-                        fvc::interpolate(rAUs[phasei]*K)
-                       *MRF.absolute(phase2->phi());
+                const phaseModel& otherPhase = pair.otherPhase(phase);
 
-                    HbyAs[phasei] += rAUs[phasei]*K*phase2->U();
-                }
+                phiHbyAs[phasei] +=
+                    fvc::interpolate(rAUs[phasei]*K)
+                   *MRF.absolute(otherPhase.phi());
 
-                Swap(phase1, phase2);
+                HbyAs[phasei] += rAUs[phasei]*K*otherPhase.U();
             }
         }
 
@@ -331,10 +324,6 @@ while (pimple.correct())
                     ).ptr()
                 );
 
-                deleteDemandDrivenData
-                (
-                    pEqnComps[phasei].faceFluxCorrectionPtr()
-                );
                 pEqnComps[phasei].relax();
             }
             else

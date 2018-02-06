@@ -98,6 +98,12 @@ void Foam::twoPhaseMixtureThermo::correct()
 }
 
 
+Foam::word Foam::twoPhaseMixtureThermo::thermoName() const
+{
+    return thermo1_->thermoName() + ',' + thermo2_->thermoName();
+}
+
+
 bool Foam::twoPhaseMixtureThermo::incompressible() const
 {
     return thermo1_->incompressible() && thermo2_->incompressible();
@@ -272,6 +278,12 @@ Foam::tmp<Foam::scalarField> Foam::twoPhaseMixtureThermo::CpByCpv
     return
         alpha1().boundaryField()[patchi]*thermo1_->CpByCpv(p, T, patchi)
       + alpha2().boundaryField()[patchi]*thermo2_->CpByCpv(p, T, patchi);
+}
+
+
+Foam::tmp<Foam::volScalarField> Foam::twoPhaseMixtureThermo::W() const
+{
+    return alpha1()*thermo1_->W() + alpha2()*thermo1_->W();
 }
 
 

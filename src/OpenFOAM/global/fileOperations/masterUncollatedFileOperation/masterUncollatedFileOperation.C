@@ -554,10 +554,6 @@ mode_t Foam::fileOperations::masterUncollatedFileOperation::mode
     const bool followLink
 ) const
 {
-//     if (missingDir(fName))
-//     {
-//         return 0;
-//     }
     return masterOp<mode_t, modeOp>(fName, modeOp(followLink));
 }
 
@@ -568,10 +564,6 @@ Foam::fileName::Type Foam::fileOperations::masterUncollatedFileOperation::type
     const bool followLink
 ) const
 {
-//     if (missingDir(fName))
-//     {
-//         return fileName::UNDEFINED;
-//     }
     return fileName::Type(masterOp<label, typeOp>(fName, typeOp(followLink)));
 }
 
@@ -583,10 +575,6 @@ bool Foam::fileOperations::masterUncollatedFileOperation::exists
     const bool followLink
 ) const
 {
-//     if (missingDir(fName))
-//     {
-//         return false;
-//     }
     return masterOp<bool, existsOp>(fName, existsOp(checkGzip, followLink));
 }
 
@@ -597,10 +585,6 @@ bool Foam::fileOperations::masterUncollatedFileOperation::isDir
     const bool followLink
 ) const
 {
-//     if (missingDir(fName))
-//     {
-//         return false;
-//     }
     return masterOp<bool, isDirOp>(fName, isDirOp(followLink));
 }
 
@@ -612,10 +596,6 @@ bool Foam::fileOperations::masterUncollatedFileOperation::isFile
     const bool followLink
 ) const
 {
-//     if (missingDir(fName))
-//     {
-//         return false;
-//     }
     return masterOp<bool, isFileOp>(fName, isFileOp(checkGzip, followLink));
 }
 
@@ -694,18 +674,11 @@ Foam::fileNameList Foam::fileOperations::masterUncollatedFileOperation::readDir
     const bool followLink
 ) const
 {
-//     if (missingDir(dir))
-//     {
-//         return fileNameList();
-//     }
-//     else
-    {
-        return masterOp<fileNameList, readDirOp>
-        (
-            dir,
-            readDirOp(type, filtergz, followLink)
-        );
-    }
+    return masterOp<fileNameList, readDirOp>
+    (
+        dir,
+        readDirOp(type, filtergz, followLink)
+    );
 }
 
 
@@ -817,19 +790,11 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePath
             // Retest all processors separately since some processors might
             // have the file and some not (e.g. lagrangian data)
 
-            objPath = io.objectPath();
-//             if (missingDir(objPath))
-//             {
-//                 objPath = "";
-//             }
-//             else
-            {
-                objPath = masterOp<fileName, fileOrNullOp>
-                (
-                    objPath,
-                    fileOrNullOp(true)
-                );
-            }
+            objPath = masterOp<fileName, fileOrNullOp>
+            (
+                io.objectPath(),
+                fileOrNullOp(true)
+            );
         }
         break;
     }
@@ -914,19 +879,11 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::dirPath
         {
             // Retest all processors separately since some processors might
             // have the file and some not (e.g. lagrangian data)
-            objPath = io.objectPath();
-//             if (missingDir(objPath))
-//             {
-//                 objPath = "";
-//             }
-//             else
-            {
-                objPath = masterOp<fileName, fileOrNullOp>
-                (
-                    objPath,
-                    fileOrNullOp(false)
-                );
-            }
+            objPath = masterOp<fileName, fileOrNullOp>
+            (
+                io.objectPath(),
+                fileOrNullOp(false)
+            );
         }
         break;
     }

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2015-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2015-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -85,11 +85,29 @@ public:
         typedef
             HashPtrTable
             <
+                surfaceScalarField,
+                phasePairKey,
+                phasePairKey::hash
+            >
+            KdfTable;
+
+        typedef
+            HashPtrTable
+            <
                 volScalarField,
                 phasePairKey,
                 phasePairKey::hash
             >
             VmTable;
+
+        typedef
+            HashPtrTable
+            <
+                surfaceScalarField,
+                phasePairKey,
+                phasePairKey::hash
+            >
+            VmfTable;
 
         typedef
             HashPtrTable
@@ -334,6 +352,9 @@ public:
         //- Solve for the phase fractions
         virtual void solve();
 
+        //- Return the total interfacial mass transfer rate for a phase
+        virtual tmp<volScalarField> dmdt(const phaseModel& phase) const;
+
         //- Correct the fluid properties other than the thermo and turbulence
         virtual void correct();
 
@@ -353,6 +374,11 @@ public:
         virtual bool read();
 };
 
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+tmp<volScalarField> byDt(const volScalarField& vf);
+tmp<surfaceScalarField> byDt(const surfaceScalarField& sf);
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

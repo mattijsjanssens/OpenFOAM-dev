@@ -251,6 +251,9 @@ public:
         //- Update properties
         virtual void correct() = 0;
 
+        //- Return the name of the thermo physics
+        virtual word thermoName() const = 0;
+
         //- Return true if the equation of state is incompressible
         //  i.e. rho != f(p)
         virtual bool incompressible() const = 0;
@@ -397,6 +400,9 @@ public:
                 const scalarField& T,
                 const label patchi
             ) const = 0;
+
+            //- Molecular weight [kg/kmol]
+            virtual tmp<volScalarField> W() const = 0;
 
 
         // Access to transport state variables

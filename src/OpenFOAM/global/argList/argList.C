@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -29,7 +29,7 @@ License
 #include "IFstream.H"
 #include "dictionary.H"
 #include "IOobject.H"
-#include "JobInfo.H"
+#include "jobInfo.H"
 #include "labelList.H"
 #include "regIOobject.H"
 #include "dynamicCode.H"
@@ -40,7 +40,6 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-bool Foam::argList::bannerEnabled = true;
 Foam::SLList<Foam::string>    Foam::argList::validArgs;
 Foam::HashTable<Foam::string> Foam::argList::validOptions;
 Foam::HashTable<Foam::string> Foam::argList::validParOptions;
@@ -143,12 +142,6 @@ void Foam::argList::removeOption(const word& opt)
 {
     validOptions.erase(opt);
     optionUsage.erase(opt);
-}
-
-
-void Foam::argList::noBanner()
-{
-    bannerEnabled = false;
 }
 
 
@@ -586,7 +579,7 @@ void Foam::argList::parse
         string timeString = clock::clockTime();
 
         // Print the banner once only for parallel runs
-        if (Pstream::master() && bannerEnabled)
+        if (Pstream::master() && writeInfoHeader)
         {
             IOobject::writeBanner(Info, true)
                 << "Build  : " << Foam::FOAMbuild << nl
@@ -597,15 +590,15 @@ void Foam::argList::parse
                 << "PID    : " << pid() << endl;
         }
 
-        jobInfo.add("startDate", dateString);
-        jobInfo.add("startTime", timeString);
-        jobInfo.add("userName", userName());
-        jobInfo.add("foamVersion", word(FOAMversion));
-        jobInfo.add("code", executable_);
-        jobInfo.add("argList", argListStr_);
-        jobInfo.add("currentDir", cwd());
-        jobInfo.add("PPID", ppid());
-        jobInfo.add("PGID", pgid());
+        jobInfo_.add("startDate", dateString);
+        jobInfo_.add("startTime", timeString);
+        jobInfo_.add("userName", userName());
+        jobInfo_.add("foamVersion", word(FOAMversion));
+        jobInfo_.add("code", executable_);
+        jobInfo_.add("argList", argListStr_);
+        jobInfo_.add("currentDir", cwd());
+        jobInfo_.add("PPID", ppid());
+        jobInfo_.add("PGID", pgid());
 
         // Add build information - only use the first word
         {
@@ -615,7 +608,7 @@ void Foam::argList::parse
             {
                 build.resize(found);
             }
-            jobInfo.add("foamBuild", build);
+            jobInfo_.add("foamBuild", build);
         }
     }
 
@@ -644,7 +637,7 @@ void Foam::argList::parse
             fileOperation::New
             (
                 handlerType,
-                bannerEnabled
+                writeInfoHeader
             )
         );
         Foam::fileHandler(handler);
@@ -896,7 +889,7 @@ void Foam::argList::parse
     }
 
 
-    if (Pstream::master() && bannerEnabled)
+    if (Pstream::master() && writeInfoHeader)
     {
         Info<< "Case   : " << (rootPath_/globalCase_).c_str() << nl
             << "nProcs : " << nProcs << endl;
@@ -920,27 +913,27 @@ void Foam::argList::parse
 
     if (initialise)
     {
-        jobInfo.add("root", rootPath_);
-        jobInfo.add("case", globalCase_);
-        jobInfo.add("nProcs", nProcs);
+        jobInfo_.add("root", rootPath_);
+        jobInfo_.add("case", globalCase_);
+        jobInfo_.add("nProcs", nProcs);
         if (slaveProcs.size())
         {
-            jobInfo.add("slaves", slaveProcs);
+            jobInfo_.add("slaves", slaveProcs);
         }
         if (roots.size())
         {
-            jobInfo.add("roots", roots);
+            jobInfo_.add("roots", roots);
         }
-        jobInfo.write();
+        jobInfo_.write(executable_, rootPath_/globalCase_);
 
         // Switch on signal trapping. We have to wait until after Pstream::init
         // since this sets up its own ones.
-        sigFpe_.set(bannerEnabled);
-        sigInt_.set(bannerEnabled);
-        sigQuit_.set(bannerEnabled);
-        sigSegv_.set(bannerEnabled);
+        sigFpe_.set(writeInfoHeader);
+        sigInt_.set(writeInfoHeader);
+        sigQuit_.set(writeInfoHeader);
+        sigSegv_.set(writeInfoHeader);
 
-        if (bannerEnabled)
+        if (writeInfoHeader)
         {
             Info<< "fileModificationChecking : "
                 << "Monitoring run-time modified files using "
@@ -977,7 +970,7 @@ void Foam::argList::parse
             }
         }
 
-        if (Pstream::master() && bannerEnabled)
+        if (Pstream::master() && writeInfoHeader)
         {
             Info<< endl;
             IOobject::writeDivider(Info);
@@ -990,7 +983,7 @@ void Foam::argList::parse
 
 Foam::argList::~argList()
 {
-    jobInfo.end();
+    jobInfo_.end();
 
     // Delete file handler to flush any remaining IO
     autoPtr<fileOperation> dummy(nullptr);

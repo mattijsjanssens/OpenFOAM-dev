@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -118,6 +118,12 @@ public:
         composition() const
         {
             return *this;
+        }
+
+        //- Return the name of the thermo physics
+        virtual word thermoName() const
+        {
+            return MixtureType::thermoType::typeName();
         }
 
         //- Return true if the equation of state is incompressible
@@ -252,6 +258,9 @@ public:
                 const scalarField& T,
                 const label patchi
             ) const;
+
+            //- Molecular weight [kg/kmol]
+            virtual tmp<volScalarField> W() const;
 
 
         // Fields derived from transport state variables

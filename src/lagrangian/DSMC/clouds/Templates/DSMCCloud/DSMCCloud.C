@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -55,7 +55,7 @@ void Foam::DSMCCloud<ParcelType>::buildConstProps()
         const dictionary& molDict(moleculeProperties.subDict(id));
 
         constProps_[i] =
-        typename ParcelType::constantProperties::constantProperties(molDict);
+        typename ParcelType::constantProperties(molDict);
     }
 }
 
@@ -386,12 +386,12 @@ void Foam::DSMCCloud<ParcelType>::resetFields()
         Zero
     );
 
-    rhoN_ = dimensionedScalar("zero",  dimensionSet(0, -3, 0, 0, 0), VSMALL);
-    rhoM_ =  dimensionedScalar("zero",  dimensionSet(1, -3, 0, 0, 0), VSMALL);
+    rhoN_ = dimensionedScalar("zero",  dimensionSet(0, -3, 0, 0, 0), vSmall);
+    rhoM_ =  dimensionedScalar("zero",  dimensionSet(1, -3, 0, 0, 0), vSmall);
     dsmcRhoN_ = dimensionedScalar("zero",  dimensionSet(0, -3, 0, 0, 0), 0.0);
     linearKE_ = dimensionedScalar("zero",  dimensionSet(1, -1, -2, 0, 0), 0.0);
     internalE_ = dimensionedScalar("zero",  dimensionSet(1, -1, -2, 0, 0), 0.0);
-    iDof_ = dimensionedScalar("zero",  dimensionSet(0, -3, 0, 0, 0), VSMALL);
+    iDof_ = dimensionedScalar("zero",  dimensionSet(0, -3, 0, 0, 0), vSmall);
 
     momentum_ = dimensionedVector
     (
@@ -791,7 +791,7 @@ Foam::DSMCCloud<ParcelType>::DSMCCloud
             IOobject::NO_WRITE
         ),
         mesh_,
-        dimensionedScalar("zero",  dimensionSet(0, -3, 0, 0, 0), VSMALL)
+        dimensionedScalar("zero",  dimensionSet(0, -3, 0, 0, 0), vSmall)
     ),
     rhoM_
     (
@@ -804,7 +804,7 @@ Foam::DSMCCloud<ParcelType>::DSMCCloud
             IOobject::NO_WRITE
         ),
         mesh_,
-        dimensionedScalar("zero",  dimensionSet(1, -3, 0, 0, 0), VSMALL)
+        dimensionedScalar("zero",  dimensionSet(1, -3, 0, 0, 0), vSmall)
     ),
     dsmcRhoN_
     (
@@ -856,7 +856,7 @@ Foam::DSMCCloud<ParcelType>::DSMCCloud
             IOobject::NO_WRITE
         ),
         mesh_,
-        dimensionedScalar("zero",  dimensionSet(0, -3, 0, 0, 0), VSMALL)
+        dimensionedScalar("zero",  dimensionSet(0, -3, 0, 0, 0), vSmall)
     ),
     momentum_
     (
@@ -1034,11 +1034,11 @@ Foam::scalar Foam::DSMCCloud<ParcelType>::equipartitionInternalEnergy
 {
     scalar Ei = 0.0;
 
-    if (iDof < SMALL)
+    if (iDof == 0)
     {
         return Ei;
     }
-    else if (iDof < 2.0 + SMALL && iDof > 2.0 - SMALL)
+    else if (iDof == 2)
     {
         // Special case for iDof = 2, i.e. diatomics;
         Ei = -log(rndGen_.scalar01())*physicoChemical::k.value()*temperature;

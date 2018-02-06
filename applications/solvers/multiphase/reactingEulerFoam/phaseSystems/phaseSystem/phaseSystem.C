@@ -28,6 +28,7 @@ License
 #include "aspectRatioModel.H"
 #include "surfaceInterpolate.H"
 #include "fvcDdt.H"
+#include "localEulerDdtScheme.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -282,6 +283,30 @@ void Foam::phaseSystem::solve()
 {}
 
 
+Foam::tmp<Foam::volScalarField> Foam::phaseSystem::dmdt
+(
+const Foam::phaseModel& phase
+) const
+{
+    tmp<volScalarField> tDmdt
+    (
+        new volScalarField
+        (
+            IOobject
+            (
+                IOobject::groupName("dmdt", phase.name()),
+                this->mesh_.time().timeName(),
+                this->mesh_
+            ),
+            this->mesh_,
+            dimensionedScalar("zero", dimDensity/dimTime, 0)
+        )
+    );
+
+    return tDmdt;
+}
+
+
 void Foam::phaseSystem::correct()
 {
     forAll(phaseModels_, phasei)
@@ -355,6 +380,32 @@ bool Foam::phaseSystem::read()
     else
     {
         return false;
+    }
+}
+
+
+Foam::tmp<Foam::volScalarField> Foam::byDt(const volScalarField& vf)
+{
+    if (fv::localEulerDdt::enabled(vf.mesh()))
+    {
+        return fv::localEulerDdt::localRDeltaT(vf.mesh())*vf;
+    }
+    else
+    {
+        return vf/vf.mesh().time().deltaT();
+    }
+}
+
+
+Foam::tmp<Foam::surfaceScalarField> Foam::byDt(const surfaceScalarField& sf)
+{
+    if (fv::localEulerDdt::enabled(sf.mesh()))
+    {
+        return fv::localEulerDdt::localRDeltaTf(sf.mesh())*sf;
+    }
+    else
+    {
+        return sf/sf.mesh().time().deltaT();
     }
 }
 

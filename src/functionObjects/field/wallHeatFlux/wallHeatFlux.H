@@ -25,7 +25,7 @@ Class
     Foam::functionObjects::wallHeatFlux
 
 Group
-    grpForcesFunctionObjects
+    grpFieldFunctionObjects
 
 Description
     Calculates and write the heat-flux at wall patches as the
@@ -63,7 +63,6 @@ See also
     Foam::functionObjects::fvMeshFunctionObject
     Foam::functionObjects::logFiles
     Foam::functionObjects::writeLocalObjects
-    Foam::functionObjects::pressureTools
     Foam::functionObjects::timeControl
 
 SourceFiles
@@ -77,8 +76,8 @@ SourceFiles
 #include "fvMeshFunctionObject.H"
 #include "logFiles.H"
 #include "writeLocalObjects.H"
-#include "volFieldsFwd.H"
 #include "HashSet.H"
+#include "volFieldsFwd.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -127,7 +127,7 @@ void Foam::ThermoParcel<ParcelType>::calcSurfaceValues
     kappas = td.kappaInterp().interpolate(this->coordinates(), tetIs)/TRatio;
 
     Pr = td.Cpc()*mus/kappas;
-    Pr = max(ROOTVSMALL, Pr);
+    Pr = max(rootVSmall, Pr);
 }
 
 
@@ -286,12 +286,12 @@ Foam::scalar Foam::ThermoParcel<ParcelType>::calcHeatTransfer
     ancp /= m*Cp_;
 
     // Integrate to find the new parcel temperature
-    const scalar dtEff = cloud.TIntegrator().dtEff(dt, bcp);
-    const scalar deltaTcp = integrationScheme::delta(T_, dtEff, acp, bcp);
-    const scalar deltaTncp = integrationScheme::delta(T_, dtEff, ancp, 0);
+    const scalar deltaT = cloud.TIntegrator().delta(T_, dt, acp + ancp, bcp);
+    const scalar deltaTncp = ancp*dt;
+    const scalar deltaTcp = deltaT - deltaTncp;
 
     // Calculate the new temperature and the enthalpy transfer terms
-    scalar Tnew = T_ + deltaTcp + deltaTncp;
+    scalar Tnew = T_ + deltaT;
     Tnew = min(max(Tnew, cloud.constProps().TMin()), cloud.constProps().TMax());
 
     dhsTrans -= m*Cp_*deltaTcp;

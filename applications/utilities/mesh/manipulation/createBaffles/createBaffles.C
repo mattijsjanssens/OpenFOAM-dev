@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -364,9 +364,17 @@ void createFaces
         {
             const polyPatch& pp = pbm[patchi];
 
-            label newPatchi = newMasterPatches[i];
+            const label newMasterPatchi = newMasterPatches[i];
+            const label newSlavePatchi = newSlavePatches[i];
 
-            if (pp.coupled() && pbm[newPatchi].coupled())
+            if
+            (
+                pp.coupled()
+             && (
+                    pbm[newMasterPatchi].coupled()
+                 || pbm[newSlavePatchi].coupled()
+                )
+            )
             {
                 // Do not allow coupled faces to be moved to different
                 // coupled patches.
@@ -387,12 +395,14 @@ void createFaces
                                 << "Found boundary face (in patch "
                                 << pp.name()
                                 << ") in faceZone " << fZone.name()
-                                << " to convert to baffle patch "
-                                << pbm[newPatchi].name()
+                                << " to convert to baffle patches "
+                                << pbm[newMasterPatchi].name() << "/"
+                                << pbm[newSlavePatchi].name()
                                 << endl
-                                << "    Run with -internalFacesOnly option"
-                                << " if you don't wish to convert"
-                                << " boundary faces." << endl;
+                                << "    Set internalFacesOnly to true in the"
+                                << " createBaffles control dictionary if you"
+                                << " don't wish to convert boundary faces."
+                                << endl;
                         }
 
                         modifyOrAddFace
@@ -402,11 +412,14 @@ void createFaces
                             facei,                      // label of face
                             mesh.faceOwner()[facei],    // owner
                             false,                      // face flip
-                            newPatchi,                  // patch for face
+                            fZone.flipMap()[zoneFacei]
+                          ? newSlavePatchi
+                          : newMasterPatchi,            // patch for face
                             fZone.index(),              // zone for face
                             fZone.flipMap()[zoneFacei], // face flip in zone
                             modifiedFace                // modify or add
                         );
+
                         nModified++;
                     }
                 }

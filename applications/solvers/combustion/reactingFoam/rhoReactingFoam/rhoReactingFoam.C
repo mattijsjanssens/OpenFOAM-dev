@@ -31,7 +31,8 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "fvCFD.H"
-#include "rhoCombustionModel.H"
+#include "rhoReactionThermo.H"
+#include "CombustionModel.H"
 #include "turbulentFluidThermoModel.H"
 #include "multivariateScheme.H"
 #include "pimpleControl.H"
@@ -50,10 +51,11 @@ int main(int argc, char *argv[])
     #include "createTime.H"
     #include "createMesh.H"
     #include "createControl.H"
-    #include "createTimeControls.H"
     #include "initContinuityErrs.H"
     #include "createFields.H"
     #include "createFieldRefs.H"
+    #include "createRhoUfIfPresent.H"
+    #include "createTimeControls.H"
 
     turbulence->validate();
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -120,7 +120,7 @@ class triSurface
         //  Returns true if any points merged
         bool stitchTriangles
         (
-            const scalar tol = SMALL,
+            const scalar tol = small,
             const bool verbose = false
         );
 
@@ -391,6 +391,12 @@ public:
                 labelList& pointMap,
                 labelList& faceMap
             ) const;
+
+
+        // Conversion
+
+            //- Return the list of triangles as a faceList
+            faceList faces() const;
 
 
         // Write

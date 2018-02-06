@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -179,6 +179,8 @@ const Foam::vector Foam::KinematicParcel<ParcelType>::calcVelocity
     const forceSuSp Fncp = forces.calcNonCoupled(p, ttd, dt, mass, Re, mu);
     const scalar massEff = forces.massEff(p, ttd, mass);
 
+    /*
+    // Proper splitting ...
     // Calculate the integration coefficients
     const vector acp = (Fcp.Sp()*td.Uc() + Fcp.Su())/massEff;
     const vector ancp = (Fncp.Sp()*td.Uc() + Fncp.Su() + Su)/massEff;
@@ -186,12 +188,32 @@ const Foam::vector Foam::KinematicParcel<ParcelType>::calcVelocity
     const scalar bncp = Fncp.Sp()/massEff;
 
     // Integrate to find the new parcel velocity
-    const scalar dtEff = cloud.UIntegrator().dtEff(dt, bcp + bncp);
-    const vector deltaUcp = integrationScheme::delta(U_, dtEff, acp, bcp);
-    const vector deltaUncp = integrationScheme::delta(U_, dtEff, ancp, bncp);
+    const vector deltaUcp =
+        cloud.UIntegrator().partialDelta
+        (
+            U_, dt, acp + ancp, bcp + bncp, acp, bcp
+        );
+    const vector deltaUncp =
+        cloud.UIntegrator().partialDelta
+        (
+            U_, dt, acp + ancp, bcp + bncp, ancp, bncp
+        );
+    const vector deltaT = deltaUcp + deltaUncp;
+    */
+
+    // Shortcut splitting assuming no implicit non-coupled force ...
+    // Calculate the integration coefficients
+    const vector acp = (Fcp.Sp()*td.Uc() + Fcp.Su())/massEff;
+    const vector ancp = (Fncp.Su() + Su)/massEff;
+    const scalar bcp = Fcp.Sp()/massEff;
+
+    // Integrate to find the new parcel velocity
+    const vector deltaU = cloud.UIntegrator().delta(U_, dt, acp + ancp, bcp);
+    const vector deltaUncp = ancp*dt;
+    const vector deltaUcp = deltaU - deltaUncp;
 
     // Calculate the new velocity and the momentum transfer terms
-    vector Unew = U_ + deltaUcp + deltaUncp;
+    vector Unew = U_ + deltaU;
 
     dUTrans -= massEff*deltaUcp;
 
@@ -291,7 +313,7 @@ bool Foam::KinematicParcel<ParcelType>::move
         // maxCo times the total value.
         scalar f = 1 - p.stepFraction();
         f = min(f, maxCo);
-        f = min(f, maxCo*l/max(SMALL*l, mag(s)));
+        f = min(f, maxCo*l/max(small*l, mag(s)));
         if (p.active())
         {
             // Track to the next face
@@ -310,7 +332,7 @@ bool Foam::KinematicParcel<ParcelType>::move
         const scalar dt = (p.stepFraction() - sfrac)*trackTime;
 
         // Avoid problems with extremely small timesteps
-        if (dt > ROOTVSMALL)
+        if (dt > rootVSmall)
         {
             // Update cell based properties
             p.setCellValues(cloud, ttd);

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2013-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -150,8 +150,8 @@ bool Foam::faceAreaWeightAMI<SourcePatch, TargetPatch>::processSourceFace
         visitedFaces.append(tgtFacei);
         scalar area = interArea(srcFacei, tgtFacei);
 
-        // store when intersection fractional area > tolerance
-        if (area/this->srcMagSf_[srcFacei] > faceAreaIntersect::tolerance())
+        // store when intersection fractional area > min weight
+        if (area/this->srcMagSf_[srcFacei] > minWeight())
         {
             srcAddr[srcFacei].append(tgtFacei);
             srcWght[srcFacei].append(area);
@@ -208,7 +208,7 @@ void Foam::faceAreaWeightAMI<SourcePatch, TargetPatch>::setNextFaces
                 scalar areaTotal = this->srcMagSf_[srcFacei];
 
                 // Check that faces have enough overlap for robust walking
-                if (area/areaTotal > faceAreaIntersect::tolerance())
+                if (area/areaTotal > minWeight())
                 {
                     // TODO - throwing area away - re-use in next iteration?
 
@@ -310,7 +310,7 @@ Foam::scalar Foam::faceAreaWeightAMI<SourcePatch, TargetPatch>::interArea
     // quick reject if either face has zero area
     // Note: do not use stored face areas for target patch
     const scalar tgtMag = tgt.mag(tgtPoints);
-    if ((this->srcMagSf_[srcFacei] < ROOTVSMALL) || (tgtMag < ROOTVSMALL))
+    if ((this->srcMagSf_[srcFacei] < rootVSmall) || (tgtMag < rootVSmall))
     {
         return area;
     }
@@ -330,7 +330,7 @@ Foam::scalar Foam::faceAreaWeightAMI<SourcePatch, TargetPatch>::interArea
     }
     scalar magN = mag(n);
 
-    if (magN > ROOTVSMALL)
+    if (magN > rootVSmall)
     {
         area = inter.calc(src, tgt, n/magN, this->triMode_);
     }
@@ -449,6 +449,14 @@ restartUncoveredSourceFace
             }
         }
     }
+}
+
+
+template<class SourcePatch, class TargetPatch>
+Foam::scalar
+Foam::faceAreaWeightAMI<SourcePatch, TargetPatch>::minWeight() const
+{
+    return faceAreaIntersect::tolerance();
 }
 
 

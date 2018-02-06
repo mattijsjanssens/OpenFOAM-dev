@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -488,8 +488,8 @@ thermoSingleLayer::thermoSingleLayer
     ),
     phaseChange_(phaseChangeModel::New(*this, coeffs())),
     radiation_(filmRadiationModel::New(*this, coeffs())),
-    Tmin_(-VGREAT),
-    Tmax_(VGREAT)
+    Tmin_(-vGreat),
+    Tmax_(vGreat)
 {
     if (coeffs().readIfPresent("Tmin", Tmin_))
     {
@@ -633,6 +633,9 @@ void thermoSingleLayer::evolveRegion()
 
     // Update film wall and surface temperatures
     updateSurfaceTemperatures();
+
+    // Solve continuity for deltaRho_
+    solveContinuity();
 
     // Update sub-models to provide updated source contributions
     updateSubmodels();

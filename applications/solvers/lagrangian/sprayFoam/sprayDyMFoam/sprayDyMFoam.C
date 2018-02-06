@@ -34,7 +34,8 @@ Description
 #include "dynamicFvMesh.H"
 #include "turbulenceModel.H"
 #include "basicSprayCloud.H"
-#include "psiCombustionModel.H"
+#include "psiReactionThermo.H"
+#include "CombustionModel.H"
 #include "radiationModel.H"
 #include "SLGThermo.H"
 #include "pimpleControl.H"
@@ -50,8 +51,7 @@ int main(int argc, char *argv[])
     #include "setRootCase.H"
     #include "createTime.H"
     #include "createDynamicFvMesh.H"
-    #include "createControl.H"
-    #include "createControls.H"
+    #include "createDyMControls.H"
     #include "createFields.H"
     #include "createFieldRefs.H"
     #include "createRhoUf.H"
@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
 
     while (runTime.run())
     {
-        #include "readControls.H"
+        #include "readDyMControls.H"
 
         {
             // Store divrhoU from the previous time-step/mesh for the correctPhi

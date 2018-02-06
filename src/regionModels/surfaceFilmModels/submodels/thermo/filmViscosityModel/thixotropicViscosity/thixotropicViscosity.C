@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013-2017 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2013-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -132,12 +132,12 @@ void thixotropicViscosity::correct
     (
         "deltaRho0",
         deltaRho.dimensions(),
-        ROOTVSMALL
+        rootVSmall
     );
 
     const surfaceScalarField phiU(phi/fvc::interpolate(deltaRho + deltaRho0));
 
-    const dimensionedScalar c0("c0", dimless/dimTime, ROOTVSMALL);
+    const dimensionedScalar c0("c0", dimless/dimTime, rootVSmall);
     const volScalarField coeff("coeff", -c_*pow(gDot, d_) + c0);
 
     fvScalarMatrix lambdaEqn
@@ -154,7 +154,7 @@ void thixotropicViscosity::correct
         (
             max
             (
-                film.rhoSp(),
+               -film.rhoSp(),
                 dimensionedScalar("zero", film.rhoSp().dimensions(), 0)
             )/(deltaRho + deltaRho0),
             lambda_
@@ -167,7 +167,7 @@ void thixotropicViscosity::correct
     lambda_.min(1);
     lambda_.max(0);
 
-    mu_ = muInf_/(sqr(1 - K_*lambda_) + ROOTVSMALL);
+    mu_ = muInf_/(sqr(1 - K_*lambda_) + rootVSmall);
     mu_.correctBoundaryConditions();
 }
 

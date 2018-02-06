@@ -219,7 +219,6 @@ void* Foam::OFstreamCollator::writeAll(void *threadarg)
                 ptr->data_,
                 ptr->sizes_,
                 slaveData,
-
                 ptr->format_,
                 ptr->version_,
                 ptr->compression_,

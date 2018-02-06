@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -405,7 +405,7 @@ Foam::label Foam::faceCoupleInfo::mostAlignedCutEdge
     // Find the edge that gets us nearest end.
 
     label maxEdgeI = -1;
-    scalar maxCos = -GREAT;
+    scalar maxCos = -great;
 
     forAll(pEdges, i)
     {
@@ -444,7 +444,7 @@ Foam::label Foam::faceCoupleInfo::mostAlignedCutEdge
 
             scalar magEVec = mag(eVec);
 
-            if (magEVec < VSMALL)
+            if (magEVec < vSmall)
             {
                 WarningInFunction
                     << "Crossing zero sized edge " << edgeI
@@ -756,7 +756,7 @@ bool Foam::faceCoupleInfo::matchPointsThroughFaces
 
             //const point& cutPt = cutPoints[cutPointi];
             //const point& patchPt = patchPoints[patchPointi];
-            //if (mag(cutPt - patchPt) > SMALL)
+            //if (mag(cutPt - patchPt) > small)
             //{
             //    FatalErrorInFunction
             //    << "cutP:" << cutPt
@@ -862,7 +862,7 @@ Foam::scalar Foam::faceCoupleInfo::maxDistance
     const pointField& masterPoints
 )
 {
-    scalar maxDist = -GREAT;
+    scalar maxDist = -great;
 
     forAll(cutF, fp)
     {
@@ -1366,7 +1366,7 @@ Foam::label Foam::faceCoupleInfo::geometricMatchEdgeFaces
             const labelList& masterFaces = iter();
 
             // Find the best matching master face.
-            scalar minDist = GREAT;
+            scalar minDist = great;
             label minMasterFacei = -1;
 
             forAll(masterFaces, i)
@@ -1475,12 +1475,13 @@ void Foam::faceCoupleInfo::perfectPointMatch
         // Faces do not have to be ordered (but all have
         // to match). Note: Faces will be already ordered if we enter here from
         // construct from meshes.
+
         matchedAllFaces = matchPoints
         (
             calcFaceCentres<List>
             (
                 cutFaces(),
-                cutPoints_,
+                cutFaces().points(),
                 0,
                 cutFaces().size()
             ),
@@ -1492,9 +1493,43 @@ void Foam::faceCoupleInfo::perfectPointMatch
                 slavePatch().size()
             ),
             scalarField(slavePatch().size(), absTol),
-            true,
+            false,
             cutToSlaveFaces_
         );
+
+        // If some of the face centres did not match, then try to match the
+        // point averages instead. There is no division by the face area in
+        // calculating the point average, so this is more stable when faces
+        // collapse onto a line or point.
+        if (!matchedAllFaces)
+        {
+            labelList cutToSlaveFacesTemp(cutToSlaveFaces_.size(), -1);
+
+            matchPoints
+            (
+                calcFacePointAverages<List>
+                (
+                    cutFaces(),
+                    cutFaces().points(),
+                    0,
+                    cutFaces().size()
+                ),
+                calcFacePointAverages<IndirectList>
+                (
+                    slavePatch(),
+                    slavePatch().points(),
+                    0,
+                    slavePatch().size()
+                ),
+                scalarField(slavePatch().size(), absTol),
+                true,
+                cutToSlaveFacesTemp
+            );
+
+            cutToSlaveFaces_ = max(cutToSlaveFaces_, cutToSlaveFacesTemp);
+
+            matchedAllFaces = min(cutToSlaveFaces_) != -1;
+        }
     }
 
 

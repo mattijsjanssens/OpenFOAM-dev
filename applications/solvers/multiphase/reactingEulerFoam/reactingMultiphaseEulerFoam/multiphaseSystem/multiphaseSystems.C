@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2015-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -29,6 +29,8 @@ License
 #include "multiphaseSystem.H"
 #include "MomentumTransferPhaseSystem.H"
 #include "HeatTransferPhaseSystem.H"
+#include "HeatAndMassTransferPhaseSystem.H"
+#include "PopulationBalancePhaseSystem.H"
 #include "InterfaceCompositionPhaseChangePhaseSystem.H"
 #include "ThermalPhaseChangePhaseSystem.H"
 
@@ -52,9 +54,27 @@ namespace Foam
     );
 
     typedef
-        InterfaceCompositionPhaseChangePhaseSystem
+        HeatAndMassTransferPhaseSystem
         <
             MomentumTransferPhaseSystem<multiphaseSystem>
+        >
+        heatAndMassTransferMultiphaseSystem;
+
+    addNamedToRunTimeSelectionTable
+    (
+        multiphaseSystem,
+        heatAndMassTransferMultiphaseSystem,
+        dictionary,
+        heatAndMassTransferMultiphaseSystem
+    );
+
+    typedef
+        InterfaceCompositionPhaseChangePhaseSystem
+        <
+            HeatAndMassTransferPhaseSystem
+            <
+                MomentumTransferPhaseSystem<multiphaseSystem>
+            >
         >
         interfaceCompositionPhaseChangeMultiphaseSystem;
 
@@ -69,7 +89,10 @@ namespace Foam
     typedef
         ThermalPhaseChangePhaseSystem
         <
-            MomentumTransferPhaseSystem<multiphaseSystem>
+            HeatAndMassTransferPhaseSystem
+            <
+                MomentumTransferPhaseSystem<multiphaseSystem>
+            >
         >
         thermalPhaseChangeMultiphaseSystem;
 
@@ -79,6 +102,46 @@ namespace Foam
         thermalPhaseChangeMultiphaseSystem,
         dictionary,
         thermalPhaseChangeMultiphaseSystem
+    );
+
+    typedef
+
+        PopulationBalancePhaseSystem
+        <
+            HeatAndMassTransferPhaseSystem
+            <
+                MomentumTransferPhaseSystem<multiphaseSystem>
+            >
+        >
+        populationBalanceMultiphaseSystem;
+
+    addNamedToRunTimeSelectionTable
+    (
+        multiphaseSystem,
+        populationBalanceMultiphaseSystem,
+        dictionary,
+        populationBalanceMultiphaseSystem
+    );
+
+    typedef
+        ThermalPhaseChangePhaseSystem
+        <
+            PopulationBalancePhaseSystem
+            <
+                HeatAndMassTransferPhaseSystem
+                <
+                    MomentumTransferPhaseSystem<multiphaseSystem>
+                >
+            >
+        >
+        thermalPhaseChangePopulationBalanceMultiphaseSystem;
+
+    addNamedToRunTimeSelectionTable
+    (
+        multiphaseSystem,
+        thermalPhaseChangePopulationBalanceMultiphaseSystem,
+        dictionary,
+        thermalPhaseChangePopulationBalanceMultiphaseSystem
     );
 }
 

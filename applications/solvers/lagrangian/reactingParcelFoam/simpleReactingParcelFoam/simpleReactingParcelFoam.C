@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013-2017 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2013-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -33,7 +33,8 @@ Description
 #include "fvCFD.H"
 #include "turbulentFluidThermoModel.H"
 #include "basicReactingMultiphaseCloud.H"
-#include "rhoCombustionModel.H"
+#include "rhoReactionThermo.H"
+#include "CombustionModel.H"
 #include "radiationModel.H"
 #include "IOporosityModelList.H"
 #include "fvOptions.H"
@@ -60,7 +61,7 @@ int main(int argc, char *argv[])
 
     Info<< "\nStarting time loop\n" << endl;
 
-    while (simple.loop())
+    while (simple.loop(runTime))
     {
         Info<< "Time = " << runTime.timeName() << nl << endl;
 

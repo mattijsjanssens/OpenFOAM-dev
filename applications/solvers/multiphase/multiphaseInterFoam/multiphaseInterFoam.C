@@ -26,13 +26,15 @@ Application
 
 Description
     Solver for n incompressible fluids which captures the interfaces and
-    includes surface-tension and contact-angle effects for each phase.
+    includes surface-tension and contact-angle effects for each phase, with
+    optional mesh motion and mesh topology changes.
 
     Turbulence modelling is generic, i.e. laminar, RAS or LES may be selected.
 
 \*---------------------------------------------------------------------------*/
 
 #include "fvCFD.H"
+#include "dynamicFvMesh.H"
 #include "multiphaseMixture.H"
 #include "turbulentTransportModel.H"
 #include "pimpleControl.H"
@@ -47,16 +49,17 @@ int main(int argc, char *argv[])
 
     #include "setRootCase.H"
     #include "createTime.H"
-    #include "createMesh.H"
-    #include "createControl.H"
+    #include "createDynamicFvMesh.H"
     #include "initContinuityErrs.H"
+    #include "createDyMControls.H"
     #include "createFields.H"
-    #include "createTimeControls.H"
-    #include "correctPhi.H"
-    #include "CourantNo.H"
-    #include "setInitialDeltaT.H"
+    #include "initCorrectPhi.H"
+    #include "createUfIfPresent.H"
 
     turbulence->validate();
+
+    #include "CourantNo.H"
+    #include "setInitialDeltaT.H"
 
     const surfaceScalarField& rhoPhi(mixture.rhoPhi());
 
@@ -66,7 +69,7 @@ int main(int argc, char *argv[])
 
     while (runTime.run())
     {
-        #include "readTimeControls.H"
+        #include "readDyMControls.H"
         #include "CourantNo.H"
         #include "alphaCourantNo.H"
         #include "setDeltaT.H"
@@ -75,12 +78,50 @@ int main(int argc, char *argv[])
 
         Info<< "Time = " << runTime.timeName() << nl << endl;
 
-        mixture.solve();
-        rho = mixture.rho();
-
-         // --- Pressure-velocity PIMPLE corrector loop
+        // --- Pressure-velocity PIMPLE corrector loop
         while (pimple.loop())
         {
+            if (pimple.firstIter() || moveMeshOuterCorrectors)
+            {
+                scalar timeBeforeMeshUpdate = runTime.elapsedCpuTime();
+
+                mesh.update();
+
+                if (mesh.changing())
+                {
+                    Info<< "Execution time for mesh.update() = "
+                        << runTime.elapsedCpuTime() - timeBeforeMeshUpdate
+                        << " s" << endl;
+
+                    gh = (g & mesh.C()) - ghRef;
+                    ghf = (g & mesh.Cf()) - ghRef;
+
+                    MRF.update();
+
+                    if (correctPhi)
+                    {
+                        // Calculate absolute flux
+                        // from the mapped surface velocity
+                        phi = mesh.Sf() & Uf();
+
+                        #include "correctPhi.H"
+
+                        // Make the flux relative to the mesh motion
+                        fvc::makeRelative(phi, U);
+
+                        mixture.correct();
+                    }
+
+                    if (checkMeshCourantNo)
+                    {
+                        #include "meshCourantNo.H"
+                    }
+                }
+            }
+
+            mixture.solve();
+            rho = mixture.rho();
+
             #include "UEqn.H"
 
             // --- Pressure corrector loop

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2013-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -42,10 +42,7 @@ const Foam::scalar Foam::cyclicACMIPolyPatch::tolerance_ = 1e-10;
 
 // * * * * * * * * * * * * Protected Member Functions  * * * * * * * * * * * //
 
-void Foam::cyclicACMIPolyPatch::resetAMI
-(
-    const AMIPatchToPatchInterpolation::interpolationMethod&
-) const
+void Foam::cyclicACMIPolyPatch::resetAMI() const
 {
     if (owner())
     {
@@ -89,10 +86,7 @@ void Foam::cyclicACMIPolyPatch::resetAMI
         // Calculate the AMI using partial face-area-weighted. This leaves
         // the weights as fractions of local areas (sum(weights) = 1 means
         // face is fully covered)
-        cyclicAMIPolyPatch::resetAMI
-        (
-            AMIPatchToPatchInterpolation::imPartialFaceAreaWeight
-        );
+        cyclicAMIPolyPatch::resetAMI();
 
         AMIPatchToPatchInterpolation& AMI =
             const_cast<AMIPatchToPatchInterpolation&>(this->AMI());
@@ -288,15 +282,24 @@ Foam::cyclicACMIPolyPatch::cyclicACMIPolyPatch
     const transformType transform
 )
 :
-    cyclicAMIPolyPatch(name, size, start, index, bm, patchType, transform),
+    cyclicAMIPolyPatch
+    (
+        name,
+        size,
+        start,
+        index,
+        bm,
+        patchType,
+        transform,
+        false,
+        AMIPatchToPatchInterpolation::imPartialFaceAreaWeight
+    ),
     nonOverlapPatchName_(word::null),
     nonOverlapPatchID_(-1),
     srcMask_(),
     tgtMask_(),
     updated_(false)
 {
-    AMIRequireMatch_ = false;
-
     // Non-overlapping patch might not be valid yet so cannot determine
     // associated patchID
 }
@@ -311,15 +314,22 @@ Foam::cyclicACMIPolyPatch::cyclicACMIPolyPatch
     const word& patchType
 )
 :
-    cyclicAMIPolyPatch(name, dict, index, bm, patchType),
+    cyclicAMIPolyPatch
+    (
+        name,
+        dict,
+        index,
+        bm,
+        patchType,
+        false,
+        AMIPatchToPatchInterpolation::imPartialFaceAreaWeight
+    ),
     nonOverlapPatchName_(dict.lookup("nonOverlapPatch")),
     nonOverlapPatchID_(-1),
     srcMask_(),
     tgtMask_(),
     updated_(false)
 {
-    AMIRequireMatch_ = false;
-
     if (nonOverlapPatchName_ == name)
     {
         FatalIOErrorInFunction
@@ -348,8 +358,6 @@ Foam::cyclicACMIPolyPatch::cyclicACMIPolyPatch
     tgtMask_(),
     updated_(false)
 {
-    AMIRequireMatch_ = false;
-
     // Non-overlapping patch might not be valid yet so cannot determine
     // associated patchID
 }
@@ -373,8 +381,6 @@ Foam::cyclicACMIPolyPatch::cyclicACMIPolyPatch
     tgtMask_(),
     updated_(false)
 {
-    AMIRequireMatch_ = false;
-
     if (nonOverlapPatchName_ == name())
     {
         FatalErrorInFunction
@@ -404,7 +410,8 @@ Foam::cyclicACMIPolyPatch::cyclicACMIPolyPatch
     tgtMask_(),
     updated_(false)
 {
-    AMIRequireMatch_ = false;
+    // Non-overlapping patch might not be valid yet so cannot determine
+    // associated patchID
 }
 
 
@@ -462,7 +469,7 @@ Foam::label Foam::cyclicACMIPolyPatch::nonOverlapPatchID() const
 
             forAll(magSf, facei)
             {
-                scalar ratio = mag(magSf[facei]/(noMagSf[facei] + ROOTVSMALL));
+                scalar ratio = mag(magSf[facei]/(noMagSf[facei] + rootVSmall));
 
                 if (ratio - 1 > tolerance_)
                 {

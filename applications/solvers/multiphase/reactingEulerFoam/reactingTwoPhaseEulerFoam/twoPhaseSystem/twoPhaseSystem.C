@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013-2017 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2013-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -174,16 +174,6 @@ bool Foam::twoPhaseSystem::transfersMass() const
 }
 
 
-Foam::tmp<Foam::volScalarField>
-Foam::twoPhaseSystem::dmdt() const
-{
-    return dmdt
-    (
-        phasePairKey(phase1().name(), phase2().name())
-    );
-}
-
-
 void Foam::twoPhaseSystem::solve()
 {
     const Time& runTime = mesh_.time();
@@ -287,8 +277,8 @@ void Foam::twoPhaseSystem::solve()
             {
                 if (dgdt[celli] > 0.0)
                 {
-                    Sp[celli] -= dgdt[celli]/max(1.0 - alpha1[celli], 1e-4);
-                    Su[celli] += dgdt[celli]/max(1.0 - alpha1[celli], 1e-4);
+                    Sp[celli] -= dgdt[celli]/max(1 - alpha1[celli], 1e-4);
+                    Su[celli] += dgdt[celli]/max(1 - alpha1[celli], 1e-4);
                 }
                 else if (dgdt[celli] < 0.0)
                 {

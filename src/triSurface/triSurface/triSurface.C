@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -820,7 +820,7 @@ void Foam::triSurface::scalePoints(const scalar scaleFactor)
 void Foam::triSurface::cleanup(const bool verbose)
 {
     // Merge points (already done for STL, TRI)
-    stitchTriangles(SMALL, verbose);
+    stitchTriangles(small, verbose);
 
     // Merging points might have changed geometric factors
     clearOut();
@@ -1028,6 +1028,19 @@ Foam::triSurface Foam::triSurface::subsetMesh
 
     // Construct subsurface
     return triSurface(newTriangles, patches(), newPoints, true);
+}
+
+
+Foam::faceList Foam::triSurface::faces() const
+{
+    faceList faces(size());
+
+    forAll(*this, facei)
+    {
+        faces[facei] = operator[](facei).triFaceFace();
+    }
+
+    return faces;
 }
 
 

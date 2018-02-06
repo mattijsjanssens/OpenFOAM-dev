@@ -241,7 +241,6 @@ while (pimple.correct())
                     )
                 );
 
-            deleteDemandDrivenData(pEqnComp1.ref().faceFluxCorrectionPtr());
             pEqnComp1.ref().relax();
         }
         else
@@ -283,7 +282,6 @@ while (pimple.correct())
                     )
                 );
 
-            deleteDemandDrivenData(pEqnComp2.ref().faceFluxCorrectionPtr());
             pEqnComp2.ref().relax();
         }
         else
@@ -305,20 +303,20 @@ while (pimple.correct())
     {
         if (pEqnComp1.valid())
         {
-            pEqnComp1.ref() -= fluid.dmdt()/rho1;
+            pEqnComp1.ref() -= fluid.dmdt(phase1)/rho1;
         }
         else
         {
-            pEqnComp1 = fvm::Su(-fluid.dmdt()/rho1, p_rgh);
+            pEqnComp1 = fvm::Su(-fluid.dmdt(phase1)/rho1, p_rgh);
         }
 
         if (pEqnComp2.valid())
         {
-            pEqnComp2.ref() += fluid.dmdt()/rho2;
+            pEqnComp2.ref() -= fluid.dmdt(phase2)/rho2;
         }
         else
         {
-            pEqnComp2 = fvm::Su(fluid.dmdt()/rho2, p_rgh);
+            pEqnComp2 = fvm::Su(-fluid.dmdt(phase2)/rho2, p_rgh);
         }
     }
 
@@ -376,7 +374,7 @@ while (pimple.correct())
             surfaceScalarField phir
             (
                 ((phi2s + rAUf2*Kdf*phi1s) - (phi1s + rAUf1*Kdf*phi2s))
-               /(1.0 - rAUf1*rAUf2*sqr(Kdf))
+               /(1 - rAUf1*rAUf2*sqr(Kdf))
             );
 
             phi1 = phi - alphaf2*phir;
