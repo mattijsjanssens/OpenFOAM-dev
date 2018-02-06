@@ -607,9 +607,10 @@ void Foam::decomposedBlockData::gather
         recvOffsets.setSize(nProcs);
         forAll(recvOffsets, proci)
         {
+            // Note: truncating long int to int since UPstream::gather limited
+            // to ints
             recvOffsets[proci] =
-                reinterpret_cast<char*>(&datas[proci])
-              - data0Ptr;
+                int(reinterpret_cast<char*>(&datas[proci]) - data0Ptr);
         }
         recvSizes.setSize(nProcs, sizeof(label));
     }
@@ -669,7 +670,8 @@ void Foam::decomposedBlockData::gatherSlaveData
      && (UPstream::myProcNo(comm) < startProc+nProcs)
     )
     {
-        nSend = data.byteSize();
+        // Note: UPstream::gather limited to int
+        nSend = int(data.byteSize());
     }
 
     UPstream::gather
@@ -684,7 +686,7 @@ void Foam::decomposedBlockData::gatherSlaveData
     );
 }
 
-//XXXXXXX
+
 Foam::label Foam::decomposedBlockData::calcNumProcs
 (
     const label comm,
@@ -723,7 +725,7 @@ Foam::label Foam::decomposedBlockData::calcNumProcs
 
     return n;
 }
-//XXXXXXX
+
 
 bool Foam::decomposedBlockData::writeBlocks
 (
@@ -733,8 +735,7 @@ bool Foam::decomposedBlockData::writeBlocks
     const UList<char>& data,
 
     const labelUList& recvSizes,
-    const bool haveSlaveData,
-    const List<char>& slaveData,
+    const PtrList<SubList<char>>& slaveData,
 
     const UPstream::commsTypes commsType,
     const bool syncReturnState
@@ -745,17 +746,15 @@ bool Foam::decomposedBlockData::writeBlocks
         Pout<< "decomposedBlockData::writeBlocks:"
             << " stream:" << (osPtr.valid() ? osPtr().name() : "invalid")
             << " data:" << data.size()
-            << " haveSlaveData:" << haveSlaveData
             << " (master only) slaveData:" << slaveData.size()
             << " commsType:" << Pstream::commsTypeNames[commsType] << endl;
     }
 
     const label nProcs = UPstream::nProcs(comm);
 
-
     bool ok = true;
 
-    if (haveSlaveData)
+    if (slaveData.size())
     {
         // Already have gathered the slave data. communicator only used to
         // check who is the master
@@ -782,8 +781,7 @@ bool Foam::decomposedBlockData::writeBlocks
                 os << nl << nl << "// Processor" << proci << nl;
                 start[proci] = os.stdStream().tellp();
 
-                os << SubList<char>(slaveData, recvSizes[proci], slaveOffset);
-
+                os << slaveData[proci];
                 slaveOffset += recvSizes[proci];
             }
 
@@ -863,44 +861,14 @@ bool Foam::decomposedBlockData::writeBlocks
 
         while (nSendProcs > 0)
         {
-            //labelPair masterData(startAndSize);
-            //if (UPstream::master(comm))
-            //{
-            //    label totalSize = recvSizes[masterData[0]];
-            //    label proci = masterData[0]+1;
-            //    while
-            //    (
-            //        proci < nProcs
-            //     && (
-            //            totalSize+recvSizes[proci]
-            //          < fileOperations::masterUncollatedFileOperation::
-            //                maxMasterFileBufferSize
-            //        )
-            //    )
-            //    {
-            //        totalSize += recvSizes[proci];
-            //        proci++;
-            //    }
-            //
-            //    masterData[1] = proci-masterData[0];
-            //}
-            //
-            //// Scatter masterData
-            //UPstream::scatter
-            //(
-            //    reinterpret_cast<const char*>(masterData.cdata()),
-            //    List<int>(nProcs, sizeof(masterData)),
-            //    List<int>(nProcs, 0),
-            //    reinterpret_cast<char*>(startAndSize.data()),
-            //    sizeof(startAndSize),
-            //    comm
-            //);
-
             nSendProcs = calcNumProcs
             (
                 comm,
-                fileOperations::masterUncollatedFileOperation::
-                maxMasterFileBufferSize,
+                off_t
+                (
+                    fileOperations::masterUncollatedFileOperation::
+                    maxMasterFileBufferSize
+                ),
                 recvSizes,
                 startProc
             );
@@ -1073,10 +1041,10 @@ bool Foam::decomposedBlockData::writeObject
     }
 
     labelList recvSizes;
-    gather(comm_, this->byteSize(), recvSizes);
+    gather(comm_, label(this->byteSize()), recvSizes);
 
     List<std::streamoff> start;
-    List<char> slaveData;           // dummy already received slave data
+    PtrList<SubList<char>> slaveData;  // dummy slave data
     return writeBlocks
     (
         comm_,
@@ -1084,7 +1052,6 @@ bool Foam::decomposedBlockData::writeObject
         start,
         *this,
         recvSizes,
-        false,                      // don't have slave data
         slaveData,
         commsType_
     );

@@ -45,8 +45,7 @@ bool Foam::OFstreamCollator::writeFile
     const fileName& fName,
     const string& masterData,
     const labelUList& recvSizes,
-    const bool haveSlaveData,           // does master have slaveData
-    const UList<char>& slaveData,       // on master: slave data
+    const PtrList<SubList<char>>& slaveData,    // optional slave data
     IOstream::streamFormat fmt,
     IOstream::versionNumber ver,
     IOstream::compressionType cmp,
@@ -55,9 +54,22 @@ bool Foam::OFstreamCollator::writeFile
 {
     if (debug)
     {
-        Pout<< "OFstreamCollator : Writing " << masterData.size()
+        Pout<< "OFstreamCollator : Writing master " << masterData.size()
             << " bytes to " << fName
             << " using comm " << comm << endl;
+        if (slaveData.size())
+        {
+            Pout<< "OFstreamCollator :  Slave data" << endl;
+            forAll(slaveData, proci)
+            {
+                if (slaveData.set(proci))
+                {
+                    Pout<< "    " << proci
+                        << " size:" << slaveData[proci].size()
+                        << endl;
+                }
+            }
+        }
     }
 
     autoPtr<OSstream> osPtr;
@@ -113,7 +125,6 @@ bool Foam::OFstreamCollator::writeFile
         start,
         slice,
         recvSizes,
-        haveSlaveData,
         slaveData,
         (
             fileOperations::masterUncollatedFileOperation::
@@ -141,7 +152,11 @@ bool Foam::OFstreamCollator::writeFile
             {
                 sum += recvSizes[i];
             }
-            Pout<< " (overall " << sum << ")";
+            // Use ostringstream to display long int (until writing these is
+            // supported)
+            std::ostringstream os;
+            os << sum;
+            Pout<< " (overall " << os.str() << ")";
         }
         Pout<< " to " << fName
             << " using comm " << comm << endl;
@@ -174,6 +189,28 @@ void* Foam::OFstreamCollator::writeAll(void *threadarg)
         }
         else
         {
+            // Convert storage to pointers
+            PtrList<SubList<char>> slaveData;
+            if (ptr->slaveData_.size())
+            {
+                slaveData.setSize(ptr->slaveData_.size());
+                forAll(slaveData, proci)
+                {
+                    if (ptr->slaveData_.set(proci))
+                    {
+                        slaveData.set
+                        (
+                            proci,
+                            new SubList<char>
+                            (
+                                ptr->slaveData_[proci],
+                                ptr->sizes_[proci]
+                            )
+                        );
+                    }
+                }
+            }
+
             bool ok = writeFile
             (
                 ptr->comm_,
@@ -181,8 +218,7 @@ void* Foam::OFstreamCollator::writeAll(void *threadarg)
                 ptr->pathName_,
                 ptr->data_,
                 ptr->sizes_,
-                ptr->haveSlaveData_,
-                ptr->slaveData_,
+                slaveData,
 
                 ptr->format_,
                 ptr->version_,
@@ -325,9 +361,7 @@ bool Foam::OFstreamCollator::write
     // Determine (on master) sizes to receive. Note: do NOT use thread
     // communicator
     labelList recvSizes;
-    decomposedBlockData::gather(localComm_, data.size(), recvSizes);
-
-DebugVar(recvSizes);
+    decomposedBlockData::gather(localComm_, label(data.size()), recvSizes);
 
     off_t totalSize = 0;
     label maxLocalSize = 0;
@@ -341,11 +375,6 @@ DebugVar(recvSizes);
         Pstream::scatter(maxLocalSize, Pstream::msgType(), localComm_);
     }
 
-DebugVar(data.size());
-std::cout<< "tottalSize:" << totalSize << std::endl;
-DebugVar(maxLocalSize);
-DebugVar(maxBufferSize_);
-
     if (maxBufferSize_ == 0 || maxLocalSize > maxBufferSize_)
     {
         if (debug)
@@ -354,7 +383,7 @@ DebugVar(maxBufferSize_);
                 << " using local comm " << localComm_ << endl;
         }
         // Direct collating and writing (so master blocks until all written!)
-        const List<char> dummySlaveData;
+        const PtrList<SubList<char>> dummySlaveData;
         return writeFile
         (
             localComm_,
@@ -362,7 +391,6 @@ DebugVar(maxBufferSize_);
             fName,
             data,
             recvSizes,
-            false,              // no slave data provided yet
             dummySlaveData,
             fmt,
             ver,
@@ -381,7 +409,7 @@ DebugVar(maxBufferSize_);
                 << fName << endl;
         }
 
-        if (Pstream::master())
+        if (Pstream::master(localComm_))
         {
             waitForBufferSpace(totalSize);
         }
@@ -390,109 +418,104 @@ DebugVar(maxBufferSize_);
         // Receive in chunks of labelMax (2^31-1) since this is the maximum
         // size that a List can be
 
+        autoPtr<writeData> fileAndDataPtr
+        (
+            new writeData
+            (
+                threadComm_,        // Note: comm not actually used anymore
+                typeName,
+                fName,
+                (
+                    Pstream::master(localComm_)
+                  ? data            // Only used on master
+                  : string::null
+                ),
+                recvSizes,
+                fmt,
+                ver,
+                cmp,
+                append
+            )
+        );
+        writeData& fileAndData = fileAndDataPtr();
+
+        PtrList<List<char>>& slaveData = fileAndData.slaveData_;
+
         UList<char> slice(const_cast<char*>(data.data()), label(data.size()));
 
-        // Current data segment
-        label chunk = 0;
+        slaveData.setSize(recvSizes.size());
 
-        // Starting slave processor and number of processors
-        label startProc = 1;
-        label nSendProcs = recvSizes.size()-1;
-
-        while (nSendProcs > 0)
+        // Gather all data onto master. Is done in local communicator since
+        // not in write thread. Note that we do not store in contiguous
+        // buffer since that would limit to 2G chars.
+        label startOfRequests = Pstream::nRequests();
+        if (Pstream::master(localComm_))
         {
-            nSendProcs = decomposedBlockData::calcNumProcs
-            (
-                localComm_,
-                labelMax,
-                recvSizes,
-                startProc
-            );
-
-            Pout<< "    chunk:" << chunk << " startProc:" << startProc
-                << " endProc:" << startProc+nSendProcs-1 << endl;
-
-            if (startProc == recvSizes.size() || nSendProcs == 0)
+            for (label proci = 1; proci < slaveData.size(); proci++)
             {
-                break;
-            }
-
-            // Allocate local buffer for all collated data
-            autoPtr<writeData> fileAndDataPtr
-            (
-                new writeData
+                slaveData.set(proci, new List<char>(recvSizes[proci]));
+                UIPstream::read
                 (
-                    threadComm_,        // Note: comm not actually used anymore
-                    typeName,
-                    fName,
-                    (                   // local data
-                        chunk == 0
-                      ? data
-                      : string::null
-                    ),
-                    recvSizes,
-                    true,               // have slave data (collected below)
-                    fmt,
-                    ver,
-                    cmp,
-                    (
-                        chunk == 0
-                      ? append
-                      : true
-                    )
-                )
-            );
-            writeData& fileAndData = fileAndDataPtr();
-
-            // Gather the slave data and insert into fileAndData
-            List<int> slaveOffsets;
-            decomposedBlockData::gatherSlaveData
+                    UPstream::commsTypes::nonBlocking,
+                    proci,
+                    reinterpret_cast<char*>(slaveData[proci].begin()),
+                    slaveData[proci].byteSize(),
+                    Pstream::msgType(),
+                    localComm_
+                );
+            }
+        }
+        else
+        {
+            if
             (
-                localComm_,
-                slice,
-                recvSizes,
-
-                startProc,  // startProc,
-                nSendProcs, // n procs
-
-                slaveOffsets,
-                fileAndData.slaveData_
-            );
-
-            Pout<< "    chunk:" << chunk << " master data:"
-                << fileAndData.data_.size()
-                << " slave data:" << fileAndData.slaveData_.size() << endl;
-
+               !UOPstream::write
+                (
+                    UPstream::commsTypes::nonBlocking,
+                    0,
+                    reinterpret_cast<const char*>(slice.begin()),
+                    slice.byteSize(),
+                    Pstream::msgType(),
+                    localComm_
+                )
+            )
             {
-                std::lock_guard<std::mutex> guard(mutex_);
+                FatalErrorInFunction
+                    << "Cannot send outgoing message. "
+                    << "to:" << 0 << " nBytes:"
+                    << label(slice.byteSize())
+                    << Foam::abort(FatalError);
+            }
+        }
+        Pstream::waitRequests(startOfRequests);
 
-                // Append to thread buffer
-                objects_.push(fileAndDataPtr.ptr());
+        {
+            std::lock_guard<std::mutex> guard(mutex_);
 
-                // Start thread if not running
-                if (!threadRunning_)
+            // Append to thread buffer
+            objects_.push(fileAndDataPtr.ptr());
+
+            // Start thread if not running
+            if (!threadRunning_)
+            {
+                if (thread_.valid())
                 {
-                    if (thread_.valid())
-                    {
-                        if (debug)
-                        {
-                            Pout<< "OFstreamCollator : Waiting for write thread"
-                                << endl;
-                        }
-                        thread_().join();
-                    }
-
                     if (debug)
                     {
-                        Pout<< "OFstreamCollator : Starting write thread"
+                        Pout<< "OFstreamCollator : Waiting for write thread"
                             << endl;
                     }
-                    thread_.reset(new std::thread(writeAll, this));
-                    threadRunning_ = true;
+                    thread_().join();
                 }
-            }
 
-            chunk++;
+                if (debug)
+                {
+                    Pout<< "OFstreamCollator : Starting write thread"
+                        << endl;
+                }
+                thread_.reset(new std::thread(writeAll, this));
+                threadRunning_ = true;
+            }
         }
 
         return true;
@@ -515,7 +538,7 @@ DebugVar(maxBufferSize_);
                 << exit(FatalError);
         }
 
-        if (Pstream::master())
+        if (Pstream::master(localComm_))
         {
             waitForBufferSpace(data.size());
         }
@@ -534,7 +557,6 @@ DebugVar(maxBufferSize_);
                     fName,
                     data,
                     recvSizes,
-                    false,          // Have no slave data; collect in thread
                     fmt,
                     ver,
                     cmp,

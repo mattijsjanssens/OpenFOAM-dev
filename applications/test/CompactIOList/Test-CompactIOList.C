@@ -33,6 +33,7 @@ Description
 #include "argList.H"
 #include "Time.H"
 #include "polyMesh.H"
+#include "multiCollatedFileOperation.H"
 
 using namespace Foam;
 
@@ -91,8 +92,19 @@ int main(int argc, char *argv[])
             true
         );
 
+        // Install new file handler to flush thread
+        autoPtr<fileOperation> handler
+        (
+            new fileOperations::multiCollatedFileOperation
+            (
+                true
+            )
+        );
+        Foam::fileHandler(handler);
+
         Info<< "Written old format faceList in = "
             << runTime.cpuTimeIncrement() << " s" << nl << endl;
+
 
         // Read
         faceIOList faces3
@@ -154,6 +166,15 @@ int main(int argc, char *argv[])
             true
         );
 
+        // Install new file handler to flush thread
+        autoPtr<fileOperation> handler
+        (
+            new fileOperations::collatedFileOperation
+            (
+                true
+            )
+        );
+        Foam::fileHandler(handler);
         Info<< "Written new format faceList in = "
             << runTime.cpuTimeIncrement() << " s" << nl << endl;
 
