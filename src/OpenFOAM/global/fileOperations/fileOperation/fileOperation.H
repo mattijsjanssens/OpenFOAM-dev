@@ -49,7 +49,11 @@ class regIOobject;
 class objectRegistry;
 class Time;
 
-typedef Tuple2<fileName, label> dirIndex;
+// Description of processor directory naming:
+//  - processor directory naming
+//  - whether directory contains a range (so differs on different processors)
+//  - index in range
+typedef Tuple2<fileName, Tuple2<bool, label>> dirIndex;
 typedef List<dirIndex> dirIndexList;
 
 /*---------------------------------------------------------------------------*\
@@ -118,14 +122,14 @@ public:
             ABSOLUTE,               // instance is absolute directory
             OBJECT,                 // io.objectPath() exists
             WRITEOBJECT,            // write path exists
-            PROCESSORSBASEOBJECT,   // objectPath exists in processorsBaseDir
-                                    // (usually 'processors')
-            PROCESSORSOBJECT,       // objectPath exists in processorsDir
-                                    // (usually 'processorsDDD')
+            PROCESSORSBASEOBJECT,   // objectPath exists in specified, constant
+                                    // processorsDir (usually 'processorsDDD')
+            PROCESSORSOBJECT,       // objectPath exists in locally differing
+                                    // processorsDir (e.g. 'processorsDDD_0-1')
             PARENTOBJECT,           // parent of object path
             FINDINSTANCE,           // file found in time directory
-            PROCESSORSBASEINSTANCE, // as above but in processors/
-            PROCESSORSINSTANCE      // as above but in processorsDDD/
+            PROCESSORSBASEINSTANCE, // as PROCESSORSBASEOBJECT but with instance
+            PROCESSORSINSTANCE      // as PROCESSORSOBJECT but with instance
         };
 
 

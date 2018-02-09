@@ -346,7 +346,7 @@ Foam::fileName Foam::fileOperations::collatedFileOperation::objectPath
         (
             io,
             fileOperation::PROCESSORSOBJECT,
-            processorsDir(io),
+            "dummy",        // not used for processorsobject
             io.instance()
         );
     }

@@ -117,7 +117,10 @@ class OFstreamCollator
                 off_t sz = data_.size();
                 forAll(slaveData_, i)
                 {
-                    sz += slaveData_[i].size();
+                    if (slaveData_.set(i))
+                    {
+                        sz += slaveData_[i].size();
+                    }
                 }
                 return sz;
             }

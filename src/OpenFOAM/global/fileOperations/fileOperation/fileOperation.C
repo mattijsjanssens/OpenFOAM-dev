@@ -250,6 +250,8 @@ Foam::fileOperation::lookupProcessorsPath(const fileName& fName) const
 
         DynamicList<dirIndex> procDirs;
 
+        // Note: use parallel synchronised reading so cache will be same
+        //       order on all processors
         fileNameList dirNames(readDir(path, fileName::Type::DIRECTORY));
 
         // Extract info from processorsDDD or processorDDD:
@@ -271,13 +273,20 @@ Foam::fileOperation::lookupProcessorsPath(const fileName& fName) const
             if (proci == readProci)
             {
                 // Found "processorDDD". No need for index.
-                procDirs.append(dirIndex(dirN, -1));
+                procDirs.append(dirIndex(dirN, Tuple2<bool, label>(false, -1)));
             }
             else if (proci >= rStart && proci < rStart+rSize)
             {
                 // "processorsDDD_start-end"
                 // Found the file that contains the data for proci
-                procDirs.append(dirIndex(dirN, proci-rStart));
+                procDirs.append
+                (
+                    dirIndex
+                    (
+                        dirN,
+                        Tuple2<bool, label>(true, proci-rStart)
+                    )
+                );
             }
             if (rNum != -1)
             {
@@ -287,7 +296,10 @@ Foam::fileOperation::lookupProcessorsPath(const fileName& fName) const
                 if (rStart == -1)
                 {
                     // "processorsDDD"
-                    procDirs.append(dirIndex(dirN, proci));
+                    procDirs.append
+                    (
+                        dirIndex(dirN, Tuple2<bool, label>(false, proci))
+                    );
                 }
             }
         }

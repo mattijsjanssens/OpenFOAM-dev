@@ -152,8 +152,16 @@ Foam::fileOperations::masterUncollatedFileOperation::filePathInfo
                    /io.name();
                 if (objPath != writePath && isFileOrDir(isFile, objPath))
                 {
+                    if (pDirs()[i].second().first())
+                    {
+                        // Locally varying processorsDir
+                        searchType = fileOperation::PROCESSORSOBJECT;
+                    }
+                    else
+                    {
+                        searchType = fileOperation::PROCESSORSBASEOBJECT;
+                    }
                     procsDir = pDir;
-                    searchType = fileOperation::PROCESSORSOBJECT;
                     return objPath;
                 }
             }
@@ -232,7 +240,15 @@ Foam::fileOperations::masterUncollatedFileOperation::filePathInfo
                     );
                     if (isFileOrDir(isFile, fName))
                     {
-                        searchType = fileOperation::PROCESSORSINSTANCE;
+                        if (pDirs()[i].second().first())
+                        {
+                            // Locally varying processorsDir
+                            searchType = fileOperation::PROCESSORSINSTANCE;
+                        }
+                        else
+                        {
+                            searchType = fileOperation::PROCESSORSBASEINSTANCE;
+                        }
                         procsDir = pDir;
                         return fName;
                     }
@@ -263,7 +279,7 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::objectPath
 (
     const IOobject& io,
     const pathType& searchType,
-    const word& processorsDir,
+    const word& procDir,
     const word& instancePath
 ) const
 {
@@ -292,7 +308,7 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::objectPath
         case fileOperation::PROCESSORSBASEOBJECT:
         {
             return
-                processorsPath(io, io.instance(), processorsBaseDir)
+                processorsPath(io, io.instance(), procDir)
                /io.name();
         }
         break;
@@ -300,7 +316,7 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::objectPath
         case fileOperation::PROCESSORSOBJECT:
         {
             return
-                processorsPath(io, io.instance(), processorsDir)
+                processorsPath(io, io.instance(), processorsDir(io))
                /io.name();
         }
         break;
@@ -324,7 +340,7 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::objectPath
         case fileOperation::PROCESSORSBASEINSTANCE:
         {
             return
-                processorsPath(io, instancePath, processorsBaseDir)
+                processorsPath(io, instancePath, procDir)
                /io.name();
         }
         break;
@@ -332,7 +348,7 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::objectPath
         case fileOperation::PROCESSORSINSTANCE:
         {
             return
-                processorsPath(io, instancePath, processorsDir)
+                processorsPath(io, instancePath, processorsDir(io))
                /io.name();
         }
         break;
@@ -1693,13 +1709,6 @@ void Foam::fileOperations::masterUncollatedFileOperation::setTime
     HashPtrTable<instantList>::const_iterator iter = times_.find(tm.path());
     if (iter != times_.end())
     {
-        if (debug)
-        {
-            Pout<< "masterUncollatedFileOperation::setTime :"
-                << " Caching time " << tm.timeName()
-                << " for case:" << tm.path() << endl;
-        }
-
         instantList& times = *iter();
 
         const instant timeNow(tm.value(), tm.timeName());
@@ -1718,6 +1727,13 @@ void Foam::fileOperations::masterUncollatedFileOperation::setTime
              == -1
             )
             {
+                if (debug)
+                {
+                    Pout<< "masterUncollatedFileOperation::setTime :"
+                        << " Caching time " << tm.timeName()
+                        << " for case:" << tm.path() << endl;
+                }
+
                 times.append(timeNow);
                 SubList<instant> realTimes(times, times.size()-1, 1);
                 Foam::stableSort(realTimes);
@@ -1727,6 +1743,13 @@ void Foam::fileOperations::masterUncollatedFileOperation::setTime
         {
             if (findSortedIndex(times, timeNow) == -1)
             {
+                if (debug)
+                {
+                    Pout<< "masterUncollatedFileOperation::setTime :"
+                        << " Caching time " << tm.timeName()
+                        << " for case:" << tm.path() << endl;
+                }
+
                 times.append(timeNow);
                 Foam::stableSort(times);
             }
