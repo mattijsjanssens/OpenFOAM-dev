@@ -209,11 +209,9 @@ void Foam::fileOperation::mergeTimes
 
 bool Foam::fileOperation::isFileOrDir(const bool isFile, const fileName& f)
 {
-    const fileName::Type fTyp = Foam::type(f);
-
     return
-        (isFile && fTyp == fileName::FILE)
-     || (!isFile && fTyp == fileName::DIRECTORY);
+        (isFile && Foam::isFile(f))
+     || (!isFile && Foam::isDir(f));
 }
 
 
