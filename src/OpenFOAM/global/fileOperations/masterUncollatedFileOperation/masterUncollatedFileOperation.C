@@ -939,6 +939,11 @@ Foam::fileOperations::masterUncollatedFileOperation::readObjects
 
     if (Pstream::master())  //comm_))
     {
+        // Avoid fileOperation::readObjects from triggering parallel ops
+        // (through call to filePath which triggers parallel )
+        bool oldParRun = UPstream::parRun();
+        UPstream::parRun() = false;
+
         //- Use non-time searching version
         objectNames = fileOperation::readObjects
         (
@@ -980,6 +985,8 @@ Foam::fileOperations::masterUncollatedFileOperation::readObjects
                 }
             }
         }
+
+        UPstream::parRun() = oldParRun;
     }
 
     Pstream::scatter(newInstance);  //, Pstream::msgType(), comm_);
@@ -1030,7 +1037,6 @@ bool Foam::fileOperations::masterUncollatedFileOperation::readHeader
                 if (is.good())
                 {
                     ok = io.readHeader(is);
-
                     if (io.headerClassName() == decomposedBlockData::typeName)
                     {
                         // Read the header inside the container (master data)
@@ -1064,23 +1070,13 @@ bool Foam::fileOperations::masterUncollatedFileOperation::readHeader
                     if (is.good())
                     {
                         result[proci] = io.readHeader(is);
+                        if (io.headerClassName() == decomposedBlockData::typeName)
+                        {
+                            // Read the header inside the container (master data)
+                            result[proci] = decomposedBlockData::readMasterHeader(io, is);
+                        }
                         headerClassName[proci] = io.headerClassName();
                         note[proci] = io.note();
-
-                        //if
-                        //(
-                        //    io.headerClassName()
-                        // == decomposedBlockData::typeName
-                        //)
-                        //{
-                        //    FatalErrorInFunction
-                        //        << "Unexpected decomposedBlockData container"
-                        //        << " for processor " << proci
-                        //        << " file:" << filePaths[proci]
-                        //        << ". A decomposedBlockData container should"
-                        //        << " produce the same file name on all"
-                        //        << " processors" << exit(FatalError);
-                        //}
                     }
                 }
             }
