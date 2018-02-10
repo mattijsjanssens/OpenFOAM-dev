@@ -36,4 +36,8 @@ runApplication -s multiCollated reconstructPar -latestTime \
 #- Convert the multi-rank format to uncollated
 runParallel -s uncollated foamFormatConvert -fileHandler uncollated
 
+#- Restart from multiCollated using collated
+runParallel -s uncollated_from_multiCollated \
+    `getApplication` -fileHandler uncollated
+
 #------------------------------------------------------------------------------
