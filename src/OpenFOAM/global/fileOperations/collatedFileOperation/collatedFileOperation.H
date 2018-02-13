@@ -117,6 +117,7 @@ public:
         (
             const label comm,
             const labelList& ioRanks,
+            const word& typeName,
             const bool verbose
         );
 

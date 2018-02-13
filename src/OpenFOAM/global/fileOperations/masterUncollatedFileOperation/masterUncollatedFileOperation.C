@@ -773,24 +773,33 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePath
     }
 
     // Scatter the information about where the master found the object
+    // Note: use the worldComm to make sure all processors decide
+    //       the same type. Only procsDir is allowed to differ; searchType
+    //       and instance have to be same
     {
         label masterType(searchType);
-        Pstream::scatter(masterType, Pstream::msgType(), comm_);
+        Pstream::scatter(masterType);   //, Pstream::msgType(), comm_);
         searchType = pathType(masterType);
     }
     Pstream::scatter(procsDir, Pstream::msgType(), comm_);
-    Pstream::scatter(newInstancePath, Pstream::msgType(), comm_);
-
+    Pstream::scatter(newInstancePath);  //, Pstream::msgType(), comm_);
 
     // Use the master type to determine if additional information is
     // needed to construct the local equivalent
     switch (searchType)
     {
+        case fileOperation::PARENTOBJECT:
+        {
+            // Distribute master path. This makes sure it is seen as uniform
+            // and only gets read from the master.
+            Pstream::scatter(objPath);  //, Pstream::msgType(), comm_);
+        }
+        break;
+
         case fileOperation::ABSOLUTE:
         case fileOperation::WRITEOBJECT:
         case fileOperation::PROCESSORSBASEOBJECT:
         case fileOperation::PROCESSORSOBJECT:
-        case fileOperation::PARENTOBJECT:
         case fileOperation::FINDINSTANCE:
         case fileOperation::PROCESSORSBASEINSTANCE:
         case fileOperation::PROCESSORSINSTANCE:
@@ -1065,18 +1074,37 @@ bool Foam::fileOperations::masterUncollatedFileOperation::readHeader
             {
                 if (!filePaths[proci].empty())
                 {
-                    IFstream is(filePaths[proci]);
-
-                    if (is.good())
+                    if (proci > 0 && filePaths[proci] == filePaths[proci-1])
                     {
-                        result[proci] = io.readHeader(is);
-                        if (io.headerClassName() == decomposedBlockData::typeName)
+                        result[proci] = result[proci-1];
+                        headerClassName[proci] = headerClassName[proci-1];
+                        note[proci] = note[proci-1];
+                    }
+                    else
+                    {
+                        IFstream is(filePaths[proci]);
+
+                        if (is.good())
                         {
-                            // Read the header inside the container (master data)
-                            result[proci] = decomposedBlockData::readMasterHeader(io, is);
+                            result[proci] = io.readHeader(is);
+                            if
+                            (
+                                io.headerClassName()
+                             == decomposedBlockData::typeName
+                            )
+                            {
+                                // Read the header inside the container (master
+                                // data)
+                                result[proci] = decomposedBlockData::
+                                readMasterHeader
+                                (
+                                    io,
+                                    is
+                                );
+                            }
+                            headerClassName[proci] = io.headerClassName();
+                            note[proci] = io.note();
                         }
-                        headerClassName[proci] = io.headerClassName();
-                        note[proci] = io.note();
                     }
                 }
             }
@@ -1312,6 +1340,73 @@ Foam::fileOperations::masterUncollatedFileOperation::readStream
         // Note: a special case is that all the filePaths are empty (so also
         // classified as uniform). This can only happen if valid is false
         // (e.g. if trying to restart from lagrangian and there is none)
+
+        //if (Pstream::master())
+        //{
+        //    // Search for file to read and send it to all processors with
+        //    // same fileName
+        //
+        //    for
+        //    (
+        //        label proci = 0;
+        //        proci < Pstream::nProcs();  //comm_);
+        //        proci++
+        //    )
+        //    {
+        //        if (procValid[proci] && !filePaths[proci].empty())
+        //        {
+        //            // Collect processors with same file
+        //            DynamicList<label> validProcs(Pstream::nProcs()); //comm_));
+        //
+        //            validProcs.append(proci);
+        //            for
+        //            (
+        //                label revcProci = proci+1;
+        //                recvProci < Pstream::nProcs()
+        //             && procValid[recvProci]
+        //             && filePaths[recvProci] == filePaths[proci];
+        //                recvProci++
+        //            )
+        //            {
+        //                validProcs.append(revcProci);
+        //            }
+        //
+        //            // Note: handle compression ourselves since size cannot
+        //            // be determined without actually uncompressing
+        //
+        //            if (debug)
+        //            {
+        //                Pout<< "masterUncollatedFileOperation::readStream :"
+        //                    << " For file " << fName
+        //                    << " sending to " << validProcs << endl;
+        //            }
+        //
+        //            if (Foam::exists(filePaths[proci]+".gz", false))
+        //            {
+        //                readAndSend
+        //                (
+        //                    filePaths[proci],
+        //                    IOstream::compressionType::COMPRESSED,
+        //                    validProcs,
+        //                    pBufs
+        //                );
+        //            }
+        //            else
+        //            {
+        //                readAndSend
+        //                (
+        //                    filePaths[proci],
+        //                    IOstream::compressionType::UNCOMPRESSED,
+        //                    validProcs,
+        //                    pBufs
+        //                );
+        //            }
+        //
+        //            proci = validProcs.last();
+        //        }
+        //    }
+        //}
+
 
         if (Pstream::master())  //comm_))
         {

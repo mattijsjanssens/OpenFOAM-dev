@@ -152,6 +152,7 @@ Foam::fileOperations::multiCollatedFileOperation::multiCollatedFileOperation
             subRanks(Pstream::nProcs())
         ),
         ioRanks(),  // For serial operation: know processor directories
+        typeName,
         verbose
     )
 {
