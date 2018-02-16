@@ -350,14 +350,22 @@ protected:
         Type scatterList(const UList<Type>&, const int, const label comm) const;
 
         template<class Type, class fileOp>
-        Type masterOp(const fileName&, const fileOp& fop) const;
+        Type masterOp
+        (
+            const fileName&,
+            const fileOp& fop,
+            const int tag,
+            const label comm
+        ) const;
 
         template<class Type, class fileOp>
         Type masterOp
         (
             const fileName&,
             const fileName&,
-            const fileOp& fop
+            const fileOp& fop,
+            const int tag,
+            const label comm
         ) const;
 
         //- Equivalent of Time::findInstance

@@ -725,51 +725,57 @@ void Foam::argList::parse
                     dictNProcs = roots.size()+1;
                 }
             }
-            else if (getEnv("FOAM_ROOTS").size())
-            {
-//XXXXX
-                IStringStream is(getEnv("FOAM_ROOTS"));
-                HashTable<fileName, string> hostToRoot(is);
-                roots.setSize(Pstream::nProcs()-1);
-                forAll(slaveMachine, i)
-                {
-                    const string& slave = slaveMachine[i];
-                    if (!hostToRoot.found(slave))
-                    {
-                        WarningInFunction << "Cannot find root for machine "
-                            << slave << " in environment variable FOAM_ROOTS"
-                            << endl;
-                    }
-                    else
-                    {
-                        roots[i] = hostToRoot[slaveMachine[i]];
-                    }
-                }
-            }
-//XXXXX
             else
             {
-                source = rootPath_/globalCase_/"system/decomposeParDict";
-                IFstream decompDictStream(source);
-
-                if (!decompDictStream.good())
+                string rootString(getEnv("FOAM_ROOTS"));
+                if (!rootString.empty())
                 {
-                    FatalError
-                        << "Cannot read "
-                        << decompDictStream.name()
-                        << exit(FatalError);
+                    IStringStream is(rootString);
+                    HashTable<fileName, string> hostToRoot(is);
+                    roots.setSize(Pstream::nProcs()-1);
+                    forAll(slaveMachine, i)
+                    {
+                        const string& slave = slaveMachine[i];
+                        HashTable<fileName, string>::const_iterator fnd =
+                            hostToRoot.find(slave);
+
+                        if (fnd == hostToRoot.end())
+                        {
+                            WarningInFunction << "Cannot find root for machine "
+                                << slave
+                                << " in environment variable FOAM_ROOTS"
+                                << endl;
+                        }
+                        else
+                        {
+                            roots[i] = fnd();
+                        }
+                    }
                 }
-
-                dictionary decompDict(decompDictStream);
-
-                dictNProcs = readLabel
-                (
-                    decompDict.lookup("numberOfSubdomains")
-                );
-
-                if (decompDict.lookupOrDefault("distributed", false))
+                else
                 {
-                    decompDict.lookup("roots") >> roots;
+                    source = rootPath_/globalCase_/"system/decomposeParDict";
+                    IFstream decompDictStream(source);
+
+                    if (!decompDictStream.good())
+                    {
+                        FatalError
+                            << "Cannot read "
+                            << decompDictStream.name()
+                            << exit(FatalError);
+                    }
+
+                    dictionary decompDict(decompDictStream);
+
+                    dictNProcs = readLabel
+                    (
+                        decompDict.lookup("numberOfSubdomains")
+                    );
+
+                    if (decompDict.lookupOrDefault("distributed", false))
+                    {
+                        decompDict.lookup("roots") >> roots;
+                    }
                 }
             }
 
