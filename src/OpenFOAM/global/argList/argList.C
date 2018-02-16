@@ -643,6 +643,58 @@ void Foam::argList::parse
         Foam::fileHandler(handler);
     }
 
+
+    stringList slaveMachine;
+    stringList slaveProcs;
+
+    // Collect slave machine/pid
+    if (parRunControl_.parRun())
+    {
+        if (Pstream::master())
+        {
+            slaveMachine.setSize(Pstream::nProcs() - 1);
+            slaveProcs.setSize(Pstream::nProcs() - 1);
+            label proci = 0;
+            for
+            (
+                int slave = Pstream::firstSlave();
+                slave <= Pstream::lastSlave();
+                slave++
+            )
+            {
+                IPstream fromSlave(Pstream::commsTypes::scheduled, slave);
+
+                string slaveBuild;
+                label slavePid;
+                fromSlave >> slaveBuild >> slaveMachine[proci] >> slavePid;
+
+                slaveProcs[proci] = slaveMachine[proci]+"."+name(slavePid);
+                proci++;
+
+                // Check build string to make sure all processors are running
+                // the same build
+                if (slaveBuild != Foam::FOAMbuild)
+                {
+                    FatalErrorIn(executable())
+                        << "Master is running version " << Foam::FOAMbuild
+                        << "; slave " << proci << " is running version "
+                        << slaveBuild
+                        << exit(FatalError);
+                }
+            }
+        }
+        else
+        {
+            OPstream toMaster
+            (
+                Pstream::commsTypes::scheduled,
+                Pstream::masterNo()
+            );
+            toMaster << string(Foam::FOAMbuild) << hostName() << pid();
+        }
+    }
+
+
     // Case is a single processor run unless it is running parallel
     int nProcs = 1;
 
@@ -673,6 +725,28 @@ void Foam::argList::parse
                     dictNProcs = roots.size()+1;
                 }
             }
+            else if (getEnv("FOAM_ROOTS").size())
+            {
+//XXXXX
+                IStringStream is(getEnv("FOAM_ROOTS"));
+                HashTable<fileName, string> hostToRoot(is);
+                roots.setSize(Pstream::nProcs()-1);
+                forAll(slaveMachine, i)
+                {
+                    const string& slave = slaveMachine[i];
+                    if (!hostToRoot.found(slave))
+                    {
+                        WarningInFunction << "Cannot find root for machine "
+                            << slave << " in environment variable FOAM_ROOTS"
+                            << endl;
+                    }
+                    else
+                    {
+                        roots[i] = hostToRoot[slaveMachine[i]];
+                    }
+                }
+            }
+//XXXXX
             else
             {
                 source = rootPath_/globalCase_/"system/decomposeParDict";
@@ -838,56 +912,6 @@ void Foam::argList::parse
         getRootCase();
         case_ = globalCase_;
     }
-
-
-    stringList slaveProcs;
-
-    // Collect slave machine/pid
-    if (parRunControl_.parRun())
-    {
-        if (Pstream::master())
-        {
-            slaveProcs.setSize(Pstream::nProcs() - 1);
-            label proci = 0;
-            for
-            (
-                int slave = Pstream::firstSlave();
-                slave <= Pstream::lastSlave();
-                slave++
-            )
-            {
-                IPstream fromSlave(Pstream::commsTypes::scheduled, slave);
-
-                string slaveBuild;
-                string slaveMachine;
-                label slavePid;
-                fromSlave >> slaveBuild >> slaveMachine >> slavePid;
-
-                slaveProcs[proci++] = slaveMachine + "." + name(slavePid);
-
-                // Check build string to make sure all processors are running
-                // the same build
-                if (slaveBuild != Foam::FOAMbuild)
-                {
-                    FatalErrorIn(executable())
-                        << "Master is running version " << Foam::FOAMbuild
-                        << "; slave " << proci << " is running version "
-                        << slaveBuild
-                        << exit(FatalError);
-                }
-            }
-        }
-        else
-        {
-            OPstream toMaster
-            (
-                Pstream::commsTypes::scheduled,
-                Pstream::masterNo()
-            );
-            toMaster << string(Foam::FOAMbuild) << hostName() << pid();
-        }
-    }
-
 
     if (Pstream::master() && writeInfoHeader)
     {
