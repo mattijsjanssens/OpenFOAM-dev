@@ -343,7 +343,7 @@ Foam::fileName Foam::fileOperations::collatedFileOperation::objectPath
     // Replacement for objectPath
     if (io.time().processorCase())
     {
-        return masterUncollatedFileOperation::objectPath
+        return masterUncollatedFileOperation::localObjectPath
         (
             io,
             fileOperation::PROCESSORSOBJECT,
@@ -353,7 +353,7 @@ Foam::fileName Foam::fileOperations::collatedFileOperation::objectPath
     }
     else
     {
-        return masterUncollatedFileOperation::objectPath
+        return masterUncollatedFileOperation::localObjectPath
         (
             io,
             fileOperation::OBJECT,

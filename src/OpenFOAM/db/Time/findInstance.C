@@ -35,64 +35,228 @@ Description
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-bool Foam::Time::exists(IOobject& io)
-{
-    // Generate output filename for object
-    fileName objPath(fileHandler().objectPath(io, word::null));
-
-    // Test for either directory or a (valid) file & IOobject
-    bool ok;
-    if (io.name().empty())
-    {
-        ok = fileHandler().isDir(objPath);
-    }
-    else
-    {
-        ok =
-            fileHandler().isFile(objPath)
-         && io.typeHeaderOk<IOList<label>>(false);// object with local scope
-    }
-
-    if (!ok)
-    {
-//         // Re-test with raw objectPath. This is for backwards
-//         // compatibility
-//         fileName originalPath(io.objectPath());
-//         if (originalPath != objPath)
-//         {
-//             // Test for either directory or a (valid) file & IOobject
-//             if (io.name().empty())
-//             {
-//                 ok = fileHandler().isDir(originalPath);
-//             }
-//             else
-//             {
-//                 ok =
-//                     fileHandler().isFile(originalPath)
-//                  && io.typeHeaderOk<IOList<label>>(false);
-//             }
-//         }
-        // Re-test with searched for objectPath. This is for backwards
-        // compatibility
-        fileName originalPath(fileHandler().filePath(io.objectPath()));
-        if (originalPath != objPath)
-        {
-            // Test for either directory or a (valid) file & IOobject
-            if (io.name().empty())
-            {
-                ok = fileHandler().isDir(originalPath);
-            }
-            else
-            {
-                ok =
-                    fileHandler().isFile(originalPath)
-                 && io.typeHeaderOk<IOList<label>>(false);
-            }
-        }
-    }
-
-    return ok;
-}
+//bool Foam::Time::exists(IOobject& io)
+//{
+//    // Generate output filename for object
+//    fileName objPath(fileHandler().objectPath(io, word::null));
+//
+//    // Test for either directory or a (valid) file & IOobject
+//    bool ok;
+//    if (io.name().empty())
+//    {
+//        ok = fileHandler().isDir(objPath);
+//    }
+//    else
+//    {
+//        ok =
+//            fileHandler().isFile(objPath)
+//         && io.typeHeaderOk<IOList<label>>(false);// object with local scope
+//    }
+//
+//    if (!ok)
+//    {
+////         // Re-test with raw objectPath. This is for backwards
+////         // compatibility
+////         fileName originalPath(io.objectPath());
+////         if (originalPath != objPath)
+////         {
+////             // Test for either directory or a (valid) file & IOobject
+////             if (io.name().empty())
+////             {
+////                 ok = fileHandler().isDir(originalPath);
+////             }
+////             else
+////             {
+////                 ok =
+////                     fileHandler().isFile(originalPath)
+////                  && io.typeHeaderOk<IOList<label>>(false);
+////             }
+////         }
+//        // Re-test with searched for objectPath. This is for backwards
+//        // compatibility
+//        fileName originalPath(fileHandler().filePath(io.objectPath()));
+//        if (originalPath != objPath)
+//        {
+//            // Test for either directory or a (valid) file & IOobject
+//            if (io.name().empty())
+//            {
+//                ok = fileHandler().isDir(originalPath);
+//            }
+//            else
+//            {
+//                ok =
+//                    fileHandler().isFile(originalPath)
+//                 && io.typeHeaderOk<IOList<label>>(false);
+//            }
+//        }
+//    }
+//
+//    return ok;
+//}
+//
+//
+//Foam::word Foam::Time::findInstance
+//(
+//    const fileName& dir,
+//    const word& name,
+//    const IOobject::readOption rOpt,
+//    const word& stopInstance
+//) const
+//{
+//    // Note: - if name is empty, just check the directory itself
+//    //       - check both for isFile and headerOk since the latter does a
+//    //         filePath so searches for the file.
+//    //       - check for an object with local file scope (so no looking up in
+//    //         parent directory in case of parallel)
+//
+//    {
+//        IOobject io
+//        (
+//            name,           // name might be empty!
+//            timeName(),
+//            dir,
+//            *this
+//        );
+//
+//        if (exists(io))
+//        {
+//            if (debug)
+//            {
+//                InfoInFunction
+//                    << "Found exact match for \"" << name
+//                    << "\" in " << timeName()/dir
+//                    << endl;
+//            }
+//
+//            return timeName();
+//        }
+//    }
+//
+//    // Search back through the time directories to find the time
+//    // closest to and lower than current time
+//
+//    instantList ts = times();
+//    label instanceI;
+//
+//    for (instanceI = ts.size()-1; instanceI >= 0; --instanceI)
+//    {
+//        if (ts[instanceI].value() <= timeOutputValue())
+//        {
+//            break;
+//        }
+//    }
+//
+//    // continue searching from here
+//    for (; instanceI >= 0; --instanceI)
+//    {
+//        // Shortcut: if actual directory is the timeName we've already tested it
+//        if (ts[instanceI].name() == timeName())
+//        {
+//            continue;
+//        }
+//
+//        IOobject io
+//        (
+//            name,           // name might be empty!
+//            ts[instanceI].name(),
+//            dir,
+//            *this
+//        );
+//
+//        if (exists(io))
+//        {
+//            if (debug)
+//            {
+//                InfoInFunction
+//                    << "Found instance match for \"" << name
+//                    << "\" in " << ts[instanceI].name()/dir
+//                    << endl;
+//            }
+//
+//            return ts[instanceI].name();
+//        }
+//
+//        // Check if hit minimum instance
+//        if (ts[instanceI].name() == stopInstance)
+//        {
+//            if (debug)
+//            {
+//                InfoInFunction
+//                    << "Hit stopInstance " << stopInstance << endl;
+//            }
+//
+//            if
+//            (
+//                rOpt == IOobject::MUST_READ
+//             || rOpt == IOobject::MUST_READ_IF_MODIFIED
+//            )
+//            {
+//                if (name.empty())
+//                {
+//                    FatalErrorInFunction
+//                        << "Cannot find directory "
+//                        << dir << " in times " << timeName()
+//                        << " down to " << stopInstance
+//                        << exit(FatalError);
+//                }
+//                else
+//                {
+//                    FatalErrorInFunction
+//                        << "Cannot find file \"" << name << "\" in directory "
+//                        << dir << " in times " << timeName()
+//                        << " down to " << stopInstance
+//                        << exit(FatalError);
+//                }
+//            }
+//
+//            return ts[instanceI].name();
+//        }
+//    }
+//
+//    // times() usually already includes the constant() so would have been
+//    // checked above. Re-test if
+//    // - times() is empty. Sometimes this can happen (e.g. decomposePar with
+//    //   collated)
+//    // - times()[0] is not constant
+//    if (!ts.size() || ts[0].name() != constant())
+//    {
+//        // Note. This needs to be a hard-coded constant, rather than the
+//        // constant function of the time, because the latter points to
+//        // the case constant directory in parallel cases
+//
+//        IOobject io
+//        (
+//            name,
+//            constant(),
+//            dir,
+//            *this
+//        );
+//
+//        if (exists(io))
+//        {
+//            if (debug)
+//            {
+//                InfoInFunction
+//                    << "Found constant match for \"" << name
+//                    << "\" in " << constant()/dir
+//                    << endl;
+//            }
+//            return constant();
+//        }
+//    }
+//
+//
+//    if (rOpt == IOobject::MUST_READ || rOpt == IOobject::MUST_READ_IF_MODIFIED)
+//    {
+//        FatalErrorInFunction
+//            << "Cannot find file \"" << name << "\" in directory "
+//            << dir << " in times " << timeName()
+//            << " down to " << constant()
+//            << exit(FatalError);
+//    }
+//
+//    return constant();
+//}
 
 
 Foam::word Foam::Time::findInstance
@@ -103,159 +267,25 @@ Foam::word Foam::Time::findInstance
     const word& stopInstance
 ) const
 {
-    // Note: - if name is empty, just check the directory itself
-    //       - check both for isFile and headerOk since the latter does a
-    //         filePath so searches for the file.
-    //       - check for an object with local file scope (so no looking up in
-    //         parent directory in case of parallel)
+    IOobject startIO
+    (
+        name,           // name might be empty!
+        timeName(),
+        dir,
+        *this,
+        rOpt
+    );
 
-    {
-        IOobject io
+    IOobject io
+    (
+        fileHandler().findInstance
         (
-            name,           // name might be empty!
-            timeName(),
-            dir,
-            *this
-        );
-
-        if (exists(io))
-        {
-            if (debug)
-            {
-                InfoInFunction
-                    << "Found exact match for \"" << name
-                    << "\" in " << timeName()/dir
-                    << endl;
-            }
-
-            return timeName();
-        }
-    }
-
-    // Search back through the time directories to find the time
-    // closest to and lower than current time
-
-    instantList ts = times();
-    label instanceI;
-
-    for (instanceI = ts.size()-1; instanceI >= 0; --instanceI)
-    {
-        if (ts[instanceI].value() <= timeOutputValue())
-        {
-            break;
-        }
-    }
-
-    // continue searching from here
-    for (; instanceI >= 0; --instanceI)
-    {
-        // Shortcut: if actual directory is the timeName we've already tested it
-        if (ts[instanceI].name() == timeName())
-        {
-            continue;
-        }
-
-        IOobject io
-        (
-            name,           // name might be empty!
-            ts[instanceI].name(),
-            dir,
-            *this
-        );
-
-        if (exists(io))
-        {
-            if (debug)
-            {
-                InfoInFunction
-                    << "Found instance match for \"" << name
-                    << "\" in " << ts[instanceI].name()/dir
-                    << endl;
-            }
-
-            return ts[instanceI].name();
-        }
-
-        // Check if hit minimum instance
-        if (ts[instanceI].name() == stopInstance)
-        {
-            if (debug)
-            {
-                InfoInFunction
-                    << "Hit stopInstance " << stopInstance << endl;
-            }
-
-            if
-            (
-                rOpt == IOobject::MUST_READ
-             || rOpt == IOobject::MUST_READ_IF_MODIFIED
-            )
-            {
-                if (name.empty())
-                {
-                    FatalErrorInFunction
-                        << "Cannot find directory "
-                        << dir << " in times " << timeName()
-                        << " down to " << stopInstance
-                        << exit(FatalError);
-                }
-                else
-                {
-                    FatalErrorInFunction
-                        << "Cannot find file \"" << name << "\" in directory "
-                        << dir << " in times " << timeName()
-                        << " down to " << stopInstance
-                        << exit(FatalError);
-                }
-            }
-
-            return ts[instanceI].name();
-        }
-    }
-
-    // times() usually already includes the constant() so would have been
-    // checked above. Re-test if
-    // - times() is empty. Sometimes this can happen (e.g. decomposePar with
-    //   collated)
-    // - times()[0] is not constant
-    if (!ts.size() || ts[0].name() != constant())
-    {
-        // Note. This needs to be a hard-coded constant, rather than the
-        // constant function of the time, because the latter points to
-        // the case constant directory in parallel cases
-
-        IOobject io
-        (
-            name,
-            constant(),
-            dir,
-            *this
-        );
-
-        if (exists(io))
-        {
-            if (debug)
-            {
-                InfoInFunction
-                    << "Found constant match for \"" << name
-                    << "\" in " << constant()/dir
-                    << endl;
-            }
-            return constant();
-        }
-    }
-
-
-    if (rOpt == IOobject::MUST_READ || rOpt == IOobject::MUST_READ_IF_MODIFIED)
-    {
-        FatalErrorInFunction
-            << "Cannot find file \"" << name << "\" in directory "
-            << dir << " in times " << timeName()
-            << " down to " << constant()
-            << exit(FatalError);
-    }
-
-    return constant();
+            startIO,
+            timeOutputValue(),
+            stopInstance
+        )
+    );
+    return io.instance();
 }
 
 

@@ -132,7 +132,7 @@ Foam::fileOperations::masterUncollatedFileOperation::filePathInfo
     else
     {
         // 1. Check the writing fileName
-        fileName writePath(fileOperation::objectPath(io, io.headerClassName()));
+        fileName writePath(objectPath(io, io.headerClassName()));
 
         if (isFileOrDir(isFile, writePath))
         {
@@ -275,7 +275,8 @@ Foam::fileOperations::masterUncollatedFileOperation::filePathInfo
 }
 
 
-Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::objectPath
+Foam::fileName
+Foam::fileOperations::masterUncollatedFileOperation::localObjectPath
 (
     const IOobject& io,
     const pathType& searchType,
@@ -301,7 +302,7 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::objectPath
 
         case fileOperation::WRITEOBJECT:
         {
-            return fileOperation::objectPath(io, io.headerClassName());
+            return objectPath(io, io.headerClassName());
         }
         break;
 
@@ -903,7 +904,13 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePath
         case fileOperation::PROCESSORSINSTANCE:
         {
             // Construct equivalent local path
-            objPath = objectPath(io, searchType, procsDir, newInstancePath);
+            objPath = localObjectPath
+            (
+                io,
+                searchType,
+                procsDir,
+                newInstancePath
+            );
         }
         break;
 
@@ -1002,7 +1009,13 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::dirPath
         case fileOperation::PROCESSORSINSTANCE:
         {
             // Construct equivalent local path
-            objPath = objectPath(io, searchType, procsDir, newInstancePath);
+            objPath = localObjectPath
+            (
+                io,
+                searchType,
+                procsDir,
+                newInstancePath
+            );
         }
         break;
 
@@ -1030,6 +1043,207 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::dirPath
             << "    filePath  :" << objPath << endl << endl;
     }
     return objPath;
+}
+
+
+Foam::IOobject
+Foam::fileOperations::masterUncollatedFileOperation::findInstance
+(
+    const IOobject& startIO,
+    const scalar startValue,
+    const word& stopInstance
+) const
+{
+    const Time& time = startIO.time();
+
+    IOobject io(startIO);
+
+    // Note: - if name is empty, just check the directory itself
+    //       - check both for isFile and headerOk since the latter does a
+    //         filePath so searches for the file.
+    //       - check for an object with local file scope (so no looking up in
+    //         parent directory in case of parallel)
+
+    word foundInstance;
+
+    if (Pstream::master(comm_))
+    {
+        // Generate output filename for object
+        fileName objPath(objectPath(io, word::null));
+        if
+        (
+            (io.name().empty() && Foam::isDir(objPath))
+         || (!io.name().empty() && Foam::isFile(objPath))
+        )
+        {
+            foundInstance = io.instance();
+        }
+    }
+
+    // Do parallel early exit to avoid calling time.times()
+    Pstream::scatter(foundInstance, Pstream::msgType(), comm_);
+    if (!foundInstance.empty())
+    {
+        io.instance() = foundInstance;
+        if (debug)
+        {
+            Pout<< "masterUncollatedFileOperation::findInstance :"
+                << " for name:" << io.name() << " local:" << io.local()
+                << " found starting instance:" << io.instance() << endl;
+        }
+        return io;
+    }
+
+
+    // Search back through the time directories to find the time
+    // closest to and lower than current time
+
+    instantList ts = time.times();
+    if (Pstream::master(comm_))
+    {
+        label instanceI;
+
+        for (instanceI = ts.size()-1; instanceI >= 0; --instanceI)
+        {
+            if (ts[instanceI].value() <= startValue)
+            {
+                break;
+            }
+        }
+
+        // continue searching from here
+        for (; instanceI >= 0; --instanceI)
+        {
+            // Shortcut: if actual directory is the timeName we've
+            // already tested it
+            if (ts[instanceI].name() == time.timeName())
+            {
+                continue;
+            }
+
+            io.instance() = ts[instanceI].name();
+            fileName objPath(objectPath(io, word::null));
+
+            if
+            (
+                (io.name().empty() && Foam::isDir(objPath))
+             || (!io.name().empty() && Foam::isFile(objPath))
+            )
+            {
+                foundInstance = io.instance();
+                if (debug)
+                {
+                    Pout<< "masterUncollatedFileOperation::findInstance :"
+                        << " for name:" << io.name() << " local:" << io.local()
+                        << " found at:" << io.instance()
+                        << endl;
+                }
+                break;
+            }
+
+            // Check if hit minimum instance
+            if (ts[instanceI].name() == stopInstance)
+            {
+                if
+                (
+                    startIO.readOpt() == IOobject::MUST_READ
+                 || startIO.readOpt() == IOobject::MUST_READ_IF_MODIFIED
+                )
+                {
+                    if (io.name().empty())
+                    {
+                        FatalErrorInFunction
+                            << "Cannot find directory "
+                            << io.local() << " in times " << time.timeName()
+                            << " down to " << stopInstance
+                            << exit(FatalError);
+                    }
+                    else
+                    {
+                        FatalErrorInFunction
+                            << "Cannot find file \"" << io.name()
+                            << "\" in directory " << io.local()
+                            << " in times " << time.timeName()
+                            << " down to " << stopInstance
+                            << exit(FatalError);
+                    }
+                }
+                foundInstance = io.instance();
+                if (debug)
+                {
+                    Pout<< "masterUncollatedFileOperation::findInstance :"
+                        << " for name:" << io.name() << " local:" << io.local()
+                        << " returning stopinstance:" << io.instance()
+                        << endl;
+                }
+                break;
+            }
+        }
+
+
+        if (foundInstance.empty())
+        {
+            // times() usually already includes the constant() so would
+            // have been checked above. Re-test if
+            // - times() is empty. Sometimes this can happen (e.g. decomposePar
+            //   with collated)
+            // - times()[0] is not constant
+            if (!ts.size() || ts[0].name() != time.constant())
+            {
+                // Note. This needs to be a hard-coded constant, rather than the
+                // constant function of the time, because the latter points to
+                // the case constant directory in parallel cases
+
+                io.instance() = time.constant();
+                fileName objPath(objectPath(io, word::null));
+                if
+                (
+                    (io.name().empty() && Foam::isDir(objPath))
+                 || (!io.name().empty() && Foam::isFile(objPath))
+                )
+                {
+                    if (debug)
+                    {
+                        Pout<< "masterUncollatedFileOperation::findInstance :"
+                            << " name:" << io.name()
+                            << " local:" << io.local()
+                            << " found at:" << io.instance() << endl;
+                    }
+                    foundInstance = io.instance();
+                }
+            }
+        }
+
+        if (foundInstance.empty())
+        {
+            if
+            (
+                startIO.readOpt() == IOobject::MUST_READ
+             || startIO.readOpt() == IOobject::MUST_READ_IF_MODIFIED
+            )
+            {
+                FatalErrorInFunction
+                    << "Cannot find file \"" << io.name() << "\" in directory "
+                    << io.local() << " in times " << startIO.instance()
+                    << " down to " << time.constant()
+                    << exit(FatalError);
+            }
+            else
+            {
+                foundInstance = time.constant();
+            }
+        }
+    }
+
+    Pstream::scatter(foundInstance, Pstream::msgType(), comm_);
+    io.instance() = foundInstance;
+    if (debug)
+    {
+        Pout<< "masterUncollatedFileOperation::findInstance :"
+            << " name:" << io.name() << " local:" << io.local()
+            << " returning instance:" << io.instance() << endl;
+    }
+    return io;
 }
 
 
@@ -1139,14 +1353,14 @@ bool Foam::fileOperations::masterUncollatedFileOperation::readHeader
 
     fileNameList filePaths(Pstream::nProcs(comm_)); //Pstream::worldComm));
     filePaths[Pstream::myProcNo(comm_ /*Pstream::worldComm*/)] = fName;
-    Pstream::gatherList(filePaths, Pstream::msgType(), comm_);  //Pstream::worldComm);
+    Pstream::gatherList(filePaths, Pstream::msgType(), comm_);
 
     bool uniform = uniformFile(filePaths);
-    Pstream::scatter(uniform, Pstream::msgType(), comm_);//Pstream::worldComm);
+    Pstream::scatter(uniform, Pstream::msgType(), comm_);
 
     if (uniform)
     {
-        if (Pstream::master(comm_)) //Pstream::worldComm))
+        if (Pstream::master(comm_))
         {
             if (!fName.empty())
             {
@@ -1163,21 +1377,21 @@ bool Foam::fileOperations::masterUncollatedFileOperation::readHeader
                 }
             }
         }
-        Pstream::scatter(ok, Pstream::msgType(), comm_);    //Pstream::worldComm);
+        Pstream::scatter(ok, Pstream::msgType(), comm_);
         Pstream::scatter
         (
             io.headerClassName(),
             Pstream::msgType(),
-            comm_   //Pstream::worldComm
+            comm_
         );
-        Pstream::scatter(io.note(), Pstream::msgType(), comm_);//Pstream::worldComm);
+        Pstream::scatter(io.note(), Pstream::msgType(), comm_);
     }
     else
     {
-        boolList result(Pstream::nProcs(comm_));    //Pstream::worldComm), false);
-        wordList headerClassName(Pstream::nProcs(comm_));   //Pstream::worldComm));
-        stringList note(Pstream::nProcs(comm_));    //Pstream::worldComm));
-        if (Pstream::master(comm_)) //Pstream::worldComm))
+        boolList result(Pstream::nProcs(comm_));
+        wordList headerClassName(Pstream::nProcs(comm_));
+        stringList note(Pstream::nProcs(comm_));
+        if (Pstream::master(comm_))
         {
             forAll(filePaths, proci)
             {
@@ -1218,14 +1432,14 @@ bool Foam::fileOperations::masterUncollatedFileOperation::readHeader
                 }
             }
         }
-        ok = scatterList(result, Pstream::msgType(), comm_);//Pstream::worldComm);
+        ok = scatterList(result, Pstream::msgType(), comm_);
         io.headerClassName() = scatterList
         (
             headerClassName,
             Pstream::msgType(),
-            comm_   //Pstream::worldComm
+            comm_
         );
-        io.note() = scatterList(note, Pstream::msgType(), comm_);   //Pstream::worldComm);
+        io.note() = scatterList(note, Pstream::msgType(), comm_);
     }
 
     if (debug)
@@ -1472,7 +1686,7 @@ Foam::fileOperations::masterUncollatedFileOperation::readStream
         //        if (procValid[proci] && !filePaths[proci].empty())
         //        {
         //            // Collect processors with same file
-        //            DynamicList<label> validProcs(Pstream::nProcs()); //comm_));
+        //            DynamicList<label> validProcs(Pstream::nProcs());
         //
         //            validProcs.append(proci);
         //            for

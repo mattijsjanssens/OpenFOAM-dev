@@ -393,7 +393,7 @@ protected:
         ) const;
 
         //- Construct filePath
-        fileName objectPath
+        fileName localObjectPath
         (
             const IOobject&,
             const pathType& searchType,
@@ -682,6 +682,16 @@ public:
 
             //- Get sorted list of times
             virtual instantList findTimes(const fileName&, const word&) const;
+
+            //- Find instance where IOobject is. Fails if cannot be found
+            //  and readOpt() is MUST_READ/MUST_READ_IF_MODIFIED. Otherwise
+            //  returns stopInstance.
+            virtual IOobject findInstance
+            (
+                const IOobject& io,
+                const scalar startValue,
+                const word& stopInstance
+            ) const;
 
             //- Callback for time change
             virtual void setTime(const Time&) const;
