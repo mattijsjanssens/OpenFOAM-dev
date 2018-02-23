@@ -43,6 +43,28 @@ namespace Foam
     defineTypeNameAndDebug(fileOperation, 0);
     defineRunTimeSelectionTable(fileOperation, word);
 
+    template<>
+    const char* Foam::NamedEnum
+    <
+        fileOperation::pathType,
+        12
+    >::names[] =
+    {
+        "notFound",
+        "absolute",
+        "objectPath",
+        "writeObject",
+        "uncollatedProc",
+        "globalProc",
+        "localProc",
+        "parentObjectPath",
+        "findInstance",
+        "uncollatedProcInstance",
+        "globalProcInstance",
+        "localProcInstance"
+    };
+    const NamedEnum<fileOperation::pathType, 12> fileOperation::pathTypeNames_;
+
     word fileOperation::defaultFileHandler
     (
         debug::optimisationSwitches().lookupOrAddDefault
@@ -215,7 +237,7 @@ bool Foam::fileOperation::isFileOrDir(const bool isFile, const fileName& f)
 }
 
 
-Foam::tmpNrc<Foam::dirIndexList>
+Foam::tmpNrc<Foam::fileOperation::dirIndexList>
 Foam::fileOperation::lookupProcessorsPath(const fileName& fName) const
 {
     // If path is local to a processor (e.g. contains 'processor2')
@@ -271,7 +293,14 @@ Foam::fileOperation::lookupProcessorsPath(const fileName& fName) const
             if (proci == readProci)
             {
                 // Found "processorDDD". No need for index.
-                procDirs.append(dirIndex(dirN, Tuple2<bool, label>(false, -1)));
+                procDirs.append
+                (
+                    dirIndex
+                    (
+                        dirN,
+                        Tuple2<pathType, label>(PROCUNCOLLATED, -1)
+                    )
+                );
             }
             else if (proci >= rStart && proci < rStart+rSize)
             {
@@ -282,7 +311,7 @@ Foam::fileOperation::lookupProcessorsPath(const fileName& fName) const
                     dirIndex
                     (
                         dirN,
-                        Tuple2<bool, label>(true, proci-rStart)
+                        Tuple2<pathType, label>(PROCOBJECT, proci-rStart)
                     )
                 );
             }
@@ -296,7 +325,11 @@ Foam::fileOperation::lookupProcessorsPath(const fileName& fName) const
                     // "processorsDDD"
                     procDirs.append
                     (
-                        dirIndex(dirN, Tuple2<bool, label>(false, proci))
+                        dirIndex
+                        (
+                            dirN,
+                            Tuple2<pathType, label>(PROCBASEOBJECT, proci)
+                        )
                     );
                 }
             }
@@ -325,7 +358,7 @@ Foam::fileOperation::lookupProcessorsPath(const fileName& fName) const
             return procsDirs_[procPath];
         }
     }
-    return tmpNrc<Foam::dirIndexList>(new dirIndexList(0, dirIndex()));
+    return tmpNrc<dirIndexList>(new dirIndexList(0, dirIndex()));
 }
 
 
@@ -386,11 +419,6 @@ Foam::autoPtr<Foam::fileOperation> Foam::fileOperation::New
     const bool verbose
 )
 {
-    if (debug)
-    {
-        InfoInFunction << "Constructing fileOperation" << endl;
-    }
-
     wordConstructorTable::iterator cstrIter =
         wordConstructorTablePtr_->find(type);
 

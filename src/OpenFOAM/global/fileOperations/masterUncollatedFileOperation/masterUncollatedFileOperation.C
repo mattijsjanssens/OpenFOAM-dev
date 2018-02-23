@@ -35,6 +35,7 @@ License
 #include "dummyISstream.H"
 #include "SubList.H"
 #include "unthreadedInitialise.H"
+#include "PackedBoolList.H"
 
 /* * * * * * * * * * * * * * * Static Member Data  * * * * * * * * * * * * * */
 
@@ -65,7 +66,7 @@ namespace fileOperations
     addNamedToRunTimeSelectionTable
     (
         fileOperationInitialise,
-        unthreadedInitialise,
+        masterUncollatedFileOperationInitialise,
         word,
         masterUncollated
     );
@@ -74,6 +75,57 @@ namespace fileOperations
 
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
+
+Foam::labelList Foam::fileOperations::masterUncollatedFileOperation::subRanks
+(
+    const label n
+)
+{
+    string ioRanksString(getEnv("FOAM_IORANKS"));
+    if (ioRanksString.empty())
+    {
+        return identity(n);
+    }
+    else
+    {
+        DynamicList<label> subRanks(n);
+
+        IStringStream is(ioRanksString);
+        labelList ioRanks(is);
+
+        if (findIndex(ioRanks, 0) == -1)
+        {
+            FatalErrorInFunction
+                << "Rank 0 (master) should be in the IO ranks. Currently "
+                << ioRanks << exit(FatalError);
+        }
+
+        // The lowest numbered rank is the IO rank
+        PackedBoolList isIOrank(n);
+        isIOrank.set(ioRanks);
+
+        for (label proci = Pstream::myProcNo(); proci >= 0; --proci)
+        {
+            if (isIOrank[proci])
+            {
+                // Found my master. Collect all processors with same master
+                subRanks.append(proci);
+                for
+                (
+                    label rank = proci+1;
+                    rank < n && !isIOrank[rank];
+                    ++rank
+                )
+                {
+                    subRanks.append(rank);
+                }
+                break;
+            }
+        }
+        return subRanks;
+    }
+}
+
 
 Foam::word
 Foam::fileOperations::masterUncollatedFileOperation::findInstancePath
@@ -152,15 +204,7 @@ Foam::fileOperations::masterUncollatedFileOperation::filePathInfo
                    /io.name();
                 if (objPath != writePath && isFileOrDir(isFile, objPath))
                 {
-                    if (pDirs()[i].second().first())
-                    {
-                        // Locally varying processorsDir
-                        searchType = fileOperation::PROCESSORSOBJECT;
-                    }
-                    else
-                    {
-                        searchType = fileOperation::PROCESSORSBASEOBJECT;
-                    }
+                    searchType = pDirs()[i].second().first();
                     procsDir = pDir;
                     return objPath;
                 }
@@ -240,14 +284,26 @@ Foam::fileOperations::masterUncollatedFileOperation::filePathInfo
                     );
                     if (isFileOrDir(isFile, fName))
                     {
-                        if (pDirs()[i].second().first())
+                        switch (pDirs()[i].second().first())
                         {
-                            // Locally varying processorsDir
-                            searchType = fileOperation::PROCESSORSINSTANCE;
-                        }
-                        else
-                        {
-                            searchType = fileOperation::PROCESSORSBASEINSTANCE;
+                            case fileOperation::PROCUNCOLLATED:
+                            {
+                                searchType =
+                                    fileOperation::PROCUNCOLLATEDINSTANCE;
+                            }
+                            break;
+                            case fileOperation::PROCBASEOBJECT:
+                            {
+                                searchType = fileOperation::PROCBASEINSTANCE;
+                            }
+                            break;
+                            case fileOperation::PROCOBJECT:
+                            {
+                                searchType = fileOperation::PROCINSTANCE;
+                            }
+                            break;
+                            default:
+                            break;
                         }
                         procsDir = pDir;
                         return fName;
@@ -306,16 +362,32 @@ Foam::fileOperations::masterUncollatedFileOperation::localObjectPath
         }
         break;
 
-        case fileOperation::PROCESSORSBASEOBJECT:
+        case fileOperation::PROCUNCOLLATED:
         {
+            // Uncollated type, e.g. processor1
+            const word procName
+            (
+                "processor"
+               +Foam::name(Pstream::myProcNo(Pstream::worldComm))
+            );
+            return
+                processorsPath(io, io.instance(), procName)
+               /io.name();
+        }
+        break;
+
+        case fileOperation::PROCBASEOBJECT:
+        {
+            // Collated, e.g. processors4
             return
                 processorsPath(io, io.instance(), procDir)
                /io.name();
         }
         break;
 
-        case fileOperation::PROCESSORSOBJECT:
+        case fileOperation::PROCOBJECT:
         {
+            // Processors directory locally provided by the fileHanlder itself
             return
                 processorsPath(io, io.instance(), processorsDir(io))
                /io.name();
@@ -338,16 +410,32 @@ Foam::fileOperations::masterUncollatedFileOperation::localObjectPath
         }
         break;
 
-        case fileOperation::PROCESSORSBASEINSTANCE:
+        case fileOperation::PROCUNCOLLATEDINSTANCE:
         {
+            // Uncollated type, e.g. processor1
+            const word procName
+            (
+                "processor"
+               +Foam::name(Pstream::myProcNo(Pstream::worldComm))
+            );
+            return
+                processorsPath(io, instancePath, procName)
+               /io.name();
+        }
+        break;
+
+        case fileOperation::PROCBASEINSTANCE:
+        {
+            // Collated, e.g. processors4
             return
                 processorsPath(io, instancePath, procDir)
                /io.name();
         }
         break;
 
-        case fileOperation::PROCESSORSINSTANCE:
+        case fileOperation::PROCINSTANCE:
         {
+            // Processors directory locally provided by the fileHanlder itself
             return
                 processorsPath(io, instancePath, processorsDir(io))
                /io.name();
@@ -459,7 +547,15 @@ masterUncollatedFileOperation
     const bool verbose
 )
 :
-    fileOperation(Pstream::worldComm)
+    fileOperation
+    (
+        UPstream::allocateCommunicator
+        (
+            UPstream::worldComm,
+            subRanks(Pstream::nProcs())
+        )
+    ),
+    myComm_(comm_)
 {
     if (verbose)
     {
@@ -501,7 +597,8 @@ masterUncollatedFileOperation
     const bool verbose
 )
 :
-    fileOperation(comm)
+    fileOperation(comm),
+    myComm_(-1)
 {
     if (verbose)
     {
@@ -536,11 +633,46 @@ masterUncollatedFileOperation
 }
 
 
+Foam::fileOperations::masterUncollatedFileOperationInitialise::
+masterUncollatedFileOperationInitialise(int& argc, char**& argv)
+:
+    unthreadedInitialise(argc, argv)
+{
+    // Filter out any of my arguments
+    const string s("-ioRanks");
+
+    int index = -1;
+    for (int i=1; i<argc-1; i++)
+    {
+        if (argv[i] == s)
+        {
+            index = i;
+            setEnv("FOAM_IORANKS", argv[i+1], true);
+            break;
+        }
+    }
+
+    if (index != -1)
+    {
+        for (int i=index+2; i<argc; i++)
+        {
+            argv[i-2] = argv[i];
+        }
+        argc -= 2;
+    }
+}
+
+
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
 Foam::fileOperations::masterUncollatedFileOperation::
 ~masterUncollatedFileOperation()
-{}
+{
+    if (myComm_ != -1)
+    {
+        UPstream::freeCommunicator(myComm_);
+    }
+}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
@@ -877,11 +1009,11 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePath
     //       and instance have to be same
     {
         label masterType(searchType);
-        Pstream::scatter(masterType);   //, Pstream::msgType(), comm_);
+        Pstream::scatter(masterType);
         searchType = pathType(masterType);
     }
+    Pstream::scatter(newInstancePath);
     Pstream::scatter(procsDir, Pstream::msgType(), comm_);
-    Pstream::scatter(newInstancePath);  //, Pstream::msgType(), comm_);
 
     // Use the master type to determine if additional information is
     // needed to construct the local equivalent
@@ -897,11 +1029,13 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePath
 
         case fileOperation::ABSOLUTE:
         case fileOperation::WRITEOBJECT:
-        case fileOperation::PROCESSORSBASEOBJECT:
-        case fileOperation::PROCESSORSOBJECT:
+        case fileOperation::PROCUNCOLLATED:
+        case fileOperation::PROCBASEOBJECT:
+        case fileOperation::PROCOBJECT:
         case fileOperation::FINDINSTANCE:
-        case fileOperation::PROCESSORSBASEINSTANCE:
-        case fileOperation::PROCESSORSINSTANCE:
+        case fileOperation::PROCUNCOLLATEDINSTANCE:
+        case fileOperation::PROCBASEINSTANCE:
+        case fileOperation::PROCINSTANCE:
         {
             // Construct equivalent local path
             objPath = localObjectPath
@@ -1002,11 +1136,13 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::dirPath
 
         case fileOperation::ABSOLUTE:
         case fileOperation::WRITEOBJECT:
-        case fileOperation::PROCESSORSBASEOBJECT:
-        case fileOperation::PROCESSORSOBJECT:
+        case fileOperation::PROCUNCOLLATED:
+        case fileOperation::PROCBASEOBJECT:
+        case fileOperation::PROCOBJECT:
         case fileOperation::FINDINSTANCE:
-        case fileOperation::PROCESSORSBASEINSTANCE:
-        case fileOperation::PROCESSORSINSTANCE:
+        case fileOperation::PROCUNCOLLATEDINSTANCE:
+        case fileOperation::PROCBASEINSTANCE:
+        case fileOperation::PROCINSTANCE:
         {
             // Construct equivalent local path
             objPath = localObjectPath
@@ -1046,6 +1182,54 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::dirPath
 }
 
 
+bool Foam::fileOperations::masterUncollatedFileOperation::exists
+(
+    const dirIndexList& pDirs,
+    IOobject& io
+) const
+{
+    // Cut-down version of filePathInfo that does not look for
+    // different instance or parent directory
+
+    const bool isFile = !io.name().empty();
+
+    // Generate output filename for object
+    const fileName writePath(objectPath(io, word::null));
+
+    // 1. Test writing name for either directory or a (valid) file
+    if (isFileOrDir(isFile, writePath))
+    {
+        return true;
+    }
+
+    // 2. Check processors/
+    if (io.time().processorCase())
+    {
+        forAll(pDirs, i)
+        {
+            const fileName& pDir = pDirs[i].first();
+            fileName procPath =
+                processorsPath(io, io.instance(), pDir)
+               /io.name();
+            if (procPath != writePath && isFileOrDir(isFile, procPath))
+            {
+                return true;
+            }
+        }
+    }
+
+    // 3. Check local
+    fileName localPath = io.objectPath();
+
+    if (localPath != writePath && isFileOrDir(isFile, localPath))
+    {
+        return true;
+    }
+
+    return false;
+}
+
+
 Foam::IOobject
 Foam::fileOperations::masterUncollatedFileOperation::findInstance
 (
@@ -1054,6 +1238,16 @@ Foam::fileOperations::masterUncollatedFileOperation::findInstance
     const word& stopInstance
 ) const
 {
+    if (debug)
+    {
+        Pout<< "masterUncollatedFileOperation::findInstance :"
+            << " Starting searching for name:" << startIO.name()
+            << " local:" << startIO.local()
+            << " from instance:" << startIO.instance()
+            << endl;
+    }
+
+
     const Time& time = startIO.time();
 
     IOobject io(startIO);
@@ -1064,24 +1258,23 @@ Foam::fileOperations::masterUncollatedFileOperation::findInstance
     //       - check for an object with local file scope (so no looking up in
     //         parent directory in case of parallel)
 
+
+    tmpNrc<dirIndexList> pDirs(lookupProcessorsPath(io.objectPath()));
+
     word foundInstance;
 
-    if (Pstream::master(comm_))
+    //if (Pstream::master(comm_))
+    if (Pstream::master(UPstream::worldComm))
     {
-        // Generate output filename for object
-        fileName objPath(objectPath(io, word::null));
-        if
-        (
-            (io.name().empty() && Foam::isDir(objPath))
-         || (!io.name().empty() && Foam::isFile(objPath))
-        )
+        if (exists(pDirs, io))
         {
             foundInstance = io.instance();
         }
     }
 
     // Do parallel early exit to avoid calling time.times()
-    Pstream::scatter(foundInstance, Pstream::msgType(), comm_);
+    //Pstream::scatter(foundInstance, Pstream::msgType(), comm_);
+    Pstream::scatter(foundInstance, Pstream::msgType(), UPstream::worldComm);
     if (!foundInstance.empty())
     {
         io.instance() = foundInstance;
@@ -1099,7 +1292,8 @@ Foam::fileOperations::masterUncollatedFileOperation::findInstance
     // closest to and lower than current time
 
     instantList ts = time.times();
-    if (Pstream::master(comm_))
+    //if (Pstream::master(comm_))
+    if (Pstream::master(UPstream::worldComm))
     {
         label instanceI;
 
@@ -1122,13 +1316,7 @@ Foam::fileOperations::masterUncollatedFileOperation::findInstance
             }
 
             io.instance() = ts[instanceI].name();
-            fileName objPath(objectPath(io, word::null));
-
-            if
-            (
-                (io.name().empty() && Foam::isDir(objPath))
-             || (!io.name().empty() && Foam::isFile(objPath))
-            )
+            if (exists(pDirs, io))
             {
                 foundInstance = io.instance();
                 if (debug)
@@ -1172,9 +1360,8 @@ Foam::fileOperations::masterUncollatedFileOperation::findInstance
                 if (debug)
                 {
                     Pout<< "masterUncollatedFileOperation::findInstance :"
-                        << " for name:" << io.name() << " local:" << io.local()
-                        << " returning stopinstance:" << io.instance()
-                        << endl;
+                        << " name:" << io.name() << " local:" << io.local()
+                        << " found at stopinstance:" << io.instance() << endl;
                 }
                 break;
             }
@@ -1195,12 +1382,7 @@ Foam::fileOperations::masterUncollatedFileOperation::findInstance
                 // the case constant directory in parallel cases
 
                 io.instance() = time.constant();
-                fileName objPath(objectPath(io, word::null));
-                if
-                (
-                    (io.name().empty() && Foam::isDir(objPath))
-                 || (!io.name().empty() && Foam::isFile(objPath))
-                )
+                if (exists(pDirs, io))
                 {
                     if (debug)
                     {
@@ -1235,7 +1417,8 @@ Foam::fileOperations::masterUncollatedFileOperation::findInstance
         }
     }
 
-    Pstream::scatter(foundInstance, Pstream::msgType(), comm_);
+    //Pstream::scatter(foundInstance, Pstream::msgType(), comm_);
+    Pstream::scatter(foundInstance, Pstream::msgType(), UPstream::worldComm);
     io.instance() = foundInstance;
     if (debug)
     {
@@ -1388,7 +1571,7 @@ bool Foam::fileOperations::masterUncollatedFileOperation::readHeader
     }
     else
     {
-        boolList result(Pstream::nProcs(comm_));
+        boolList result(Pstream::nProcs(comm_), false);
         wordList headerClassName(Pstream::nProcs(comm_));
         stringList note(Pstream::nProcs(comm_));
         if (Pstream::master(comm_))

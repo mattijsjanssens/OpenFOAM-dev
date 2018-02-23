@@ -37,6 +37,7 @@ Description
 #include "OSspecific.H"
 #include "HashPtrTable.H"
 #include "Switch.H"
+#include "unthreadedInitialise.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -59,6 +60,9 @@ class masterUncollatedFileOperation
 protected:
 
     // Protected data
+
+        //- Any communicator allocated by me
+        const label myComm_;
 
         //- Cached times for a given directory
         mutable HashPtrTable<instantList> times_;
@@ -346,6 +350,9 @@ protected:
 
     // Private Member Functions
 
+        //- Get the list of processors that are part of this communicator
+        static labelList subRanks(const label n);
+
         template<class Type>
         Type scatterList(const UList<Type>&, const int, const label comm) const;
 
@@ -409,6 +416,10 @@ protected:
             const labelUList& procs,
             PstreamBuffers& pBufs
         );
+
+        //- Helper: check IO for local existence. Like filePathInfo but
+        //  without parent searchign and instance searching
+        bool exists(const dirIndexList&, IOobject& io) const;
 
 
 public:
@@ -701,6 +712,28 @@ public:
             {
                 return times_;
             }
+};
+
+
+/*---------------------------------------------------------------------------*\
+           Class masterUncollatedFileOperationInitialise Declaration
+\*---------------------------------------------------------------------------*/
+
+class masterUncollatedFileOperationInitialise
+:
+    public unthreadedInitialise
+{
+public:
+
+    // Constructors
+
+        //- Construct from components
+        masterUncollatedFileOperationInitialise(int& argc, char**& argv);
+
+
+    //- Destructor
+    virtual ~masterUncollatedFileOperationInitialise()
+    {}
 };
 
 

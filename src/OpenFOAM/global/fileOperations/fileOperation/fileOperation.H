@@ -38,6 +38,7 @@ Class
 #include "labelList.H"
 #include "Switch.H"
 #include "tmpNrc.H"
+#include "NamedEnum.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -53,8 +54,8 @@ class Time;
 //  - processor directory naming
 //  - whether directory contains a range (so differs on different processors)
 //  - index in range
-typedef Tuple2<fileName, Tuple2<bool, label>> dirIndex;
-typedef List<dirIndex> dirIndexList;
+//typedef Tuple2<fileName, Tuple2<bool, label>> dirIndex;
+//typedef List<dirIndex> dirIndexList;
 
 /*---------------------------------------------------------------------------*\
                          Class fileOperation Declaration
@@ -62,6 +63,32 @@ typedef List<dirIndex> dirIndexList;
 
 class fileOperation
 {
+public:
+
+        //- Enumeration for the location of an IOobject
+        enum pathType
+        {
+            NOTFOUND,               // not found
+            ABSOLUTE,               // instance is absolute directory
+            OBJECT,                 // io.objectPath() exists
+            WRITEOBJECT,            // write path exists
+            PROCUNCOLLATED,         // objectPath exists in processor0
+            PROCBASEOBJECT,         // objectPath exists in specified, constant
+                                    // processorsDir (usually 'processorsDDD')
+            PROCOBJECT,             // objectPath exists in locally differing
+                                    // processorsDir (e.g. 'processorsDDD_0-1')
+            PARENTOBJECT,           // parent of object path
+            FINDINSTANCE,           // file found in time directory
+            PROCUNCOLLATEDINSTANCE, // as PROCUNCOLLATED but with instance
+            PROCBASEINSTANCE,       // as PROCBASEOBJECT but with instance
+            PROCINSTANCE            // as PROCOBJECT but with instance
+        };
+        static const NamedEnum<pathType, 12> pathTypeNames_;
+
+        typedef Tuple2<fileName, Tuple2<pathType, label>> dirIndex;
+        typedef List<dirIndex> dirIndexList;
+
+
 protected:
 
     // Protected data
@@ -118,24 +145,6 @@ public:
 
 
     // Public data types
-
-        //- Enumeration for the location of an IOobject
-        enum pathType
-        {
-            NOTFOUND,               // not found
-            ABSOLUTE,               // instance is absolute directory
-            OBJECT,                 // io.objectPath() exists
-            WRITEOBJECT,            // write path exists
-            PROCESSORSBASEOBJECT,   // objectPath exists in specified, constant
-                                    // processorsDir (usually 'processorsDDD')
-            PROCESSORSOBJECT,       // objectPath exists in locally differing
-                                    // processorsDir (e.g. 'processorsDDD_0-1')
-            PARENTOBJECT,           // parent of object path
-            FINDINSTANCE,           // file found in time directory
-            PROCESSORSBASEINSTANCE, // as PROCESSORSBASEOBJECT but with instance
-            PROCESSORSINSTANCE      // as PROCESSORSOBJECT but with instance
-        };
-
 
         //- Runtime type information
         TypeName("fileOperation");
@@ -433,15 +442,15 @@ public:
 
         // Other
 
-            //- Actual name of processors dir (for use in mode PROCESSORSOBJECT,
-            //  PROCESSORSINSTANCE)
+            //- Actual name of processors dir (for use in mode PROCOBJECT,
+            //  PROCINSTANCE)
             virtual word processorsDir(const IOobject& io) const
             {
                 return processorsBaseDir;
             }
 
-            //- Actual name of processors dir (for use in mode PROCESSORSOBJECT,
-            //  PROCESSORSINSTANCE)
+            //- Actual name of processors dir (for use in mode PROCOBJECT,
+            //  PROCINSTANCE)
             virtual word processorsDir(const fileName&) const
             {
                 return processorsBaseDir;

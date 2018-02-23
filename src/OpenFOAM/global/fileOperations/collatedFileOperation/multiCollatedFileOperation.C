@@ -41,7 +41,8 @@ namespace fileOperations
         word
     );
 
-    // Mark as needing threaded mpi
+    // Register initialisation routine. Signals need for threaded mpi and
+    // handles command line arguments
     addNamedToRunTimeSelectionTable
     (
         fileOperationInitialise,
@@ -193,28 +194,6 @@ multiCollatedFileOperationInitialise(int& argc, char**& argv)
         {
             index = i;
             setEnv("FOAM_IORANKS", argv[i+1], true);
-            break;
-        }
-    }
-
-    if (index != -1)
-    {
-        for (int i=index+2; i<argc; i++)
-        {
-            argv[i-2] = argv[i];
-        }
-        argc -= 2;
-    }
-
-
-    const string ioString("-ioRoots");
-    index = -1;
-    for (int i=1; i<argc-1; i++)
-    {
-        if (argv[i] == ioString)
-        {
-            index = i;
-            setEnv("FOAM_ROOTS", argv[i+1], true);
             break;
         }
     }

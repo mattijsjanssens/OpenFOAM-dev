@@ -346,7 +346,7 @@ Foam::fileName Foam::fileOperations::collatedFileOperation::objectPath
         return masterUncollatedFileOperation::localObjectPath
         (
             io,
-            fileOperation::PROCESSORSOBJECT,
+            fileOperation::PROCOBJECT,
             "dummy",        // not used for processorsobject
             io.instance()
         );

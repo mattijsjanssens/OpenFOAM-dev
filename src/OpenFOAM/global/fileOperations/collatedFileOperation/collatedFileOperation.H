@@ -176,6 +176,8 @@ public:
 
         //- Construct from components
         collatedFileOperationInitialise(int& argc, char**& argv)
+        :
+            fileOperationInitialise(argc, argv)
         {}
 
 

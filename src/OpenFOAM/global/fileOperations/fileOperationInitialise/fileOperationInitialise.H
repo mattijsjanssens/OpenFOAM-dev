@@ -52,8 +52,8 @@ public:
 
     // Constructors
 
-        //- Construct null
-        fileOperationInitialise();
+        //- Construct components
+        fileOperationInitialise(int& argc, char**& argv);
 
 
     // Declare run-time constructor selection table

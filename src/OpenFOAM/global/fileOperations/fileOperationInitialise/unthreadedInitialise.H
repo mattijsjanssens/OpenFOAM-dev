@@ -52,6 +52,8 @@ public:
 
         //- Construct from components
         unthreadedInitialise(int& argc, char**& argv)
+        :
+            fileOperationInitialise(argc, argv)
         {}
 
 
