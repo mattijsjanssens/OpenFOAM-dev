@@ -46,28 +46,7 @@ Foam::fileOperations::fileOperationInitialise::fileOperationInitialise
     int& argc,
     char**& argv
 )
-{
-    const string ioString("-ioRoots");
-    label index = -1;
-    for (int i=1; i<argc-1; i++)
-    {
-        if (argv[i] == ioString)
-        {
-            index = i;
-            setEnv("FOAM_ROOTS", argv[i+1], true);
-            break;
-        }
-    }
-
-    if (index != -1)
-    {
-        for (int i=index+2; i<argc; i++)
-        {
-            argv[i-2] = argv[i];
-        }
-        argc -= 2;
-    }
-}
+{}
 
 
 Foam::autoPtr<Foam::fileOperations::fileOperationInitialise>

@@ -28,6 +28,31 @@ Description
     fileOperations that performs all file operations on the master processor.
     Requires the calls to be parallel synchronised!
 
+    Limitations: - no /processor in filename
+                 - no /uniform/ in the filename
+
+    The main logic is in ::filePath which returns a
+    - same path on all processors. This can either be a global file
+      (system/controlDict, processorXXX/0/uniform/) or a collated file
+      (processors/0/p)
+    - same path on all processors of the local communicator
+      (processors4_0-1/0/p)
+    - different path on all processors (processor0/0/p)
+
+    system/controlDict:
+    filePath worldmaster: <globalRoot>/system/controlDict
+             localmaster:           ,,
+             slave      :           ,,
+
+    processor0/uniform/time
+    filePath worldmaster: <globalRoot>/processorXXX/uniform/time
+             localmaster:           ,,
+             slave      :           ,,
+
+    processors0/0/p
+    processors10/0/p
+    processors10_2-4/0/p
+
 \*---------------------------------------------------------------------------*/
 
 #ifndef fileOperations_masterUncollatedFileOperation_H

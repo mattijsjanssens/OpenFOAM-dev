@@ -35,6 +35,7 @@ License
 #include "dynamicCode.H"
 #include "fileOperation.H"
 #include "fileOperationInitialise.H"
+#include "stringListOps.H"
 
 #include <cctype>
 
@@ -64,6 +65,13 @@ Foam::argList::initValidTables::initValidTables()
         "slave root directories for distributed running"
     );
     validParOptions.set("roots", "(dir1 .. dirN)");
+
+    argList::addOption
+    (
+        "hostRoots", "(((host1 dir1) .. (hostN dirN))",
+        "slave root directories (per host) for distributed running"
+    );
+    validParOptions.set("hostRoots", "((host1 dir1) .. (hostN dirN))");
 
     argList::addBoolOption
     (
@@ -149,6 +157,7 @@ void Foam::argList::noParallel()
 {
     removeOption("parallel");
     removeOption("roots");
+    removeOption("hostRoots");
     validParOptions.clear();
 }
 
@@ -725,57 +734,75 @@ void Foam::argList::parse
                     dictNProcs = roots.size()+1;
                 }
             }
-            else
+            else if (options_.found("hostRoots"))
             {
-                string rootString(getEnv("FOAM_ROOTS"));
-                if (!rootString.empty())
-                {
-                    IStringStream is(rootString);
-                    HashTable<fileName, string> hostToRoot(is);
-                    roots.setSize(Pstream::nProcs()-1);
-                    forAll(slaveMachine, i)
-                    {
-                        const string& slave = slaveMachine[i];
-                        HashTable<fileName, string>::const_iterator fnd =
-                            hostToRoot.find(slave);
+                source = "-hostRoots";
+                IStringStream is(options_["hostRoots"]);
+                List<Tuple2<wordRe, fileName>> hostRoots(is);
 
-                        if (fnd == hostToRoot.end())
+                roots.setSize(Pstream::nProcs()-1);
+                forAll(hostRoots, i)
+                {
+                    const Tuple2<wordRe, fileName>& hostRoot = hostRoots[i];
+                    const wordRe& re = hostRoot.first();
+                    labelList matchedRoots(findStrings(re, slaveMachine));
+                    forAll(matchedRoots, matchi)
+                    {
+                        label slavei = matchedRoots[matchi];
+                        if (roots[slavei] != wordRe())
                         {
-                            WarningInFunction << "Cannot find root for machine "
-                                << slave
-                                << " in environment variable FOAM_ROOTS"
-                                << endl;
+                            FatalErrorInFunction
+                                << "Slave " << slaveMachine[slavei]
+                                << " has multiple matching roots in "
+                                << hostRoots << exit(FatalError);
                         }
                         else
                         {
-                            roots[i] = fnd();
+                            roots[slavei] = hostRoot.second();
                         }
                     }
                 }
-                else
+
+                // Check
+                forAll(roots, slavei)
                 {
-                    source = rootPath_/globalCase_/"system/decomposeParDict";
-                    IFstream decompDictStream(source);
-
-                    if (!decompDictStream.good())
+                    if (roots[slavei] == wordRe())
                     {
-                        FatalError
-                            << "Cannot read "
-                            << decompDictStream.name()
-                            << exit(FatalError);
+                        FatalErrorInFunction
+                            << "Slave " << slaveMachine[slavei]
+                            << " has no matching roots in "
+                            << hostRoots << exit(FatalError);
                     }
+                }
 
-                    dictionary decompDict(decompDictStream);
+                if (roots.size() != 1)
+                {
+                    dictNProcs = roots.size()+1;
+                }
+            }
+            else
+            {
+                source = rootPath_/globalCase_/"system/decomposeParDict";
+                IFstream decompDictStream(source);
 
-                    dictNProcs = readLabel
-                    (
-                        decompDict.lookup("numberOfSubdomains")
-                    );
+                if (!decompDictStream.good())
+                {
+                    FatalError
+                        << "Cannot read "
+                        << decompDictStream.name()
+                        << exit(FatalError);
+                }
 
-                    if (decompDict.lookupOrDefault("distributed", false))
-                    {
-                        decompDict.lookup("roots") >> roots;
-                    }
+                dictionary decompDict(decompDictStream);
+
+                dictNProcs = readLabel
+                (
+                    decompDict.lookup("numberOfSubdomains")
+                );
+
+                if (decompDict.lookupOrDefault("distributed", false))
+                {
+                    decompDict.lookup("roots") >> roots;
                 }
             }
 
@@ -1036,6 +1063,7 @@ bool Foam::argList::setOption(const word& opt, const string& param)
             opt == "case"
          || opt == "parallel"
          || opt == "roots"
+         || opt == "hostRoots"
         )
         {
             FatalError
@@ -1109,6 +1137,7 @@ bool Foam::argList::unsetOption(const word& opt)
             opt == "case"
          || opt == "parallel"
          || opt == "roots"
+         || opt == "hostRoots"
         )
         {
             FatalError

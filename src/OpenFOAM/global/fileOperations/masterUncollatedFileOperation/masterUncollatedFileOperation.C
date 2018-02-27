@@ -1013,56 +1013,72 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePath
         searchType = pathType(masterType);
     }
     Pstream::scatter(newInstancePath);
-    Pstream::scatter(procsDir, Pstream::msgType(), comm_);
 
-    // Use the master type to determine if additional information is
-    // needed to construct the local equivalent
-    switch (searchType)
+    if
+    (
+        checkGlobal
+     || searchType == fileOperation::PARENTOBJECT
+     || searchType == fileOperation::PROCBASEOBJECT
+     || searchType == fileOperation::PROCBASEINSTANCE
+     || io.local() == "uniform"
+    )
     {
-        case fileOperation::PARENTOBJECT:
-        {
             // Distribute master path. This makes sure it is seen as uniform
             // and only gets read from the master.
-            Pstream::scatter(objPath);  //, Pstream::msgType(), comm_);
-        }
-        break;
+            Pstream::scatter(objPath);
+            Pstream::scatter(procsDir);
+    }
+    else
+    {
+        Pstream::scatter(procsDir, Pstream::msgType(), comm_);
 
-        case fileOperation::ABSOLUTE:
-        case fileOperation::WRITEOBJECT:
-        case fileOperation::PROCUNCOLLATED:
-        case fileOperation::PROCBASEOBJECT:
-        case fileOperation::PROCOBJECT:
-        case fileOperation::FINDINSTANCE:
-        case fileOperation::PROCUNCOLLATEDINSTANCE:
-        case fileOperation::PROCBASEINSTANCE:
-        case fileOperation::PROCINSTANCE:
+        // Use the master type to determine if additional information is
+        // needed to construct the local equivalent
+        switch (searchType)
         {
-            // Construct equivalent local path
-            objPath = localObjectPath
-            (
-                io,
-                searchType,
-                procsDir,
-                newInstancePath
-            );
-        }
-        break;
+            case fileOperation::PARENTOBJECT:
+            case fileOperation::PROCBASEOBJECT:
+            case fileOperation::PROCBASEINSTANCE:
+            {
+                // Already handled above
+            }
+            break;
 
-        case fileOperation::OBJECT:
-        case fileOperation::NOTFOUND:
-        {
-            // Retest all processors separately since some processors might
-            // have the file and some not (e.g. lagrangian data)
+            case fileOperation::ABSOLUTE:
+            case fileOperation::WRITEOBJECT:
+            case fileOperation::PROCUNCOLLATED:
+            case fileOperation::PROCOBJECT:
+            case fileOperation::FINDINSTANCE:
+            case fileOperation::PROCUNCOLLATEDINSTANCE:
+            case fileOperation::PROCINSTANCE:
+            {
+                // Construct equivalent local path
+                objPath = localObjectPath
+                (
+                    io,
+                    searchType,
+                    procsDir,
+                    newInstancePath
+                );
+            }
+            break;
 
-            objPath = masterOp<fileName, fileOrNullOp>
-            (
-                io.objectPath(),
-                fileOrNullOp(true),
-                Pstream::msgType(),
-                comm_
-            );
+            case fileOperation::OBJECT:
+            case fileOperation::NOTFOUND:
+            {
+                // Retest all processors separately since some processors might
+                // have the file and some not (e.g. lagrangian data)
+
+                objPath = masterOp<fileName, fileOrNullOp>
+                (
+                    io.objectPath(),
+                    fileOrNullOp(true),
+                    Pstream::msgType(),
+                    comm_
+                );
+            }
+            break;
         }
-        break;
     }
 
     if (debug)
@@ -1118,57 +1134,72 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::dirPath
         Pstream::scatter(masterType);   //, Pstream::msgType(), comm_);
         searchType = pathType(masterType);
     }
-    Pstream::scatter(procsDir, Pstream::msgType(), comm_);
     Pstream::scatter(newInstancePath);  //, Pstream::msgType(), comm_);
 
-
-    // Use the master type to determine if additional information is
-    // needed to construct the local equivalent
-    switch (searchType)
+    if
+    (
+        checkGlobal
+     || searchType == fileOperation::PARENTOBJECT
+     || searchType == fileOperation::PROCBASEOBJECT
+     || searchType == fileOperation::PROCBASEINSTANCE
+     || io.local() == "uniform"
+    )
     {
-        case fileOperation::PARENTOBJECT:
-        {
             // Distribute master path. This makes sure it is seen as uniform
             // and only gets read from the master.
-            Pstream::scatter(objPath);  //, Pstream::msgType(), comm_);
-        }
-        break;
+            Pstream::scatter(objPath);
+            Pstream::scatter(procsDir);
+    }
+    else
+    {
+        Pstream::scatter(procsDir, Pstream::msgType(), comm_);
 
-        case fileOperation::ABSOLUTE:
-        case fileOperation::WRITEOBJECT:
-        case fileOperation::PROCUNCOLLATED:
-        case fileOperation::PROCBASEOBJECT:
-        case fileOperation::PROCOBJECT:
-        case fileOperation::FINDINSTANCE:
-        case fileOperation::PROCUNCOLLATEDINSTANCE:
-        case fileOperation::PROCBASEINSTANCE:
-        case fileOperation::PROCINSTANCE:
+        // Use the master type to determine if additional information is
+        // needed to construct the local equivalent
+        switch (searchType)
         {
-            // Construct equivalent local path
-            objPath = localObjectPath
-            (
-                io,
-                searchType,
-                procsDir,
-                newInstancePath
-            );
-        }
-        break;
+            case fileOperation::PARENTOBJECT:
+            case fileOperation::PROCBASEOBJECT:
+            case fileOperation::PROCBASEINSTANCE:
+            {
+                // Already handled above
+            }
+            break;
 
-        case fileOperation::OBJECT:
-        case fileOperation::NOTFOUND:
-        {
-            // Retest all processors separately since some processors might
-            // have the file and some not (e.g. lagrangian data)
-            objPath = masterOp<fileName, fileOrNullOp>
-            (
-                io.objectPath(),
-                fileOrNullOp(false),
-                Pstream::msgType(),
-                comm_
-            );
+            case fileOperation::ABSOLUTE:
+            case fileOperation::WRITEOBJECT:
+            case fileOperation::PROCUNCOLLATED:
+            case fileOperation::PROCOBJECT:
+            case fileOperation::FINDINSTANCE:
+            case fileOperation::PROCUNCOLLATEDINSTANCE:
+            case fileOperation::PROCINSTANCE:
+            {
+                // Construct equivalent local path
+                objPath = localObjectPath
+                (
+                    io,
+                    searchType,
+                    procsDir,
+                    newInstancePath
+                );
+            }
+            break;
+
+            case fileOperation::OBJECT:
+            case fileOperation::NOTFOUND:
+            {
+                // Retest all processors separately since some processors might
+                // have the file and some not (e.g. lagrangian data)
+                objPath = masterOp<fileName, fileOrNullOp>
+                (
+                    io.objectPath(),
+                    fileOrNullOp(false),
+                    Pstream::msgType(),
+                    comm_
+                );
+            }
+            break;
         }
-        break;
     }
 
     if (debug)
@@ -1534,16 +1565,16 @@ bool Foam::fileOperations::masterUncollatedFileOperation::readHeader
             << "    fName     :" << fName << endl;
     }
 
-    fileNameList filePaths(Pstream::nProcs(comm_)); //Pstream::worldComm));
-    filePaths[Pstream::myProcNo(comm_ /*Pstream::worldComm*/)] = fName;
-    Pstream::gatherList(filePaths, Pstream::msgType(), comm_);
-
+    // Get filePaths on world master
+    fileNameList filePaths(Pstream::nProcs(Pstream::worldComm));
+    filePaths[Pstream::myProcNo(Pstream::worldComm)] = fName;
+    Pstream::gatherList(filePaths, Pstream::msgType(), Pstream::worldComm);
     bool uniform = uniformFile(filePaths);
-    Pstream::scatter(uniform, Pstream::msgType(), comm_);
+    Pstream::scatter(uniform, Pstream::msgType(), Pstream::worldComm);
 
     if (uniform)
     {
-        if (Pstream::master(comm_))
+        if (Pstream::master(Pstream::worldComm))
         {
             if (!fName.empty())
             {
@@ -1560,17 +1591,25 @@ bool Foam::fileOperations::masterUncollatedFileOperation::readHeader
                 }
             }
         }
-        Pstream::scatter(ok, Pstream::msgType(), comm_);
+        Pstream::scatter(ok, Pstream::msgType(), Pstream::worldComm);
         Pstream::scatter
         (
             io.headerClassName(),
             Pstream::msgType(),
-            comm_
+            Pstream::worldComm
         );
-        Pstream::scatter(io.note(), Pstream::msgType(), comm_);
+        Pstream::scatter(io.note(), Pstream::msgType(), Pstream::worldComm);
     }
     else
     {
+        if (Pstream::nProcs(comm_) != Pstream::nProcs(Pstream::worldComm))
+        {
+            // Re-gather file paths on local master
+            filePaths.setSize(Pstream::nProcs(comm_));
+            filePaths[Pstream::myProcNo(comm_)] = fName;
+            Pstream::gatherList(filePaths, Pstream::msgType(), comm_);
+        }
+
         boolList result(Pstream::nProcs(comm_), false);
         wordList headerClassName(Pstream::nProcs(comm_));
         stringList note(Pstream::nProcs(comm_));
