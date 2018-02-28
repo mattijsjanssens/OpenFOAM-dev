@@ -344,7 +344,7 @@ Foam::fileOperation::lookupProcessorsPath(const fileName& fName) const
             }
         }
 
-        if (procDirs.size())
+        if (returnReduce(procDirs.size(), sumOp<label>()))
         {
             procsDirs_.insert(procPath, procDirs);
 

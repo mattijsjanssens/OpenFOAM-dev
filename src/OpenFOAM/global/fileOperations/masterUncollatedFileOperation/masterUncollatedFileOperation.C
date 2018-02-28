@@ -1001,6 +1001,16 @@ Foam::fileName Foam::fileOperations::masterUncollatedFileOperation::filePath
             procsDir,
             newInstancePath
         );
+
+        if (debug)
+        {
+            Pout<< "masterUncollatedFileOperation::filePath :"
+                << " master objPath:" << objPath
+                << " searchType:" << fileOperation::pathTypeNames_[searchType]
+                << " procsDir:" << procsDir << " instance:" << newInstancePath
+                << endl;
+        }
+
     }
 
     // Scatter the information about where the master found the object
