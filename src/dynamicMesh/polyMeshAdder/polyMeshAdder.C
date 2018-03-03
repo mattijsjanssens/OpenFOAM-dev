@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -393,7 +393,7 @@ Foam::labelList Foam::polyMeshAdder::getFaceOrder
 
 
 // Extends face f with split points. cutEdgeToPoints gives for every
-// edge the points introduced inbetween the endpoints.
+// edge the points introduced in between the endpoints.
 void Foam::polyMeshAdder::insertVertices
 (
     const edgeLookup& cutEdgeToPoints,
@@ -758,7 +758,7 @@ void Foam::polyMeshAdder::mergePrimitives
     // - get map from master edge to split edges.
     // - check all faces to find any edge that is split.
     {
-        // From two cut-points to labels of cut-points inbetween.
+        // From two cut-points to labels of cut-points in between.
         // (in order: from e[0] to e[1]
         const edgeLookup& cutEdgeToPoints = coupleInfo.cutEdgeToPoints();
 
@@ -891,7 +891,7 @@ void Foam::polyMeshAdder::mergePointZones
     // Zone(s) per point. Two levels: if only one zone
     // stored in pointToZone. Any extra stored in additionalPointToZones.
     // This is so we only allocate labelLists per point if absolutely
-    // necesary.
+    // necessary.
     labelList pointToZone(nAllPoints, -1);
     labelListList addPointToZones(nAllPoints);
 
@@ -1216,7 +1216,7 @@ void Foam::polyMeshAdder::mergeCellZones
     // Zone(s) per cell. Two levels: if only one zone
     // stored in cellToZone. Any extra stored in additionalCellToZones.
     // This is so we only allocate labelLists per cell if absolutely
-    // necesary.
+    // necessary.
     labelList cellToZone(nAllCells, -1);
     labelListList addCellToZones(nAllCells);
 

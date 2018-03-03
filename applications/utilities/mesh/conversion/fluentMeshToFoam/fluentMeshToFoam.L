@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -1184,16 +1184,16 @@ int main(int argc, char *argv[])
         patchPhysicalTypes
     );
 
-    //dont write mesh yet, otherwise preservePatchTypes will be broken
-    //and zones wont be written
-    //checkmesh done after patch addition as well
+    // don't write mesh yet, otherwise preservePatchTypes will be broken
+    // and zones won't be written
+    // checkmesh done after patch addition as well
     Info<< "done." << endl;
 
 
     Info<< endl << "Building boundary and internal patches." << endl;
     //adding patches after mesh construction allows topological checks
     //on whether a patch is internal or external, something fluent
-    //doesnt seem to mind
+    //doesn't seem to mind
 
     // Make boundary patches
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -287,23 +287,24 @@ int main(int argc, char *argv[])
     // Set time from database
     #include "createTime.H"
 
-    fileName dictPath;
-
     // Check if the dictionary is specified on the command-line
+    fileName dictPath = fileName::null;
     if (args.optionFound("dict"))
     {
         dictPath = args["dict"];
 
-        dictPath =
-        (
-            isDir(dictPath)
-          ? dictPath/dictName
-          : dictPath
-        );
-    }
-    else
-    {
-        dictPath = runTime.path()/"system"/dictName;
+        if (!isFile(dictPath))
+        {
+            dictPath = dictPath/dictName;
+        }
+
+        if (!isFile(dictPath))
+        {
+            FatalErrorInFunction
+                << "Specified -dict " << args["dict"] << " but neither "
+                << args["dict"] << " nor " << args["dict"]/dictName
+                << " could be found" << nl << exit(FatalError);
+        }
     }
 
     // Allow override of time
@@ -344,6 +345,57 @@ int main(int argc, char *argv[])
     }
 
 
+    {
+        // Determine the existing processor count directly
+        label nProcs = fileHandler().nProcs(runTime.path());
+
+        if (forceOverwrite)
+        {
+            if (region)
+            {
+                FatalErrorInFunction
+                    << "Cannot force the decomposition of a single region"
+                    << exit(FatalError);
+            }
+
+            Info<< "Removing " << nProcs
+                << " existing processor directories" << endl;
+
+            // Remove existing processors directory
+            const fileName procDir(runTime.path()/word("processors"));
+            if (fileHandler().exists(procDir))
+            {
+                fileHandler().rmDir(procDir);
+            }
+
+            // Remove existing processor directories
+            // reverse order to avoid gaps if someone interrupts the process
+            for (label proci = nProcs-1; proci >= 0; --proci)
+            {
+                const fileName procDir
+                (
+                    runTime.path()/(word("processor") + name(proci))
+                );
+
+                if (fileHandler().exists(procDir))
+                {
+                    fileHandler().rmDir(procDir);
+                }
+            }
+        }
+        else if (nProcs && !region && !decomposeFieldsOnly)
+        {
+            FatalErrorInFunction
+                << "Case is already decomposed with " << nProcs
+                << " domains, use the -force option or manually" << nl
+                << "remove processor directories before decomposing. e.g.,"
+                << nl
+                << "    rm -rf " << runTime.path().c_str() << "/processor*"
+                << nl
+                << exit(FatalError);
+        }
+    }
+
 
     forAll(regionNames, regioni)
     {
@@ -352,28 +404,37 @@ int main(int argc, char *argv[])
 
         Info<< "\n\nDecomposing mesh " << regionName << nl << endl;
 
-
         // Determine the existing processor count directly
         label nProcs = fileHandler().nProcs(runTime.path(), regionDir);
 
+        // Get the dictionary IO
+        const IOobject dictIO
+        (
+            dictPath == fileName::null
+          ? IOobject
+            (
+                dictName,
+                runTime.time().system(),
+                regionDir, // use region if non-standard
+                runTime,
+                IOobject::MUST_READ_IF_MODIFIED,
+                IOobject::NO_WRITE,
+                false
+            )
+          : IOobject
+            (
+                dictPath,
+                runTime,
+                IOobject::MUST_READ_IF_MODIFIED,
+                IOobject::NO_WRITE,
+                false
+            )
+        );
         // Get requested numberOfSubdomains. Note: have no mesh yet so
         // cannot use decompositionModel::New
-        const label nDomains = readLabel
-        (
-            IOdictionary
-            (
-                IOobject
-                (
-                    dictName,
-                    runTime.time().system(),
-                    regionDir,          // use region if non-standard
-                    runTime,
-                    IOobject::MUST_READ_IF_MODIFIED,
-                    IOobject::NO_WRITE,
-                    false
-                )
-            ).lookup("numberOfSubdomains")
-        );
+        const label nDomains =
+            readLabel(IOdictionary(dictIO).lookup("numberOfSubdomains"));
+
         // Give file handler a chance to determine the output directory
         const_cast<fileOperation&>(fileHandler()).setNProcs(nDomains);
 
@@ -394,67 +455,11 @@ int main(int argc, char *argv[])
         }
         else if (nProcs)
         {
-            bool procDirsProblem = true;
-
             if (ifRequiredDecomposition && nProcs == nDomains)
             {
-                // we can reuse the decomposition
+                // Reuse the decomposition
                 decomposeFieldsOnly = true;
-                procDirsProblem = false;
-                forceOverwrite = false;
-
                 Info<< "Using existing processor directories" << nl;
-            }
-
-            if (region || allRegions)
-            {
-                procDirsProblem = false;
-                forceOverwrite = false;
-            }
-
-            if (forceOverwrite)
-            {
-                Info<< "Removing " << nProcs
-                    << " existing processor directories" << endl;
-
-                // Remove existing processor directories
-                // reverse order to avoid gaps if someone interrupts the process
-                for (label proci = nProcs-1; proci >= 0; --proci)
-                {
-                    const fileName procDir
-                    (
-                        runTime.path()/(word("processor") + name(proci))
-                    );
-
-                    if (fileHandler().exists(procDir))
-                    {
-                        fileHandler().rmDir(procDir);
-                    }
-                }
-
-                // Remove existing processors or processorsDDD directory
-                const fileName procDir
-                (
-                    fileHandler().filePath(runTime.path()/word("processor0"))
-                );
-                if (fileHandler().exists(procDir))
-                {
-                    fileHandler().rmDir(procDir);
-                }
-
-                procDirsProblem = false;
-            }
-
-            if (procDirsProblem)
-            {
-                FatalErrorInFunction
-                    << "Case is already decomposed with " << nProcs
-                    << " domains, use the -force option or manually" << nl
-                    << "remove processor directories before decomposing. e.g.,"
-                    << nl
-                    << "    rm -rf " << runTime.path().c_str() << "/processor*"
-                    << nl
-                    << exit(FatalError);
             }
         }
 
@@ -470,7 +475,7 @@ int main(int argc, char *argv[])
                 IOobject::NO_WRITE,
                 false
             ),
-            dictPath
+            dictIO.objectPath()
         );
 
         // Decompose the mesh
@@ -482,7 +487,7 @@ int main(int argc, char *argv[])
                 fileOperations::collatedFileOperation::maxThreadFileBufferSize;
             fileOperations::collatedFileOperation::maxThreadFileBufferSize = 0;
 
-            mesh.decomposeMesh(dictPath);
+            mesh.decomposeMesh(dictIO.objectPath());
 
             mesh.writeDecomposition(decomposeSets);
 
