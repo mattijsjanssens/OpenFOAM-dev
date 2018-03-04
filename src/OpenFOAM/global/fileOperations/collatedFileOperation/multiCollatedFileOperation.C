@@ -56,22 +56,6 @@ namespace fileOperations
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-Foam::labelList Foam::fileOperations::multiCollatedFileOperation::ioRanks()
-{
-    labelList ioRanks;
-    if (!Pstream::parRun())
-    {
-        string ioRanksString(getEnv("FOAM_IORANKS"));
-        if (!ioRanksString.empty())
-        {
-            IStringStream is(ioRanksString);
-            is >> ioRanks;
-        }
-    }
-    return ioRanks;
-}
-
-
 Foam::labelList Foam::fileOperations::multiCollatedFileOperation::subRanks
 (
     const label n
@@ -152,7 +136,7 @@ Foam::fileOperations::multiCollatedFileOperation::multiCollatedFileOperation
             UPstream::worldComm,
             subRanks(Pstream::nProcs())
         ),
-        ioRanks(),  // For serial operation: know processor directories
+        (Pstream::parRun() ? labelList(0) : ioRanks()), // processor dirs
         typeName,
         verbose
     )
@@ -175,36 +159,6 @@ Foam::fileOperations::multiCollatedFileOperation::multiCollatedFileOperation
                 Info<< "             " << ioRanks[proci] << endl;
             }
         }
-    }
-}
-
-
-Foam::fileOperations::multiCollatedFileOperationInitialise::
-multiCollatedFileOperationInitialise(int& argc, char**& argv)
-:
-    collatedFileOperationInitialise(argc, argv)
-{
-    // Filter out any of my arguments
-    const string s("-ioRanks");
-
-    int index = -1;
-    for (int i=1; i<argc-1; i++)
-    {
-        if (argv[i] == s)
-        {
-            index = i;
-            setEnv("FOAM_IORANKS", argv[i+1], true);
-            break;
-        }
-    }
-
-    if (index != -1)
-    {
-        for (int i=index+2; i<argc; i++)
-        {
-            argv[i-2] = argv[i];
-        }
-        argc -= 2;
     }
 }
 

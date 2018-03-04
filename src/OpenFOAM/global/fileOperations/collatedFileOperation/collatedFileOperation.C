@@ -72,6 +72,21 @@ namespace fileOperations
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
+Foam::labelList Foam::fileOperations::collatedFileOperation::ioRanks()
+{
+    labelList ioRanks;
+
+    string ioRanksString(getEnv("FOAM_IORANKS"));
+    if (!ioRanksString.empty())
+    {
+        IStringStream is(ioRanksString);
+        is >> ioRanks;
+    }
+
+    return ioRanks;
+}
+
+
 bool Foam::fileOperations::collatedFileOperation::isMasterRank
 (
     const label proci
@@ -209,9 +224,23 @@ Foam::fileOperations::collatedFileOperation::collatedFileOperation
     const bool verbose
 )
 :
-    masterUncollatedFileOperation(false),   // use worldComm for now
-    writer_(maxThreadFileBufferSize),
-    nProcs_(Pstream::nProcs())
+    masterUncollatedFileOperation
+    (
+        (
+            ioRanks().size()
+          ? UPstream::allocateCommunicator
+            (
+                UPstream::worldComm,
+                subRanks(Pstream::nProcs())
+            )
+          : UPstream::worldComm
+        ),
+        false
+    ),
+    myComm_(comm_),
+    writer_(maxThreadFileBufferSize, comm_),
+    nProcs_(Pstream::nProcs()),
+    ioRanks_(ioRanks())
 {
     if (verbose)
     {
@@ -239,6 +268,27 @@ Foam::fileOperations::collatedFileOperation::collatedFileOperation
                 << "         $FOAM_ETC/controlDict"
                 << endl;
         }
+
+        if (ioRanks_.size())
+        {
+            // Print a bit of information
+            stringList ioRanks(Pstream::nProcs());
+            if (Pstream::master(comm_))
+            {
+                ioRanks[Pstream::myProcNo()] = hostName()+"."+name(pid());
+            }
+            Pstream::gatherList(ioRanks);
+
+            Info<< "         IO nodes:" << endl;
+            forAll(ioRanks, proci)
+            {
+                if (!ioRanks[proci].empty())
+                {
+                    Info<< "             " << ioRanks[proci] << endl;
+                }
+            }
+        }
+
 
         if
         (
@@ -272,6 +322,7 @@ Foam::fileOperations::collatedFileOperation::collatedFileOperation
 )
 :
     masterUncollatedFileOperation(comm, false),
+    myComm_(-1),
     writer_(maxThreadFileBufferSize, comm),
     nProcs_(Pstream::nProcs()),
     ioRanks_(ioRanks)
@@ -329,7 +380,12 @@ Foam::fileOperations::collatedFileOperation::collatedFileOperation
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
 Foam::fileOperations::collatedFileOperation::~collatedFileOperation()
-{}
+{
+    if (myComm_ != -1)
+    {
+        UPstream::freeCommunicator(myComm_);
+    }
+}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //

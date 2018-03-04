@@ -64,6 +64,9 @@ protected:
 
     // Protected data
 
+        //- Any communicator allocated by me
+        const label myComm_;
+
         //- Threaded writer
         mutable OFstreamCollator writer_;
 
@@ -77,6 +80,8 @@ protected:
 
 
    // Private Member Functions
+
+        static labelList ioRanks();
 
         //- Is proci master of communicator (in parallel) or master of
         //  the io ranks (non-parallel)
@@ -168,7 +173,7 @@ public:
 
 class collatedFileOperationInitialise
 :
-    public fileOperationInitialise
+    public masterUncollatedFileOperationInitialise
 {
 public:
 
@@ -177,7 +182,7 @@ public:
         //- Construct from components
         collatedFileOperationInitialise(int& argc, char**& argv)
         :
-            fileOperationInitialise(argc, argv)
+            masterUncollatedFileOperationInitialise(argc, argv)
         {}
 
 

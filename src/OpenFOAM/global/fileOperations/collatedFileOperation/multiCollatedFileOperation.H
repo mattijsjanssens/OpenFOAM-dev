@@ -76,10 +76,6 @@ class multiCollatedFileOperation
 {
    // Private Member Functions
 
-        //- Get the ranks that do IO (through command line argument;
-        //  non-parallel only)
-        static labelList ioRanks();
-
         //- Get the list of processors part of this set
         static labelList subRanks(const label n);
 
@@ -114,7 +110,10 @@ public:
     // Constructors
 
         //- Construct from components
-        multiCollatedFileOperationInitialise(int& argc, char**& argv);
+        multiCollatedFileOperationInitialise(int& argc, char**& argv)
+        :
+            collatedFileOperationInitialise(argc, argv)
+        {}
 
 
     //- Destructor
