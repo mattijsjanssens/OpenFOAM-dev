@@ -23,7 +23,7 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "multiCollatedFileOperation.H"
+#include "hostCollatedFileOperation.H"
 #include "addToRunTimeSelectionTable.H"
 #include "PackedBoolList.H"
 
@@ -33,11 +33,11 @@ namespace Foam
 {
 namespace fileOperations
 {
-    defineTypeNameAndDebug(multiCollatedFileOperation, 0);
+    defineTypeNameAndDebug(hostCollatedFileOperation, 0);
     addToRunTimeSelectionTable
     (
         fileOperation,
-        multiCollatedFileOperation,
+        hostCollatedFileOperation,
         word
     );
 
@@ -46,9 +46,9 @@ namespace fileOperations
     addNamedToRunTimeSelectionTable
     (
         fileOperationInitialise,
-        multiCollatedFileOperationInitialise,
+        hostCollatedFileOperationInitialise,
         word,
-        multiCollated
+        hostCollated
     );
 }
 }
@@ -56,7 +56,7 @@ namespace fileOperations
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-Foam::labelList Foam::fileOperations::multiCollatedFileOperation::subRanks
+Foam::labelList Foam::fileOperations::hostCollatedFileOperation::subRanks
 (
     const label n
 )
@@ -124,7 +124,7 @@ Foam::labelList Foam::fileOperations::multiCollatedFileOperation::subRanks
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::fileOperations::multiCollatedFileOperation::multiCollatedFileOperation
+Foam::fileOperations::hostCollatedFileOperation::hostCollatedFileOperation
 (
     const bool verbose
 )
@@ -165,7 +165,7 @@ Foam::fileOperations::multiCollatedFileOperation::multiCollatedFileOperation
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-Foam::fileOperations::multiCollatedFileOperation::~multiCollatedFileOperation()
+Foam::fileOperations::hostCollatedFileOperation::~hostCollatedFileOperation()
 {
     if (comm_ != -1)
     {

@@ -22,7 +22,7 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::fileOperations::multiCollatedFileOperation
+    Foam::fileOperations::hostCollatedFileOperation
 
 Description
     Version of collatedFileOperation with multiple read/write ranks.
@@ -37,7 +37,7 @@ Description
     FOAM_IORANKS environment variable (also when running non-parallel), e.g.
     when decomposing into 4:
 
-        FOAM_IORANKS='(0 2)' decomposePar -fileHandler multiCollated
+        FOAM_IORANKS='(0 2)' decomposePar -fileHandler hostCollated
 
     will generate
 
@@ -50,12 +50,12 @@ See also
     collatedFileOperation
 
 SourceFiles
-    multiCollatedFileOperation.C
+    hostCollatedFileOperation.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef fileOperations_multiCollatedFileOperation_H
-#define fileOperations_multiCollatedFileOperation_H
+#ifndef fileOperations_hostCollatedFileOperation_H
+#define fileOperations_hostCollatedFileOperation_H
 
 #include "collatedFileOperation.H"
 
@@ -67,10 +67,10 @@ namespace fileOperations
 {
 
 /*---------------------------------------------------------------------------*\
-                 Class multiCollatedFileOperation Declaration
+                 Class hostCollatedFileOperation Declaration
 \*---------------------------------------------------------------------------*/
 
-class multiCollatedFileOperation
+class hostCollatedFileOperation
 :
     public collatedFileOperation
 {
@@ -83,25 +83,25 @@ class multiCollatedFileOperation
 public:
 
         //- Runtime type information
-        TypeName("multiCollated");
+        TypeName("hostCollated");
 
 
     // Constructors
 
         //- Construct null
-        multiCollatedFileOperation(const bool verbose);
+        hostCollatedFileOperation(const bool verbose);
 
 
     //- Destructor
-    virtual ~multiCollatedFileOperation();
+    virtual ~hostCollatedFileOperation();
 };
 
 
 /*---------------------------------------------------------------------------*\
-            Class multiCollatedFileOperationInitialise Declaration
+            Class hostCollatedFileOperationInitialise Declaration
 \*---------------------------------------------------------------------------*/
 
-class multiCollatedFileOperationInitialise
+class hostCollatedFileOperationInitialise
 :
     public collatedFileOperationInitialise
 {
@@ -110,14 +110,14 @@ public:
     // Constructors
 
         //- Construct from components
-        multiCollatedFileOperationInitialise(int& argc, char**& argv)
+        hostCollatedFileOperationInitialise(int& argc, char**& argv)
         :
             collatedFileOperationInitialise(argc, argv)
         {}
 
 
     //- Destructor
-    virtual ~multiCollatedFileOperationInitialise()
+    virtual ~hostCollatedFileOperationInitialise()
     {}
 };
 
