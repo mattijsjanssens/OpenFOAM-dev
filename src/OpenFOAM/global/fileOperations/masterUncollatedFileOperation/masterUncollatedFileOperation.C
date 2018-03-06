@@ -371,7 +371,16 @@ Foam::fileOperations::masterUncollatedFileOperation::localObjectPath
                +Foam::name(Pstream::myProcNo(Pstream::worldComm))
             );
             return
-                processorsPath(io, io.instance(), procName)
+                processorsPath
+                (
+                    io,
+                    io.instance(),
+                    (
+                        Pstream::parRun()
+                      ? procName
+                      : procDir
+                    )
+                )
                /io.name();
         }
         break;
@@ -387,7 +396,7 @@ Foam::fileOperations::masterUncollatedFileOperation::localObjectPath
 
         case fileOperation::PROCOBJECT:
         {
-            // Processors directory locally provided by the fileHanlder itself
+            // Processors directory locally provided by the fileHandler itself
             return
                 processorsPath(io, io.instance(), processorsDir(io))
                /io.name();
@@ -419,7 +428,16 @@ Foam::fileOperations::masterUncollatedFileOperation::localObjectPath
                +Foam::name(Pstream::myProcNo(Pstream::worldComm))
             );
             return
-                processorsPath(io, instancePath, procName)
+                processorsPath
+                (
+                    io,
+                    instancePath,
+                    (
+                        Pstream::parRun()
+                      ? procName
+                      : procDir
+                    )
+                )
                /io.name();
         }
         break;
@@ -435,7 +453,7 @@ Foam::fileOperations::masterUncollatedFileOperation::localObjectPath
 
         case fileOperation::PROCINSTANCE:
         {
-            // Processors directory locally provided by the fileHanlder itself
+            // Processors directory locally provided by the fileHandler itself
             return
                 processorsPath(io, instancePath, processorsDir(io))
                /io.name();

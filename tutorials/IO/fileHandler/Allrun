@@ -55,9 +55,11 @@ runParallel foamFormatConvert -fileHandler uncollated
 runParallel -s multiCollated \
     $application -fileHandler collated -ioRanks '(0 2)'
 
-#- Reconstruct the multi-rank format
+#- Reconstruct the multi-rank format. Delete the collated directory
+#  since conflicts with the multi-collated directory
+rm -rf processors4
 runApplication -s multiCollated reconstructPar -latestTime \
-    -fileHandler collated
+    -fileHandler collated -ioRanks '(0 2)'
 
 #- Convert the multi-rank format to uncollated
 runParallel -s uncollated foamFormatConvert -fileHandler uncollated
