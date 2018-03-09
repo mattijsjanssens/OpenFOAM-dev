@@ -63,6 +63,7 @@ Description
 #include "HashPtrTable.H"
 #include "Switch.H"
 #include "unthreadedInitialise.H"
+#include "boolList.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -440,6 +441,25 @@ protected:
             const IOstream::compressionType cmp,
             const labelUList& procs,
             PstreamBuffers& pBufs
+        );
+
+        //- Detect file (possibly compressed), read file contents and send
+        //  to processors
+        static void readAndSend
+        (
+            const fileName& fName,
+            const labelUList& procs,
+            PstreamBuffers& pBufs
+        );
+
+        //- Read files on comms master
+        static autoPtr<ISstream> read
+        (
+            IOobject& io,
+            const label comm,
+            const bool uniform,             // on comms master only
+            const fileNameList& filePaths,  // on comms master only
+            const boolList& procValid       // on comms master only
         );
 
         //- Helper: check IO for local existence. Like filePathInfo but

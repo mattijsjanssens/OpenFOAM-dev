@@ -557,6 +557,186 @@ void Foam::fileOperations::masterUncollatedFileOperation::readAndSend
 }
 
 
+void Foam::fileOperations::masterUncollatedFileOperation::readAndSend
+(
+    const fileName& fName,
+    const labelUList& procs,
+    PstreamBuffers& pBufs
+)
+{
+    if (Foam::exists(fName+".gz", false))
+    {
+        readAndSend
+        (
+            fName,
+            IOstream::compressionType::COMPRESSED,
+            procs,
+            pBufs
+        );
+    }
+    else
+    {
+        readAndSend
+        (
+            fName,
+            IOstream::compressionType::UNCOMPRESSED,
+            procs,
+            pBufs
+        );
+    }
+}
+
+
+Foam::autoPtr<Foam::ISstream>
+Foam::fileOperations::masterUncollatedFileOperation::read
+(
+    IOobject& io,
+    const label comm,
+    const bool uniform,             // on comms master only
+    const fileNameList& filePaths,  // on comms master only
+    const boolList& procValid       // on comms master only
+)
+{
+    autoPtr<ISstream> isPtr;
+
+    //const bool uniform = uniformFile(filePaths);
+
+    PstreamBuffers pBufs
+    (
+        Pstream::commsTypes::nonBlocking,
+        Pstream::msgType(),
+        comm
+    );
+
+    if (Pstream::master(comm))
+    {
+        if (uniform)
+        {
+            if (procValid[0])
+            {
+                DynamicList<label> validProcs(Pstream::nProcs(comm));
+                for
+                (
+                    label proci = 0;
+                    proci < Pstream::nProcs(comm);
+                    proci++
+                )
+                {
+                    if (procValid[proci])
+                    {
+                        validProcs.append(proci);
+                    }
+                }
+
+                // Read on master and send to all processors (including
+                // master for simplicity)
+                if (debug)
+                {
+                    Pout<< "masterUncollatedFileOperation::readStream :"
+                        << " For uniform file " << filePaths[0]
+                        << " sending to " << validProcs
+                        << " in comm:" << comm << endl;
+                }
+                readAndSend(filePaths[0], validProcs, pBufs);
+            }
+        }
+        else
+        {
+            if (procValid[0])
+            {
+                if (filePaths[0].empty())
+                {
+                    FatalIOErrorInFunction(filePaths[0])
+                        << "cannot find file " << io.objectPath()
+                        << exit(FatalIOError);
+                }
+
+                autoPtr<IFstream> ifsPtr(new IFstream(filePaths[0]));
+
+                // Read header
+                if (!io.readHeader(ifsPtr()))
+                {
+                    FatalIOErrorInFunction(ifsPtr())
+                        << "problem while reading header for object "
+                        << io.name() << exit(FatalIOError);
+                }
+
+                // Open master (steal from ifsPtr)
+                isPtr.reset(ifsPtr.ptr());
+            }
+
+            // Read slave files
+            for
+            (
+                label proci = 1;
+                proci < Pstream::nProcs(comm);
+                proci++
+            )
+            {
+                if (debug)
+                {
+                    Pout<< "masterUncollatedFileOperation::readStream :"
+                        << " For processor " << proci
+                        << " opening " << filePaths[proci] << endl;
+                }
+
+                const fileName& fPath = filePaths[proci];
+
+                if (procValid[proci] && !fPath.empty())
+                {
+                    // Note: handle compression ourselves since size cannot
+                    // be determined without actually uncompressing
+                    readAndSend(fPath, labelList(1, proci), pBufs);
+                }
+            }
+        }
+    }
+
+    labelList recvSizes;
+    pBufs.finishedSends(recvSizes);
+
+    // isPtr will be valid on master and will be the unbuffered
+    // IFstream. Else the information is in the PstreamBuffers (and
+    // the special case of a uniform file)
+
+    if (procValid[Pstream::myProcNo(comm)])
+    {
+        // This processor needs to return something
+
+        if (!isPtr.valid())
+        {
+            UIPstream is(Pstream::masterNo(), pBufs);
+            string buf(recvSizes[Pstream::masterNo()], '\0');
+            if (recvSizes[Pstream::masterNo()] > 0)
+            {
+                is.read(&buf[0], recvSizes[Pstream::masterNo()]);
+            }
+
+            if (debug)
+            {
+                Pout<< "masterUncollatedFileOperation::readStream :"
+                    << " Done reading " << buf.size() << " bytes" << endl;
+            }
+            const fileName& fName = filePaths[Pstream::myProcNo(comm)];
+            isPtr.reset(new IStringStream(fName, buf));
+
+            if (!io.readHeader(isPtr()))
+            {
+                FatalIOErrorInFunction(isPtr())
+                    << "problem while reading header for object "
+                    << io.name() << exit(FatalIOError);
+            }
+        }
+    }
+    else
+    {
+        isPtr.reset(new dummyISstream());
+    }
+
+    return isPtr;
+}
+
+
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 Foam::fileOperations::masterUncollatedFileOperation::
@@ -1901,271 +2081,33 @@ Foam::fileOperations::masterUncollatedFileOperation::readStream
                 << " starting separated input from " << fName << endl;
         }
 
-        fileNameList filePaths(Pstream::nProcs(comm_));
-        filePaths[Pstream::myProcNo(comm_)] = fName;
-        Pstream::gatherList(filePaths, Pstream::msgType(), comm_);
-        boolList procValid(Pstream::nProcs(comm_));
-        procValid[Pstream::myProcNo(comm_)] = valid;
-        Pstream::gatherList(procValid, Pstream::msgType(), comm_);
-
-        PstreamBuffers pBufs
-        (
-            Pstream::commsTypes::nonBlocking,
-            Pstream::msgType(),
-            comm_
-        );
-
-        const bool uniform = uniformFile(filePaths);
-
-        // Note: a special case is that all the filePaths are empty (so also
-        // classified as uniform). This can only happen if valid is false
-        // (e.g. if trying to restart from lagrangian and there is none)
-
-        //if (Pstream::master())
-        //{
-        //    // Search for file to read and send it to all processors with
-        //    // same fileName
-        //
-        //    for
-        //    (
-        //        label proci = 0;
-        //        proci < Pstream::nProcs();  //comm_);
-        //        proci++
-        //    )
-        //    {
-        //        if (procValid[proci] && !filePaths[proci].empty())
-        //        {
-        //            // Collect processors with same file
-        //            DynamicList<label> validProcs(Pstream::nProcs());
-        //
-        //            validProcs.append(proci);
-        //            for
-        //            (
-        //                label revcProci = proci+1;
-        //                recvProci < Pstream::nProcs()
-        //             && procValid[recvProci]
-        //             && filePaths[recvProci] == filePaths[proci];
-        //                recvProci++
-        //            )
-        //            {
-        //                validProcs.append(revcProci);
-        //            }
-        //
-        //            // Note: handle compression ourselves since size cannot
-        //            // be determined without actually uncompressing
-        //
-        //            if (debug)
-        //            {
-        //                Pout<< "masterUncollatedFileOperation::readStream :"
-        //                    << " For file " << fName
-        //                    << " sending to " << validProcs << endl;
-        //            }
-        //
-        //            if (Foam::exists(filePaths[proci]+".gz", false))
-        //            {
-        //                readAndSend
-        //                (
-        //                    filePaths[proci],
-        //                    IOstream::compressionType::COMPRESSED,
-        //                    validProcs,
-        //                    pBufs
-        //                );
-        //            }
-        //            else
-        //            {
-        //                readAndSend
-        //                (
-        //                    filePaths[proci],
-        //                    IOstream::compressionType::UNCOMPRESSED,
-        //                    validProcs,
-        //                    pBufs
-        //                );
-        //            }
-        //
-        //            proci = validProcs.last();
-        //        }
-        //    }
-        //}
-
-
-        if (Pstream::master(comm_))
+        if (io.global())
         {
-            if (uniform)
-            {
-                if (valid)
-                {
-                    DynamicList<label> validProcs(Pstream::nProcs(comm_));
-                    for
-                    (
-                        label proci = 0;
-                        proci < Pstream::nProcs(comm_);
-                        proci++
-                    )
-                    {
-                        if (procValid[proci])
-                        {
-                            validProcs.append(proci);
-                        }
-                    }
+            // Use worldComm. Note: should not really need to gather filePaths
+            // since we enforce sending from master anyway ...
+            fileNameList filePaths(Pstream::nProcs());
+            filePaths[Pstream::myProcNo()] = fName;
+            Pstream::gatherList(filePaths);
+            boolList procValid(Pstream::nProcs());
+            procValid[Pstream::myProcNo()] = valid;
+            Pstream::gatherList(procValid);
 
-                    // Read on master and send to all processors (including
-                    // master for simplicity)
-                    if (debug)
-                    {
-                        Pout<< "masterUncollatedFileOperation::readStream :"
-                            << " For uniform file " << fName
-                            << " sending to " << validProcs << endl;
-                    }
-
-                    if (Foam::exists(fName+".gz", false))
-                    {
-                        readAndSend
-                        (
-                            fName,
-                            IOstream::compressionType::COMPRESSED,
-                            validProcs,
-                            pBufs
-                        );
-                    }
-                    else
-                    {
-                        if (fName.empty())
-                        {
-                            FatalIOErrorInFunction(fName)
-                                << "cannot find file " << io.objectPath()
-                                << exit(FatalIOError);
-                        }
-
-                        readAndSend
-                        (
-                            fName,
-                            IOstream::compressionType::UNCOMPRESSED,
-                            validProcs,
-                            pBufs
-                        );
-                    }
-                }
-            }
-            else
-            {
-                if (valid)
-                {
-                    if (fName.empty())
-                    {
-                        FatalIOErrorInFunction(fName)
-                            << "cannot find file " << io.objectPath()
-                            << exit(FatalIOError);
-                    }
-
-                    autoPtr<IFstream> ifsPtr(new IFstream(fName));
-
-                    // Read header
-                    if (!io.readHeader(ifsPtr()))
-                    {
-                        FatalIOErrorInFunction(ifsPtr())
-                            << "problem while reading header for object "
-                            << io.name() << exit(FatalIOError);
-                    }
-
-                    // Open master (steal from ifsPtr)
-                    isPtr.reset(ifsPtr.ptr());
-                }
-
-                // Read slave files
-                for
-                (
-                    label proci = 1;
-                    proci < Pstream::nProcs(comm_);
-                    proci++
-                )
-                {
-                    if (debug)
-                    {
-                        Pout<< "masterUncollatedFileOperation::readStream :"
-                            << " For processor " << proci
-                            << " opening " << filePaths[proci] << endl;
-                    }
-
-                    if (procValid[proci] && !filePaths[proci].empty())
-                    {
-                        // Note: handle compression ourselves since size cannot
-                        // be determined without actually uncompressing
-
-                        if (Foam::exists(filePaths[proci]+".gz", false))
-                        {
-                            readAndSend
-                            (
-                                filePaths[proci],
-                                IOstream::compressionType::COMPRESSED,
-                                labelList(1, proci),
-                                pBufs
-                            );
-                        }
-                        else
-                        {
-                            readAndSend
-                            (
-                                filePaths[proci],
-                                IOstream::compressionType::UNCOMPRESSED,
-                                labelList(1, proci),
-                                pBufs
-                            );
-                        }
-                    }
-                }
-            }
-        }
-
-        labelList recvSizes;
-        pBufs.finishedSends(recvSizes);
-
-        // isPtr will be valid on master and will be the unbuffered
-        // IFstream. Else the information is in the PstreamBuffers (and
-        // the special case of a uniform file)
-
-        if (Pstream::master(comm_) && !uniform)
-        //if (Pstream::master() && !uniform)
-        {
-            if (!isPtr.valid())
-            {
-                return autoPtr<ISstream>(new dummyISstream());
-            }
-            else
-            {
-                return isPtr;
-            }
+            return read(io, Pstream::worldComm, true, filePaths, procValid);
         }
         else
         {
-            if (valid)
-            {
-                UIPstream is(Pstream::masterNo(), pBufs);
-                string buf(recvSizes[Pstream::masterNo()], '\0');
-                if (recvSizes[Pstream::masterNo()] > 0)
-                {
-                    is.read(&buf[0], recvSizes[Pstream::masterNo()]);
-                }
+            // Use local communicator
+            fileNameList filePaths(Pstream::nProcs(comm_));
+            filePaths[Pstream::myProcNo(comm_)] = fName;
+            Pstream::gatherList(filePaths, Pstream::msgType(), comm_);
+            boolList procValid(Pstream::nProcs(comm_));
+            procValid[Pstream::myProcNo(comm_)] = valid;
+            Pstream::gatherList(procValid, Pstream::msgType(), comm_);
 
-                if (debug)
-                {
-                    Pout<< "masterUncollatedFileOperation::readStream :"
-                        << " Done reading " << buf.size() << " bytes" << endl;
-                }
-                isPtr.reset(new IStringStream(fName, buf));
+            // Uniform in local comm
+            bool uniform = uniformFile(filePaths);
 
-                if (!io.readHeader(isPtr()))
-                {
-                    FatalIOErrorInFunction(isPtr())
-                        << "problem while reading header for object "
-                        << io.name() << exit(FatalIOError);
-                }
-
-                return isPtr;
-            }
-            else
-            {
-                return autoPtr<ISstream>(new dummyISstream());
-            }
+            return read(io, comm_, uniform, filePaths, procValid);
         }
     }
 }
