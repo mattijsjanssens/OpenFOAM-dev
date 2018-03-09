@@ -2381,6 +2381,11 @@ void Foam::fileOperations::masterUncollatedFileOperation::setTime
     const Time& tm
 ) const
 {
+    if (tm.subCycling())
+    {
+        return;
+    }
+
     HashPtrTable<instantList>::const_iterator iter = times_.find(tm.path());
     if (iter != times_.end())
     {

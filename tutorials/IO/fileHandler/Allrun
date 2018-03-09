@@ -13,11 +13,8 @@ runApplication decomposePar -fileHandler collated
 runParallel $application -fileHandler collated
 runApplication reconstructPar -latestTime -fileHandler collated
 
-#- Delete collated files
-rm -rf processors*
-
 #- Test writing uncollated format
-runApplication -s uncollated decomposePar -fileHandler uncollated
+runApplication -s uncollated decomposePar -fileHandler uncollated -force
 runParallel -s uncollated $application -fileHandler uncollated
 
 
@@ -71,10 +68,11 @@ runParallel -s uncollated_from_multiCollated \
 
 
 #- Test collated+distributed running: copy to different roots
+#  Important: make sure to copy uniform since we're copying it
 
 #- Delete all processor directories
-rm -rf processor*
-runApplication -s collated decomposePar -fileHandler collated -force
+runApplication -s collated decomposePar \
+    -fileHandler collated -force -copyUniform
 
 rm -rf machineA/fileHandler
 mkdir -p machineA/fileHandler
@@ -86,9 +84,6 @@ mkdir -p machineA/fileHandler
 #- Note: slave node does not need constant&system since these are global
 rm -rf machineB/fileHandler
 mkdir -p machineB/fileHandler
-#(   cd machineB/fileHandler && \
-#    cp -r ../../processor[2-3] .
-#)
 
 #- Run with different roots
 (   d=$PWD && \

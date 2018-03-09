@@ -144,6 +144,27 @@ bool Foam::fileOperations::collatedFileOperation::appendObject
 
     const bool isMaster = isMasterRank(proci);
 
+    // Determine the local rank if the pathName is a per-rank one
+    label localProci = proci;
+    {
+        fileName path, procDir, local;
+        label groupStart, groupSize, nProcs;
+        splitProcessorPath
+        (
+            pathName,
+            path,
+            procDir,
+            local,
+            groupStart,
+            groupSize,
+            nProcs
+        );
+        if (groupSize > 0 && groupStart != -1)
+        {
+            localProci = proci-groupStart;
+        }
+    }
+
 
     // Create string from all data to write
     string buf;
@@ -211,7 +232,7 @@ bool Foam::fileOperations::collatedFileOperation::appendObject
         const_cast<char*>(buf.data()),
         label(buf.size())
     );
-    os << nl << "// Processor" << proci << nl << slice << nl;
+    os << nl << "// Processor" << localProci << nl << slice << nl;
 
     return os.good();
 }
