@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2015-2017 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2015-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -201,6 +201,9 @@ public:
         //- Return the momentum equation
         virtual tmp<fvVectorMatrix> UEqn() = 0;
 
+        //- Return the momentum equation for the face-based algorithm
+        virtual tmp<fvVectorMatrix> UfEqn() = 0;
+
         //- Return the enthalpy equation
         virtual tmp<fvScalarMatrix> heEqn() = 0;
 
@@ -224,15 +227,6 @@ public:
 
             //- Return the phase kinetic energy
             virtual const volScalarField& K() const;
-
-
-        // Implicit phase pressure and dispersion support
-
-            //- Return the phase diffusivity divided by the momentum coefficient
-            virtual const surfaceScalarField& DbyA() const;
-
-            //- Set the phase diffusivity divided by the momentum coefficient
-            virtual void DbyA(const tmp<surfaceScalarField>& DbyA);
 
 
         // Thermo
@@ -264,6 +258,9 @@ public:
 
             //- Return the substantive acceleration
             virtual tmp<volVectorField> DUDt() const = 0;
+
+            //- Return the substantive acceleration on the faces
+            virtual tmp<surfaceScalarField> DUDtf() const = 0;
 
             //- Constant access the continuity error
             virtual tmp<volScalarField> continuityError() const = 0;
@@ -310,13 +307,15 @@ public:
             //- Return the laminar thermal conductivity on a patch
             virtual tmp<scalarField> kappa(const label patchi) const = 0;
 
-            //- Return the effective thermal conductivity
+            //- Return the effective thermal conductivity, given the turbulent
+            //  thermal diffusivity
             virtual tmp<volScalarField> kappaEff
             (
                 const volScalarField& alphat
             ) const = 0;
 
-            //- Access the effective thermal conductivity
+            //- Return the effective thermal conductivity on a patch, given the
+            //  turbulent thermal diffusivity
             virtual tmp<scalarField> kappaEff
             (
                 const scalarField& alphat,
@@ -329,13 +328,15 @@ public:
             //- Return the laminar thermal diffusivity for enthalpy on a patch
             virtual tmp<scalarField> alpha(const label patchi) const = 0;
 
-            //- Return the effective thermal diffusivity for enthalpy
+            //- Return the effective thermal diffusivity for enthalpy, given the
+            //  turbulent thermal diffusivity
             virtual tmp<volScalarField> alphaEff
             (
                 const volScalarField& alphat
             ) const = 0;
 
-            //- Return the effective thermal diffusivity for enthalpy on a patch
+            //- Return the effective thermal diffusivity for enthalpy on a
+            //  patch, given the turbulent thermal diffusivity
             virtual tmp<scalarField> alphaEff
             (
                 const scalarField& alphat,
@@ -345,9 +346,37 @@ public:
 
         // Turbulence
 
-            //- Return the turbulence model
-            virtual const phaseCompressibleTurbulenceModel&
-                turbulence() const = 0;
+            //- Return the turbulent dynamic viscosity
+            virtual tmp<volScalarField> mut() const = 0;
+
+            //- Return the effective dynamic viscosity
+            virtual tmp<volScalarField> muEff() const = 0;
+
+            //- Return the turbulent kinematic viscosity
+            virtual tmp<volScalarField> nut() const = 0;
+
+            //- Return the effective kinematic viscosity
+            virtual tmp<volScalarField> nuEff() const = 0;
+
+            //- Return the effective thermal conductivity
+            virtual tmp<volScalarField> kappaEff() const = 0;
+
+            //- Return the effective thermal conductivity on a patch
+            virtual tmp<scalarField> kappaEff(const label patchi) const = 0;
+
+            //- Return the effective thermal diffusivity for enthalpy
+            virtual tmp<volScalarField> alphaEff() const = 0;
+
+            //- Return the effective thermal conductivity for enthalpy on a
+            //  patch
+            virtual tmp<scalarField> alphaEff(const label patchi) const = 0;
+
+            //- Return the turbulent kinetic energy
+            virtual tmp<volScalarField> k() const = 0;
+
+            //- Return the phase-pressure'
+            //  (derivative of phase-pressure w.r.t. phase-fraction)
+            virtual tmp<volScalarField> pPrime() const = 0;
 };
 
 

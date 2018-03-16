@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2015-2017 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2015-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -80,7 +80,10 @@ protected:
         surfaceScalarField alphaRhoPhi_;
 
         //- Lagrangian acceleration field (needed for virtual-mass)
-        volVectorField DUDt_;
+        mutable tmp<volVectorField> DUDt_;
+
+        //- Lagrangian acceleration field on the faces (needed for virtual-mass)
+        mutable tmp<surfaceScalarField> DUDtf_;
 
         //- Dilatation rate
         tmp<volScalarField> divU_;
@@ -90,10 +93,6 @@ protected:
 
         //- Continuity error
         volScalarField continuityError_;
-
-        //- Phase diffusivity divided by the momentum coefficient.
-        //  Used for implicit treatment of the phase pressure and dispersion
-        tmp<surfaceScalarField> DbyA_;
 
 
 private:
@@ -137,14 +136,8 @@ public:
         //- Return the momentum equation
         virtual tmp<fvVectorMatrix> UEqn();
 
-
-        // Implicit phase pressure and dispersion support
-
-            //- Return the phase diffusivity divided by the momentum coefficient
-            virtual const surfaceScalarField& DbyA() const;
-
-            //- Set the phase diffusivity divided by the momentum coefficient
-            virtual void DbyA(const tmp<surfaceScalarField>& DbyA);
+        //- Return the momentum equation for the face-based algorithm
+        virtual tmp<fvVectorMatrix> UfEqn();
 
 
         // Momentum
@@ -157,6 +150,9 @@ public:
 
             //- Return the substantive acceleration
             virtual tmp<volVectorField> DUDt() const;
+
+            //- Return the substantive acceleration on the faces
+            virtual tmp<surfaceScalarField> DUDtf() const;
 
             //- Return the phase dilatation rate (d(alpha)/dt + div(alpha*phi))
             virtual const tmp<volScalarField>& divU() const;
@@ -186,10 +182,39 @@ public:
             virtual surfaceScalarField& alphaRhoPhi();
 
 
-        // Turbulence
+        // Transport
 
-            //- Return the turbulence model
-            virtual const phaseCompressibleTurbulenceModel& turbulence() const;
+            //- Return the turbulent dynamic viscosity
+            virtual tmp<volScalarField> mut() const;
+
+            //- Return the effective dynamic viscosity
+            virtual tmp<volScalarField> muEff() const;
+
+            //- Return the turbulent kinematic viscosity
+            virtual tmp<volScalarField> nut() const;
+
+            //- Return the effective kinematic viscosity
+            virtual tmp<volScalarField> nuEff() const;
+
+            //- Return the effective thermal conductivity
+            virtual tmp<volScalarField> kappaEff() const;
+
+            //- Return the effective thermal conductivity on a patch
+            virtual tmp<scalarField> kappaEff(const label patchi) const;
+
+            //- Return the effective thermal diffusivity for enthalpy
+            virtual tmp<volScalarField> alphaEff() const;
+
+            //- Return the effective thermal conductivity for enthalpy on a
+            //  patch
+            virtual tmp<scalarField> alphaEff(const label patchi) const;
+
+            //- Return the turbulent kinetic energy
+            virtual tmp<volScalarField> k() const;
+
+            //- Return the phase-pressure'
+            //  (derivative of phase-pressure w.r.t. phase-fraction)
+            virtual tmp<volScalarField> pPrime() const;
 };
 
 

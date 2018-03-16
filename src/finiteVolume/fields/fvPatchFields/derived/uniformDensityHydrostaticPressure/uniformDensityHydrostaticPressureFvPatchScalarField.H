@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -37,11 +37,11 @@ Description
 
     where
     \vartable
-        p_{hyd} | hyrostatic pressure [Pa]
-        p_{ref} | reference pressure [Pa]
-        x_{ref} | reference point in Cartesian co-ordinates
-        \rho    | density (assumed uniform)
-        g       | acceleration due to gravity [m/s2]
+        p_{hyd} | Hyrostatic pressure [Pa]
+        p_{ref} | Reference pressure [Pa]
+        x_{ref} | Reference point in Cartesian co-ordinates
+        \rho    | Density (assumed uniform)
+        g       | Acceleration due to gravity [m/s2]
     \endtable
 
 Usage
