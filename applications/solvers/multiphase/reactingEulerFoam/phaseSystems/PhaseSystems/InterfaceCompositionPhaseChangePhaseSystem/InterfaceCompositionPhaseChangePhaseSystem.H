@@ -48,6 +48,7 @@ namespace Foam
 {
 
 class interfaceCompositionModel;
+class massTransferModel;
 
 /*---------------------------------------------------------------------------*\
                  Class InterfaceCompositionPhaseChangePhaseSystem Declaration
@@ -69,29 +70,38 @@ protected:
             phasePairKey::hash
         > interfaceCompositionModelTable;
 
+        typedef HashTable
+        <
+            Pair<autoPtr<BlendedInterfacialModel<massTransferModel>>>,
+            phasePairKey,
+            phasePairKey::hash
+        > massTransferModelTable;
+
+        typedef HashPtrTable<volScalarField, phasePairKey, phasePairKey::hash>
+            iDmdtTable;
+
 
     // Protected data
 
         // Sub Models
 
+            //- Mass transfer models
+            massTransferModelTable massTransferModels_;
+
             //- Interface composition models
             interfaceCompositionModelTable interfaceCompositionModels_;
 
             //- Interfacial Mass transfer rate
-            HashPtrTable<volScalarField, phasePairKey, phasePairKey::hash>
-                iDmdt_;
+            iDmdtTable iDmdt_;
 
             //- Explicit part of the mass transfer rate
-            HashPtrTable<volScalarField, phasePairKey, phasePairKey::hash>
-                iDmdtExplicit_;
+            iDmdtTable iDmdtExplicit_;
+
 
     // Protected member functions
 
-        //- Add the mass-based momentum transfer to the equations
-        void addMomentumTransfer
-        (
-            phaseSystem::momentumTransferTable& eqns
-        ) const;
+        //- Return the interfacial mass transfer rate for a pair for a pair
+        virtual tmp<volScalarField> iDmdt(const phasePairKey& key) const;
 
 
 public:
@@ -108,37 +118,17 @@ public:
 
     // Member Functions
 
-        //- Return the interfacial mass flow rate
-        virtual tmp<volScalarField> iDmdt(const phasePairKey& key) const;
+        //- Return the mass transfer rate for a pair
+        virtual tmp<volScalarField> dmdt(const phasePairKey& key) const;
 
-        //- Return the total interfacial mass transfer rate for phase
-        virtual tmp<volScalarField> iDmdt(const phaseModel& phase) const;
-
-        //- Return the interfacial mass flow rate
-        virtual tmp<volScalarField> dmdt(const phasePairKey& key) const
-        {
-            return BasePhaseSystem::dmdt(key) + this->iDmdt(key);
-        };
-
-        //- Return the total interfacial mass transfer rate for phase
-        virtual tmp<volScalarField> dmdt(const phaseModel& phase) const;
-
-        //- Return the momentum transfer matrices
-        virtual autoPtr<phaseSystem::momentumTransferTable>
-            momentumTransfer() const;
-
-        //- Return the momentum transfer matrices for the face based algorithm
-        virtual autoPtr<phaseSystem::momentumTransferTable>
-            momentumTransferf() const;
-
-        //- Return the heat transfer matrices
-        virtual autoPtr<phaseSystem::heatTransferTable> heatTransfer() const;
+        //- Return the mass transfer rates for each phase
+        virtual Xfer<PtrList<volScalarField>> dmdts() const;
 
         //- Return the mass transfer matrices
         virtual autoPtr<phaseSystem::massTransferTable> massTransfer() const;
 
         //- Correct the thermodynamics
-        virtual void correctThermo();
+        virtual void correctInterfaceThermo();
 
         //- Read base phaseProperties dictionary
         virtual bool read();

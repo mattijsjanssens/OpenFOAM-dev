@@ -741,7 +741,7 @@ void Foam::triSurfaceMesh::getNormal
             if (info[i].hit())
             {
                 label facei = info[i].index();
-                normal[i] = s[facei].normal(pts);
+                normal[i] = s[facei].area(pts);
 
                 scalar qual = s[facei].tri(pts).quality();
 
@@ -757,7 +757,7 @@ void Foam::triSurfaceMesh::getNormal
                         if (nbrQual > qual)
                         {
                             qual = nbrQual;
-                            normal[i] = s[nbrI].normal(pts);
+                            normal[i] = s[nbrI].area(pts);
                         }
                     }
                 }
@@ -779,11 +779,10 @@ void Foam::triSurfaceMesh::getNormal
             {
                 label facei = info[i].index();
                 // Cached:
-                //normal[i] = faceNormals()[facei];
+                // normal[i] = faceNormals()[facei];
 
                 // Uncached
                 normal[i] = s[facei].normal(pts);
-                normal[i] /= mag(normal[i]) + vSmall;
             }
             else
             {
@@ -792,6 +791,37 @@ void Foam::triSurfaceMesh::getNormal
             }
         }
     }
+}
+
+
+void Foam::triSurfaceMesh::getVolumeType
+(
+    const pointField& points,
+    List<volumeType>& volType
+) const
+{
+    volType.setSize(points.size());
+
+    scalar oldTol = indexedOctree<treeDataTriSurface>::perturbTol();
+    indexedOctree<treeDataTriSurface>::perturbTol() = tolerance();
+
+    forAll(points, pointi)
+    {
+        const point& pt = points[pointi];
+
+        if (!tree().bb().contains(pt))
+        {
+            // Have to calculate directly as outside the octree
+            volType[pointi] = tree().shapes().getVolumeType(tree(), pt);
+        }
+        else
+        {
+            // - use cached volume type per each tree node
+            volType[pointi] = tree().getVolumeType(pt);
+        }
+    }
+
+    indexedOctree<treeDataTriSurface>::perturbTol() = oldTol;
 }
 
 
@@ -844,37 +874,6 @@ void Foam::triSurfaceMesh::getField
             }
         }
     }
-}
-
-
-void Foam::triSurfaceMesh::getVolumeType
-(
-    const pointField& points,
-    List<volumeType>& volType
-) const
-{
-    volType.setSize(points.size());
-
-    scalar oldTol = indexedOctree<treeDataTriSurface>::perturbTol();
-    indexedOctree<treeDataTriSurface>::perturbTol() = tolerance();
-
-    forAll(points, pointi)
-    {
-        const point& pt = points[pointi];
-
-        if (!tree().bb().contains(pt))
-        {
-            // Have to calculate directly as outside the octree
-            volType[pointi] = tree().shapes().getVolumeType(tree(), pt);
-        }
-        else
-        {
-            // - use cached volume type per each tree node
-            volType[pointi] = tree().getVolumeType(pt);
-        }
-    }
-
-    indexedOctree<treeDataTriSurface>::perturbTol() = oldTol;
 }
 
 

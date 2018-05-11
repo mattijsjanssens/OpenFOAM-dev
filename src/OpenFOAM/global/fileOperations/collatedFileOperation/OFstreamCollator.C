@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2017 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2017-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -233,7 +233,7 @@ void* Foam::OFstreamCollator::writeAll(void *threadarg)
 
             delete ptr;
         }
-        //sleep(1);
+        // sleep(1);
     }
 
     if (debug)

@@ -143,16 +143,16 @@ void Foam::diameterModels::nucleationModels::wallBoiling::correct()
 }
 
 
-void Foam::diameterModels::nucleationModels::wallBoiling::
-nucleationRate
+void
+Foam::diameterModels::nucleationModels::wallBoiling::addToNucleationRate
 (
     volScalarField& nucleationRate,
     const label i
 )
 {
     const sizeGroup& fi = *popBal_.sizeGroups()[i];
-    phaseModel& phase = const_cast<phaseModel&>(fi.phase());
-    volScalarField& rho = phase.thermo().rho();
+    const phaseModel& phase = fi.phase();
+    const volScalarField& rho = phase.rho();
     const tmp<volScalarField> talphat(turbulence_.alphat());
     const volScalarField::Boundary& alphatBf = talphat().boundaryField();
 

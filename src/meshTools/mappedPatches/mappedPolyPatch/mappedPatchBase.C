@@ -648,26 +648,47 @@ void Foam::mappedPatchBase::calcMapping() const
     }
 
     // Now we have all the data we need:
-    // - where sample originates from (so destination when mapping):
-    //   patchFaces, patchFaceProcs.
-    // - cell/face sample is in (so source when mapping)
-    //   sampleIndices, sampleProcs.
+    //   - where sample originates from (so destination when mapping):
+    //     patchFaces, patchFaceProcs.
+    //   - cell/face sample is in (so source when mapping)
+    //     sampleIndices, sampleProcs.
 
-    //forAll(samples, i)
-    //{
-    //    Info<< i << " need data in region "
-    //        << patch_.boundaryMesh().mesh().name()
-    //        << " for proc:" << patchFaceProcs[i]
-    //        << " face:" << patchFaces[i]
-    //        << " at:" << patchFc[i] << endl
-    //        << "Found data in region " << sampleRegion()
-    //        << " at proc:" << sampleProcs[i]
-    //        << " face:" << sampleIndices[i]
-    //        << " at:" << sampleLocations[i]
-    //        << nl << endl;
-    //}
+    // forAll(samples, i)
+    // {
+    //     Info<< i << " need data in region "
+    //         << patch_.boundaryMesh().mesh().name()
+    //         << " for proc:" << patchFaceProcs[i]
+    //         << " face:" << patchFaces[i]
+    //         << " at:" << patchFc[i] << endl
+    //         << "Found data in region " << sampleRegion()
+    //         << " at proc:" << sampleProcs[i]
+    //         << " face:" << sampleIndices[i]
+    //         << " at:" << sampleLocations[i]
+    //         << nl << endl;
+    // }
 
+    bool mapSucceeded = true;
 
+    forAll(samples, i)
+    {
+        if (sampleProcs[i] == -1)
+        {
+            mapSucceeded = false;
+            break;
+        }
+    }
+
+    if (!mapSucceeded)
+    {
+        FatalErrorInFunction
+            << "Mapping failed for " << nl
+            << "    patch: " << patch_.name() << nl
+            << "    sampleRegion: " << sampleRegion() << nl
+            << "    mode: " << sampleModeNames_[mode_] << nl
+            << "    samplePatch: " << samplePatch() << nl
+            << "    offsetMode: " << offsetModeNames_[offsetMode_]
+            << exit(FatalError);
+    }
 
     if (debug && Pstream::master())
     {
@@ -715,7 +736,7 @@ void Foam::mappedPatchBase::calcMapping() const
             constructMap[proci]
         );
 
-        //if (debug)
+        // if (debug)
         //{
         //    Pout<< "To proc:" << proci << " sending values of cells/faces:"
         //        << subMap[proci] << endl;
@@ -1078,7 +1099,7 @@ Foam::mappedPatchBase::mappedPatchBase
 
             case NONUNIFORM:
             {
-                //offsets_ = pointField(dict.lookup("offsets"));
+                // offsets_ = pointField(dict.lookup("offsets"));
                 offsets_ = readListOrField("offsets", dict, patch_.size());
             }
             break;
@@ -1098,7 +1119,7 @@ Foam::mappedPatchBase::mappedPatchBase
     else if (dict.found("offsets"))
     {
         offsetMode_ = NONUNIFORM;
-        //offsets_ = pointField(dict.lookup("offsets"));
+        // offsets_ = pointField(dict.lookup("offsets"));
         offsets_ = readListOrField("offsets", dict, patch_.size());
     }
     else if (mode_ != NEARESTPATCHFACE && mode_ != NEARESTPATCHFACEAMI)
@@ -1124,7 +1145,7 @@ Foam::mappedPatchBase::mappedPatchBase
     sampleRegion_(dict.lookupOrDefault<word>("sampleRegion", "")),
     mode_(mode),
     samplePatch_(dict.lookupOrDefault<word>("samplePatch", "")),
-    coupleGroup_(dict), //dict.lookupOrDefault<word>("coupleGroup", "")),
+    coupleGroup_(dict), // dict.lookupOrDefault<word>("coupleGroup", "")),
     offsetMode_(UNIFORM),
     offset_(Zero),
     offsets_(0),

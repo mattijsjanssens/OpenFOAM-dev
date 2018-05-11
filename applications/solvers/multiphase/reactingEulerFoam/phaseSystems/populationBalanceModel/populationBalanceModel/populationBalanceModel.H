@@ -62,9 +62,9 @@ Description
     \verbatim
         Binary breakup term formulation:
             Liao, Y.; Oertel, R.; Kriebitzsch, S.; Schlegel, F.; Lucas, D.
-            (2017). A Discrete Population Balance Equation for Binary Breakage.
-            International Journal for Numerical Methods in Fluids, Accepted for
-            publication.
+            (2018). A Discrete Population Balance Equation for Binary Breakage.
+            International Journal for Numerical Methods in Fluids,
+            DOI 10.1002/fld.4491.
     \endverbatim
 
 Usage
@@ -275,9 +275,6 @@ class populationBalanceModel
         //- Average velocity
         volVectorField U_;
 
-        //- Mean Sauter diameter
-        autoPtr<volScalarField> d_;
-
 
     // Private member functions
 
@@ -287,7 +284,7 @@ class populationBalanceModel
 
         void createPhasePairs();
 
-        void preSolve();
+        void correct();
 
         void birthByCoalescence(const label j, const label k);
 
@@ -314,8 +311,6 @@ class populationBalanceModel
         void calcAlphas();
 
         void calcVelocity();
-
-        tmp<volScalarField> dsm() const;
 
 
 public:

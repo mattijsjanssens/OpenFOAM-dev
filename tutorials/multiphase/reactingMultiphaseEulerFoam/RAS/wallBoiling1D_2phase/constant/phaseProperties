@@ -19,7 +19,7 @@ type    thermalPhaseChangeMultiphaseSystem;
 
 phases (gas liquid);
 
-massTransfer on;
+phaseChange on;
 
 gas
 {
@@ -52,18 +52,6 @@ liquid
 blending
 {
     default
-    {
-        type            none;
-        continuousPhase liquid;
-    }
-
-    heatTransfer
-    {
-        type            none;
-        continuousPhase liquid;
-    }
-
-    massTransfer
     {
         type            none;
         continuousPhase liquid;
@@ -155,10 +143,7 @@ heatTransfer.liquid
     }
 );
 
-massTransfer.gas
-();
-
-massTransfer.liquid
+phaseTransfer
 ();
 
 lift

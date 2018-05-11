@@ -22,7 +22,7 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::diameterModels::driftModels::constant
+    Foam::diameterModels::driftModels::constantDrift
 
 Description
     Constant drift rate within all classes. Used for verification and
@@ -88,7 +88,7 @@ public:
         virtual void correct();
 
         //- Add to driftRate
-        virtual void driftRate
+        virtual void addToDriftRate
         (
             volScalarField& driftRate,
             const label i

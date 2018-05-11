@@ -65,6 +65,8 @@ class blendedInterfacialModel
 
 template<class ModelType>
 class BlendedInterfacialModel
+:
+    public regIOobject
 {
     // Private data
 
@@ -122,6 +124,10 @@ class BlendedInterfacialModel
 
 
 public:
+
+    //- Runtime type information
+    TypeName("BlendedInterfacialModel");
+
 
     // Constructors
 
@@ -183,8 +189,28 @@ public:
 
         //- Return the blended diffusivity
         tmp<volScalarField> D() const;
+
+        //- Return the blended mass transfer rate
+        tmp<volScalarField> dmdt() const;
+
+        //- Dummy write for regIOobject
+        bool writeData(Ostream& os) const;
 };
 
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#define defineBlendedInterfacialModelTypeNameAndDebug(ModelType, DebugSwitch)  \
+                                                                               \
+    defineTemplateTypeNameAndDebugWithName                                     \
+    (                                                                          \
+        BlendedInterfacialModel<ModelType>,                                    \
+        (                                                                      \
+            word(BlendedInterfacialModel<ModelType>::typeName_()) + "<"        \
+          + ModelType::typeName_() + ">"                                       \
+        ).c_str(),                                                             \
+        DebugSwitch                                                            \
+    );
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

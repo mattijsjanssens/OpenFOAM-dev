@@ -159,9 +159,9 @@ bool Foam::faceTriangulation::triangleContainsPoint
     const point& pt
 )
 {
-    scalar area01Pt = triPointRef(p0, p1, pt).normal() & n;
-    scalar area12Pt = triPointRef(p1, p2, pt).normal() & n;
-    scalar area20Pt = triPointRef(p2, p0, pt).normal() & n;
+    scalar area01Pt = triPointRef(p0, p1, pt).area() & n;
+    scalar area12Pt = triPointRef(p1, p2, pt).area() & n;
+    scalar area20Pt = triPointRef(p2, p0, pt).area() & n;
 
     if ((area01Pt > 0) && (area12Pt > 0) && (area20Pt > 0))
     {
@@ -249,7 +249,7 @@ void Foam::faceTriangulation::findDiagonal
 
     if (minIndex == -1)
     {
-        //WarningInFunction
+        // WarningInFunction
         //    << "Could not find intersection starting from " << f[startIndex]
         //    << " for face " << f << endl;
 
@@ -580,16 +580,16 @@ bool Foam::faceTriangulation::split
         }
 
         // Decompose the split faces
-        //Pout<< "Split face:" << f << " into " << face1 << " and " << face2
+        // Pout<< "Split face:" << f << " into " << face1 << " and " << face2
         //    << endl;
-        //string oldPrefix(Pout.prefix());
-        //Pout.prefix() = "  " + oldPrefix;
+        // string oldPrefix(Pout.prefix());
+        // Pout.prefix() = "  " + oldPrefix;
 
         bool splitOk =
             split(fallBack, points, face1, normal, triI)
          && split(fallBack, points, face2, normal, triI);
 
-        //Pout.prefix() = oldPrefix;
+        // Pout.prefix() = oldPrefix;
 
         return splitOk;
     }
@@ -598,14 +598,12 @@ bool Foam::faceTriangulation::split
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// Null constructor
 Foam::faceTriangulation::faceTriangulation()
 :
     triFaceList()
 {}
 
 
-// Construct from components
 Foam::faceTriangulation::faceTriangulation
 (
     const pointField& points,
@@ -615,8 +613,7 @@ Foam::faceTriangulation::faceTriangulation
 :
     triFaceList(f.size()-2)
 {
-    vector avgNormal = f.normal(points);
-    avgNormal /= mag(avgNormal) + vSmall;
+    const vector avgNormal = f.normal(points);
 
     label triI = 0;
 
@@ -629,7 +626,6 @@ Foam::faceTriangulation::faceTriangulation
 }
 
 
-// Construct from components
 Foam::faceTriangulation::faceTriangulation
 (
     const pointField& points,
@@ -651,7 +647,6 @@ Foam::faceTriangulation::faceTriangulation
 }
 
 
-// Construct from Istream
 Foam::faceTriangulation::faceTriangulation(Istream& is)
 :
     triFaceList(is)

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2017 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2017-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -70,7 +70,7 @@ namespace Foam
         debug::optimisationSwitches().lookupOrAddDefault
         (
             "fileHandler",
-            //Foam::fileOperations::uncollatedFileOperation::typeName,
+            // Foam::fileOperations::uncollatedFileOperation::typeName,
             word("uncollated"),
             false,
             false

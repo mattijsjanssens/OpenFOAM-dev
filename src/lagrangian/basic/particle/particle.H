@@ -59,6 +59,7 @@ class polyPatch;
 class cyclicPolyPatch;
 class cyclicAMIPolyPatch;
 class cyclicACMIPolyPatch;
+class cyclicRepeatAMIPolyPatch;
 class processorPolyPatch;
 class symmetryPlanePolyPatch;
 class symmetryPolyPatch;
@@ -315,6 +316,16 @@ protected:
         template<class TrackCloudType>
         void hitCyclicACMIPatch(TrackCloudType&, trackingData&, const vector&);
 
+        //- Overridable function to handle the particle hitting an
+        //  cyclicRepeatAMIPolyPatch
+        template<class TrackCloudType>
+        void hitCyclicRepeatAMIPatch
+        (
+            TrackCloudType&,
+            trackingData&,
+            const vector&
+        );
+
         //- Overridable function to handle the particle hitting a processorPatch
         template<class TrackCloudType>
         void hitProcessorPatch(TrackCloudType&, trackingData&);
@@ -470,11 +481,6 @@ public:
             //- Return the normal of the tri on tetFacei_ for the
             //  current tet.
             inline vector normal() const;
-
-            //- Return the normal of the tri on tetFacei_ for the
-            //  current tet at the start of the timestep, i.e. based
-            //  on oldPoints
-            inline vector oldNormal() const;
 
             //- Is the particle on a face?
             inline bool onFace() const;

@@ -47,10 +47,7 @@ void Foam::Cloud<ParticleType>::checkPatches() const
             const cyclicAMIPolyPatch& cami =
                 refCast<const cyclicAMIPolyPatch>(pbm[patchi]);
 
-            if (cami.owner())
-            {
-                ok = ok && (cami.AMI().singlePatchProc() != -1);
-            }
+            ok = ok && cami.singlePatchProc() != -1;
         }
     }
 
@@ -77,7 +74,6 @@ Foam::Cloud<ParticleType>::Cloud
     cloud(pMesh, cloudName),
     IDLList<ParticleType>(),
     polyMesh_(pMesh),
-    labels_(),
     globalPositionsPtr_()
 {
     checkPatches();
@@ -355,10 +351,6 @@ void Foam::Cloud<ParticleType>::autoMap(const mapPolyMesh& mapper)
             << "Cloud::storeGlobalPositions has not been called."
             << exit(FatalError);
     }
-
-    // Reset stored data that relies on the mesh
-    //    polyMesh_.clearCellTree();
-    cellWallFacesPtr_.clear();
 
     // Ask for the tetBasePtIs to trigger all processors to build
     // them, otherwise, if some processors have no particles then

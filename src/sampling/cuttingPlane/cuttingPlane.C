@@ -184,7 +184,7 @@ bool Foam::cuttingPlane::walkCell
 
         label nextEdgeI = -1;
 
-        //Note: here is where we should check for whether there are more
+        // Note: here is where we should check for whether there are more
         // than 2 intersections with the face (warped/non-convex face).
         // If so should e.g. decompose the cells on both faces and redo
         // the calculation.
@@ -307,7 +307,7 @@ void Foam::cuttingPlane::walkCellCuts
             face f(faceVerts);
 
             // Orient face to point in the same direction as the plane normal
-            if ((f.normal(cutPoints) & normal()) < 0)
+            if ((f.area(cutPoints) & normal()) < 0)
             {
                 f.flip();
             }

@@ -38,10 +38,7 @@ SourceFiles
 #ifndef PopulationBalancePhaseSystem_H
 #define PopulationBalancePhaseSystem_H
 
-#include "HeatAndMassTransferPhaseSystem.H"
-#include "saturationModel.H"
-#include "Switch.H"
-
+#include "phaseSystem.H"
 #include "populationBalanceModel.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -58,8 +55,13 @@ class PopulationBalancePhaseSystem
 :
     public BasePhaseSystem
 {
-
 protected:
+
+    // Protected typedefs
+
+        typedef HashPtrTable<volScalarField, phasePairKey, phasePairKey::hash>
+            pDmdtTable;
+
 
     // Protected data
 
@@ -67,16 +69,13 @@ protected:
         PtrList<diameterModels::populationBalanceModel> populationBalances_;
 
         //- Interfacial Mass transfer rate
-        HashPtrTable<volScalarField, phasePairKey, phasePairKey::hash> pDmdt_;
+        pDmdtTable pDmdt_;
 
 
     // Protected member functions
 
-        //- Add the mass-based momentum transfer to the equations
-        void addMomentumTransfer
-        (
-            phaseSystem::momentumTransferTable& eqns
-        ) const;
+        //- Return the population balance mass transfer rate
+        virtual tmp<volScalarField> pDmdt(const phasePairKey& key) const;
 
 
 public:
@@ -93,28 +92,11 @@ public:
 
     // Member Functions
 
-        //- Return the interfacial mass flow rate
-        virtual tmp<volScalarField> pDmdt(const phasePairKey& key) const;
+        //- Return the mass transfer rate for a pair
+        virtual tmp<volScalarField> dmdt(const phasePairKey& key) const;
 
-        //- Return the interfacial mass flow rate
-        virtual tmp<volScalarField> dmdt(const phasePairKey& key) const
-        {
-            return BasePhaseSystem::dmdt(key) + this->pDmdt(key);
-        };
-
-        //- Return the total interfacial mass transfer rate for phase
-        virtual tmp<volScalarField> dmdt(const phaseModel& phase) const;
-
-        //- Return the momentum transfer matrices
-        virtual autoPtr<phaseSystem::momentumTransferTable>
-            momentumTransfer() const;
-
-        //- Return the momentum transfer matrices for the face based algorithm
-        virtual autoPtr<phaseSystem::momentumTransferTable>
-            momentumTransferf() const;
-
-        //- Return the heat transfer matrices
-        virtual autoPtr<phaseSystem::heatTransferTable> heatTransfer() const;
+        //- Return the mass transfer rates for each phase
+        virtual Xfer<PtrList<volScalarField>> dmdts() const;
 
         //- Return the mass transfer matrices
         virtual autoPtr<phaseSystem::massTransferTable> massTransfer() const;

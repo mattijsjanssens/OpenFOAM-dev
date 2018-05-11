@@ -1271,7 +1271,7 @@ void Foam::cellCuts::calcCellLoops(const labelList& cutCells)
         }
         else
         {
-            //Pout<< "calcCellLoops(const labelList&) : did not find valid"
+            // Pout<< "calcCellLoops(const labelList&) : did not find valid"
             //    << " loop for cell " << celli << " since not enough cut faces"
             //    << endl;
             cellLoops_[celli].setSize(0);
@@ -1354,12 +1354,11 @@ bool Foam::cellCuts::loopAnchorConsistent
     const labelList& anchorPoints
 ) const
 {
-    // Create identity face for ease of calculation of normal etc.
-    face f(identity(loopPts.size()));
+    // Create identity face for ease of calculation of area etc.
+    const face f(identity(loopPts.size()));
 
-    vector normal = f.normal(loopPts);
-    point ctr = f.centre(loopPts);
-
+    const vector a = f.area(loopPts);
+    const point ctr = f.centre(loopPts);
 
     // Get average position of anchor points.
     vector avg(Zero);
@@ -1370,8 +1369,7 @@ bool Foam::cellCuts::loopAnchorConsistent
     }
     avg /= anchorPoints.size();
 
-
-    if (((avg - ctr) & normal) > 0)
+    if (((avg - ctr) & a) > 0)
     {
         return true;
     }
@@ -1691,7 +1689,7 @@ bool Foam::cellCuts::calcAnchors
     // Check which one of point sets to use.
     bool loopOk = loopAnchorConsistent(celli, loopPts, connectedPoints);
 
-    //if (debug)
+    // if (debug)
     {
         // Additional check: are non-anchor points on other side?
         bool otherLoopOk = loopAnchorConsistent(celli, loopPts, otherPoints);
@@ -2099,7 +2097,7 @@ bool Foam::cellCuts::validLoop
             << "Found loop on cell " << celli << " with all points"
             << " on face " << faceContainingLoop << endl;
 
-        //writeOBJ(".", celli, loopPoints(loop, loopWeights), labelList(0));
+        // writeOBJ(".", celli, loopPoints(loop, loopWeights), labelList(0));
 
         return false;
     }
@@ -2148,7 +2146,7 @@ void Foam::cellCuts::setFromCellLoops()
                 )
             )
             {
-                //writeOBJ(".", celli, loopPoints(celli), anchorPoints);
+                // writeOBJ(".", celli, loopPoints(celli), anchorPoints);
 
                 WarningInFunction
                     << "Illegal loop " << loop

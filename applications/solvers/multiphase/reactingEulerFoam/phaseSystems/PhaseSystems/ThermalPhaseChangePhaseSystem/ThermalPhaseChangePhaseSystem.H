@@ -58,6 +58,18 @@ class ThermalPhaseChangePhaseSystem
 
 protected:
 
+    // Protected typedefs
+
+        typedef HashPtrTable<volScalarField, phasePairKey, phasePairKey::hash>
+            iDmdtTable;
+
+        typedef HashPtrTable<volScalarField, phasePairKey, phasePairKey::hash>
+            wDmdtTable;
+
+        typedef HashPtrTable<volScalarField, phasePairKey, phasePairKey::hash>
+            wMDotLTable;
+
+
     // Protected data
 
         //- Name of the volatile specie
@@ -66,29 +78,26 @@ protected:
         //- The saturation model used to evaluate Tsat = Tf
         autoPtr<saturationModel> saturationModel_;
 
-        // Mass transfer enabled
-        Switch massTransfer_;
+        // Phase change enabled
+        Switch phaseChange_;
 
         //- Interfacial Mass transfer rate
-        HashPtrTable<volScalarField, phasePairKey, phasePairKey::hash>
-            iDmdt_;
+        iDmdtTable iDmdt_;
 
         //- Boundary Mass transfer rate
-        HashPtrTable<volScalarField, phasePairKey, phasePairKey::hash>
-            wDmdt_;
+        wDmdtTable wDmdt_;
 
         //- Boundary thermal energy transfer rate
-        HashPtrTable<volScalarField, phasePairKey, phasePairKey::hash>
-            wMDotL_;
+        wMDotLTable wMDotL_;
 
 
     // Protected member functions
 
-        //- Add the mass-based momentum transfer to the equations
-        void addMomentumTransfer
-        (
-            phaseSystem::momentumTransferTable& eqns
-        ) const;
+        //- Return the interfacial mass transfer rate for a pair
+        tmp<volScalarField> iDmdt(const phasePairKey& key) const;
+
+        //- Return the boundary mass transfer rate for a pair
+        tmp<volScalarField> wDmdt(const phasePairKey& key) const;
 
 
 public:
@@ -108,35 +117,11 @@ public:
         //- Return the saturationModel
         const saturationModel& saturation() const;
 
-        //- Return the interfacial mass flow rate
-        virtual tmp<volScalarField> iDmdt(const phasePairKey& key) const;
+        //- Return the mass transfer rate for a pair
+        virtual tmp<volScalarField> dmdt(const phasePairKey& key) const;
 
-        //- Return the total interfacial mass transfer rate for phase
-        virtual tmp<volScalarField> iDmdt(const phaseModel& phase) const;
-
-        //- Return the boundary mass flow rate
-        virtual tmp<volScalarField> wDmdt(const phasePairKey& key) const;
-
-        //- Return the total boundary mass transfer rate for phase
-        virtual tmp<volScalarField> wDmdt(const phaseModel& phase) const;
-
-        //- Return the interfacial mass flow rate
-        virtual tmp<volScalarField> dmdt(const phasePairKey& key) const
-        {
-            return BasePhaseSystem::dmdt(key)
-              + this->iDmdt(key) + this->wDmdt(key);
-        };
-
-        //- Return the total interfacial mass transfer rate for phase
-        virtual tmp<volScalarField> dmdt(const phaseModel& phase) const;
-
-        //- Return the momentum transfer matrices
-        virtual autoPtr<phaseSystem::momentumTransferTable>
-            momentumTransfer() const;
-
-        //- Return the momentum transfer matrices for the face based algorithm
-        virtual autoPtr<phaseSystem::momentumTransferTable>
-            momentumTransferf() const;
+        //- Return the mass transfer rates for each phase
+        virtual Xfer<PtrList<volScalarField>> dmdts() const;
 
         //- Return the heat transfer matrices
         virtual autoPtr<phaseSystem::heatTransferTable> heatTransfer() const;
@@ -144,8 +129,8 @@ public:
         //- Return the mass transfer matrices
         virtual autoPtr<phaseSystem::massTransferTable> massTransfer() const;
 
-        //- Correct the thermodynamics
-        virtual void correctThermo();
+        //- Correct the interface thermodynamics
+        virtual void correctInterfaceThermo();
 
         //- Read base phaseProperties dictionary
         virtual bool read();

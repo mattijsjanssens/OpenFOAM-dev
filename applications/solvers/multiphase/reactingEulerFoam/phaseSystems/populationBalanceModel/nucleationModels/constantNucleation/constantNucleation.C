@@ -97,8 +97,8 @@ void Foam::diameterModels::nucleationModels::constantNucleation::correct()
 }
 
 
-void Foam::diameterModels::nucleationModels::constantNucleation::
-nucleationRate
+void
+Foam::diameterModels::nucleationModels::constantNucleation::addToNucleationRate
 (
     volScalarField& nucleationRate,
     const label i
@@ -106,7 +106,7 @@ nucleationRate
 {
     const sizeGroup& fi = *popBal_.sizeGroups()[i];
     phaseModel& phase = const_cast<phaseModel&>(fi.phase());
-    volScalarField& rho = phase.thermo().rho();
+    volScalarField& rho = phase.thermoRef().rho();
 
     nucleationRate +=
         popBal_.gamma(i, velGroup_.formFactor()*pow3(d_))

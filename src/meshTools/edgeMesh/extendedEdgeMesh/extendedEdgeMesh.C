@@ -631,7 +631,7 @@ void Foam::extendedEdgeMesh::nearestFeatureEdge
 (
     const pointField& samples,
     const scalarField& searchDistSqr,
-    List<pointIndexHit>& info
+    pointIndexHitList& info
 ) const
 {
     info.setSize(samples.size());
@@ -652,7 +652,7 @@ void Foam::extendedEdgeMesh::nearestFeatureEdgeByType
 (
     const point& sample,
     const scalarField& searchDistSqr,
-    List<pointIndexHit>& info
+    pointIndexHitList& info
 ) const
 {
     const PtrList<indexedOctree<treeDataEdge>>& edgeTrees = edgeTreesByType();
@@ -688,7 +688,7 @@ void Foam::extendedEdgeMesh::allNearestFeaturePoints
 (
     const point& sample,
     scalar searchRadiusSqr,
-    List<pointIndexHit>& info
+    pointIndexHitList& info
 ) const
 {
     // Pick up all the feature points that intersect the search sphere
@@ -719,7 +719,7 @@ void Foam::extendedEdgeMesh::allNearestFeatureEdges
 (
     const point& sample,
     const scalar searchRadiusSqr,
-    List<pointIndexHit>& info
+    pointIndexHitList& info
 ) const
 {
     const PtrList<indexedOctree<treeDataEdge>>& edgeTrees = edgeTreesByType();
@@ -768,6 +768,56 @@ void Foam::extendedEdgeMesh::allNearestFeatureEdges
     }
 
     info.transfer(dynEdgeHit);
+}
+
+
+Foam::scalar Foam::extendedEdgeMesh::minDisconnectedDist
+(
+    const pointIndexHitList& hitList
+) const
+{
+    scalar minDist = GREAT;
+
+    for
+    (
+        label hi1 = 0;
+        hi1 < hitList.size() - 1;
+        ++hi1
+    )
+    {
+        const pointIndexHit& pHit1 = hitList[hi1];
+
+        if (pHit1.hit())
+        {
+            const edge& e1 = edges()[pHit1.index()];
+
+            for
+            (
+                label hi2 = hi1 + 1;
+                hi2 < hitList.size();
+                ++hi2
+            )
+            {
+                const pointIndexHit& pHit2 = hitList[hi2];
+
+                if (pHit2.hit())
+                {
+                    const edge& e2 = edges()[pHit2.index()];
+
+                    // Don't refine if the edges are connected to each other
+                    if (!e1.connected(e2))
+                    {
+                        scalar curDist =
+                            mag(pHit1.hitPoint() - pHit2.hitPoint());
+
+                        minDist = min(curDist, minDist);
+                    }
+                }
+            }
+        }
+    }
+
+    return minDist;
 }
 
 
@@ -1331,13 +1381,16 @@ void Foam::extendedEdgeMesh::flipNormals()
 
 void Foam::extendedEdgeMesh::writeObj
 (
-    const fileName& prefix
+    const fileName& prefix,
+    const bool verbose
 ) const
 {
     Info<< nl << "Writing extendedEdgeMesh components to " << prefix
         << endl;
 
     edgeMesh::write(prefix + "_edgeMesh.obj");
+
+    if (!verbose) return;
 
     OBJstream convexFtPtStr(prefix + "_convexFeaturePts.obj");
     Info<< "Writing convex feature points to " << convexFtPtStr.name() << endl;
@@ -1461,19 +1514,15 @@ void Foam::extendedEdgeMesh::writeStats(Ostream& os) const
     os  << incrIndent;
     os  << indent << "convex feature points          : "
         << setw(8) << concaveStart_-convexStart_
-        //<< setw(8) << convexStart_
         << nl;
     os  << indent << "concave feature points         : "
         << setw(8) << mixedStart_-concaveStart_
-        //<< setw(8) << concaveStart_
         << nl;
     os  << indent << "mixed feature points           : "
         << setw(8) << nonFeatureStart_-mixedStart_
-        //<< setw(8) << mixedStart_
         << nl;
     os  << indent << "other (non-feature) points     : "
         << setw(8) << points().size()-nonFeatureStart_
-        //<< setw(8) << nonFeatureStart_
         << nl;
     os  << decrIndent;
 
@@ -1481,23 +1530,18 @@ void Foam::extendedEdgeMesh::writeStats(Ostream& os) const
     os  << incrIndent;
     os  << indent << "external (convex angle) edges  : "
         << setw(8) << internalStart_-externalStart_
-        //<< setw(8) << externalStart_
         << nl;
     os  << indent << "internal (concave angle) edges : "
         << setw(8) << flatStart_-internalStart_
-        //<< setw(8) << internalStart_
         << nl;
     os  << indent << "flat region edges              : "
         << setw(8) << openStart_-flatStart_
-        //<< setw(8) << flatStart_
         << nl;
     os  << indent << "open edges                     : "
         << setw(8) << multipleStart_-openStart_
-        //<< setw(8) << openStart_
         << nl;
     os  << indent << "multiply connected edges       : "
         << setw(8) << edges().size()-multipleStart_
-        //<< setw(8) << multipleStart_
         << nl;
     os  << decrIndent;
 }
@@ -1537,7 +1581,7 @@ Foam::Ostream& Foam::operator<<
 
 Foam::Ostream& Foam::operator<<(Ostream& os, const extendedEdgeMesh& em)
 {
-    //fileFormats::extendedEdgeMeshFormat::write(os, em.points_, em.edges_);
+    // fileFormats::extendedEdgeMeshFormat::write(os, em.points_, em.edges_);
     os  << "// points" << nl
         << em.points() << nl
         << "// edges" << nl
@@ -1576,7 +1620,7 @@ Foam::Ostream& Foam::operator<<(Ostream& os, const extendedEdgeMesh& em)
 
 Foam::Istream& Foam::operator>>(Istream& is, extendedEdgeMesh& em)
 {
-    //fileFormats::extendedEdgeMeshFormat::read(is, em.points_, em.edges_);
+    // fileFormats::extendedEdgeMeshFormat::read(is, em.points_, em.edges_);
     is  >> static_cast<edgeMesh&>(em)
         >> em.concaveStart_
         >> em.mixedStart_

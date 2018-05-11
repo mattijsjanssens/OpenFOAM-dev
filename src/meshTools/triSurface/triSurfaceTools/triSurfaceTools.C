@@ -32,7 +32,6 @@ License
 #include "plane.H"
 #include "geompack.H"
 
-
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 const Foam::label Foam::triSurfaceTools::ANYEDGE = -1;
@@ -497,7 +496,7 @@ void Foam::triSurfaceTools::getMergedEdges
             vert1I,
             vert2I
         );
-        //Pout<< "Face:" << surf.localFaces()[face1I] << " other vertices:"
+        // Pout<< "Face:" << surf.localFaces()[face1I] << " other vertices:"
         //    << vert1I << ' ' << vert2I << endl;
 
         // Check vert1, vert2 for usage by v2Face.
@@ -1044,7 +1043,7 @@ void Foam::triSurfaceTools::snapToEnd
             // endpoint on triangle; current on triangle
             if (current.index() == end.index())
             {
-                //if (debug)
+                // if (debug)
                 //{
                 //    Pout<< "snapToEnd : snapping:" << current << " onto:"
                 //        << end << endl;
@@ -1064,7 +1063,7 @@ void Foam::triSurfaceTools::snapToEnd
 
             if (findIndex(fEdges, end.index()) != -1)
             {
-                //if (debug)
+                // if (debug)
                 //{
                 //    Pout<< "snapToEnd : snapping:" << current << " onto:"
                 //        << end << endl;
@@ -1078,7 +1077,7 @@ void Foam::triSurfaceTools::snapToEnd
             // endpoint on edge; current on edge
             if (current.index() == end.index())
             {
-                //if (debug)
+                // if (debug)
                 //{
                 //    Pout<< "snapToEnd : snapping:" << current << " onto:"
                 //        << end << endl;
@@ -1094,7 +1093,7 @@ void Foam::triSurfaceTools::snapToEnd
 
             if (current.index() == e[0] || current.index() == e[1])
             {
-                //if (debug)
+                // if (debug)
                 //{
                 //    Pout<< "snapToEnd : snapping:" << current << " onto:"
                 //        << end << endl;
@@ -1113,7 +1112,7 @@ void Foam::triSurfaceTools::snapToEnd
 
             if (findIndex(f, end.index()) != -1)
             {
-                //if (debug)
+                // if (debug)
                 //{
                 //    Pout<< "snapToEnd : snapping:" << current << " onto:"
                 //        << end << endl;
@@ -1129,7 +1128,7 @@ void Foam::triSurfaceTools::snapToEnd
 
             if (end.index() == e[0] || end.index() == e[1])
             {
-                //if (debug)
+                // if (debug)
                 //{
                 //    Pout<< "snapToEnd : snapping:" << current << " onto:"
                 //        << end << endl;
@@ -1143,7 +1142,7 @@ void Foam::triSurfaceTools::snapToEnd
             // endpoint on point; current on point
             if (current.index() == end.index())
             {
-                //if (debug)
+                // if (debug)
                 //{
                 //    Pout<< "snapToEnd : snapping:" << current << " onto:"
                 //        << end << endl;
@@ -1670,7 +1669,7 @@ Foam::triSurface Foam::triSurfaceTools::collapseEdges
     labelList faceStatus(surf.size(), ANYEDGE);
 
     //// Protect triangles which are on the border of different regions
-    //forAll(edges, edgeI)
+    // forAll(edges, edgeI)
     //{
     //    const labelList& neighbours = edgeFaces[edgeI];
     //
@@ -1686,7 +1685,7 @@ Foam::triSurface Foam::triSurfaceTools::collapseEdges
     //        {
     //            // Neighbours on different regions. For now don't allow
     //            // any collapse.
-    //            //Pout<< "protecting face " << neighbours[0]
+    //            // Pout<< "protecting face " << neighbours[0]
     //            //    << ' ' << neighbours[1] << endl;
     //            faceStatus[neighbours[0]] = NOEDGE;
     //            faceStatus[neighbours[1]] = NOEDGE;
@@ -1837,7 +1836,7 @@ Foam::triSurface Foam::triSurfaceTools::collapseEdges
         }
         else
         {
-            //Pout<< "Collapsed triangle " << facei
+            // Pout<< "Collapsed triangle " << facei
             //    << " vertices:" << f << endl;
         }
     }
@@ -2080,7 +2079,7 @@ Foam::triSurface Foam::triSurfaceTools::mergePoints
             newTriangles,
             surf.patches(),
             newPoints,
-            true                //reuse storage
+            true                // reuse storage
         );
     }
     else
@@ -2328,7 +2327,6 @@ Foam::triSurfaceTools::sideType Foam::triSurfaceTools::surfaceSide
 }
 
 
-// triangulation of boundaryMesh
 Foam::triSurface Foam::triSurfaceTools::triangulate
 (
     const polyBoundaryMesh& bMesh,
@@ -2371,6 +2369,96 @@ Foam::triSurface Foam::triSurfaceTools::triangulate
                 triangles.append(labelledTri(f[0], f[1], f[2], newPatchi));
 
                 nTriTotal++;
+            }
+        }
+
+        if (verbose)
+        {
+            Pout<< patch.name() << " : generated " << nTriTotal
+                << " triangles from " << patch.size() << " faces with"
+                << " new patchid " << newPatchi << endl;
+        }
+
+        newPatchi++;
+    }
+    triangles.shrink();
+
+    // Create globally numbered tri surface
+    triSurface rawSurface(triangles, mesh.points());
+
+    // Create locally numbered tri surface
+    triSurface surface
+    (
+        rawSurface.localFaces(),
+        rawSurface.localPoints()
+    );
+
+    // Add patch names to surface
+    surface.patches().setSize(newPatchi);
+
+    newPatchi = 0;
+
+    forAllConstIter(labelHashSet, includePatches, iter)
+    {
+        const label patchi = iter.key();
+        const polyPatch& patch = bMesh[patchi];
+
+        surface.patches()[newPatchi].name() = patch.name();
+        surface.patches()[newPatchi].geometricType() = patch.type();
+
+        newPatchi++;
+    }
+
+    return surface;
+}
+
+
+Foam::triSurface Foam::triSurfaceTools::triangulate
+(
+    const polyBoundaryMesh& bMesh,
+    const labelHashSet& includePatches,
+    const boundBox& bBox,
+    const bool verbose
+)
+{
+    const polyMesh& mesh = bMesh.mesh();
+
+    // Storage for surfaceMesh. Size estimate.
+    DynamicList<labelledTri> triangles
+    (
+        mesh.nFaces() - mesh.nInternalFaces()
+    );
+
+    label newPatchi = 0;
+
+    forAllConstIter(labelHashSet, includePatches, iter)
+    {
+        const label patchi = iter.key();
+        const polyPatch& patch = bMesh[patchi];
+        const pointField& points = patch.points();
+
+        label nTriTotal = 0;
+
+        forAll(patch, patchFacei)
+        {
+            const face& f = patch[patchFacei];
+
+            if (bBox.containsAny(points, f))
+            {
+                faceList triFaces(f.nTriangles(points));
+
+                label nTri = 0;
+
+                f.triangles(points, nTri, triFaces);
+
+                forAll(triFaces, triFacei)
+                {
+                    const face& f = triFaces[triFacei];
+
+                    triangles.append(labelledTri(f[0], f[1], f[2], newPatchi));
+
+                    nTriTotal++;
+                }
             }
         }
 
@@ -2662,7 +2750,7 @@ void Foam::triSurfaceTools::calcInterpolationWeights
 
                 calcInterpolationWeights(tri, nearest.rawPoint(), weights);
 
-                //Pout<< "calcScalingFactors : samplePt:" << samplePt
+                // Pout<< "calcScalingFactors : samplePt:" << samplePt
                 //    << " inside triangle:" << facei
                 //    << " verts:" << verts
                 //    << " weights:" << weights
@@ -2685,7 +2773,7 @@ void Foam::triSurfaceTools::calcInterpolationWeights
                     verts[2] = -1;
                     weights[2] = -great;
 
-                    //Pout<< "calcScalingFactors : samplePt:" << samplePt
+                    // Pout<< "calcScalingFactors : samplePt:" << samplePt
                     //    << " distance:" << nearest.distance()
                     //    << " from point:" << points[f[nearLabel]]
                     //    << endl;
@@ -2714,7 +2802,7 @@ void Foam::triSurfaceTools::calcInterpolationWeights
                     weights[1] = s;
                     weights[2] = -great;
 
-                    //Pout<< "calcScalingFactors : samplePt:" << samplePt
+                    // Pout<< "calcScalingFactors : samplePt:" << samplePt
                     //    << " distance:" << nearest.distance()
                     //    << " from edge:" << p0 << p1 << " s:" << s
                     //    << endl;
@@ -2728,7 +2816,7 @@ void Foam::triSurfaceTools::calcInterpolationWeights
 
                     calcInterpolationWeights(tri, nearest.rawPoint(), weights);
 
-                    //Pout<< "calcScalingFactors : samplePt:" << samplePt
+                    // Pout<< "calcScalingFactors : samplePt:" << samplePt
                     //    << " distance:" << nearest.distance()
                     //    << " to verts:" << verts
                     //    << " weights:" << weights
@@ -2758,7 +2846,7 @@ Foam::surfaceLocation Foam::triSurfaceTools::classify
 
     // Nearest point could be on point or edge. Retest.
     label index, elemType;
-    //bool inside =
+    // bool inside =
     triPointRef(s[triI].tri(s.points())).classify
     (
         trianglePoint,
@@ -2780,7 +2868,7 @@ Foam::surfaceLocation Foam::triSurfaceTools::classify
         nearest.setIndex(s.faceEdges()[triI][index]);
         nearest.elementType() = triPointRef::EDGE;
     }
-    else //if (elemType == triPointRef::POINT)
+    else // if (elemType == triPointRef::POINT)
     {
         nearest.setMiss();
         nearest.setIndex(s.localFaces()[triI][index]);
@@ -2877,15 +2965,15 @@ void Foam::triSurfaceTools::track
     surfaceLocation& hitInfo
 )
 {
-    //OFstream str("track.obj");
-    //label vertI = 0;
-    //meshTools::writeOBJ(str, hitInfo.rawPoint());
-    //vertI++;
+    // OFstream str("track.obj");
+    // label vertI = 0;
+    // meshTools::writeOBJ(str, hitInfo.rawPoint());
+    // vertI++;
 
     // Track across surface.
     while (true)
     {
-        //Pout<< "Tracking from:" << nl
+        // Pout<< "Tracking from:" << nl
         //    << "    " << hitInfo.info()
         //    << endl;
 
@@ -2897,11 +2985,11 @@ void Foam::triSurfaceTools::track
             cutPlane
         );
 
-        //meshTools::writeOBJ(str, hitInfo.rawPoint());
-        //vertI++;
-        //str<< "l " << vertI-1 << ' ' << vertI << nl;
+        // meshTools::writeOBJ(str, hitInfo.rawPoint());
+        // vertI++;
+        // str<< "l " << vertI-1 << ' ' << vertI << nl;
 
-        //Pout<< "Tracked to:" << nl
+        // Pout<< "Tracked to:" << nl
         //    << "    " << hitInfo.info() << endl;
 
         if (hitInfo.hit() || hitInfo.triangle() == -1)

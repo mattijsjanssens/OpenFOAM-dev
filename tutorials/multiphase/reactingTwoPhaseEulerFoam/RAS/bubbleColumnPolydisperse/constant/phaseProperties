@@ -81,10 +81,7 @@ populationBalanceCoeffs
 
         coalescenceModels
         (
-            hydrodynamic
-            {
-                C 0.25;
-            }
+            CoulaloglouTavlarides{}
         );
 
         binaryBreakupModels
@@ -94,8 +91,8 @@ populationBalanceCoeffs
         (
             exponential
             {
-                C 0.5;
-                exponent 0.01;
+                C 10.0;
+                exponent 1.0;
                 daughterSizeDistributionModel uniformBinary;
             }
         );
@@ -113,6 +110,15 @@ populationBalanceCoeffs
 blending
 {
     default
+    {
+        type            linear;
+        minFullyContinuousAlpha.air 0.7;
+        minPartlyContinuousAlpha.air 0.3;
+        minFullyContinuousAlpha.water 0.7;
+        minPartlyContinuousAlpha.water 0.3;
+    }
+
+    drag
     {
         type            linear;
         minFullyContinuousAlpha.air 0.7;
@@ -195,41 +201,22 @@ virtualMass
     }
 );
 
-heatTransfer.air
+heatTransfer
 (
     (air in water)
     {
-        type spherical;
-        residualAlpha 1e-3;
+        type            RanzMarshall;
+        residualAlpha   1e-4;
     }
 
     (water in air)
     {
-        type RanzMarshall;
-        residualAlpha 1e-3;
+        type            RanzMarshall;
+        residualAlpha   1e-4;
     }
 );
 
-heatTransfer.water
-(
-    (air in water)
-    {
-        type RanzMarshall;
-        residualAlpha 1e-3;
-    }
-
-    (water in air)
-    {
-        type spherical;
-        residualAlpha 1e-3;
-    }
-);
-
-massTransfer.air
-(
-);
-
-massTransfer.water
+phaseTransfer
 (
 );
 

@@ -31,34 +31,38 @@ License
 // * * * * * * * * * * * * Private Member Functions * * * * * * * * * * * * //
 
 template<class BasePhaseSystem>
-void Foam::ThermalPhaseChangePhaseSystem<BasePhaseSystem>::
-addMomentumTransfer(phaseSystem::momentumTransferTable& eqns) const
+Foam::tmp<Foam::volScalarField>
+Foam::ThermalPhaseChangePhaseSystem<BasePhaseSystem>::iDmdt
+(
+    const phasePairKey& key
+) const
 {
-    // Source term due to mass trasfer
-    forAllConstIter
-    (
-        phaseSystem::phasePairTable,
-        this->phasePairs_,
-        phasePairIter
-    )
+    if (!iDmdt_.found(key))
     {
-        const phasePair& pair(phasePairIter());
-
-        if (pair.ordered())
-        {
-            continue;
-        }
-
-        const volVectorField& U1(pair.phase1().U());
-        const volVectorField& U2(pair.phase2().U());
-
-        const volScalarField dmdt(this->iDmdt(pair) + this->wDmdt(pair));
-        const volScalarField dmdt21(posPart(dmdt));
-        const volScalarField dmdt12(negPart(dmdt));
-
-        *eqns[pair.phase1().name()] += dmdt21*U2 - fvm::Sp(dmdt21, U1);
-        *eqns[pair.phase2().name()] -= dmdt12*U1 - fvm::Sp(dmdt12, U2);
+        return phaseSystem::dmdt(key);
     }
+
+    const scalar dmdtSign(Pair<word>::compare(iDmdt_.find(key).key(), key));
+
+    return dmdtSign**iDmdt_[key];
+}
+
+
+template<class BasePhaseSystem>
+Foam::tmp<Foam::volScalarField>
+Foam::ThermalPhaseChangePhaseSystem<BasePhaseSystem>::wDmdt
+(
+    const phasePairKey& key
+) const
+{
+    if (!wDmdt_.found(key))
+    {
+        return phaseSystem::dmdt(key);
+    }
+
+    const scalar dmdtSign(Pair<word>::compare(wDmdt_.find(key).key(), key));
+
+    return dmdtSign**wDmdt_[key];
 }
 
 
@@ -77,7 +81,7 @@ ThermalPhaseChangePhaseSystem
     (
         saturationModel::New(this->subDict("saturationModel"), mesh)
     ),
-    massTransfer_(this->lookup("massTransfer"))
+    phaseChange_(this->lookup("phaseChange"))
 {
 
     forAllConstIter
@@ -174,199 +178,40 @@ Foam::ThermalPhaseChangePhaseSystem<BasePhaseSystem>::saturation() const
 
 template<class BasePhaseSystem>
 Foam::tmp<Foam::volScalarField>
-Foam::ThermalPhaseChangePhaseSystem<BasePhaseSystem>::iDmdt
-(
-    const phasePairKey& key
-) const
-{
-    const scalar dmdtSign(Pair<word>::compare(iDmdt_.find(key).key(), key));
-    return dmdtSign**iDmdt_[key];
-}
-
-
-template<class BasePhaseSystem>
-Foam::tmp<Foam::volScalarField>
-Foam::ThermalPhaseChangePhaseSystem<BasePhaseSystem>::iDmdt
-(
-    const Foam::phaseModel& phase
-) const
-{
-    tmp<volScalarField> tiDmdt
-    (
-        new volScalarField
-        (
-            IOobject
-            (
-                IOobject::groupName("iDmdt", phase.name()),
-                this->mesh_.time().timeName(),
-                this->mesh_
-            ),
-            this->mesh_,
-            dimensionedScalar("zero", dimDensity/dimTime, 0)
-        )
-    );
-
-    forAllConstIter
-    (
-        phaseSystem::phasePairTable,
-        this->phasePairs_,
-        phasePairIter
-    )
-    {
-        const phasePair& pair(phasePairIter());
-
-        if (pair.ordered())
-        {
-            continue;
-        }
-
-        if (pair.contains(phase))
-        {
-            tiDmdt.ref() += this->iDmdt
-            (
-                phasePairKey(phase.name(), pair.otherPhase(phase).name())
-            );
-        }
-    }
-
-    return tiDmdt;
-}
-
-
-template<class BasePhaseSystem>
-Foam::tmp<Foam::volScalarField>
-Foam::ThermalPhaseChangePhaseSystem<BasePhaseSystem>::wDmdt
-(
-    const phasePairKey& key
-) const
-{
-    const scalar dmdtSign(Pair<word>::compare(wDmdt_.find(key).key(), key));
-
-    return dmdtSign**wDmdt_[key];
-}
-
-
-template<class BasePhaseSystem>
-Foam::tmp<Foam::volScalarField>
-Foam::ThermalPhaseChangePhaseSystem<BasePhaseSystem>::wDmdt
-(
-    const Foam::phaseModel& phase
-) const
-{
-    tmp<volScalarField> twDmdt
-    (
-        new volScalarField
-        (
-            IOobject
-            (
-                IOobject::groupName("wDmdt", phase.name()),
-                this->mesh_.time().timeName(),
-                this->mesh_
-            ),
-            this->mesh_,
-            dimensionedScalar("zero", dimDensity/dimTime, 0)
-        )
-    );
-
-    forAllConstIter
-    (
-        phaseSystem::phasePairTable,
-        this->phasePairs_,
-        phasePairIter
-    )
-    {
-        const phasePair& pair(phasePairIter());
-
-        if (pair.ordered())
-        {
-            continue;
-        }
-
-        if (pair.contains(phase))
-        {
-            twDmdt.ref() += this->wDmdt
-            (
-                phasePairKey(phase.name(), pair.otherPhase(phase).name())
-            );
-        }
-    }
-
-    return twDmdt;
-}
-
-
-template<class BasePhaseSystem>
-Foam::tmp<Foam::volScalarField>
 Foam::ThermalPhaseChangePhaseSystem<BasePhaseSystem>::dmdt
 (
-    const Foam::phaseModel& phase
+    const phasePairKey& key
 ) const
 {
-    tmp<volScalarField> tDmdt
-    (
-        new volScalarField
-        (
-            IOobject
-            (
-                IOobject::groupName("Dmdt", phase.name()),
-                this->mesh_.time().timeName(),
-                this->mesh_
-            ),
-            this->mesh_,
-            dimensionedScalar("zero", dimDensity/dimTime, 0)
-        )
-    );
+    return BasePhaseSystem::dmdt(key) + this->iDmdt(key) + this->wDmdt(key);
+}
 
-    forAllConstIter
-    (
-        phaseSystem::phasePairTable,
-        this->phasePairs_,
-        phasePairIter
-    )
+
+template<class BasePhaseSystem>
+Foam::Xfer<Foam::PtrList<Foam::volScalarField>>
+Foam::ThermalPhaseChangePhaseSystem<BasePhaseSystem>::dmdts() const
+{
+    PtrList<volScalarField> dmdts(BasePhaseSystem::dmdts());
+
+    forAllConstIter(iDmdtTable, iDmdt_, iDmdtIter)
     {
-        const phasePair& pair(phasePairIter());
+        const phasePair& pair = this->phasePairs_[iDmdtIter.key()];
+        const volScalarField& iDmdt = *iDmdtIter();
 
-        if (pair.ordered())
-        {
-            continue;
-        }
-
-        if (pair.contains(phase))
-        {
-            tDmdt.ref() += this->dmdt
-            (
-                phasePairKey(phase.name(), pair.otherPhase(phase).name())
-            );
-        }
+        this->addField(pair.phase1(), "dmdt", iDmdt, dmdts);
+        this->addField(pair.phase2(), "dmdt", - iDmdt, dmdts);
     }
 
-    return tDmdt;
-}
+    forAllConstIter(wDmdtTable, wDmdt_, wDmdtIter)
+    {
+        const phasePair& pair = this->phasePairs_[wDmdtIter.key()];
+        const volScalarField& wDmdt = *wDmdtIter();
 
+        this->addField(pair.phase1(), "dmdt", wDmdt, dmdts);
+        this->addField(pair.phase2(), "dmdt", - wDmdt, dmdts);
+    }
 
-template<class BasePhaseSystem>
-Foam::autoPtr<Foam::phaseSystem::momentumTransferTable>
-Foam::ThermalPhaseChangePhaseSystem<BasePhaseSystem>::momentumTransfer() const
-{
-    autoPtr<phaseSystem::momentumTransferTable>
-        eqnsPtr(BasePhaseSystem::momentumTransfer());
-
-    addMomentumTransfer(eqnsPtr());
-
-    return eqnsPtr;
-}
-
-
-template<class BasePhaseSystem>
-Foam::autoPtr<Foam::phaseSystem::momentumTransferTable>
-Foam::ThermalPhaseChangePhaseSystem<BasePhaseSystem>::momentumTransferf() const
-{
-    autoPtr<phaseSystem::momentumTransferTable>
-        eqnsPtr(BasePhaseSystem::momentumTransferf());
-
-    addMomentumTransfer(eqnsPtr());
-
-    return eqnsPtr;
+    return dmdts.xfer();
 }
 
 
@@ -379,7 +224,7 @@ Foam::ThermalPhaseChangePhaseSystem<BasePhaseSystem>::heatTransfer() const
 
     phaseSystem::heatTransferTable& eqns = eqnsPtr();
 
-    // Source term due to mass transfer
+    // Add boundary term
     forAllConstIter
     (
         phaseSystem::phasePairTable,
@@ -387,10 +232,7 @@ Foam::ThermalPhaseChangePhaseSystem<BasePhaseSystem>::heatTransfer() const
         phasePairIter
     )
     {
-        if
-        (
-            this->heatTransferModels_.found(phasePairIter.key())
-        )
+        if (this->wMDotL_.found(phasePairIter.key()))
         {
             const phasePair& pair(phasePairIter());
 
@@ -401,27 +243,6 @@ Foam::ThermalPhaseChangePhaseSystem<BasePhaseSystem>::heatTransfer() const
 
             const phaseModel& phase1 = pair.phase1();
             const phaseModel& phase2 = pair.phase2();
-
-            const volScalarField& he1(phase1.thermo().he());
-            const volScalarField& he2(phase2.thermo().he());
-
-            const volScalarField& K1(phase1.K());
-            const volScalarField& K2(phase2.K());
-
-            const volScalarField dmdt(this->dmdt(pair));
-            const volScalarField dmdt21(posPart(dmdt));
-            const volScalarField dmdt12(negPart(dmdt));
-            const volScalarField& Tf(*this->Tf_[pair]);
-
-            *eqns[phase1.name()] +=
-                dmdt21*(phase1.thermo().he(phase1.thermo().p(), Tf))
-              - fvm::Sp(dmdt21, he1)
-              + dmdt21*(K2 - K1);
-
-            *eqns[phase2.name()] -=
-                dmdt12*(phase2.thermo().he(phase2.thermo().p(), Tf))
-              - fvm::Sp(dmdt12, he2)
-              + dmdt12*(K1 - K2);
 
             *eqns[phase1.name()] += negPart(*this->wMDotL_[pair]);
             *eqns[phase2.name()] -= posPart(*this->wMDotL_[pair]);
@@ -454,6 +275,7 @@ Foam::ThermalPhaseChangePhaseSystem<BasePhaseSystem>::massTransfer() const
         {
             continue;
         }
+
         const phaseModel& phase = pair.phase1();
         const phaseModel& otherPhase = pair.phase2();
 
@@ -461,7 +283,6 @@ Foam::ThermalPhaseChangePhaseSystem<BasePhaseSystem>::massTransfer() const
 
         forAll(Yi, i)
         {
-
             if (Yi[i].member() != volatile_)
             {
                 continue;
@@ -492,195 +313,171 @@ Foam::ThermalPhaseChangePhaseSystem<BasePhaseSystem>::massTransfer() const
 
 
 template<class BasePhaseSystem>
-void Foam::ThermalPhaseChangePhaseSystem<BasePhaseSystem>::correctThermo()
+void
+Foam::ThermalPhaseChangePhaseSystem<BasePhaseSystem>::correctInterfaceThermo()
 {
     typedef compressible::alphatPhaseChangeWallFunctionFvPatchScalarField
         alphatPhaseChangeWallFunction;
 
-    phaseSystem::correctThermo();
-
     forAllConstIter
     (
-        phaseSystem::phasePairTable,
-        this->phasePairs_,
-        phasePairIter
+        typename BasePhaseSystem::heatTransferModelTable,
+        this->heatTransferModels_,
+        heatTransferModelIter
     )
     {
-        if
+        const phasePair& pair
         (
-            this->heatTransferModels_.found(phasePairIter.key())
-        )
+            this->phasePairs_[heatTransferModelIter.key()]
+        );
+
+        const phaseModel& phase1 = pair.phase1();
+        const phaseModel& phase2 = pair.phase2();
+
+        const volScalarField& T1(phase1.thermo().T());
+        const volScalarField& T2(phase2.thermo().T());
+
+        const volScalarField& he1(phase1.thermo().he());
+        const volScalarField& he2(phase2.thermo().he());
+
+        volScalarField& iDmdt(*this->iDmdt_[pair]);
+        volScalarField& Tf(*this->Tf_[pair]);
+
+        volScalarField hef1(phase1.thermo().he(phase1.thermo().p(), Tf));
+        volScalarField hef2(phase2.thermo().he(phase2.thermo().p(), Tf));
+
+        volScalarField L
+        (
+            (neg0(iDmdt)*hef2 + pos(iDmdt)*he2)
+          - (pos0(iDmdt)*hef1 + neg(iDmdt)*he1)
+        );
+
+        volScalarField iDmdtNew(iDmdt);
+
+        if (phaseChange_)
         {
-            const phasePair& pair(phasePairIter());
+            volScalarField H1(heatTransferModelIter().first()->K(0));
+            volScalarField H2(heatTransferModelIter().second()->K(0));
 
-            if (pair.ordered())
-            {
-                continue;
-            }
+            Tf = saturationModel_->Tsat(phase1.thermo().p());
 
-            const phaseModel& phase1 = pair.phase1();
-            const phaseModel& phase2 = pair.phase2();
+            iDmdtNew = (H1*(Tf - T1) + H2*(Tf - T2))/L;
+        }
+        else
+        {
+            iDmdtNew == dimensionedScalar("0", iDmdt.dimensions(), 0);
+        }
 
-            const volScalarField& T1(phase1.thermo().T());
-            const volScalarField& T2(phase2.thermo().T());
+        volScalarField H1(heatTransferModelIter().first()->K());
+        volScalarField H2(heatTransferModelIter().second()->K());
 
-            const volScalarField& he1(phase1.thermo().he());
-            const volScalarField& he2(phase2.thermo().he());
+        // Limit the H[12] to avoid /0
+        H1.max(small);
+        H2.max(small);
 
-            volScalarField& iDmdt(*this->iDmdt_[pair]);
-            volScalarField& Tf(*this->Tf_[pair]);
+        Tf = (H1*T1 + H2*T2 + iDmdtNew*L)/(H1 + H2);
 
-            volScalarField hef1(phase1.thermo().he(phase1.thermo().p(), Tf));
-            volScalarField hef2(phase2.thermo().he(phase2.thermo().p(), Tf));
+        Info<< "Tf." << pair.name()
+            << ": min = " << min(Tf.primitiveField())
+            << ", mean = " << average(Tf.primitiveField())
+            << ", max = " << max(Tf.primitiveField())
+            << endl;
 
-            volScalarField L
-            (
-                (neg0(iDmdt)*hef2 + pos(iDmdt)*he2)
-              - (pos0(iDmdt)*hef1 + neg(iDmdt)*he1)
-            );
+        scalar iDmdtRelax(this->mesh().fieldRelaxationFactor("iDmdt"));
+        iDmdt = (1 - iDmdtRelax)*iDmdt + iDmdtRelax*iDmdtNew;
 
-            volScalarField iDmdtNew(iDmdt);
-
-            if (massTransfer_ )
-            {
-                volScalarField H1
-                (
-                    this->heatTransferModels_[pair][pair.first()]->K(0)
-                );
-
-                volScalarField H2
-                (
-                    this->heatTransferModels_[pair][pair.second()]->K(0)
-                );
-
-                Tf = saturationModel_->Tsat(phase1.thermo().p());
-
-                iDmdtNew =
-                    (H1*(Tf - T1) + H2*(Tf - T2))/L;
-            }
-            else
-            {
-                iDmdtNew == dimensionedScalar("0", iDmdt.dimensions(), 0);
-            }
-
-            volScalarField H1
-            (
-                this->heatTransferModels_[pair][pair.first()]->K()
-            );
-
-            volScalarField H2
-            (
-                this->heatTransferModels_[pair][pair.second()]->K()
-            );
-
-            // Limit the H[12] to avoid /0
-            H1.max(small);
-            H2.max(small);
-
-            Tf = (H1*T1 + H2*T2 + iDmdtNew*L)/(H1 + H2);
-
-            Info<< "Tf." << pair.name()
-                << ": min = " << min(Tf.primitiveField())
-                << ", mean = " << average(Tf.primitiveField())
-                << ", max = " << max(Tf.primitiveField())
+        if (phaseChange_)
+        {
+            Info<< "iDmdt." << pair.name()
+                << ": min = " << min(iDmdt.primitiveField())
+                << ", mean = " << average(iDmdt.primitiveField())
+                << ", max = " << max(iDmdt.primitiveField())
+                << ", integral = " << fvc::domainIntegrate(iDmdt).value()
                 << endl;
+        }
 
-            scalar iDmdtRelax(this->mesh().fieldRelaxationFactor("iDmdt"));
-            iDmdt = (1 - iDmdtRelax)*iDmdt + iDmdtRelax*iDmdtNew;
+        volScalarField& wDmdt(*this->wDmdt_[pair]);
+        volScalarField& wMDotL(*this->wMDotL_[pair]);
+        wDmdt *= 0;
+        wMDotL *= 0;
 
-            if (massTransfer_ )
-            {
-                Info<< "iDmdt." << pair.name()
-                    << ": min = " << min(iDmdt.primitiveField())
-                    << ", mean = " << average(iDmdt.primitiveField())
-                    << ", max = " << max(iDmdt.primitiveField())
-                    << ", integral = " << fvc::domainIntegrate(iDmdt).value()
-                    << endl;
-            }
+        bool wallBoilingActive = false;
 
-            volScalarField& wDmdt(*this->wDmdt_[pair]);
-            volScalarField& wMDotL(*this->wMDotL_[pair]);
-            wDmdt *= 0;
-            wMDotL *= 0;
+        forAllConstIter(phasePair, pair, iter)
+        {
+            const phaseModel& phase = iter();
+            const phaseModel& otherPhase = iter.otherPhase();
 
-            bool wallBoilingActive = false;
-
-            forAllConstIter(phasePair, pair, iter)
-            {
-                const phaseModel& phase = iter();
-                const phaseModel& otherPhase = iter.otherPhase();
-
-                if
+            if
+            (
+                phase.mesh().foundObject<volScalarField>
                 (
-                    phase.mesh().foundObject<volScalarField>
+                    "alphat." +  phase.name()
+                )
+            )
+            {
+                const volScalarField& alphat =
+                    phase.mesh().lookupObject<volScalarField>
                     (
                         "alphat." +  phase.name()
-                    )
-                )
+                    );
+
+                const fvPatchList& patches = this->mesh().boundary();
+                forAll(patches, patchi)
                 {
-                    const volScalarField& alphat =
-                        phase.mesh().lookupObject<volScalarField>
-                        (
-                            "alphat." +  phase.name()
-                        );
+                    const fvPatch& currPatch = patches[patchi];
 
-                    const fvPatchList& patches = this->mesh().boundary();
-                    forAll(patches, patchi)
+                    if
+                    (
+                        isA<alphatPhaseChangeWallFunction>
+                        (
+                            alphat.boundaryField()[patchi]
+                        )
+                    )
                     {
-                        const fvPatch& currPatch = patches[patchi];
-
-                        if
-                        (
-                            isA<alphatPhaseChangeWallFunction>
+                        const alphatPhaseChangeWallFunction& PCpatch =
+                            refCast<const alphatPhaseChangeWallFunction>
                             (
                                 alphat.boundaryField()[patchi]
-                            )
-                        )
+                            );
+
+                        phasePairKey key(phase.name(), otherPhase.name());
+
+                        if (PCpatch.activePhasePair(key))
                         {
-                            const alphatPhaseChangeWallFunction& PCpatch =
-                                refCast<const alphatPhaseChangeWallFunction>
-                                (
-                                    alphat.boundaryField()[patchi]
-                                );
+                            wallBoilingActive = true;
 
-                            phasePairKey key(phase.name(), otherPhase.name());
+                            const scalarField& patchDmdt =
+                                PCpatch.dmdt(key);
+                            const scalarField& patchMDotL =
+                                PCpatch.mDotL(key);
 
-                            if (PCpatch.activePhasePair(key))
+                            const scalar sign
+                            (
+                                Pair<word>::compare(pair, key)
+                            );
+
+                            forAll(patchDmdt, facei)
                             {
-                                wallBoilingActive = true;
-
-                                const scalarField& patchDmdt =
-                                    PCpatch.dmdt(key);
-                                const scalarField& patchMDotL =
-                                    PCpatch.mDotL(key);
-
-                                const scalar sign
-                                (
-                                    Pair<word>::compare(pair, key)
-                                );
-
-                                forAll(patchDmdt, facei)
-                                {
-                                    const label faceCelli =
-                                        currPatch.faceCells()[facei];
-                                    wDmdt[faceCelli] -= sign*patchDmdt[facei];
-                                    wMDotL[faceCelli] -= sign*patchMDotL[facei];
-                                }
+                                const label faceCelli =
+                                    currPatch.faceCells()[facei];
+                                wDmdt[faceCelli] -= sign*patchDmdt[facei];
+                                wMDotL[faceCelli] -= sign*patchMDotL[facei];
                             }
                         }
                     }
                 }
             }
+        }
 
-            if (wallBoilingActive)
-            {
-                Info<< "wDmdt." << pair.name()
-                    << ": min = " << min(wDmdt.primitiveField())
-                    << ", mean = " << average(wDmdt.primitiveField())
-                    << ", max = " << max(wDmdt.primitiveField())
-                    << ", integral = " << fvc::domainIntegrate(wDmdt).value()
-                    << endl;
-            }
+        if (wallBoilingActive)
+        {
+            Info<< "wDmdt." << pair.name()
+                << ": min = " << min(wDmdt.primitiveField())
+                << ", mean = " << average(wDmdt.primitiveField())
+                << ", max = " << max(wDmdt.primitiveField())
+                << ", integral = " << fvc::domainIntegrate(wDmdt).value()
+                << endl;
         }
     }
 }

@@ -23,14 +23,48 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "surfaceFeatureExtract.H"
 #include "argList.H"
 #include "Time.H"
+#include "triSurfaceMesh.H"
 #include "featureEdgeMesh.H"
+#include "extendedFeatureEdgeMesh.H"
+#include "surfaceFeatures.H"
+#include "triSurfaceFields.H"
 #include "vtkSurfaceWriter.H"
 #include "IOdictionary.H"
 
 using namespace Foam;
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
+    void writeStats(const extendedFeatureEdgeMesh& fem, Ostream& os)
+    {
+        os  << "    points : " << fem.points().size() << nl
+            << "    of which" << nl
+            << "        convex             : "
+            << fem.concaveStart() << nl
+            << "        concave            : "
+            << (fem.mixedStart() - fem.concaveStart()) << nl
+            << "        mixed              : "
+            << (fem.nonFeatureStart() - fem.mixedStart()) << nl
+            << "        non-feature        : "
+            << (fem.points().size() - fem.nonFeatureStart()) << nl
+            << "    edges  : " << fem.edges().size() << nl
+            << "    of which" << nl
+            << "        external edges     : "
+            << fem.internalStart() << nl
+            << "        internal edges     : "
+            << (fem.flatStart() - fem.internalStart()) << nl
+            << "        flat edges         : "
+            << (fem.openStart() - fem.flatStart()) << nl
+            << "        open edges         : "
+            << (fem.multipleStart() - fem.openStart()) << nl
+            << "        multiply connected : "
+            << (fem.edges().size() - fem.multipleStart()) << endl;
+    }
+}
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -231,19 +265,19 @@ int main(int argc, char *argv[])
             {
                 treeBoundBox bb(subsetDict.lookup("insideBox")());
 
-                Info<< "Removing all edges outside bb " << bb << endl;
-                dumpBox(bb, "subsetBox.obj");
-
-                deleteBox(surf, bb, false, edgeStat);
+                Info<< "Selecting edges inside bb " << bb
+                    << " see insideBox.obj" << endl;
+                bb.writeOBJ("insideBox.obj");
+                selectBox(surf, bb, true, edgeStat);
             }
             else if (subsetDict.found("outsideBox"))
             {
                 treeBoundBox bb(subsetDict.lookup("outsideBox")());
 
-                Info<< "Removing all edges inside bb " << bb << endl;
-                dumpBox(bb, "deleteBox.obj");
-
-                deleteBox(surf, bb, true, edgeStat);
+                Info<< "Removing all edges inside bb " << bb
+                    << " see outsideBox.obj" << endl;
+                bb.writeOBJ("outsideBox.obj");
+                selectBox(surf, bb, false, edgeStat);
             }
 
             const Switch nonManifoldEdges =
@@ -255,26 +289,7 @@ int main(int argc, char *argv[])
                     << " (edges with > 2 connected faces) unless they"
                     << " cross multiple regions" << endl;
 
-                forAll(edgeStat, edgeI)
-                {
-                    const labelList& eFaces = surf.edgeFaces()[edgeI];
-
-                    if
-                    (
-                        eFaces.size() > 2
-                     && edgeStat[edgeI] == surfaceFeatures::REGION
-                     && (eFaces.size() % 2) == 0
-                    )
-                    {
-                        edgeStat[edgeI] = checkFlatRegionEdge
-                        (
-                            surf,
-                            1e-5,   //tol,
-                            includedAngle,
-                            edgeI
-                        );
-                    }
-                }
+                selectManifoldEdges(surf, 1e-5, includedAngle, edgeStat);
             }
 
             const Switch openEdges =
@@ -285,20 +300,20 @@ int main(int argc, char *argv[])
                 Info<< "Removing all open edges"
                     << " (edges with 1 connected face)" << endl;
 
-                forAll(edgeStat, edgeI)
+                forAll(edgeStat, edgei)
                 {
-                    if (surf.edgeFaces()[edgeI].size() == 1)
+                    if (surf.edgeFaces()[edgei].size() == 1)
                     {
-                        edgeStat[edgeI] = surfaceFeatures::NONE;
+                        edgeStat[edgei] = surfaceFeatures::NONE;
                     }
                 }
             }
 
             if (subsetDict.found("plane"))
             {
-                plane cutPlane(subsetDict.lookup("plane")());
+                const plane cutPlane(subsetDict.lookup("plane")());
 
-                deleteEdges(surf, cutPlane, edgeStat);
+                selectCutEdges(surf, cutPlane, edgeStat);
 
                 Info<< "Only edges that intersect the plane with normal "
                     << cutPlane.normal()
@@ -417,13 +432,115 @@ int main(int argc, char *argv[])
             Info<< nl << "Extracting internal and external closeness of "
                 << "surface." << endl;
 
-            Info<< "externalToleranceCosAngle: " << externalToleranceCosAngle
-                << nl
-                << "internalToleranceCosAngle: " << internalToleranceCosAngle
-                << endl;
+            // Searchable triSurface
+            const triSurfaceMesh searchSurf
+            (
+                IOobject
+                (
+                    sFeatFileName + ".closeness",
+                    runTime.constant(),
+                    "triSurface",
+                    runTime
+                ),
+                surf
+            );
 
-            extractCloseness(sFeatFileName, runTime, surf, writeVTK);
-            extractPointCloseness(sFeatFileName, runTime, surf, writeVTK);
+            {
+                Pair<tmp<triSurfaceScalarField>> closenessFields
+                (
+                    searchSurf.extractCloseness()
+                );
+
+                closenessFields.first()->write();
+                closenessFields.second()->write();
+
+                if (writeVTK)
+                {
+                    const faceList faces(searchSurf.faces());
+
+                    vtkSurfaceWriter().write
+                    (
+                        runTime.constantPath()/"triSurface",// outputDir
+                        searchSurf.objectRegistry::name(),  // surfaceName
+                        searchSurf.points(),
+                        faces,
+                        "internalCloseness",                // fieldName
+                        closenessFields.first(),
+                        false,                              // isNodeValues
+                        true                                // verbose
+                    );
+
+                    vtkSurfaceWriter().write
+                    (
+                        runTime.constantPath()/"triSurface",// outputDir
+                        searchSurf.objectRegistry::name(),  // surfaceName
+                        searchSurf.points(),
+                        faces,
+                        "externalCloseness",                // fieldName
+                        closenessFields.second(),
+                        false,                              // isNodeValues
+                        true                                // verbose
+                    );
+                }
+            }
+
+            {
+                Pair<tmp<triSurfacePointScalarField >> closenessFields
+                (
+                    searchSurf.extractPointCloseness()
+                );
+
+                closenessFields.first()->write();
+                closenessFields.second()->write();
+
+                if (writeVTK)
+                {
+                    const faceList faces(searchSurf.faces());
+                    const Map<label>& meshPointMap = searchSurf.meshPointMap();
+
+                    const triSurfacePointScalarField&
+                        internalClosenessPointField = closenessFields.first();
+
+                    const triSurfacePointScalarField&
+                        externalClosenessPointField = closenessFields.second();
+
+                    scalarField internalCloseness(searchSurf.nPoints(), great);
+                    scalarField externalCloseness(searchSurf.nPoints(), great);
+
+                    forAll(meshPointMap, pi)
+                    {
+                        internalCloseness[pi] =
+                            internalClosenessPointField[meshPointMap[pi]];
+
+                        externalCloseness[pi] =
+                            externalClosenessPointField[meshPointMap[pi]];
+                    }
+
+                    vtkSurfaceWriter().write
+                    (
+                        runTime.constantPath()/"triSurface",// outputDir
+                        searchSurf.objectRegistry::name(),  // surfaceName
+                        searchSurf.points(),
+                        faces,
+                        "internalPointCloseness",           // fieldName
+                        internalCloseness,
+                        true,                               // isNodeValues
+                        true                                // verbose
+                    );
+
+                    vtkSurfaceWriter().write
+                    (
+                        runTime.constantPath()/"triSurface",// outputDir
+                        searchSurf.objectRegistry::name(),  // surfaceName
+                        searchSurf.points(),
+                        faces,
+                        "externalPointCloseness",           // fieldName
+                        externalCloseness,
+                        true,                               // isNodeValues
+                        true                                // verbose
+                    );
+                }
+            }
         }
 
 
@@ -432,16 +549,18 @@ int main(int argc, char *argv[])
             Info<< nl << "Extracting curvature of surface at the points."
                 << endl;
 
-            vectorField pointNormals = calcVertexNormals(surf);
-            triadField pointCoordSys = calcVertexCoordSys(surf, pointNormals);
-
-            triSurfacePointScalarField k = calcCurvature
+            triSurfacePointScalarField k
             (
-                sFeatFileName,
-                runTime,
+                IOobject
+                (
+                    sFeatFileName + ".curvature",
+                    runTime.constant(),
+                    "triSurface",
+                    runTime
+                ),
                 surf,
-                pointNormals,
-                pointCoordSys
+                dimLength,
+                surf.curvature()
             );
 
             k.write();
@@ -473,9 +592,9 @@ int main(int argc, char *argv[])
 
             scalarField featureProximity(surf.size(), searchDistance);
 
-            forAll(surf, fI)
+            forAll(surf, fi)
             {
-                const triPointRef& tri = surf[fI].tri(surf.points());
+                const triPointRef& tri = surf[fi].tri(surf.points());
                 const point& triCentre = tri.circumCentre();
 
                 const scalar radiusSqr = min
@@ -484,26 +603,21 @@ int main(int argc, char *argv[])
                     sqr(searchDistance)
                 );
 
-                List<pointIndexHit> hitList;
+                pointIndexHitList hitList;
 
                 feMesh.allNearestFeatureEdges(triCentre, radiusSqr, hitList);
-
-                featureProximity[fI] =
-                    calcProximityOfFeatureEdges
-                    (
-                        feMesh,
-                        hitList,
-                        featureProximity[fI]
-                    );
+                featureProximity[fi] = min
+                (
+                    feMesh.minDisconnectedDist(hitList),
+                    featureProximity[fi]
+                );
 
                 feMesh.allNearestFeaturePoints(triCentre, radiusSqr, hitList);
-
-                featureProximity[fI] =
-                    calcProximityOfFeaturePoints
-                    (
-                        hitList,
-                        featureProximity[fI]
-                    );
+                featureProximity[fi] = min
+                (
+                    minDist(hitList),
+                    featureProximity[fi]
+                );
             }
 
             triSurfaceScalarField featureProximityField

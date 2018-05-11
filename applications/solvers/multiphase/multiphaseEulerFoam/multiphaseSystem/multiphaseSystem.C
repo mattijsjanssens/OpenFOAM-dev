@@ -132,8 +132,8 @@ void Foam::multiphaseSystem::solveAlphas()
             alphaPhiCorr,
             zeroField(),
             zeroField(),
-            1,
-            0,
+            oneField(),
+            zeroField(),
             true
         );
 
@@ -168,9 +168,7 @@ void Foam::multiphaseSystem::solveAlphas()
         (
             geometricOneField(),
             phase,
-            alphaPhi,
-            zeroField(),
-            zeroField()
+            alphaPhi
         );
 
         phase.alphaPhi() = alphaPhi;
@@ -689,8 +687,8 @@ Foam::multiphaseSystem::dragCoeffs() const
             (
                 max
                 (
-                    //fvc::average(dm.phase1()*dm.phase2()),
-                    //fvc::average(dm.phase1())*fvc::average(dm.phase2()),
+                    // fvc::average(dm.phase1()*dm.phase2()),
+                    // fvc::average(dm.phase1())*fvc::average(dm.phase2()),
                     dm.phase1()*dm.phase2(),
                     dm.residualPhaseFraction()
                 )
