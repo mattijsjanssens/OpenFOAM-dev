@@ -149,13 +149,12 @@ Foam::MultiComponentPhaseModel<BasePhaseModel>::YiEqn(volScalarField& Yi)
 {
     const volScalarField& alpha = *this;
     const surfaceScalarField alphaRhoPhi(this->alphaRhoPhi());
-    const volScalarField rho(this->rho());
+    const volScalarField& rho = this->thermo().rho();
 
     return
     (
         fvm::ddt(alpha, rho, Yi)
       + fvm::div(alphaRhoPhi, Yi, "div(" + alphaRhoPhi.name() + ",Yi)")
-      - fvm::Sp(this->continuityError(), Yi)
 
       - fvm::laplacian
         (
@@ -177,6 +176,14 @@ const Foam::PtrList<Foam::volScalarField>&
 Foam::MultiComponentPhaseModel<BasePhaseModel>::Y() const
 {
     return this->thermo_->composition().Y();
+}
+
+
+template<class BasePhaseModel>
+const Foam::volScalarField&
+Foam::MultiComponentPhaseModel<BasePhaseModel>::Y(const word& name) const
+{
+    return this->thermo_->composition().Y(name);
 }
 
 

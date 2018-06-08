@@ -34,6 +34,7 @@ License
 #include "fvcDdt.H"
 #include "fvmSup.H"
 #include "fvcDiv.H"
+#include "phaseCompressibleTurbulenceModel.H"
 
 // * * * * * * * * * * * * Private Member Functions * * * * * * * * * * * * //
 
@@ -1145,6 +1146,37 @@ Foam::diameterModels::populationBalanceModel::gamma
 }
 
 
+const Foam::tmp<Foam::volScalarField>
+Foam::diameterModels::populationBalanceModel::sigmaWithContinuousPhase
+(
+    const phaseModel& dispersedPhase
+) const
+{
+    const phasePairKey key
+    (
+        dispersedPhase.name(),
+        continuousPhase_.name()
+    );
+
+    return fluid_.sigma(key);
+}
+
+
+const Foam::phaseCompressibleTurbulenceModel&
+Foam::diameterModels::populationBalanceModel::continuousTurbulence() const
+{
+    return
+        mesh_.lookupObject<phaseCompressibleTurbulenceModel>
+        (
+            IOobject::groupName
+            (
+                turbulenceModel::propertiesName,
+                continuousPhase_.name()
+            )
+        );
+}
+
+
 void Foam::diameterModels::populationBalanceModel::solve()
 {
     const dictionary& solutionControls = mesh_.solverDict(name_);
@@ -1174,15 +1206,9 @@ void Foam::diameterModels::populationBalanceModel::solve()
         }
 
         int iCorr = 0;
-        scalar initialResidual = 0;
         scalar maxInitialResidual = 1;
 
-        while
-        (
-            maxInitialResidual > tolerance
-            &&
-            ++iCorr <= nCorr
-        )
+        while (++iCorr <= nCorr && maxInitialResidual > tolerance)
         {
             Info<< "populationBalance "
                 << this->name()
@@ -1193,6 +1219,8 @@ void Foam::diameterModels::populationBalanceModel::solve()
             sources();
 
             dmdt();
+
+            maxInitialResidual = 0;
 
             forAll(sizeGroups_, i)
             {
@@ -1223,16 +1251,11 @@ void Foam::diameterModels::populationBalanceModel::solve()
                   - fvm::ddt(residualAlpha*rho, fi)
                 );
 
-                sizeGroupEqn.relax
-                (
-                    fi.mesh().equationRelaxationFactor("f")
-                );
-
-                initialResidual = sizeGroupEqn.solve().initialResidual();
+                sizeGroupEqn.relax();
 
                 maxInitialResidual = max
                 (
-                    initialResidual,
+                    sizeGroupEqn.solve().initialResidual(),
                     maxInitialResidual
                 );
             }

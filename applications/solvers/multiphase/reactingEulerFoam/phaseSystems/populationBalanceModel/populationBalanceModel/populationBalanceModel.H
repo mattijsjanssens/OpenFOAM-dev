@@ -154,6 +154,7 @@ SourceFiles
 #include "sizeGroup.H"
 #include "phasePair.H"
 #include "pimpleControl.H"
+#include "phaseCompressibleTurbulenceModelFwd.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -411,6 +412,16 @@ public:
             const label i,
             const dimensionedScalar& v
         ) const;
+
+        //- Return the surface tension coefficient between a given dispersed
+        //  and the continuous phase
+        const tmp<volScalarField> sigmaWithContinuousPhase
+        (
+            const phaseModel& dispersedPhase
+        ) const;
+
+        //- Return reference to turbulence model of the continuous phase
+        const phaseCompressibleTurbulenceModel& continuousTurbulence() const;
 
         //- Solve the population balance equation
         void solve();

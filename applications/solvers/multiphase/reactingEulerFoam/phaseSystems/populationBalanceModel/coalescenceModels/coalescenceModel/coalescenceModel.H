@@ -36,7 +36,6 @@ SourceFiles
 #define coalescenceModel_H
 
 #include "populationBalanceModel.H"
-#include "phaseCompressibleTurbulenceModel.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -57,16 +56,6 @@ protected:
 
         //- Reference to the populationBalanceModel
         const populationBalanceModel& popBal_;
-
-
-    // Protected member functions
-
-        //- Return the surface tension coefficient
-        const tmp<volScalarField> sigma
-        (
-            const word& phase1,
-            const word& phase2
-        ) const;
 
 
 public:
@@ -143,9 +132,6 @@ public:
 
 
     // Member Functions
-
-        //- Return a reference to the turbulence model for the continuous phase
-        const phaseCompressibleTurbulenceModel& continuousTurbulence() const;
 
         //- Correct diameter independent expressions
         virtual void correct();

@@ -298,13 +298,13 @@ Foam::ThermalPhaseChangePhaseSystem<BasePhaseSystem>::massTransfer() const
                 IOobject::groupName(volatile_, otherPhase.name())
             );
 
-            const volScalarField dmdt(this->iDmdt(pair) + this->wDmdt(pair));
-            const volScalarField dmdt12(posPart(dmdt));
-            const volScalarField dmdt21(negPart(dmdt));
+            // Note that the phase YiEqn does not contain a continuity error
+            // term, so these additions represent the entire mass transfer
 
-            *eqns[name] += fvm::Sp(dmdt21, eqns[name]->psi()) - dmdt21;
-            *eqns[otherName] +=
-                dmdt12 - fvm::Sp(dmdt12, eqns[otherName]->psi());
+            const volScalarField dmdt(this->iDmdt(pair) + this->wDmdt(pair));
+
+            *eqns[name] += dmdt;
+            *eqns[otherName] -= dmdt;
         }
     }
 

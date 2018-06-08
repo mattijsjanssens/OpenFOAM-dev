@@ -5,9 +5,10 @@ cd ${0%/*} || exit 1    # run from this directory
 . $WM_PROJECT_DIR/bin/tools/RunFunctions
 
 # Set application name
-application=`getApplication`
+application=$(getApplication)
 
 runApplication blockMesh
+runApplication topoSet
 runApplication setFields
 runApplication $application
 
