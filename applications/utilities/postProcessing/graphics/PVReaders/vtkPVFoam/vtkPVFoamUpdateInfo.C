@@ -192,6 +192,9 @@ void Foam::vtkPVFoam::updateInfoLagrangian
 
     // Generate a list of lagrangian clouds across all times
     HashSet<fileName> cloudDirs;
+
+    // Get times list. Flush first to force refresh.
+    fileHandler().flush();
     instantList times = dbPtr_().times();
     forAll(times, timei)
     {
@@ -706,6 +709,8 @@ void Foam::vtkPVFoam::updateInfoLagrangianFields()
     // set. ParaView will display "(partial)" after field names that only apply
     // to some of the clouds.
     const arrayRange& range = arrayRangeLagrangian_;
+
+    fileHandler().flush();
     for (label partId = range.start(); partId < range.end(); ++ partId)
     {
         const instantList times = dbPtr_().times();
