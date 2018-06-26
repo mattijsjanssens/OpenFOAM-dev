@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2012-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2012-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -34,7 +34,7 @@ const Foam::word Foam::functionObjects::writeFile::outputPrefix
     "postProcessing"
 );
 
-Foam::label Foam::functionObjects::writeFile::addChars = 7;
+Foam::label Foam::functionObjects::writeFile::addChars = 8;
 
 
 // * * * * * * * * * * * * Protected Member Functions  * * * * * * * * * * * //
@@ -70,6 +70,9 @@ Foam::fileName Foam::functionObjects::writeFile::baseFileDir() const
             baseDir = baseDir/mesh.name();
         }
     }
+
+    // Remove any ".."
+    baseDir.clean();
 
     return baseDir;
 }

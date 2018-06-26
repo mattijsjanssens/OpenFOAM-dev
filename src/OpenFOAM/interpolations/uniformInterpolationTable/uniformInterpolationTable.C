@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -25,6 +25,7 @@ License
 
 #include "uniformInterpolationTable.H"
 #include "Time.H"
+#include "IOdictionary.H"
 
 // * * * * * * * * * * * *  Private Member Functions * * * * * * * * * * * * //
 
@@ -143,7 +144,7 @@ Type Foam::uniformInterpolationTable<Type>::interpolate(scalar x) const
 {
     if (bound_)
     {
-        x = max(min(xMax() - SMALL*dx_, x), x0_);
+        x = max(min(xMax() - small*dx_, x), x0_);
     }
     else
     {

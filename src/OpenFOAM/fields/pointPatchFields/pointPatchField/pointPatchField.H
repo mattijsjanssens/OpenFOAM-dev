@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -418,14 +418,16 @@ public:
             //- Initialise evaluation of the patch field (do nothing)
             virtual void initEvaluate
             (
-                const Pstream::commsTypes commsType=Pstream::blocking
+                const Pstream::commsTypes commsType =
+                    Pstream::commsTypes::blocking
             )
             {}
 
             //- Evaluate the patch field
             virtual void evaluate
             (
-                const Pstream::commsTypes commsType=Pstream::blocking
+                const Pstream::commsTypes commsType =
+                    Pstream::commsTypes::blocking
             );
 
 
@@ -487,8 +489,8 @@ public:
 };
 
 
-// This function is added as a hack to enable simple backward compatability
-// with verions using referenceLevel in GeometicField
+// This function is added as a hack to enable simple backward compatibility
+// with versions using referenceLevel in GeometicField
 template<class Type>
 const pointPatchField<Type>& operator+
 (

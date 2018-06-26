@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -155,21 +155,38 @@ inline Scalar component(const Scalar s, const direction)
 }
 
 
+//- Return 1 if s is positive or 0 otherwise -1
 inline Scalar sign(const Scalar s)
 {
     return (s >= 0)? 1: -1;
 }
 
 
+//- Return 1 if s is positive but not 0
 inline Scalar pos(const Scalar s)
+{
+    return (s > 0)? 1: 0;
+}
+
+
+//- Return 1 if s is positive or 0
+inline Scalar pos0(const Scalar s)
 {
     return (s >= 0)? 1: 0;
 }
 
 
+//- Return 1 if s is negative but not 0
 inline Scalar neg(const Scalar s)
 {
     return (s < 0)? 1: 0;
+}
+
+
+//- Return 1 if s is negative or 0
+inline Scalar neg0(const Scalar s)
+{
+    return (s <= 0)? 1: 0;
 }
 
 
@@ -191,13 +208,13 @@ inline Scalar negPart(const Scalar s)
 
 inline bool equal(const Scalar& s1, const Scalar& s2)
 {
-    return mag(s1 - s2) <= ScalarVSMALL;
+    return mag(s1 - s2) <= ScalarVSmall;
 }
 
 
 inline bool notEqual(const Scalar s1, const Scalar s2)
 {
-    return mag(s1 - s2) > ScalarVSMALL;
+    return mag(s1 - s2) > ScalarVSmall;
 }
 
 
@@ -322,11 +339,11 @@ inline Scalar sqrtSumSqr(const Scalar a, const Scalar b)
 
     if (maga > magb)
     {
-        return maga*sqrt(1.0 + sqr(magb/maga));
+        return maga*sqrt(1 + sqr(magb/maga));
     }
     else
     {
-        return magb < ScalarVSMALL ? 0.0 : magb*sqrt(1.0 + sqr(maga/magb));
+        return magb < ScalarVSmall ? 0 : magb*sqrt(1 + sqr(maga/magb));
     }
 }
 

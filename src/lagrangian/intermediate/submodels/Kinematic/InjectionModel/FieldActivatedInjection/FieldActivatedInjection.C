@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -79,7 +79,7 @@ Foam::FieldActivatedInjection<CloudType>::FieldActivatedInjection
     diameters_(positions_.size()),
     sizeDistribution_
     (
-        distributionModels::distributionModel::New
+        distributionModel::New
         (
             this->coeffDict().subDict("sizeDistribution"),
             owner.rndGen()
@@ -152,7 +152,7 @@ void Foam::FieldActivatedInjection<CloudType>::updateMesh()
 template<class CloudType>
 Foam::scalar Foam::FieldActivatedInjection<CloudType>::timeEnd() const
 {
-    return GREAT;
+    return great;
 }
 
 

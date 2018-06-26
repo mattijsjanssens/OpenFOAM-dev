@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,9 +23,6 @@ License
 
 Class
     Foam::nutkRoughWallFunctionFvPatchScalarField
-
-Group
-    grpWallFunctions
 
 Description
     This boundary condition provides a turbulent kinematic viscosity condition
@@ -171,7 +168,7 @@ public:
 
     // Member functions
 
-        // Acces functions
+        // Access functions
 
             // Return Ks
             scalarField& Ks()

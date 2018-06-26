@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -31,19 +31,23 @@ Description
     The momentum and other fluid properties are of the "mixture" and a single
     momentum equation is solved.
 
-    Turbulence modelling is generic, i.e.  laminar, RAS or LES may be selected.
+    Either mixture or two-phase transport modelling may be selected.  In the
+    mixture approach a single laminar, RAS or LES model is selected to model the
+    momentum stress.  In the Euler-Euler two-phase approach separate laminar,
+    RAS or LES selected models are selected for each of the phases.
 
 \*---------------------------------------------------------------------------*/
 
 #include "fvCFD.H"
-#include "MULES.H"
+#include "CMULES.H"
+#include "EulerDdtScheme.H"
+#include "localEulerDdtScheme.H"
+#include "CrankNicolsonDdtScheme.H"
 #include "subCycle.H"
-#include "rhoThermo.H"
-#include "interfaceProperties.H"
-#include "twoPhaseMixture.H"
-#include "twoPhaseMixtureThermo.H"
-#include "turbulentFluidThermoModel.H"
+#include "compressibleInterPhaseTransportModel.H"
 #include "pimpleControl.H"
+#include "fvOptions.H"
+#include "fvcSmooth.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -51,21 +55,24 @@ int main(int argc, char *argv[])
 {
     #include "postProcess.H"
 
-    #include "setRootCase.H"
+    #include "setRootCaseLists.H"
     #include "createTime.H"
     #include "createMesh.H"
     #include "createControl.H"
     #include "createTimeControls.H"
     #include "createFields.H"
-    #include "CourantNo.H"
-    #include "setInitialDeltaT.H"
 
     volScalarField& p = mixture.p();
     volScalarField& T = mixture.T();
     const volScalarField& psi1 = mixture.thermo1().psi();
     const volScalarField& psi2 = mixture.thermo2().psi();
 
-    turbulence->validate();
+    if (!LTS)
+    {
+        #include "readTimeControls.H"
+        #include "CourantNo.H"
+        #include "setInitialDeltaT.H"
+    }
 
     // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -74,8 +81,17 @@ int main(int argc, char *argv[])
     while (runTime.run())
     {
         #include "readTimeControls.H"
-        #include "CourantNo.H"
-        #include "setDeltaT.H"
+
+        if (LTS)
+        {
+            #include "setRDeltaT.H"
+        }
+        else
+        {
+            #include "CourantNo.H"
+            #include "alphaCourantNo.H"
+            #include "setDeltaT.H"
+        }
 
         runTime++;
 
@@ -84,15 +100,10 @@ int main(int argc, char *argv[])
         // --- Pressure-velocity PIMPLE corrector loop
         while (pimple.loop())
         {
-            #include "alphaEqnsSubCycle.H"
+            #include "alphaControls.H"
+            #include "compressibleAlphaEqnSubCycle.H"
 
-            // correct interface on first PIMPLE corrector
-            if (pimple.corr() == 1)
-            {
-                interface.correct();
-            }
-
-            solve(fvm::ddt(rho) + fvc::div(rhoPhi));
+            turbulence.correctPhasePhi();
 
             #include "UEqn.H"
             #include "TEqn.H"
@@ -105,7 +116,7 @@ int main(int argc, char *argv[])
 
             if (pimple.turbCorr())
             {
-                turbulence->correct();
+                turbulence.correct();
             }
         }
 

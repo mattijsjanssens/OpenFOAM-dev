@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2012-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2012-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -134,7 +134,7 @@ void Foam::inclinedFilmNusseltInletVelocityFvPatchVectorField::updateCoeffs()
     // TODO: currently re-evaluating the entire gTan field to return this patch
     const scalarField gTan(film.gTan()().boundaryField()[patchi] & n);
 
-    if (patch().size() && (max(mag(gTan)) < SMALL))
+    if (patch().size() && (max(mag(gTan)) < small))
     {
         WarningInFunction
             << "is designed to operate on patches inclined with respect to "
@@ -147,7 +147,7 @@ void Foam::inclinedFilmNusseltInletVelocityFvPatchVectorField::updateCoeffs()
     const vectorField nHatp(nHat.boundaryField()[patchi].patchInternalField());
 
     vectorField nTan(nHatp ^ n);
-    nTan /= mag(nTan) + ROOTVSMALL;
+    nTan /= mag(nTan) + rootVSmall;
 
     // calculate distance in patch tangential direction
 
@@ -170,9 +170,9 @@ void Foam::inclinedFilmNusseltInletVelocityFvPatchVectorField::updateCoeffs()
     const volScalarField& rho = film.rho();
     const scalarField rhop(rho.boundaryField()[patchi].patchInternalField());
 
-    const scalarField Re(max(G, scalar(0.0))/mup);
+    const scalarField Re(max(G, scalar(0))/mup);
 
-    operator==(n*pow(gTan*mup/(3.0*rhop), 0.333)*pow(Re, 0.666));
+    operator==(n*pow(gTan*mup/(3*rhop), 1.0/3.0)*pow(Re, 2.0/3.0));
 
     fixedValueFvPatchVectorField::updateCoeffs();
 }

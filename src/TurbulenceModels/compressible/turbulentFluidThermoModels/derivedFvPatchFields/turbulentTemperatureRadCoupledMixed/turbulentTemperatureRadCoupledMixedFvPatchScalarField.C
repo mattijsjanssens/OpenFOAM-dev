@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -48,8 +48,8 @@ turbulentTemperatureRadCoupledMixedFvPatchScalarField
     mixedFvPatchScalarField(p, iF),
     temperatureCoupledBase(patch(), "undefined", "undefined", "undefined-K"),
     TnbrName_("undefined-Tnbr"),
-    QrNbrName_("undefined-QrNbr"),
-    QrName_("undefined-Qr"),
+    qrNbrName_("undefined-qrNbr"),
+    qrName_("undefined-qr"),
     thicknessLayers_(0),
     kappaLayers_(0),
     contactRes_(0)
@@ -72,8 +72,8 @@ turbulentTemperatureRadCoupledMixedFvPatchScalarField
     mixedFvPatchScalarField(psf, p, iF, mapper),
     temperatureCoupledBase(patch(), psf),
     TnbrName_(psf.TnbrName_),
-    QrNbrName_(psf.QrNbrName_),
-    QrName_(psf.QrName_),
+    qrNbrName_(psf.qrNbrName_),
+    qrName_(psf.qrName_),
     thicknessLayers_(psf.thicknessLayers_),
     kappaLayers_(psf.kappaLayers_),
     contactRes_(psf.contactRes_)
@@ -91,8 +91,8 @@ turbulentTemperatureRadCoupledMixedFvPatchScalarField
     mixedFvPatchScalarField(p, iF),
     temperatureCoupledBase(patch(), dict),
     TnbrName_(dict.lookupOrDefault<word>("Tnbr", "T")),
-    QrNbrName_(dict.lookupOrDefault<word>("QrNbr", "none")),
-    QrName_(dict.lookupOrDefault<word>("Qr", "none")),
+    qrNbrName_(dict.lookupOrDefault<word>("qrNbr", "none")),
+    qrName_(dict.lookupOrDefault<word>("qr", "none")),
     thicknessLayers_(0),
     kappaLayers_(0),
     contactRes_(0.0)
@@ -152,8 +152,8 @@ turbulentTemperatureRadCoupledMixedFvPatchScalarField
     mixedFvPatchScalarField(psf, iF),
     temperatureCoupledBase(patch(), psf),
     TnbrName_(psf.TnbrName_),
-    QrNbrName_(psf.QrNbrName_),
-    QrName_(psf.QrName_),
+    qrNbrName_(psf.qrNbrName_),
+    qrName_(psf.qrName_),
     thicknessLayers_(psf.thicknessLayers_),
     kappaLayers_(psf.kappaLayers_),
     contactRes_(psf.contactRes_)
@@ -186,12 +186,22 @@ void turbulentTemperatureRadCoupledMixedFvPatchScalarField::updateCoeffs()
     scalarField Tc(patchInternalField());
     scalarField& Tp = *this;
 
-    const turbulentTemperatureRadCoupledMixedFvPatchScalarField&
-        nbrField = refCast
-            <const turbulentTemperatureRadCoupledMixedFvPatchScalarField>
-            (
-                nbrPatch.lookupPatchField<volScalarField, scalar>(TnbrName_)
-            );
+    typedef turbulentTemperatureRadCoupledMixedFvPatchScalarField thisType;
+
+    const fvPatchScalarField& nbrTp =
+        nbrPatch.lookupPatchField<volScalarField, scalar>(TnbrName_);
+
+    if (!isA<thisType>(nbrTp))
+    {
+        FatalErrorInFunction
+            << "Patch field for " << internalField().name() << " on "
+            << patch().name() << " is of type " << thisType::typeName
+            << endl << "The neighbouring patch field " << TnbrName_ << " on "
+            << nbrPatch.name() << " is required to be the same, but is "
+            << "currently of type " << nbrTp.type() << exit(FatalError);
+    }
+
+    const thisType& nbrField = refCast<const thisType>(nbrTp);
 
     // Swap to obtain full local values of neighbour internal field
     scalarField TcNbr(nbrField.patchInternalField());
@@ -212,22 +222,22 @@ void turbulentTemperatureRadCoupledMixedFvPatchScalarField::updateCoeffs()
 
     scalarField KDelta(kappa(Tp)*patch().deltaCoeffs());
 
-    scalarField Qr(Tp.size(), 0.0);
-    if (QrName_ != "none")
+    scalarField qr(Tp.size(), 0.0);
+    if (qrName_ != "none")
     {
-        Qr = patch().lookupPatchField<volScalarField, scalar>(QrName_);
+        qr = patch().lookupPatchField<volScalarField, scalar>(qrName_);
     }
 
-    scalarField QrNbr(Tp.size(), 0.0);
-    if (QrNbrName_ != "none")
+    scalarField qrNbr(Tp.size(), 0.0);
+    if (qrNbrName_ != "none")
     {
-        QrNbr = nbrPatch.lookupPatchField<volScalarField, scalar>(QrNbrName_);
-        mpp.distribute(QrNbr);
+        qrNbr = nbrPatch.lookupPatchField<volScalarField, scalar>(qrNbrName_);
+        mpp.distribute(qrNbr);
     }
 
     valueFraction() = KDeltaNbr/(KDeltaNbr + KDelta);
     refValue() = TcNbr;
-    refGrad() = (Qr + QrNbr)/kappa(Tp);
+    refGrad() = (qr + qrNbr)/kappa(Tp);
 
     mixedFvPatchScalarField::updateCoeffs();
 
@@ -261,8 +271,8 @@ void turbulentTemperatureRadCoupledMixedFvPatchScalarField::write
 {
     mixedFvPatchScalarField::write(os);
     os.writeKeyword("Tnbr")<< TnbrName_ << token::END_STATEMENT << nl;
-    os.writeKeyword("QrNbr")<< QrNbrName_ << token::END_STATEMENT << nl;
-    os.writeKeyword("Qr")<< QrName_ << token::END_STATEMENT << nl;
+    os.writeKeyword("qrNbr")<< qrNbrName_ << token::END_STATEMENT << nl;
+    os.writeKeyword("qr")<< qrName_ << token::END_STATEMENT << nl;
     thicknessLayers_.writeEntry("thicknessLayers", os);
     kappaLayers_.writeEntry("kappaLayers", os);
 

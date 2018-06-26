@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -89,17 +89,16 @@ public:
         enum IOdebugType
         {
             IOMESH,
-            //IOSCALARLEVELS,
             IOOBJINTERSECTIONS,
             IOFEATURESEEDS,
             IOATTRACTION,
             IOLAYERINFO
         };
+
         static const NamedEnum<IOdebugType, 5> IOdebugTypeNames;
         enum debugType
         {
             MESH = 1<<IOMESH,
-            //SCALARLEVELS = 1<<IOSCALARLEVELS,
             OBJINTERSECTIONS = 1<<IOOBJINTERSECTIONS,
             FEATURESEEDS = 1<<IOFEATURESEEDS,
             ATTRACTION = 1<< IOATTRACTION,
@@ -111,6 +110,7 @@ public:
         {
             IOOUTPUTLAYERINFO
         };
+
         static const NamedEnum<IOoutputType, 1> IOoutputTypeNames;
         enum outputType
         {
@@ -121,14 +121,17 @@ public:
         enum IOwriteType
         {
             IOWRITEMESH,
+            IONOWRITEREFINEMENT,
             IOWRITELEVELS,
             IOWRITELAYERSETS,
             IOWRITELAYERFIELDS
         };
-        static const NamedEnum<IOwriteType, 4> IOwriteTypeNames;
+
+        static const NamedEnum<IOwriteType, 5> IOwriteTypeNames;
         enum writeType
         {
             WRITEMESH = 1<<IOWRITEMESH,
+            NOWRITEREFINEMENT = 1<<IONOWRITEREFINEMENT,
             WRITELEVELS = 1<<IOWRITELEVELS,
             WRITELAYERSETS = 1<<IOWRITELAYERSETS,
             WRITELAYERFIELDS = 1<<IOWRITELAYERFIELDS
@@ -515,7 +518,7 @@ private:
             ) const;
 
             //- Make namedSurfaceIndex consistent with cellToZone
-            //  - clear out any blocked faces inbetween same cell zone.
+            //  - clear out any blocked faces in between same cell zone.
             void makeConsistentFaceIndex
             (
                 const labelList& cellToZone,

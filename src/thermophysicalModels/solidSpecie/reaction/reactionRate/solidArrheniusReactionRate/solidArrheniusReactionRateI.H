@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2012 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -30,24 +30,12 @@ inline Foam::solidArrheniusReactionRate::solidArrheniusReactionRate
     const scalar A,
     const scalar Ta,
     const scalar Tcrit
-    //const scalar nReact
+    // const scalar nReact
 )
 :
     A_(A),
     Ta_(Ta),
     Tcrit_(Tcrit)
-{}
-
-
-inline Foam::solidArrheniusReactionRate::solidArrheniusReactionRate
-(
-    const speciesTable&,
-    Istream& is
-)
-:
-    A_(readScalar(is.readBegin("solidArrheniusReaction(Istream&)"))),
-    Ta_(readScalar(is)),
-    Tcrit_(readScalar(is))
 {}
 
 
@@ -72,18 +60,60 @@ inline Foam::scalar Foam::solidArrheniusReactionRate::operator()
     const scalarField&
 ) const
 {
-    scalar ak = A_;
-
     if (T < Tcrit_)
     {
-        ak *= 0.0;
+        return 0;
     }
     else
     {
-        ak *= exp(-Ta_/T);
+        return A_*exp(-Ta_/T);
     }
+}
 
-    return ak;
+
+inline Foam::scalar Foam::solidArrheniusReactionRate::ddT
+(
+    const scalar p,
+    const scalar T,
+    const scalarField&
+) const
+{
+    if (T < Tcrit_)
+    {
+        return 0;
+    }
+    else
+    {
+        return A_*exp(-Ta_/T)*Ta_/sqr(T);
+    }
+}
+
+
+inline const Foam::List<Foam::Tuple2<Foam::label, Foam::scalar>>&
+Foam::solidArrheniusReactionRate::beta() const
+{
+    return NullObjectRef<List<Tuple2<label, scalar>>>();
+}
+
+
+inline void Foam::solidArrheniusReactionRate::dcidc
+(
+    const scalar p,
+    const scalar T,
+    const scalarField& c,
+    scalarField& dcidc
+) const
+{}
+
+
+inline Foam::scalar Foam::solidArrheniusReactionRate::dcidT
+(
+    const scalar p,
+    const scalar T,
+    const scalarField& c
+) const
+{
+    return 0;
 }
 
 
@@ -101,9 +131,7 @@ inline Foam::Ostream& Foam::operator<<
     const solidArrheniusReactionRate& arr
 )
 {
-    os  << token::BEGIN_LIST
-        << arr.A_ << token::SPACE << arr.Ta_ << token::SPACE << arr.Tcrit_
-        << token::END_LIST;
+    arr.write(os);
     return os;
 }
 

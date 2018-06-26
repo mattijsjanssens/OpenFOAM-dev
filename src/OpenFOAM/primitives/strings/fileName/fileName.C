@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -48,9 +48,9 @@ Foam::fileName::fileName(const wordList& lst)
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-Foam::fileName::Type Foam::fileName::type() const
+Foam::fileName::Type Foam::fileName::type(const bool followLink) const
 {
-    return ::Foam::type(*this);
+    return ::Foam::type(*this, followLink);
 }
 
 
@@ -393,35 +393,6 @@ Foam::fileName Foam::operator/(const string& a, const string& b)
             return fileName();
         }
     }
-}
-
-
-// * * * * * * * * * * * * * * * Global Functions  * * * * * * * * * * * * * //
-
-Foam::fileName Foam::search(const word& file, const fileName& directory)
-{
-    // Search the current directory for the file
-    fileNameList files(readDir(directory));
-    forAll(files, i)
-    {
-        if (files[i] == file)
-        {
-            return directory/file;
-        }
-    }
-
-    // If not found search each of the sub-directories
-    fileNameList dirs(readDir(directory, fileName::DIRECTORY));
-    forAll(dirs, i)
-    {
-        fileName path = search(file, directory/dirs[i]);
-        if (path != fileName::null)
-        {
-            return path;
-        }
-    }
-
-    return fileName::null;
 }
 
 

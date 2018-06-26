@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -49,21 +49,24 @@ Description
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-bool haveAllTimes
-(
-    const HashSet<word>& masterTimeDirSet,
-    const instantList& timeDirs
-)
+namespace Foam
 {
-    // Loop over all times
-    forAll(timeDirs, timei)
+    bool haveAllTimes
+    (
+        const HashSet<word>& masterTimeDirSet,
+        const instantList& timeDirs
+    )
     {
-        if (!masterTimeDirSet.found(timeDirs[timei].name()))
+        // Loop over all times
+        forAll(timeDirs, timei)
         {
-            return false;
+            if (!masterTimeDirSet.found(timeDirs[timei].name()))
+            {
+                return false;
+            }
         }
+        return true;
     }
-    return true;
 }
 
 
@@ -79,11 +82,7 @@ int main(int argc, char *argv[])
     timeSelector::addOptions(true, true);
     argList::noParallel();
     #include "addRegionOption.H"
-    argList::addBoolOption
-    (
-        "allRegions",
-        "operate on all regions in regionProperties"
-    );
+    #include "addAllRegionsOption.H"
     argList::addOption
     (
         "fields",
@@ -169,17 +168,11 @@ int main(int argc, char *argv[])
         args.optionLookup("lagrangianFields")() >> selectedLagrangianFields;
     }
 
+    const wordList regionNames(selectRegionNames(args, runTime));
 
-    const bool newTimes   = args.optionFound("newTimes");
-    const bool allRegions = args.optionFound("allRegions");
-
-
-    // determine the processor count directly
-    label nProcs = 0;
-    while (isDir(args.path()/(word("processor") + name(nProcs))))
-    {
-        ++nProcs;
-    }
+    // Determine the processor count
+    const label nProcs =
+        fileHandler().nProcs(args.path(), regionDir(regionNames[0]));
 
     if (!nProcs)
     {
@@ -187,6 +180,9 @@ int main(int argc, char *argv[])
             << "No processor* directories found"
             << exit(FatalError);
     }
+
+    // Warn fileHandler of number of processors
+    const_cast<fileOperation&>(fileHandler()).setNProcs(nProcs);
 
     // Create the processor databases
     PtrList<Time> databases(nProcs);
@@ -219,27 +215,37 @@ int main(int argc, char *argv[])
     // - can be illogical
     // + any point motion handled through mesh.readUpdate
 
-
     if (timeDirs.empty())
     {
-        FatalErrorInFunction
-            << "No times selected"
-            << exit(FatalError);
+        WarningInFunction << "No times selected" << endl;
+        exit(1);
     }
 
-
     // Get current times if -newTimes
+    const bool newTimes   = args.optionFound("newTimes");
     instantList masterTimeDirs;
     if (newTimes)
     {
         masterTimeDirs = runTime.times();
     }
+
     HashSet<word> masterTimeDirSet(2*masterTimeDirs.size());
     forAll(masterTimeDirs, i)
     {
         masterTimeDirSet.insert(masterTimeDirs[i].name());
     }
 
+    if
+    (
+        newTimes
+     && regionNames.size() == 1
+     && regionNames[0] == fvMesh::defaultRegion
+     && haveAllTimes(masterTimeDirSet, timeDirs)
+    )
+    {
+        Info<< "All times already reconstructed.\n\nEnd\n" << endl;
+        return 0;
+    }
 
     // Set all times on processor meshes equal to reconstructed mesh
     forAll(databases, proci)
@@ -247,65 +253,13 @@ int main(int argc, char *argv[])
         databases[proci].setTime(runTime);
     }
 
-
-    wordList regionNames;
-    wordList regionDirs;
-    if (allRegions)
-    {
-        Info<< "Reconstructing for all regions in regionProperties" << nl
-            << endl;
-        regionProperties rp(runTime);
-        forAllConstIter(HashTable<wordList>, rp, iter)
-        {
-            const wordList& regions = iter();
-            forAll(regions, i)
-            {
-                if (findIndex(regionNames, regions[i]) == -1)
-                {
-                    regionNames.append(regions[i]);
-                }
-            }
-        }
-        regionDirs = regionNames;
-    }
-    else
-    {
-        word regionName;
-        if (args.optionReadIfPresent("region", regionName))
-        {
-            regionNames = wordList(1, regionName);
-            regionDirs = regionNames;
-        }
-        else
-        {
-            regionNames = wordList(1, fvMesh::defaultRegion);
-            regionDirs = wordList(1, word::null);
-        }
-    }
-
-
     forAll(regionNames, regioni)
     {
         const word& regionName = regionNames[regioni];
-        const word& regionDir = regionDirs[regioni];
+        const word& regionDir = Foam::regionDir(regionName);
 
         Info<< "\n\nReconstructing fields for mesh " << regionName << nl
             << endl;
-
-        if
-        (
-            newTimes
-         && regionNames.size() == 1
-         && regionDirs[0].empty()
-         && haveAllTimes(masterTimeDirSet, timeDirs)
-        )
-        {
-            Info<< "Skipping region " << regionName
-                << " since already have all times"
-                << endl << endl;
-            continue;
-        }
-
 
         fvMesh mesh
         (
@@ -314,7 +268,7 @@ int main(int argc, char *argv[])
                 regionName,
                 runTime.timeName(),
                 runTime,
-                Foam::IOobject::MUST_READ
+                IOobject::MUST_READ
             )
         );
 
@@ -550,16 +504,25 @@ int main(int argc, char *argv[])
 
                 forAll(databases, proci)
                 {
-                    fileNameList cloudDirs
+                    fileName lagrangianDir
                     (
-                        readDir
+                        fileHandler().filePath
                         (
                             databases[proci].timePath()
                           / regionDir
-                          / cloud::prefix,
-                            fileName::DIRECTORY
+                          / cloud::prefix
                         )
                     );
+
+                    fileNameList cloudDirs;
+                    if (!lagrangianDir.empty())
+                    {
+                        cloudDirs = fileHandler().readDir
+                        (
+                            lagrangianDir,
+                            fileName::DIRECTORY
+                        );
+                    }
 
                     forAll(cloudDirs, i)
                     {
@@ -737,7 +700,7 @@ int main(int argc, char *argv[])
                     IOobjectList objects
                     (
                         procMesh,
-                        databases[0].timeName(),    //procMesh.facesInstance()
+                        databases[0].timeName(),    // procMesh.facesInstance()
                         polyMesh::meshSubDir/"sets"
                     );
 
@@ -995,12 +958,15 @@ int main(int argc, char *argv[])
             {
                 fileName uniformDir0
                 (
-                    databases[0].timePath()/regionDir/"uniform"
+                    fileHandler().filePath
+                    (
+                        databases[0].timePath()/regionDir/"uniform"
+                    )
                 );
 
-                if (isDir(uniformDir0))
+                if (!uniformDir0.empty() && fileHandler().isDir(uniformDir0))
                 {
-                    cp(uniformDir0, runTime.timePath()/regionDir);
+                    fileHandler().cp(uniformDir0, runTime.timePath()/regionDir);
                 }
             }
 
@@ -1010,12 +976,15 @@ int main(int argc, char *argv[])
             {
                 fileName uniformDir0
                 (
-                    databases[0].timePath()/"uniform"
+                    fileHandler().filePath
+                    (
+                        databases[0].timePath()/"uniform"
+                    )
                 );
 
-                if (isDir(uniformDir0))
+                if (!uniformDir0.empty() && fileHandler().isDir(uniformDir0))
                 {
-                    cp(uniformDir0, runTime.timePath());
+                    fileHandler().cp(uniformDir0, runTime.timePath());
                 }
             }
         }

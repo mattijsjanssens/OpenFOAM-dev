@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -68,16 +68,16 @@ bool Foam::UOPstream::write
 
     bool transferFailed = true;
 
-    if (commsType == blocking)
+    if (commsType == commsTypes::blocking)
     {
         transferFailed = MPI_Bsend
         (
             const_cast<char*>(buf),
             bufSize,
             MPI_BYTE,
-            toProcNo,   //procID(toProcNo),
+            toProcNo,   // procID(toProcNo),
             tag,
-            PstreamGlobals::MPICommunicators_[communicator] //MPI_COMM_WORLD
+            PstreamGlobals::MPICommunicators_[communicator]
         );
 
         if (debug)
@@ -88,16 +88,16 @@ bool Foam::UOPstream::write
                 << Foam::endl;
         }
     }
-    else if (commsType == scheduled)
+    else if (commsType == commsTypes::scheduled)
     {
         transferFailed = MPI_Send
         (
             const_cast<char*>(buf),
             bufSize,
             MPI_BYTE,
-            toProcNo,   //procID(toProcNo),
+            toProcNo,   // procID(toProcNo),
             tag,
-            PstreamGlobals::MPICommunicators_[communicator] //MPI_COMM_WORLD
+            PstreamGlobals::MPICommunicators_[communicator]
         );
 
         if (debug)
@@ -108,7 +108,7 @@ bool Foam::UOPstream::write
                 << Foam::endl;
         }
     }
-    else if (commsType == nonBlocking)
+    else if (commsType == commsTypes::nonBlocking)
     {
         MPI_Request request;
 
@@ -117,9 +117,9 @@ bool Foam::UOPstream::write
             const_cast<char*>(buf),
             bufSize,
             MPI_BYTE,
-            toProcNo,   //procID(toProcNo),
+            toProcNo,   // procID(toProcNo),
             tag,
-            PstreamGlobals::MPICommunicators_[communicator],//MPI_COMM_WORLD,
+            PstreamGlobals::MPICommunicators_[communicator],
             &request
         );
 
@@ -145,7 +145,5 @@ bool Foam::UOPstream::write
     return !transferFailed;
 }
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 // ************************************************************************* //

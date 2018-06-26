@@ -3,9 +3,9 @@
 # =========                 |
 # \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
 #  \\    /   O peration     |
-#   \\  /    A nd           | Copyright (C) 2015-2016 OpenFOAM Foundation
+#   \\  /    A nd           | Copyright (C) 2015-2018 OpenFOAM Foundation
 #    \\/     M anipulation  |
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 # License
 #     This file is part of OpenFOAM.
 #
@@ -35,7 +35,7 @@
 #
 #     [-a | -all | all] [file]:
 #     Remove all .dep files from the object directory tree corresponding to the
-#     current source derectory or remove only the .dep files referring to the
+#     current source directory or remove only the .dep files referring to the
 #     optionally specified [file].  With the -a/-all/all option the .dep files
 #     are removed for all platforms rather than just the current platform.
 #
@@ -54,11 +54,10 @@
 Script=${0##*/}
 
 # Source the wmake functions
-. ${0%/*}/scripts/wmakeFunctions
+# shellcheck source=scripts/wmakeFunctions
+. "${0%/*}/scripts/wmakeFunctions"
 
 usage() {
-    exec 1>&2
-    while [ "$#" -ge 1 ]; do echo "$1"; shift; done
     cat<<USAGE
 Usage:
 
@@ -84,9 +83,26 @@ Usage:
         Must be executed in the project top-level directory: $WM_PROJECT_DIR
 
 USAGE
+}
+
+error() {
+    exec 1>&2
+    while [ "$#" -ge 1 ]; do echo "$1"; shift; done
+    usage
     exit 1
 }
 
+removeDepFiles()
+{
+    if [ "$#" -eq 1 ]
+    then
+        find "$1" -name '*.dep' -print0 | xargs -0t rm 2>/dev/null
+    elif [ "$#" -eq 2 ]
+    then
+        find "$1" -name '*.dep' -exec grep -q "$2" '{}' \; \
+             -exec rm '{}' \; -print
+    fi
+}
 
 #------------------------------------------------------------------------------
 # Parse arguments and options
@@ -103,7 +119,7 @@ do
     case "$1" in
     # Print help
     -h | -help)
-        usage
+        usage && exit 0
         ;;
     # Non-stop compilation, ignoring errors
     -a | -all | all)
@@ -119,7 +135,7 @@ do
         shift
         ;;
     -*)
-       usage "unknown option: '$*'"
+       error "unknown option: '$*'"
        ;;
     *)
        break
@@ -140,20 +156,37 @@ files)
 
     findObjectDir .
 
-    # With the -a/-all option replace the current platform with a wildcard
-    if [ "$all" = "all" ]
-    then
-        objectsDir=$(echo $objectsDir | sed s%$WM_OPTIONS%*% )
-    fi
-
+    # First give the verbose information for the current searching method
     if [ "$#" -eq 0 ]
     then
         echo "removing all .dep files ..."
-        find $objectsDir -name '*.dep' -print | xargs -t rm 2>/dev/null
     else
         echo "removing .dep files referring to $1 ..."
-        find $objectsDir -name '*.dep' -exec grep -q "$1" '{}' \; \
-             -exec rm '{}' \; -print
+    fi
+
+    # With the -a/-all option replace the current platform with a wildcard
+    if [ "$all" = "all" ]
+    then
+
+        # Handle the removal on all platforms for consistency
+        mainPath=${objectsDir%%/$WM_OPTIONS*}
+        objSubPath=${objectsDir##*$WM_OPTIONS/}
+
+        for pathEntry in "$mainPath"/*
+        do
+            if [ -e "$pathEntry/$objSubPath" ]
+            then
+                # Note:
+                # If $1 is empty, it should still work for the default method
+                removeDepFiles "$pathEntry/$objSubPath" "$1"
+            fi
+        done
+
+    else
+
+        # Handle only the removal for the current WM_OPTIONS
+        removeDepFiles "$objectsDir" "$1"
+
     fi
 
     ;;
@@ -167,9 +200,9 @@ oldFolders)
 
     for checkDir
     do
-        findObjectDir $checkDir
+        findObjectDir "$checkDir"
 
-        if [ -d $objectsDir ]
+        if [ -d "$objectsDir" ]
         then
             echo "    searching: $objectsDir"
         else
@@ -177,15 +210,15 @@ oldFolders)
             continue
         fi
 
-        find $objectsDir -name '*.dep' -print | while read depFile
+        find "$objectsDir" -name '*.dep' -print | while read -r depFile
         do
-            depToSource $depFile
+            depToSource "$depFile"
 
             # Check C++ or Flex source file exists
             if [ ! -r "$sourceFile" ];
             then
                 echo "    rm $depFile"
-                rm -f $depFile 2>/dev/null
+                rm -f "$depFile" 2>/dev/null
             fi
         done
     done
@@ -205,19 +238,19 @@ updateMode)
 
     for filePathAndName in $fileNameList
     do
-        fileName=$(basename $filePathAndName)
+        fileName=$(basename "$filePathAndName")
         echo "    'src': $fileName"
-        cd src
-        $Script -a $fileName
+        (
+            cd src || exit
+            $Script -a "$fileName"
 
-        echo "    'applications': $fileName"
-        cd ../applications
-        $Script -a $fileName
-
-        cd ..
+            echo "    'applications': $fileName"
+            cd ../applications || exit
+            $Script -a "$fileName"
+        )
 
         # Just in case, remove the symbolic link as the last step
-        unlink $filePathAndName
+        unlink "$filePathAndName"
     done
 
     ;;
@@ -229,7 +262,7 @@ esac
 # Cleanup local variables and functions
 #------------------------------------------------------------------------------
 
-unset Script usage rmdepMode all
+unset Script usage error rmdepMode all
 
 
 #------------------------------------------------------------------------------

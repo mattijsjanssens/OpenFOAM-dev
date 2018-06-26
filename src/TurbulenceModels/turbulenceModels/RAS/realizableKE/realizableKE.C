@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -52,7 +52,7 @@ tmp<volScalarField> realizableKE<BasicTurbulenceModel>::rCmu
         (2*sqrt(2.0))*((S&S)&&S)
        /(
             magS*S2
-          + dimensionedScalar("small", dimensionSet(0, 0, -3, 0, 0), SMALL)
+          + dimensionedScalar("small", dimensionSet(0, 0, -3, 0, 0), small)
         )
     );
 
@@ -151,16 +151,6 @@ realizableKE<BasicTurbulenceModel>::realizableKE
         transport,
         propertiesName
     ),
-
-    Cmu_
-    (
-        dimensioned<scalar>::lookupOrAddToDict
-        (
-            "Cmu",
-            this->coeffDict_,
-            0.09
-        )
-    ),
     A0_
     (
         dimensioned<scalar>::lookupOrAddToDict
@@ -240,7 +230,6 @@ bool realizableKE<BasicTurbulenceModel>::read()
 {
     if (eddyViscosity<RASModel<BasicTurbulenceModel>>::read())
     {
-        Cmu_.readIfPresent(this->coeffDict());
         A0_.readIfPresent(this->coeffDict());
         C2_.readIfPresent(this->coeffDict());
         sigmak_.readIfPresent(this->coeffDict());

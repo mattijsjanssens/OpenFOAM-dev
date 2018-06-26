@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2012-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2012-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -92,9 +92,10 @@ Foam::SloanRenumber::SloanRenumber(const dictionary& renumberDict)
     renumberMethod(renumberDict),
     reverse_
     (
-        renumberDict.found(typeName + "Coeffs")
-      ? Switch(renumberDict.subDict(typeName + "Coeffs").lookup("reverse"))
-      : Switch(false)
+        renumberDict.optionalSubDict
+        (
+            typeName + "Coeffs"
+        ).lookupOrDefault<Switch>("reverse", false)
     )
 {}
 
@@ -164,18 +165,18 @@ Foam::labelList Foam::SloanRenumber::renumber
     }
 
 
-    //Creating two iterators over the vertices
+    // Creating two iterators over the vertices
     graph_traits<Graph>::vertex_iterator ui, ui_end;
 
-    //Creating a property_map with the degrees of the degrees of each vertex
+    // Creating a property_map with the degrees of the degrees of each vertex
     property_map<Graph,vertex_degree_t>::type deg = get(vertex_degree, G);
     for (boost::tie(ui, ui_end) = vertices(G); ui != ui_end; ++ui)
         deg[*ui] = degree(*ui, G);
 
-    //Creating a property_map for the indices of a vertex
+    // Creating a property_map for the indices of a vertex
     property_map<Graph, vertex_index_t>::type index_map = get(vertex_index, G);
 
-    //Creating a vector of vertices
+    // Creating a vector of vertices
     std::vector<Vertex> sloan_order(num_vertices(G));
 
     sloan_ordering
@@ -222,18 +223,18 @@ Foam::labelList Foam::SloanRenumber::renumber
         }
     }
 
-    //Creating two iterators over the vertices
+    // Creating two iterators over the vertices
     graph_traits<Graph>::vertex_iterator ui, ui_end;
 
-    //Creating a property_map with the degrees of the degrees of each vertex
+    // Creating a property_map with the degrees of the degrees of each vertex
     property_map<Graph,vertex_degree_t>::type deg = get(vertex_degree, G);
     for (boost::tie(ui, ui_end) = vertices(G); ui != ui_end; ++ui)
         deg[*ui] = degree(*ui, G);
 
-    //Creating a property_map for the indices of a vertex
+    // Creating a property_map for the indices of a vertex
     property_map<Graph, vertex_index_t>::type index_map = get(vertex_index, G);
 
-    //Creating a vector of vertices
+    // Creating a vector of vertices
     std::vector<Vertex> sloan_order(num_vertices(G));
 
     sloan_ordering

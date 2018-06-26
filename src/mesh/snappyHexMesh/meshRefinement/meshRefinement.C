@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -70,7 +70,6 @@ namespace Foam
     >::names[] =
     {
         "mesh",
-        //"scalarLevels",
         "intersections",
         "featureSeeds",
         "attraction",
@@ -91,10 +90,11 @@ namespace Foam
     const char* Foam::NamedEnum
     <
         Foam::meshRefinement::IOwriteType,
-        4
+        5
     >::names[] =
     {
         "mesh",
+        "noRefinement",
         "scalarLevels",
         "layerSets",
         "layerFields"
@@ -108,7 +108,7 @@ Foam::meshRefinement::IOdebugTypeNames;
 const Foam::NamedEnum<Foam::meshRefinement::IOoutputType, 1>
 Foam::meshRefinement::IOoutputTypeNames;
 
-const Foam::NamedEnum<Foam::meshRefinement::IOwriteType, 4>
+const Foam::NamedEnum<Foam::meshRefinement::IOwriteType, 5>
 Foam::meshRefinement::IOwriteTypeNames;
 
 
@@ -171,7 +171,7 @@ void Foam::meshRefinement::calcNeighbourData
             {
                 // Extrapolate the face centre.
                 vector fn = faceAreas[i];
-                fn /= mag(fn)+VSMALL;
+                fn /= mag(fn)+vSmall;
 
                 label own = faceCells[i];
                 label ownLevel = cellLevel[own];
@@ -207,8 +207,6 @@ void Foam::meshRefinement::calcNeighbourData
 }
 
 
-// Find intersections of edges (given by their two endpoints) with surfaces.
-// Returns first intersection if there are more than one.
 void Foam::meshRefinement::updateIntersections(const labelList& changedFaces)
 {
     const pointField& cellCentres = mesh_.cellCentres();
@@ -271,7 +269,7 @@ void Foam::meshRefinement::updateIntersections(const labelList& changedFaces)
 
     // Extend segments a bit
     {
-        const vectorField smallVec(ROOTSMALL*(end-start));
+        const vectorField smallVec(rootSmall*(end-start));
         start -= smallVec;
         end += smallVec;
     }
@@ -333,7 +331,7 @@ void Foam::meshRefinement::testSyncPointList
         mesh,
         minFld,
         minEqOp<scalar>(),
-        GREAT
+        great
     );
     scalarField maxFld(fld);
     syncTools::syncPointList
@@ -341,13 +339,13 @@ void Foam::meshRefinement::testSyncPointList
         mesh,
         maxFld,
         maxEqOp<scalar>(),
-        -GREAT
+        -great
     );
     forAll(minFld, pointi)
     {
         const scalar& minVal = minFld[pointi];
         const scalar& maxVal = maxFld[pointi];
-        if (mag(minVal-maxVal) > SMALL)
+        if (mag(minVal-maxVal) > small)
         {
             Pout<< msg << " at:" << mesh.points()[pointi] << nl
                 << "    minFld:" << minVal << nl
@@ -380,7 +378,7 @@ void Foam::meshRefinement::testSyncPointList
         mesh,
         minFld,
         minMagSqrEqOp<point>(),
-        point(GREAT, GREAT, GREAT)
+        point(great, great, great)
     );
     pointField maxFld(fld);
     syncTools::syncPointList
@@ -394,7 +392,7 @@ void Foam::meshRefinement::testSyncPointList
     {
         const point& minVal = minFld[pointi];
         const point& maxVal = maxFld[pointi];
-        if (mag(minVal-maxVal) > SMALL)
+        if (mag(minVal-maxVal) > small)
         {
             Pout<< msg << " at:" << mesh.points()[pointi] << nl
                 << "    minFld:" << minVal << nl
@@ -476,7 +474,7 @@ void Foam::meshRefinement::checkData()
 
         // Extend segments a bit
         {
-            const vectorField smallVec(ROOTSMALL*(end-start));
+            const vectorField smallVec(rootSmall*(end-start));
             start -= smallVec;
             end += smallVec;
         }
@@ -609,8 +607,6 @@ void Foam::meshRefinement::setInstance(const fileName& inst)
 }
 
 
-// Remove cells. Put exposedFaces (output of getExposedFaces(cellsToRemove))
-// into exposedPatchIDs.
 Foam::autoPtr<Foam::mapPolyMesh> Foam::meshRefinement::doRemoveCells
 (
     const labelList& cellsToRemove,
@@ -661,7 +657,7 @@ Foam::autoPtr<Foam::mapPolyMesh> Foam::meshRefinement::doRemoveCells
         exposedFaces
     );
 
-    //Pout<< "removeCells : updating intersections for "
+    // Pout<< "removeCells : updating intersections for "
     //    << newExposedFaces.size() << " newly exposed faces." << endl;
 
     updateMesh(map, newExposedFaces);
@@ -670,7 +666,6 @@ Foam::autoPtr<Foam::mapPolyMesh> Foam::meshRefinement::doRemoveCells
 }
 
 
-// Split faces
 Foam::autoPtr<Foam::mapPolyMesh> Foam::meshRefinement::splitFaces
 (
     const labelList& splitFaces,
@@ -683,7 +678,6 @@ Foam::autoPtr<Foam::mapPolyMesh> Foam::meshRefinement::splitFaces
     {
         label facei = splitFaces[i];
         const face& f = mesh_.faces()[facei];
-
 
         // Split as start and end index in face
         const labelPair& split = splits[i];
@@ -737,9 +731,12 @@ Foam::autoPtr<Foam::mapPolyMesh> Foam::meshRefinement::splitFaces
         }
 
 
-Pout<< "face:" << facei << " verts:" << f
-    << " split into f0:" << f0
-    << " f1:" << f1 << endl;
+        if (debug)
+        {
+            Pout<< "face:" << facei << " verts:" << f
+                << " split into f0:" << f0
+                << " f1:" << f1 << endl;
+        }
 
         // Change/add faces
         meshMod.modifyFace
@@ -753,6 +750,7 @@ Pout<< "face:" << facei << " verts:" << f
             zoneI,                      // zone for face
             zoneFlip                    // face flip in zone
         );
+
         meshMod.addFace
         (
             f1,                         // modified face
@@ -1101,7 +1099,7 @@ Pout<< "face:" << facei << " verts:" << f
 //    {
 //        if (proci != Pstream::myProcNo())
 //        {
-//            OPstream str(Pstream::blocking, proci);
+//            OPstream str(Pstream::commsTypes::blocking, proci);
 //            str << regionConnectivity[proci];
 //        }
 //    }
@@ -1110,7 +1108,7 @@ Pout<< "face:" << facei << " verts:" << f
 //    {
 //        if (proci != Pstream::myProcNo())
 //        {
-//            IPstream str(Pstream::blocking, proci);
+//            IPstream str(Pstream::commsTypes::blocking, proci);
 //            str >> regionConnectivity[proci];
 //        }
 //    }
@@ -1160,7 +1158,6 @@ Pout<< "face:" << facei << " verts:" << f
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// Construct from components
 Foam::meshRefinement::meshRefinement
 (
     fvMesh& mesh,
@@ -1381,11 +1378,6 @@ Foam::autoPtr<Foam::mapDistributePolyMesh> Foam::meshRefinement::balance
 
     if (Pstream::parRun())
     {
-        //if (debug_)
-        //{
-        //    const_cast<Time&>(mesh_.time())++;
-        //}
-
         // Wanted distribution
         labelList distribution;
 
@@ -1553,7 +1545,7 @@ Foam::autoPtr<Foam::mapDistributePolyMesh> Foam::meshRefinement::balance
                     << endl;
             }
 
-            //if (nUnblocked > 0 || nCouples > 0)
+            // if (nUnblocked > 0 || nCouples > 0)
             //{
             //    Info<< "Applying special decomposition to keep baffles"
             //        << " and zoned faces together." << endl;
@@ -1578,7 +1570,7 @@ Foam::autoPtr<Foam::mapDistributePolyMesh> Foam::meshRefinement::balance
             //    }
             //    Info<< endl;
             //}
-            //else
+            // else
             //{
             //    // Normal decomposition
             //    distribution = decomposer.decompose
@@ -1589,7 +1581,7 @@ Foam::autoPtr<Foam::mapDistributePolyMesh> Foam::meshRefinement::balance
             //    );
             //}
         }
-        //else
+        // else
         //{
         //    // Normal decomposition
         //    distribution = decomposer.decompose
@@ -1648,7 +1640,6 @@ Foam::autoPtr<Foam::mapDistributePolyMesh> Foam::meshRefinement::balance
 }
 
 
-// Helper function to get intersected faces
 Foam::labelList Foam::meshRefinement::intersectedFaces() const
 {
     label nBoundaryFaces = 0;
@@ -1675,7 +1666,6 @@ Foam::labelList Foam::meshRefinement::intersectedFaces() const
 }
 
 
-// Helper function to get points used by faces
 Foam::labelList Foam::meshRefinement::intersectedPoints() const
 {
     const faceList& faces = mesh_.faces();
@@ -1701,8 +1691,8 @@ Foam::labelList Foam::meshRefinement::intersectedPoints() const
     }
 
     //// Insert all meshed patches.
-    //labelList adaptPatchIDs(meshedPatches());
-    //forAll(adaptPatchIDs, i)
+    // labelList adaptPatchIDs(meshedPatches());
+    // forAll(adaptPatchIDs, i)
     //{
     //    label patchi = adaptPatchIDs[i];
     //
@@ -1788,7 +1778,6 @@ Foam::autoPtr<Foam::indirectPrimitivePatch> Foam::meshRefinement::makePatch
 }
 
 
-// Construct pointVectorField with correct boundary conditions
 Foam::tmp<Foam::pointVectorField> Foam::meshRefinement::makeDisplacementField
 (
     const pointMesh& pMesh,
@@ -1955,7 +1944,7 @@ void Foam::meshRefinement::calculateEdgeWeights
         const edge& e = edges[edgeI];
         scalar eMag = max
         (
-            SMALL,
+            small,
             mag
             (
                 pts[meshPoints[e[1]]]
@@ -2088,7 +2077,6 @@ Foam::label Foam::meshRefinement::appendPatch
 }
 
 
-// Adds patch if not yet there. Returns patchID.
 Foam::label Foam::meshRefinement::addPatch
 (
     fvMesh& mesh,
@@ -2365,7 +2353,7 @@ Foam::autoPtr<Foam::mapPolyMesh> Foam::meshRefinement::splitMeshRegions
     label nExposedFaces = returnReduce(exposedFaces.size(), sumOp<label>());
     if (nExposedFaces)
     {
-        //FatalErrorInFunction
+        // FatalErrorInFunction
         //    << "Removing non-reachable cells should only expose"
         //    << " boundary faces" << nl
         //    << "ExposedFaces:" << exposedFaces << abort(FatalError);
@@ -2414,13 +2402,10 @@ void Foam::meshRefinement::distribute(const mapDistributePolyMesh& map)
 
     // Redistribute surface and any fields on it.
     {
-        Random rndGen(653213);
-
         // Get local mesh bounding box. Single box for now.
         List<treeBoundBox> meshBb(1);
         treeBoundBox& bb = meshBb[0];
-        bb = treeBoundBox(mesh_.points());
-        bb = bb.extend(rndGen, 1e-4);
+        bb = treeBoundBox(mesh_.points()).extend(1e-4);
 
         // Distribute all geometry (so refinementSurfaces and shellSurfaces)
         searchableSurfaces& geometry =
@@ -2451,7 +2436,6 @@ void Foam::meshRefinement::distribute(const mapDistributePolyMesh& map)
 }
 
 
-// Update local data for a mesh change
 void Foam::meshRefinement::updateMesh
 (
     const mapPolyMesh& map,
@@ -2578,11 +2562,7 @@ void Foam::meshRefinement::updateMesh
 
 bool Foam::meshRefinement::write() const
 {
-    bool writeOk =
-        mesh_.write()
-     && meshCutter_.write()
-     && surfaceIndex_.write();
-
+    bool writeOk = mesh_.write();
 
     // Make sure that any distributed surfaces (so ones which probably have
     // been changed) get written as well.
@@ -2732,7 +2712,7 @@ const
     }
 
 
-    //if (debug)
+    // if (debug)
     {
         const labelList& cellLevel = meshCutter_.cellLevel();
 
@@ -2873,7 +2853,7 @@ void Foam::meshRefinement::dumpIntersections(const fileName& prefix) const
 
         // Extend segments a bit
         {
-            const vectorField smallVec(ROOTSMALL*(end-start));
+            const vectorField smallVec(rootSmall*(end-start));
             start -= smallVec;
             end += smallVec;
         }
@@ -2921,10 +2901,18 @@ void Foam::meshRefinement::write
     {
         write();
     }
+
+    if (writeFlags && !(writeFlags & NOWRITEREFINEMENT))
+    {
+        meshCutter_.write();
+        surfaceIndex_.write();
+    }
+
     if (writeFlags & WRITELEVELS)
     {
         dumpRefinementLevel();
     }
+
     if (debugFlags & OBJINTERSECTIONS && prefix.size())
     {
         dumpIntersections(prefix);

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -139,7 +139,11 @@ void Foam::isoSurface::syncUnseparatedPoints
                     patchInfo[nbrPointi] = pointValues[meshPts[pointi]];
                 }
 
-                OPstream toNbr(Pstream::blocking, pp.neighbProcNo());
+                OPstream toNbr
+                (
+                    Pstream::commsTypes::blocking,
+                    pp.neighbProcNo()
+                );
                 toNbr << patchInfo;
             }
         }
@@ -162,7 +166,11 @@ void Foam::isoSurface::syncUnseparatedPoints
                 {
                     // We do not know the number of points on the other side
                     // so cannot use Pstream::read.
-                    IPstream fromNbr(Pstream::blocking, pp.neighbProcNo());
+                    IPstream fromNbr
+                    (
+                        Pstream::commsTypes::blocking,
+                        pp.neighbProcNo()
+                    );
                     fromNbr >> nbrPatchInfo;
                 }
 
@@ -259,7 +267,7 @@ Foam::scalar Foam::isoSurface::isoFraction
 {
     scalar d = s1-s0;
 
-    if (mag(d) > VSMALL)
+    if (mag(d) > vSmall)
     {
         return (iso_-s0)/d;
     }
@@ -467,7 +475,7 @@ void Foam::isoSurface::calcCutTypes
 }
 
 
-// Caculate centre of surface.
+// Calculate centre of surface.
 Foam::point Foam::isoSurface::calcCentre(const triSurface& s)
 {
     vector sum = Zero;
@@ -589,7 +597,7 @@ void Foam::isoSurface::calcSnappedCc
                     snappedCc[celli] = snappedPoints.size();
                     snappedPoints.append(otherPointSum/nOther);
 
-                    //Pout<< "    point:" << pointi
+                    // Pout<< "    point:" << pointi
                     //    << " replacing coord:" << mesh_.points()[pointi]
                     //    << " by average:" << collapsedPoint[pointi] << endl;
                 }
@@ -602,7 +610,7 @@ void Foam::isoSurface::calcSnappedCc
                 snappedCc[celli] = snappedPoints.size();
                 snappedPoints.append(sum(points)/points.size());
 
-                //Pout<< "    point:" << pointi
+                // Pout<< "    point:" << pointi
                 //    << " replacing coord:" << mesh_.points()[pointi]
                 //    << " by average:" << collapsedPoint[pointi] << endl;
             }
@@ -635,7 +643,7 @@ void Foam::isoSurface::calcSnappedCc
                 {
                     snappedCc[celli] = snappedPoints.size();
                     snappedPoints.append(calcCentre(surf));
-                    //Pout<< "    point:" << pointi << " nZones:" << nZones
+                    // Pout<< "    point:" << pointi << " nZones:" << nZones
                     //    << " replacing coord:" << mesh_.points()[pointi]
                     //    << " by average:" << collapsedPoint[pointi] << endl;
                 }
@@ -951,7 +959,7 @@ Foam::triSurface Foam::isoSurface::stitchTriPoints
 
                 if (nbrTriI > triI && (tris[nbrTriI] == tri))
                 {
-                    //Pout<< "Duplicate : " << triI << " verts:" << tri
+                    // Pout<< "Duplicate : " << triI << " verts:" << tri
                     //    << " to " << nbrTriI << " verts:" << tris[nbrTriI]
                     //    << endl;
                     dupTriI = nbrTriI;

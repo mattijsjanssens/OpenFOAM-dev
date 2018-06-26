@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -24,9 +24,6 @@ License
 Class
     Foam::functionObjects::fieldCoordinateSystemTransform
 
-Group
-    grpFieldFunctionObjects
-
 Description
     Transforms a user-specified selection of fields from global Cartesian
     co-ordinates to a local co-ordinate system.  The fields are run-time
@@ -45,11 +42,16 @@ Description
             UMean
             UPrime2Mean
         );
+
         coordinateSystem
         {
-            origin  (0.001  0       0);
-            e1      (1      0.15    0);
-            e3      (0      0      -1);
+            origin  (0.001 0 0);
+            coordinateRotation
+            {
+                type        axesRotation;
+                e1      (1      0.15    0);
+                e3      (0      0      -1);
+            }
         }
     }
     \endverbatim

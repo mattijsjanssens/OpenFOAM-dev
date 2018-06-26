@@ -3,9 +3,9 @@
 # =========                 |
 # \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
 #  \\    /   O peration     |
-#   \\  /    A nd           | Copyright (C) 2016 OpenFOAM Foundation
+#   \\  /    A nd           | Copyright (C) 2016-2018 OpenFOAM Foundation
 #    \\/     M anipulation  |
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 # License
 #     This file is part of OpenFOAM.
 #
@@ -35,8 +35,6 @@
 Script=${0##*/}
 
 usage() {
-    exec 1>&2
-    while [ "$#" -ge 1 ]; do echo "$1"; shift; done
     cat<<USAGE
 
 Usage: $Script [OPTION] <command>
@@ -44,7 +42,7 @@ Usage: $Script [OPTION] <command>
 options:
   -clean            Clean-up before compilation (removes old makefiles)
   -kill             Clean-up after termination (removes makefiles)
-  -h | -help        Print the usage
+  -help  | -h       Print the usage
 
 Collecting scheduler for fast parallel compilation of large numbers of object
 files.  Can be used in compiling OpenFOAM by setting the WM_SCHEDULER variable.
@@ -65,24 +63,30 @@ Typical usage for compiling OpenFOAM:
     wmake -queue or wmake -q
 
 USAGE
+}
+
+error() {
+    exec 1>&2
+    while [ "$#" -ge 1 ]; do echo "$1"; shift; done
+    usage
     exit 1
 }
 
-# Set true to clean-up file if interupted
+# Set true to clean-up file if interrupted
 cleanup=
 
 while [ "$#" -gt 0 ]
 do
     case "$1" in
     -h | -help)
-        usage
+        usage && exit 0
         ;;
     -kill | -clean)
         cleanup="true"
         shift
         ;;
     -*)
-        usage "unknown option: '$*'"
+        error "unknown option: '$*'"
         break
         ;;
     *)
@@ -166,7 +170,7 @@ fi
 # Cleanup local variables and functions
 #------------------------------------------------------------------------------
 
-unset Script usage
+unset Script usage error
 
 
 #------------------------------------------------------------------------------

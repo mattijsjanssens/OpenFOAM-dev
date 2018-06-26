@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -33,6 +33,8 @@ Description
 #include "Ostream.H"
 #include "demandDrivenData.H"
 #include "simpleObjectRegistry.H"
+#include "IOobject.H"
+#include "HashSet.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -93,21 +95,31 @@ Foam::dictionary& Foam::debug::controlDict()
 {
     if (!controlDictPtr_)
     {
-        fileNameList controlDictFiles = findEtcFiles("controlDict", true);
-        controlDictPtr_ = new dictionary();
-        forAllReverse(controlDictFiles, cdfi)
+        string controlDictString(getEnv("FOAM_CONTROLDICT"));
+        if (!controlDictString.empty())
         {
-            IFstream ifs(controlDictFiles[cdfi]);
-
-            if (!ifs.good())
+            // Read from environment
+            IStringStream is(controlDictString);
+            controlDictPtr_ = new dictionary(is);
+        }
+        else
+        {
+            fileNameList controlDictFiles = findEtcFiles("controlDict", true);
+            controlDictPtr_ = new dictionary();
+            forAllReverse(controlDictFiles, cdfi)
             {
-                SafeFatalIOErrorInFunction
-                (
-                    ifs,
-                    "Cannot open controlDict"
-                );
+                IFstream ifs(controlDictFiles[cdfi]);
+
+                if (!ifs.good())
+                {
+                    SafeFatalIOErrorInFunction
+                    (
+                        ifs,
+                        "Cannot open controlDict"
+                    );
+                }
+                controlDictPtr_->merge(dictionary(ifs));
             }
-            controlDictPtr_->merge(dictionary(ifs));
         }
     }
 
@@ -375,6 +387,93 @@ Foam::simpleObjectRegistry& Foam::debug::dimensionedConstantObjects()
     }
 
     return *dimensionedConstantObjectsPtr_;
+}
+
+
+namespace Foam
+{
+
+void listSwitches
+(
+    const wordList& debugSwitches,
+    const wordList& infoSwitches,
+    const wordList& optSwitches,
+    const bool unset
+)
+{
+    if (unset)
+    {
+        fileNameList controlDictFiles = findEtcFiles("controlDict", true);
+        dictionary controlDict;
+        forAllReverse(controlDictFiles, cdfi)
+        {
+            controlDict.merge(dictionary(IFstream(controlDictFiles[cdfi])()));
+        }
+
+        wordHashSet controlDictDebug
+        (
+            controlDict.subDict("DebugSwitches").sortedToc()
+        );
+
+        wordHashSet controlDictInfo
+        (
+            controlDict.subDict("InfoSwitches").sortedToc()
+        );
+
+        wordHashSet controlDictOpt
+        (
+            controlDict.subDict("OptimisationSwitches").sortedToc()
+        );
+
+
+        IOobject::writeDivider(Info);
+
+        wordHashSet hashset;
+        hashset = debugSwitches;
+        hashset -= controlDictDebug;
+        Info<< "Unset DebugSwitches" << hashset.sortedToc() << endl;
+
+        hashset = infoSwitches;
+        hashset -= controlDictInfo;
+        Info<< "Unset InfoSwitches" << hashset.sortedToc() << endl;
+
+        hashset = optSwitches;
+        hashset -= controlDictOpt;
+        Info<< "Unset OptimisationSwitches" << hashset.sortedToc() << endl;
+    }
+    else
+    {
+        IOobject::writeDivider(Info);
+        Info<< "DebugSwitches" << debugSwitches << endl;
+        Info<< "InfoSwitches" << infoSwitches << endl;
+        Info<< "OptimisationSwitches" << optSwitches << endl;
+    }
+}
+
+}
+
+
+void Foam::debug::listSwitches(const bool unset)
+{
+    listSwitches
+    (
+        debug::debugSwitches().sortedToc(),
+        debug::infoSwitches().sortedToc(),
+        debug::optimisationSwitches().sortedToc(),
+        unset
+    );
+}
+
+
+void Foam::debug::listRegisteredSwitches(const bool unset)
+{
+    listSwitches
+    (
+        debug::debugObjects().sortedToc(),
+        debug::infoObjects().sortedToc(),
+        debug::optimisationObjects().sortedToc(),
+        unset
+    );
 }
 
 

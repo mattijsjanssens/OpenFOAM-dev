@@ -15,52 +15,34 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-dimensions      [0 2 -3 0 0 0 0];
+dimensions      [ 0 2 -3 0 0 0 0 ];
 
 internalField   uniform 0.01;
 
 boundaryField
 {
+    #includeEtc "caseDicts/setConstraintTypes"
+
     minX
     {
         type            fixedValue;
-        value           uniform 0.01;
+        value           $internalField;
     }
     maxX
     {
         type            inletOutlet;
-        value           uniform 0.01;
-        inletValue      uniform 0.01;
+        value           $internalField;
+        inletValue      $internalField;
     }
-    minY
+    "(min|max)(Y|Z)"
     {
         type            epsilonWallFunction;
-        value           uniform 0.01;
+        value           $internalField;
     }
-    minZ
+    "bottomWater_to_.*"
     {
         type            epsilonWallFunction;
-        value           uniform 0.01;
-    }
-    maxZ
-    {
-        type            epsilonWallFunction;
-        value           uniform 0.01;
-    }
-    bottomWater_to_rightSolid
-    {
-        type            epsilonWallFunction;
-        value           uniform 0.01;
-    }
-    bottomWater_to_leftSolid
-    {
-        type            epsilonWallFunction;
-        value           uniform 0.01;
-    }
-    bottomWater_to_heater
-    {
-        type            epsilonWallFunction;
-        value           uniform 0.01;
+        value           $internalField;
     }
 }
 

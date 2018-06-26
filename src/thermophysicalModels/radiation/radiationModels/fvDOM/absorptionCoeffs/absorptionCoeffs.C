@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -26,27 +26,6 @@ License
 #include "absorptionCoeffs.H"
 #include "IOstreams.H"
 
-// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
-
-Foam::radiation::absorptionCoeffs::absorptionCoeffs(Istream& is)
-:
-   Tcommon_(readScalar(is)),
-   Tlow_(readScalar(is)),
-   Thigh_(readScalar(is)),
-   invTemp_(readBool(is))
-{
-    for (label coefLabel=0; absorptionCoeffs::nCoeffs_; coefLabel++)
-    {
-        is >> highACoeffs_[coefLabel];
-    }
-
-    for (label coefLabel=0; absorptionCoeffs::nCoeffs_; coefLabel++)
-    {
-        is >> lowACoeffs_[coefLabel];
-    }
-}
-
-
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * //
 
 Foam::radiation::absorptionCoeffs::~absorptionCoeffs()
@@ -60,7 +39,7 @@ void Foam::radiation::absorptionCoeffs::checkT(const scalar T) const
     if (T < Tlow_ || T > Thigh_)
     {
         WarningInFunction
-            << "usinf absCoeff out of temperature range:" << nl
+            << "using absorptionCoeffs out of temperature range:" << nl
             << "    " << Tlow_ << " -> " << Thigh_ << ";  T = " << T
             << nl << endl;
     }
@@ -86,19 +65,12 @@ Foam::radiation::absorptionCoeffs::coeffs
 }
 
 
-void Foam::radiation::absorptionCoeffs::initialise(Istream&)
-{
-    absorptionCoeffs(Istream);
-}
-
-
 void Foam::radiation::absorptionCoeffs::initialise(const dictionary& dict)
 {
     dict.lookup("Tcommon") >> Tcommon_;
     dict.lookup("Tlow") >> Tlow_;
     dict.lookup("Thigh") >> Thigh_;
     dict.lookup("invTemp") >> invTemp_;
-
     dict.lookup("loTcoeffs") >> lowACoeffs_;
     dict.lookup("hiTcoeffs") >> highACoeffs_;
 }

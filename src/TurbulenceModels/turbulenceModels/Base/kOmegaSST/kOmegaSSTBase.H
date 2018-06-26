@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,9 +23,6 @@ License
 
 Class
     Foam::kOmegaSST
-
-Group
-    grpTurbulence
 
 Description
     Implementation of the k-omega-SST turbulence model for
@@ -215,7 +212,11 @@ protected:
             return blend(F1, gamma1_, gamma2_);
         }
 
-        void correctNut(const volScalarField& S2, const volScalarField& F2);
+        virtual void correctNut
+        (
+            const volScalarField& S2,
+            const volScalarField& F2
+        );
 
         virtual void correctNut();
 

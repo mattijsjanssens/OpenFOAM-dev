@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -59,7 +59,7 @@ Foam::ManualInjection<CloudType>::ManualInjection
     U0_(this->coeffDict().lookup("U0")),
     sizeDistribution_
     (
-        distributionModels::distributionModel::New
+        distributionModel::New
         (
             this->coeffDict().subDict("sizeDistribution"),
             owner.rndGen()
@@ -156,7 +156,7 @@ Foam::scalar Foam::ManualInjection<CloudType>::timeEnd() const
 {
     // Injection is instantaneous - but allow for a finite interval to
     // avoid numerical issues when interval is zero
-    return ROOTVSMALL;
+    return rootVSmall;
 }
 
 

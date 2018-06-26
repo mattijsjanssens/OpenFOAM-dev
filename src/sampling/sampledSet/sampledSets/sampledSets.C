@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -129,7 +129,7 @@ void Foam::sampledSets::combineSampledSets
                 samplePts.name(),
                 samplePts.axis(),
                 List<point>(UIndirectList<point>(allPts, indexSets[setI])),
-                allCurveDist
+                scalarList(UIndirectList<scalar>(allCurveDist, indexSets[setI]))
             )
         );
     }
@@ -175,6 +175,8 @@ Foam::sampledSets::sampledSets
     {
         outputPath_ = outputPath_/mesh_.name();
     }
+    // Remove ".."
+    outputPath_.clean();
 
     read(dict);
 }
@@ -209,6 +211,8 @@ Foam::sampledSets::sampledSets
     {
         outputPath_ = outputPath_/mesh_.name();
     }
+    // Remove ".."
+    outputPath_.clean();
 
     read(dict);
 }

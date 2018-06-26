@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -24,9 +24,6 @@ License
 Class
     Foam::partialSlipFvPatchField
 
-Group
-    grpWallBoundaryConditions grpGenericBoundaryConditions
-
 Description
     This boundary condition provides a partial slip condition.  The amount of
     slip is controlled by a user-supplied field.
@@ -34,7 +31,7 @@ Description
 Usage
     \table
         Property      | Description             | Required    | Default value
-        valueFraction | fraction od value used for boundary [0-1] | yes |
+        valueFraction | fraction of value used for boundary [0-1] | yes |
     \endtable
 
     Example of the boundary condition specification:
@@ -195,7 +192,8 @@ public:
             //- Evaluate the patch field
             virtual void evaluate
             (
-                const Pstream::commsTypes commsType=Pstream::blocking
+                const Pstream::commsTypes commsType =
+                    Pstream::commsTypes::blocking
             );
 
             //- Return face-gradient transform diagonal

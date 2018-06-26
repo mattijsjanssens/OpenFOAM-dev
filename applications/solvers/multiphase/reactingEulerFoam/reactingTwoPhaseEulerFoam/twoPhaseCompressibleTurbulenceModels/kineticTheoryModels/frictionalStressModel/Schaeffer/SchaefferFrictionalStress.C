@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -55,7 +55,7 @@ Foam::kineticTheoryModels::frictionalStressModels::Schaeffer::Schaeffer
 )
 :
     frictionalStressModel(dict),
-    coeffDict_(dict.subDict(typeName + "Coeffs")),
+    coeffDict_(dict.optionalSubDict(typeName + "Coeffs")),
     phi_("phi", dimless, coeffDict_)
 {
     phi_ *= constant::mathematical::pi/180.0;
@@ -144,7 +144,7 @@ Foam::kineticTheoryModels::frictionalStressModels::Schaeffer::nu
                 0.5*pf[celli]*sin(phi_.value())
                /(
                     sqrt((1.0/3.0)*sqr(tr(D[celli])) - invariantII(D[celli]))
-                  + SMALL
+                  + small
                 );
         }
     }
@@ -163,7 +163,7 @@ Foam::kineticTheoryModels::frictionalStressModels::Schaeffer::nu
                     pf.boundaryField()[patchi]*sin(phi_.value())
                    /(
                         mag(U.boundaryField()[patchi].snGrad())
-                      + SMALL
+                      + small
                     )
                 );
         }
@@ -178,7 +178,7 @@ Foam::kineticTheoryModels::frictionalStressModels::Schaeffer::nu
 
 bool Foam::kineticTheoryModels::frictionalStressModels::Schaeffer::read()
 {
-    coeffDict_ <<= dict_.subDict(typeName + "Coeffs");
+    coeffDict_ <<= dict_.optionalSubDict(typeName + "Coeffs");
 
     phi_.read(coeffDict_);
     phi_ *= constant::mathematical::pi/180.0;

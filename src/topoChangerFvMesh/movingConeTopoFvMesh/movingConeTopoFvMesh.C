@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -30,6 +30,9 @@ License
 #include "addToRunTimeSelectionTable.H"
 #include "meshTools.H"
 #include "OFstream.H"
+#include "mathematicalConstants.H"
+
+using namespace Foam::constant::mathematical;
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -63,11 +66,11 @@ Foam::tmp<Foam::scalarField> Foam::movingConeTopoFvMesh::vertexMarkup
 
     forAll(p, pI)
     {
-        if (p[pI].x() < curLeft - SMALL)
+        if (p[pI].x() < curLeft - small)
         {
             vertexMarkup[pI] = -1;
         }
-        else if (p[pI].x() > curRight + SMALL)
+        else if (p[pI].x() > curRight + small)
         {
             vertexMarkup[pI] = 1;
         }
@@ -244,7 +247,6 @@ void Foam::movingConeTopoFvMesh::addZonesAndModifiers()
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// Construct from components
 Foam::movingConeTopoFvMesh::movingConeTopoFvMesh(const IOobject& io)
 :
     topoChangerFvMesh(io),
@@ -261,14 +263,13 @@ Foam::movingConeTopoFvMesh::movingConeTopoFvMesh(const IOobject& io)
                 IOobject::NO_WRITE,
                 false
             )
-        ).subDict(typeName + "Coeffs")
+        ).optionalSubDict(typeName + "Coeffs")
     ),
     motionVelAmplitude_(motionDict_.lookup("motionVelAmplitude")),
     motionVelPeriod_(readScalar(motionDict_.lookup("motionVelPeriod"))),
     curMotionVel_
     (
-        motionVelAmplitude_*
-        Foam::sin(time().value()*M_PI/motionVelPeriod_)
+        motionVelAmplitude_*sin(time().value()*pi/motionVelPeriod_)
     ),
     leftEdge_(readScalar(motionDict_.lookup("leftEdge"))),
     curLeft_(readScalar(motionDict_.lookup("leftObstacleEdge"))),
@@ -286,7 +287,7 @@ Foam::movingConeTopoFvMesh::movingConeTopoFvMesh(const IOobject& io)
         [
             faceZones().findZoneID("leftExtrusionFaces")
         ]().localPoints()
-    ).x() - SMALL;
+    ).x() - small;
 
     curRight_ = average
     (
@@ -294,7 +295,7 @@ Foam::movingConeTopoFvMesh::movingConeTopoFvMesh(const IOobject& io)
         [
             faceZones().findZoneID("rightExtrusionFaces")
         ]().localPoints()
-    ).x() + SMALL;
+    ).x() + small;
 
     motionMask_ = vertexMarkup
     (
@@ -323,8 +324,7 @@ bool Foam::movingConeTopoFvMesh::update()
     pointField newPoints;
 
     vector curMotionVel_ =
-        motionVelAmplitude_*
-        Foam::sin(time().value()*M_PI/motionVelPeriod_);
+        motionVelAmplitude_*sin(time().value()*pi/motionVelPeriod_);
 
     Pout<< "time:" << time().value() << " curMotionVel_:" << curMotionVel_
         << " curLeft:" << curLeft_ << " curRight:" << curRight_
@@ -350,7 +350,7 @@ bool Foam::movingConeTopoFvMesh::update()
             newPoints =
                 topoChangeMap().preMotionPoints()
               + (
-                    pos(0.5 - mag(motionMask_)) // cells above the body
+                    pos0(0.5 - mag(motionMask_)) // cells above the body
                 )*curMotionVel_*time().deltaT().value();
         }
         else
@@ -369,7 +369,7 @@ bool Foam::movingConeTopoFvMesh::update()
             newPoints =
                 points()
               + (
-                    pos(0.5 - mag(motionMask_)) // cells above the body
+                    pos0(0.5 - mag(motionMask_)) // cells above the body
                 )*curMotionVel_*time().deltaT().value();
         }
     }
@@ -380,13 +380,14 @@ bool Foam::movingConeTopoFvMesh::update()
         newPoints =
             points()
           + (
-                pos(0.5 - mag(motionMask_)) // cells above the body
+                pos0(0.5 - mag(motionMask_)) // cells above the body
            )*curMotionVel_*time().deltaT().value();
     }
 
     // The mesh now contains the cells with zero volume
     Info << "Executing mesh motion" << endl;
     movePoints(newPoints);
+
     //  The mesh now has got non-zero volume cells
 
     curLeft_ = average
@@ -395,7 +396,7 @@ bool Foam::movingConeTopoFvMesh::update()
         [
             faceZones().findZoneID("leftExtrusionFaces")
         ]().localPoints()
-    ).x() - SMALL;
+    ).x() - small;
 
     curRight_ = average
     (
@@ -403,8 +404,7 @@ bool Foam::movingConeTopoFvMesh::update()
         [
             faceZones().findZoneID("rightExtrusionFaces")
         ]().localPoints()
-    ).x() + SMALL;
-
+    ).x() + small;
 
     return true;
 }

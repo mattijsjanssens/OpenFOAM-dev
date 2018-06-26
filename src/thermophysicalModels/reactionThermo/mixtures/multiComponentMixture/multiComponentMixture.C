@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -57,7 +57,7 @@ void Foam::multiComponentMixture<ThermoType>::correctMassFractions()
         Yt += Y_[n];
     }
 
-    if (mag(max(Yt).value()) < ROOTVSMALL)
+    if (mag(max(Yt).value()) < rootVSmall)
     {
         FatalErrorInFunction
             << "Sum of mass fractions is zero for species " << this->species()
@@ -132,11 +132,11 @@ const ThermoType& Foam::multiComponentMixture<ThermoType>::cellMixture
     const label celli
 ) const
 {
-    mixture_ = Y_[0][celli]/speciesData_[0].W()*speciesData_[0];
+    mixture_ = Y_[0][celli]*speciesData_[0];
 
     for (label n=1; n<Y_.size(); n++)
     {
-        mixture_ += Y_[n][celli]/speciesData_[n].W()*speciesData_[n];
+        mixture_ += Y_[n][celli]*speciesData_[n];
     }
 
     return mixture_;
@@ -150,15 +150,11 @@ const ThermoType& Foam::multiComponentMixture<ThermoType>::patchFaceMixture
     const label facei
 ) const
 {
-    mixture_ =
-        Y_[0].boundaryField()[patchi][facei]
-       /speciesData_[0].W()*speciesData_[0];
+    mixture_ = Y_[0].boundaryField()[patchi][facei]*speciesData_[0];
 
     for (label n=1; n<Y_.size(); n++)
     {
-        mixture_ +=
-            Y_[n].boundaryField()[patchi][facei]
-           /speciesData_[n].W()*speciesData_[n];
+        mixture_ += Y_[n].boundaryField()[patchi][facei]*speciesData_[n];
     }
 
     return mixture_;

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -26,6 +26,7 @@ License
 #include "chemkinReader.H"
 #include <fstream>
 #include "atomicWeights.H"
+#include "ReactionProxy.H"
 #include "IrreversibleReaction.H"
 #include "ReversibleReaction.H"
 #include "NonEquilibriumReversibleReaction.H"
@@ -182,7 +183,7 @@ void Foam::chemkinReader::addReactionType
                 new IrreversibleReaction
                 <Reaction, gasHThermoPhysics, ReactionRateType>
                 (
-                    Reaction<gasHThermoPhysics>
+                    ReactionProxy<gasHThermoPhysics>
                     (
                         speciesTable_,
                         lhs.shrink(),
@@ -202,7 +203,7 @@ void Foam::chemkinReader::addReactionType
                 new ReversibleReaction
                 <Reaction, gasHThermoPhysics, ReactionRateType>
                 (
-                    Reaction<gasHThermoPhysics>
+                    ReactionProxy<gasHThermoPhysics>
                     (
                         speciesTable_,
                         lhs.shrink(),
@@ -304,7 +305,7 @@ void Foam::chemkinReader::addPressureDependentReaction
             if (TroeCoeffs.size() == 3)
             {
                 TroeCoeffs.setSize(4);
-                TroeCoeffs[3] = GREAT;
+                TroeCoeffs[3] = great;
             }
 
             addReactionType
@@ -490,7 +491,7 @@ void Foam::chemkinReader::addReaction
                     new NonEquilibriumReversibleReaction
                         <Reaction, gasHThermoPhysics, ArrheniusReactionRate>
                     (
-                        Reaction<gasHThermoPhysics>
+                        ReactionProxy<gasHThermoPhysics>
                         (
                             speciesTable_,
                             lhs.shrink(),
@@ -546,7 +547,7 @@ void Foam::chemkinReader::addReaction
                         thirdBodyArrheniusReactionRate
                     >
                     (
-                        Reaction<gasHThermoPhysics>
+                        ReactionProxy<gasHThermoPhysics>
                         (
                             speciesTable_,
                             lhs.shrink(),
@@ -646,9 +647,13 @@ void Foam::chemkinReader::addReaction
                 reactions_.append
                 (
                     new NonEquilibriumReversibleReaction
-                        <Reaction, gasHThermoPhysics, LandauTellerReactionRate>
+                    <
+                        Reaction,
+                        gasHThermoPhysics,
+                        LandauTellerReactionRate
+                    >
                     (
-                        Reaction<gasHThermoPhysics>
+                        ReactionProxy<gasHThermoPhysics>
                         (
                             speciesTable_,
                             lhs.shrink(),
@@ -780,6 +785,9 @@ void Foam::chemkinReader::read
     const fileName& transportFileName
 )
 {
+    Reaction<gasHThermoPhysics>::TlowDefault = 0;
+    Reaction<gasHThermoPhysics>::ThighDefault = great;
+
     transportDict_.read(IFstream(transportFileName)());
 
     if (thermoFileName != fileName::null)
@@ -841,7 +849,7 @@ Foam::chemkinReader::chemkinReader
     speciesTable_(species),
     reactions_(speciesTable_, speciesThermo_),
     newFormat_(newFormat),
-    imbalanceTol_(ROOTSMALL)
+    imbalanceTol_(rootSmall)
 {
     read(CHEMKINFileName, thermoFileName, transportFileName);
 }
@@ -858,7 +866,7 @@ Foam::chemkinReader::chemkinReader
     speciesTable_(species),
     reactions_(speciesTable_, speciesThermo_),
     newFormat_(thermoDict.lookupOrDefault("newFormat", false)),
-    imbalanceTol_(thermoDict.lookupOrDefault("imbalanceTolerance", ROOTSMALL))
+    imbalanceTol_(thermoDict.lookupOrDefault("imbalanceTolerance", rootSmall))
 {
     if (newFormat_)
     {

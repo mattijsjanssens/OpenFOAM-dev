@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -41,11 +41,19 @@ License
 
 namespace Foam
 {
-namespace functionObjects
-{
-    defineTypeNameAndDebug(streamLine, 0);
-    addToRunTimeSelectionTable(functionObject, streamLine, dictionary);
-}
+    template<>
+    const char*
+        NamedEnum<functionObjects::streamLine::trackDirection, 3>::names[] =
+        {"forward", "backward", "both"};
+
+    namespace functionObjects
+    {
+        defineTypeNameAndDebug(streamLine, 0);
+        addToRunTimeSelectionTable(functionObject, streamLine, dictionary);
+
+        const NamedEnum<streamLine::trackDirection, 3>
+            streamLine::trackDirectionNames_;
+    }
 }
 
 
@@ -257,7 +265,9 @@ void Foam::functionObjects::streamLine::track()
         vsInterp,
         vvInterp,
         UIndex,         // index of U in vvInterp
-        trackForward_,  // track in +u direction?
+
+        trackDirection_ == trackDirection::FORWARD,
+
         nSubCycle_,     // automatic track control:step through cells in steps?
         trackLength_,   // fixed track length
 
@@ -266,13 +276,24 @@ void Foam::functionObjects::streamLine::track()
         allVectors_
     );
 
-
-    // Set very large dt. Note: cannot use GREAT since 1/GREAT is SMALL
+    // Set very large dt. Note: cannot use great since 1/great is small
     // which is a trigger value for the tracking...
-    const scalar trackTime = Foam::sqrt(GREAT);
+    const scalar trackTime = Foam::sqrt(great);
 
     // Track
-    particles.move(td, trackTime);
+    if (trackDirection_ == trackDirection::BOTH)
+    {
+        initialParticles = particles;
+    }
+
+    particles.move(particles, td, trackTime);
+
+    if (trackDirection_ == trackDirection::BOTH)
+    {
+        particles.IDLList<streamLineParticle>::operator=(initialParticles);
+        td.trackForward_ = !td.trackForward_;
+        particles.move(particles, td, trackTime);
+    }
 }
 
 
@@ -311,22 +332,7 @@ bool Foam::functionObjects::streamLine::read(const dictionary& dict)
     Info<< type() << " " << name() << ":" << nl;
 
     dict.lookup("fields") >> fields_;
-    if (dict.found("U"))
-    {
-        dict.lookup("U") >> UName_;
-    }
-    else
-    {
-        UName_ = "U";
-        if (dict.found("U"))
-        {
-            IOWarningInFunction(dict)
-                << "Using deprecated entry \"U\"."
-                << " Please use \"UName\" instead."
-                << endl;
-            dict.lookup("U") >> UName_;
-        }
-    }
+    UName_ = dict.lookupOrDefault("U", word("U"));
 
     if (findIndex(fields_, UName_) == -1)
     {
@@ -336,8 +342,19 @@ bool Foam::functionObjects::streamLine::read(const dictionary& dict)
             << exit(FatalIOError);
     }
 
+    // The trackForward entry is maintained here for backwards compatibility
+    if (!dict.found("direction") && dict.found("trackForward"))
+    {
+        trackDirection_ =
+            dict.lookupType<bool>("trackForward")
+          ? trackDirection::FORWARD
+          : trackDirection::BACKWARD;
+    }
+    else
+    {
+        trackDirection_ = trackDirectionNames_[word(dict.lookup("direction"))];
+    }
 
-    dict.lookup("trackForward") >> trackForward_;
     dict.lookup("lifeTime") >> lifeTime_;
     if (lifeTime_ < 1)
     {
@@ -363,7 +380,7 @@ bool Foam::functionObjects::streamLine::read(const dictionary& dict)
     nSubCycle_ = 1;
     if (dict.readIfPresent("nSubCycle", nSubCycle_))
     {
-        trackLength_ = VGREAT;
+        trackLength_ = vGreat;
         if (nSubCycle_ < 1)
         {
             nSubCycle_ = 1;
@@ -387,19 +404,17 @@ bool Foam::functionObjects::streamLine::read(const dictionary& dict)
     );
 
     cloudName_ = dict.lookupOrDefault<word>("cloudName", "streamLine");
-    dict.lookup("seedSampleSet") >> seedSet_;
 
     meshSearchPtr_.reset(new meshSearch(mesh_));
 
-    const dictionary& coeffsDict = dict.subDict(seedSet_ + "Coeffs");
     sampledSetPtr_ = sampledSet::New
     (
-        seedSet_,
+        "seedSampleSet",
         mesh_,
         meshSearchPtr_(),
-        coeffsDict
+        dict.subDict("seedSampleSet")
     );
-    coeffsDict.lookup("axis") >> sampledSetAxis_;
+    sampledSetAxis_ = sampledSetPtr_->axis();
 
     scalarFormatterPtr_ = writer<scalar>::New(dict.lookup("setFormat"));
     vectorFormatterPtr_ = writer<vector>::New(dict.lookup("setFormat"));
@@ -471,7 +486,7 @@ bool Foam::functionObjects::streamLine::write()
         // to prevent buffering.
         mapDistributeBase::distribute
         (
-            Pstream::scheduled,
+            Pstream::commsTypes::scheduled,
             distMap.schedule(),
             distMap.constructSize(),
             distMap.subMap(),
@@ -488,7 +503,7 @@ bool Foam::functionObjects::streamLine::write()
             allScalars_[scalarI].shrink();
             mapDistributeBase::distribute
             (
-                Pstream::scheduled,
+                Pstream::commsTypes::scheduled,
                 distMap.schedule(),
                 distMap.constructSize(),
                 distMap.subMap(),
@@ -506,7 +521,7 @@ bool Foam::functionObjects::streamLine::write()
             allVectors_[vectorI].shrink();
             mapDistributeBase::distribute
             (
-                Pstream::scheduled,
+                Pstream::commsTypes::scheduled,
                 distMap.schedule(),
                 distMap.constructSize(),
                 distMap.subMap(),
@@ -550,7 +565,7 @@ bool Foam::functionObjects::streamLine::write()
             vtkPath = vtkPath/mesh_.name();
         }
         vtkPath = vtkPath/mesh_.time().timeName();
-
+        vtkPath.clean();
         mkDir(vtkPath);
 
         // Convert track positions

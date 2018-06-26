@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -124,7 +124,7 @@ void Foam::AMIInterpolation<SourcePatch, TargetPatch>::distributePatches
     List<labelList>& faceIDs
 ) const
 {
-    PstreamBuffers pBufs(Pstream::nonBlocking);
+    PstreamBuffers pBufs(Pstream::commsTypes::nonBlocking);
 
     for (label domain = 0; domain < Pstream::nProcs(); domain++)
     {
@@ -302,7 +302,7 @@ distributeAndMergePatches
     bool hasMerged = mergePoints
     (
         tgtPoints,
-        SMALL,
+        small,
         false,
         oldToNew,
         newTgtPoints
@@ -354,7 +354,7 @@ Foam::AMIInterpolation<SourcePatch, TargetPatch>::calcProcMap
     }
 
     // slightly increase size of bounding boxes to allow for cases where
-    // bounding boxes are perfectly alligned
+    // bounding boxes are perfectly aligned
     forAll(procBb[Pstream::myProcNo()], bbI)
     {
         treeBoundBox& bb = procBb[Pstream::myProcNo()][bbI];

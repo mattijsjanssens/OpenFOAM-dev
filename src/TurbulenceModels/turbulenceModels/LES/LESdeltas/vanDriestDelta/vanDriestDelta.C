@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -60,7 +60,7 @@ void Foam::LESModels::vanDriestDelta::calcDelta()
             mesh
         ),
         mesh,
-        dimensionedScalar("ystar", dimLength, GREAT)
+        dimensionedScalar("ystar", dimLength, great)
     );
 
     const fvPatchList& patches = mesh.boundary();
@@ -75,7 +75,7 @@ void Foam::LESModels::vanDriestDelta::calcDelta()
             const scalarField& nuSgsw = nuSgs().boundaryField()[patchi];
 
             ystarBf[patchi] =
-                nuw/sqrt((nuw + nuSgsw)*mag(Uw.snGrad()) + VSMALL);
+                nuw/sqrt((nuw + nuSgsw)*mag(Uw.snGrad()) + vSmall);
         }
     }
 
@@ -87,7 +87,7 @@ void Foam::LESModels::vanDriestDelta::calcDelta()
     delta_ = min
     (
         static_cast<const volScalarField&>(geometricDelta_()),
-        (kappa_/Cdelta_)*((scalar(1) + SMALL) - exp(-y/ystar/Aplus_))*y
+        (kappa_/Cdelta_)*((scalar(1) + small) - exp(-y/ystar/Aplus_))*y
     );
 }
 
@@ -108,21 +108,29 @@ Foam::LESModels::vanDriestDelta::vanDriestDelta
         (
             IOobject::groupName("geometricDelta", turbulence.U().group()),
             turbulence,
-            dict.subDict(type() + "Coeffs")
+            dict.optionalSubDict(type() + "Coeffs")
         )
     ),
     kappa_(dict.lookupOrDefault<scalar>("kappa", 0.41)),
     Aplus_
     (
-        dict.subDict(type() + "Coeffs").lookupOrDefault<scalar>("Aplus", 26.0)
+        dict.optionalSubDict(type() + "Coeffs").lookupOrDefault<scalar>
+        (
+            "Aplus",
+            26.0
+        )
     ),
     Cdelta_
     (
-        dict.subDict(type() + "Coeffs").lookupOrDefault<scalar>("Cdelta", 0.158)
+        dict.optionalSubDict(type() + "Coeffs").lookupOrDefault<scalar>
+        (
+            "Cdelta",
+            0.158
+        )
     ),
     calcInterval_
     (
-        dict.subDict(type() + "Coeffs").lookupOrDefault<label>
+        dict.optionalSubDict(type() + "Coeffs").lookupOrDefault<label>
         (
             "calcInterval",
             1
@@ -137,7 +145,7 @@ Foam::LESModels::vanDriestDelta::vanDriestDelta
 
 void Foam::LESModels::vanDriestDelta::read(const dictionary& dict)
 {
-    const dictionary& coeffsDict(dict.subDict(type() + "Coeffs"));
+    const dictionary& coeffsDict(dict.optionalSubDict(type() + "Coeffs"));
 
     geometricDelta_().read(coeffsDict);
     dict.readIfPresent<scalar>("kappa", kappa_);

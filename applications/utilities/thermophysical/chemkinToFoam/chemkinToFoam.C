@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -42,11 +42,16 @@ using namespace Foam;
 
 int main(int argc, char *argv[])
 {
-    argList::validArgs.append("CHEMKINFile");
-    argList::validArgs.append("CHEMKINThermodynamicsFile");
-    argList::validArgs.append("CHEMKINTransport");
-    argList::validArgs.append("FOAMChemistryFile");
-    argList::validArgs.append("FOAMThermodynamicsFile");
+    #include "removeCaseOptions.H"
+
+    // Increase the precision of the output for JANAF coefficients
+    Ostream::defaultPrecision(10);
+
+    argList::validArgs.append("CHEMKIN file");
+    argList::validArgs.append("CHEMKIN thermodynamics file");
+    argList::validArgs.append("CHEMKIN transport file");
+    argList::validArgs.append("OpenFOAM chemistry file");
+    argList::validArgs.append("OpenFOAM thermodynamics file");
 
     argList::addBoolOption
     (
@@ -62,14 +67,12 @@ int main(int argc, char *argv[])
 
     chemkinReader cr(species, args[1], args[3], args[2], newFormat);
 
-
     OFstream reactionsFile(args[4]);
-    reactionsFile
-        << "elements" << cr.elementNames() << token::END_STATEMENT << nl << nl;
-    reactionsFile
-        << "species" << cr.species() << token::END_STATEMENT << nl << nl;
+    reactionsFile.writeKeyword("elements")
+        << cr.elementNames() << token::END_STATEMENT << nl << nl;
+    reactionsFile.writeKeyword("species")
+        << cr.species() << token::END_STATEMENT << nl << nl;
     cr.reactions().write(reactionsFile);
-
 
     // Temporary hack to splice the specie composition data into the thermo file
     // pending complete integration into the thermodynamics structure
@@ -98,6 +101,14 @@ int main(int argc, char *argv[])
 
     thermoDict.write(OFstream(args[5])(), false);
 
+    reactionsFile << nl;
+
+    reactionsFile.writeKeyword("Tlow")
+        << Reaction<gasHThermoPhysics>::TlowDefault
+        << token::END_STATEMENT << nl;
+    reactionsFile.writeKeyword("Thigh")
+        << Reaction<gasHThermoPhysics>::ThighDefault
+        << token::END_STATEMENT << nl << nl;
 
     Info<< "End\n" << endl;
 

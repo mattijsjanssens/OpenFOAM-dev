@@ -18,27 +18,25 @@ FoamFile
 
 Documentation
 {
-    docBrowser      "firefox %f";
+    docBrowser      "firefox";
     doxyDocDirs
     (
         "$WM_PROJECT_USER_DIR/html"
         "~OpenFOAM/html"
         "$WM_PROJECT_DIR/doc/Doxygen/html"
+        "http://cpp.openfoam.org/dev"
     );
-    doxySourceFileExts
-    (
-        "App_8C.html"
-        "_8C.html"
-    );
+    doxySourceFileExt "_8C.html";
 }
 
 
 InfoSwitches
 {
-    writePrecision  6;
-    writeJobInfo    0;
-    writeDictionaries 0;
-    writeOptionalEntries 0;
+    writePrecision          6;
+    writeJobControl         0;
+    writeJobInfo            0;
+    writeDictionaries       0;
+    writeOptionalEntries    0;
 
     // Allow case-supplied C++ code (#codeStream, codedFixedValue)
     allowSystemOperations   1;
@@ -58,7 +56,21 @@ OptimisationSwitches
     //  - inotifyMaster     : do inotify (and file reading) only on master.
     fileModificationChecking timeStampMaster;
 
-    commsType       nonBlocking; //scheduled; //blocking;
+    //- Parallel IO file handler
+    //  uncollated (default), collated or masterUncollated
+    fileHandler uncollated;
+
+    //- collated: thread buffer size for queued file writes.
+    //  If set to 0 or not sufficient for the file size threading is not used.
+    //  Default: 2e9
+    maxThreadFileBufferSize 2e9;
+
+    //- masterUncollated: non-blocking buffer size.
+    //  If the file exceeds this buffer size scheduled transfer is used.
+    //  Default: 2e9
+    maxMasterFileBufferSize 2e9;
+
+    commsType       nonBlocking; // scheduled; // blocking;
     floatTransfer   0;
     nProcsSimpleSum 0;
 
@@ -288,6 +300,7 @@ DebugSwitches
     ThermoParcel<fluidThermoParcel>     0;
     UMIST               0;
     UMISTV              0;
+    UPstream            0;
     UpwindFitData<cubicUpwindFitPolynomial> 0;
     UpwindFitData<quadraticLinearUpwindFitPolynomial> 0;
     UpwindFitData<quadraticUpwindFitPolynomial>     0;
@@ -775,6 +788,7 @@ DebugSwitches
     solidBodyMotionFunction 0;
     solidBodyMotionFvMesh 0;
     solution            0;
+    specie              0;
     spectEddyVisc       0;
     sphereToCell        0;
     spherical           0;
@@ -847,7 +861,6 @@ DebugSwitches
     triSurface          0;
     triSurfaceMesh      0;
     turbulenceModel     0;
-    turbulentHeatFluxTemperature 0;
     turbulentInlet      0;
     turbulentIntensityKineticEnergyInlet 0;
     turbulentMixingLengthDissipationRateInlet 0;
@@ -1007,7 +1020,7 @@ DimensionSets
 
         // Set of units used for printing. Can be any basic or derived
         // but not scaled (only supported for dimensionedScalar, etc)
-        //writeUnits (kg m s K mol A Cd);
+        // writeUnits (kg m s K mol A Cd);
     }
 
     USCSCoeffs
@@ -1023,7 +1036,7 @@ DimensionSets
 
         // Set of units used for printing. Can be any basic or derived
         // but not scaled (only supported for dimensionedScalar, etc)
-        //writeUnits (lb ft s R mol A Cd);
+        // writeUnits (lb ft s R mol A Cd);
     }
 }
 

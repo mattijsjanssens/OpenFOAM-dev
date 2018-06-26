@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -132,11 +132,11 @@ inline Foam::tmp<Foam::fvScalarMatrix> Foam::ReactingCloud<CloudType>::SYi
             sourceField.primitiveFieldRef() =
                 rhoTrans_[i]/(this->db().time().deltaTValue()*this->mesh().V());
 
-            const dimensionedScalar YiSMALL("YiSMALL", dimless, SMALL);
+            const dimensionedScalar Yismall("Yismall", dimless, small);
 
             return
-                fvm::Sp(neg(sourceField)*sourceField/(Yi + YiSMALL), Yi)
-              + pos(sourceField)*sourceField;
+                fvm::Sp(neg(sourceField)*sourceField/(Yi + Yismall), Yi)
+              + pos0(sourceField)*sourceField;
         }
         else
         {

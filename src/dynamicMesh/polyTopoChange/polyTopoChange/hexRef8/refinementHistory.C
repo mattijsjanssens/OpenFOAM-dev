@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -335,7 +335,6 @@ void Foam::refinementHistory::freeSplitCell(const label index)
 }
 
 
-// Mark entry in splitCells. Recursively mark its parent and subs.
 void Foam::refinementHistory::markSplit
 (
     const label index,
@@ -372,7 +371,6 @@ void Foam::refinementHistory::markSplit
 }
 
 
-// Mark index and all its descendants
 void Foam::refinementHistory::mark
 (
     const label val,
@@ -464,7 +462,7 @@ void Foam::refinementHistory::add
     markCommonCells(cellToCluster);
 
 
-    // Unblock all faces inbetween same cluster
+    // Unblock all faces in between same cluster
 
     label nUnblocked = 0;
 
@@ -508,7 +506,7 @@ void Foam::refinementHistory::apply
     labelList cellToCluster;
     label nClusters = markCommonCells(cellToCluster);
 
-    // Unblock all faces inbetween same cluster
+    // Unblock all faces in between same cluster
 
 
     labelList clusterToProc(nClusters, -1);
@@ -762,7 +760,6 @@ Foam::refinementHistory::refinementHistory
 }
 
 
-// Construct as copy
 Foam::refinementHistory::refinementHistory
 (
     const IOobject& io,
@@ -783,7 +780,6 @@ Foam::refinementHistory::refinementHistory
 }
 
 
-// Construct from multiple
 Foam::refinementHistory::refinementHistory
 (
     const IOobject& io,
@@ -903,7 +899,6 @@ Foam::refinementHistory::refinementHistory
 }
 
 
-// Construct from Istream
 Foam::refinementHistory::refinementHistory(const IOobject& io, Istream& is)
 :
     regIOobject(io),
@@ -979,7 +974,7 @@ Foam::autoPtr<Foam::refinementHistory> Foam::refinementHistory::clone
         }
     }
 
-    //forAll(oldToNewSplit, index)
+    // forAll(oldToNewSplit, index)
     //{
     //    Pout<< "old:" << index << " new:" << oldToNewSplit[index]
     //        << endl;
@@ -1095,7 +1090,7 @@ Foam::autoPtr<Foam::refinementHistory> Foam::refinementHistory::clone
             decomposition,
             splitCellProc,
             splitCellNum,
-            1,      //procI,
+            1,      // procI,
             oldToNewSplit
         );
     }
@@ -1180,7 +1175,6 @@ void Foam::refinementHistory::updateMesh(const mapPolyMesh& map)
 }
 
 
-// Update numbering for subsetting
 void Foam::refinementHistory::subset
 (
     const labelList& pointMap,
@@ -1280,9 +1274,9 @@ void Foam::refinementHistory::distribute(const mapDistributePolyMesh& map)
     // Remove unreferenced history.
     compact();
 
-    //Pout<< nl << "--BEFORE:" << endl;
-    //writeDebug();
-    //Pout<< "---------" << nl << endl;
+    // Pout<< nl << "--BEFORE:" << endl;
+    // writeDebug();
+    // Pout<< "---------" << nl << endl;
 
 
     // Distribution is only partially functional.
@@ -1333,10 +1327,10 @@ void Foam::refinementHistory::distribute(const mapDistributePolyMesh& map)
         }
     }
 
-    //Pout<< "refinementHistory::distribute :"
+    // Pout<< "refinementHistory::distribute :"
     //    << " splitCellProc:" << splitCellProc << endl;
     //
-    //Pout<< "refinementHistory::distribute :"
+    // Pout<< "refinementHistory::distribute :"
     //    << " splitCellNum:" << splitCellNum << endl;
 
 
@@ -1344,7 +1338,7 @@ void Foam::refinementHistory::distribute(const mapDistributePolyMesh& map)
     // move in their whole to other processor.
     for (label proci = 0; proci < Pstream::nProcs(); proci++)
     {
-        //Pout<< "-- Subetting for processor " << proci << endl;
+        // Pout<< "-- Subetting for processor " << proci << endl;
 
         // From uncompacted to compacted splitCells.
         labelList oldToNew(splitCells_.size(), -1);
@@ -1380,7 +1374,7 @@ void Foam::refinementHistory::distribute(const mapDistributePolyMesh& map)
             }
         }
 
-        //forAll(oldToNew, index)
+        // forAll(oldToNew, index)
         //{
         //    Pout<< "old:" << index << " new:" << oldToNew[index]
         //        << endl;
@@ -1429,13 +1423,13 @@ void Foam::refinementHistory::distribute(const mapDistributePolyMesh& map)
             }
         }
 
-        //Pout<< nl << "--Subset for domain:" << proci << endl;
-        //writeDebug(newVisibleCells, newSplitCells);
-        //Pout<< "---------" << nl << endl;
+        // Pout<< nl << "--Subset for domain:" << proci << endl;
+        // writeDebug(newVisibleCells, newSplitCells);
+        // Pout<< "---------" << nl << endl;
 
 
         // Send to neighbours
-        OPstream toNbr(Pstream::blocking, proci);
+        OPstream toNbr(Pstream::commsTypes::blocking, proci);
         toNbr << newSplitCells << newVisibleCells;
     }
 
@@ -1453,20 +1447,20 @@ void Foam::refinementHistory::distribute(const mapDistributePolyMesh& map)
 
     for (label proci = 0; proci < Pstream::nProcs(); proci++)
     {
-        IPstream fromNbr(Pstream::blocking, proci);
+        IPstream fromNbr(Pstream::commsTypes::blocking, proci);
         List<splitCell8> newSplitCells(fromNbr);
         labelList newVisibleCells(fromNbr);
 
-        //Pout<< nl << "--Received from domain:" << proci << endl;
-        //writeDebug(newVisibleCells, newSplitCells);
-        //Pout<< "---------" << nl << endl;
+        // Pout<< nl << "--Received from domain:" << proci << endl;
+        // writeDebug(newVisibleCells, newSplitCells);
+        // Pout<< "---------" << nl << endl;
 
 
         // newSplitCells contain indices only into newSplitCells so
         // renumbering can be done here.
         label offset = splitCells_.size();
 
-        //Pout<< "**Renumbering data from proc " << proci << " with offset "
+        // Pout<< "**Renumbering data from proc " << proci << " with offset "
         //    << offset << endl;
 
         forAll(newSplitCells, index)
@@ -1507,9 +1501,9 @@ void Foam::refinementHistory::distribute(const mapDistributePolyMesh& map)
     }
     splitCells_.shrink();
 
-    //Pout<< nl << "--AFTER:" << endl;
-    //writeDebug();
-    //Pout<< "---------" << nl << endl;
+    // Pout<< nl << "--AFTER:" << endl;
+    // writeDebug();
+    // Pout<< "---------" << nl << endl;
 }
 
 

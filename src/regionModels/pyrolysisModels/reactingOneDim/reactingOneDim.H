@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,7 +22,7 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::reactingOneDim
+    Foam::regionModels::pyrolysisModels::reactingOneDim
 
 Description
     Reacting, 1-D pyrolysis model
@@ -75,11 +75,11 @@ protected:
 
     // Protected data
 
+        //- Reference to solid thermo
+        autoPtr<solidReactionThermo> solidThermo_;
+
         //- Reference to the solid chemistry model
         autoPtr<basicSolidChemistryModel> solidChemistry_;
-
-        //- Reference to solid thermo
-        solidReactionThermo& solidThermo_;
 
         //- Pointer to radiation model
         autoPtr<radiation::radiationModel> radiation_;
@@ -125,10 +125,10 @@ protected:
 
             //- Coupled region radiative heat flux [W/m2]
             //  Requires user to input mapping info for coupled patches
-            //volScalarField QrCoupled_;
+            // volScalarField qrCoupled_;
 
             //- In depth radiative heat flux [W/m2]
-            volScalarField Qr_;
+            volScalarField qr_;
 
 
         // Checks
@@ -152,7 +152,7 @@ protected:
             bool  gasHSource_;
 
             //- Add in depth radiation source term
-            bool  QrHSource_;
+            bool  qrHSource_;
 
             //- Use chemistry solvers (ode or sequential)
             bool useChemistrySolvers_;
@@ -173,7 +173,7 @@ protected:
         void updateMesh(const scalarField& mass0);
 
         //- Update radiative flux in pyrolysis region
-        void updateQr();
+        void updateqr();
 
         //- Update enthalpy flux for pyrolysis gases
         void updatePhiGas();

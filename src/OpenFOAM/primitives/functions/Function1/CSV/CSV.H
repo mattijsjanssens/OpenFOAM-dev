@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -25,9 +25,11 @@ Class
     Foam::Function1Types::CSV
 
 Description
-    Templated CSV container data entry.  Reference column is always a scalar,
-    e.g. time
+    Templated CSV function.
 
+    Reference column is always a scalar, e.g. time.
+
+    Usage:
     \verbatim
         <entryName> csvFile;
         <entryName>Coeffs
@@ -37,7 +39,7 @@ Description
             componentColumns    (1 2 3);    // component column indices
             separator           ",";        // optional (defaults to ",")
             mergeSeparators     no;         // merge multiple separators
-            fileName            "fileXYZ";  // name of csv data file
+            file                "fileXYZ";  // name of csv data file
             outOfBounds         clamp;      // optional out-of-bounds handling
             interpolationScheme linear;     // optional interpolation scheme
         }
@@ -75,9 +77,6 @@ class CSV
 {
     // Private data
 
-        //- Coefficients dictionary (for convenience on reading)
-        dictionary coeffs_;
-
         //- Number header lines
         label nHeaderLine_;
 
@@ -102,7 +101,7 @@ class CSV
         //- Read csv data table
         void read();
 
-        //- Read the next value from the splitted string
+        //- Read the next value from the split string
         Type readValue(const List<string>&);
 
         //- Disallow default bitwise assignment
@@ -121,18 +120,11 @@ public:
         CSV
         (
             const word& entryName,
-            const dictionary& dict,
-            const word& ext = "Coeffs"
+            const dictionary& dict
         );
 
         //- Copy constructor
         CSV(const CSV<Type>& tbl);
-
-        //- Construct and return a clone
-        virtual tmp<Function1<Type>> clone() const
-        {
-            return tmp<Function1<Type>>(new CSV<Type>(*this));
-        }
 
 
     //- Destructor
@@ -150,10 +142,10 @@ public:
 
 
 template<>
-label CSV<label>::readValue(const List<string>& splitted);
+label CSV<label>::readValue(const List<string>& split);
 
 template<>
-Foam::scalar CSV<scalar>::readValue(const List<string>& splitted);
+Foam::scalar CSV<scalar>::readValue(const List<string>& split);
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

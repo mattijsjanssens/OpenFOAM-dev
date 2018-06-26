@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -123,7 +123,7 @@ Foam::phaseModel::phaseModel
         IOobject::NO_READ
     );
 
-    if (phiHeader.headerOk())
+    if (phiHeader.typeHeaderOk<surfaceScalarField>(true))
     {
         Info<< "Reading face flux field " << phiName << endl;
 
@@ -210,7 +210,7 @@ Foam::autoPtr<Foam::phaseModel> Foam::phaseModel::clone() const
 
 void Foam::phaseModel::correct()
 {
-    //nuModel_->correct();
+    // nuModel_->correct();
 }
 
 
@@ -218,7 +218,7 @@ bool Foam::phaseModel::read(const dictionary& phaseDict)
 {
     phaseDict_ = phaseDict;
 
-    //if (nuModel_->read(phaseDict_))
+    // if (nuModel_->read(phaseDict_))
     {
         phaseDict_.lookup("nu") >> nu_.value();
         phaseDict_.lookup("kappa") >> kappa_.value();
@@ -233,6 +233,24 @@ bool Foam::phaseModel::read(const dictionary& phaseDict)
     // }
 
     return true;
+}
+
+
+void Foam::phaseModel::correctInflowOutflow(surfaceScalarField& alphaPhi) const
+{
+    surfaceScalarField::Boundary& alphaPhiBf = alphaPhi.boundaryFieldRef();
+    const volScalarField::Boundary& alphaBf = boundaryField();
+    const surfaceScalarField::Boundary& phiBf = phi().boundaryField();
+
+    forAll(alphaPhiBf, patchi)
+    {
+        fvsPatchScalarField& alphaPhip = alphaPhiBf[patchi];
+
+        if (!alphaPhip.coupled())
+        {
+            alphaPhip = phiBf[patchi]*alphaBf[patchi];
+        }
+    }
 }
 
 

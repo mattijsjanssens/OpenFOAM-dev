@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -61,7 +61,7 @@ Foam::viscosityModels::HerschelBulkley::calcNu() const
         (
             nu0_,
             (tau0_ + k_*rtone*pow(tone*sr(), n_))
-           /(max(sr(), dimensionedScalar ("VSMALL", dimless/dimTime, VSMALL)))
+           /(max(sr(), dimensionedScalar ("vSmall", dimless/dimTime, vSmall)))
         )
     );
 }
@@ -78,7 +78,10 @@ Foam::viscosityModels::HerschelBulkley::HerschelBulkley
 )
 :
     viscosityModel(name, viscosityProperties, U, phi),
-    HerschelBulkleyCoeffs_(viscosityProperties.subDict(typeName + "Coeffs")),
+    HerschelBulkleyCoeffs_
+    (
+        viscosityProperties.optionalSubDict(typeName + "Coeffs")
+    ),
     k_("k", dimViscosity, HerschelBulkleyCoeffs_),
     n_("n", dimless, HerschelBulkleyCoeffs_),
     tau0_("tau0", dimViscosity/dimTime, HerschelBulkleyCoeffs_),
@@ -107,7 +110,8 @@ bool Foam::viscosityModels::HerschelBulkley::read
 {
     viscosityModel::read(viscosityProperties);
 
-    HerschelBulkleyCoeffs_ = viscosityProperties.subDict(typeName + "Coeffs");
+    HerschelBulkleyCoeffs_ =
+        viscosityProperties.optionalSubDict(typeName + "Coeffs");
 
     HerschelBulkleyCoeffs_.lookup("k") >> k_;
     HerschelBulkleyCoeffs_.lookup("n") >> n_;

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -87,7 +87,7 @@ dynamicLagrangian<BasicTurbulenceModel>::dynamicLagrangian
     (
         IOobject
         (
-            IOobject::groupName("flm", this->U_.group()),
+            IOobject::groupName("flm", this->alphaRhoPhi_.group()),
             this->runTime_.timeName(),
             this->mesh_,
             IOobject::MUST_READ,
@@ -99,7 +99,7 @@ dynamicLagrangian<BasicTurbulenceModel>::dynamicLagrangian
     (
         IOobject
         (
-            IOobject::groupName("fmm", this->U_.group()),
+            IOobject::groupName("fmm", this->alphaRhoPhi_.group()),
             this->runTime_.timeName(),
             this->mesh_,
             IOobject::MUST_READ,
@@ -122,7 +122,7 @@ dynamicLagrangian<BasicTurbulenceModel>::dynamicLagrangian
     filter_(filterPtr_()),
 
     flm0_("flm0", flm_.dimensions(), 0.0),
-    fmm0_("fmm0", fmm_.dimensions(), VSMALL)
+    fmm0_("fmm0", fmm_.dimensions(), vSmall)
 {
     if (type == typeName)
     {
@@ -159,7 +159,9 @@ void dynamicLagrangian<BasicTurbulenceModel>::correct()
     }
 
     // Local references
-    const surfaceScalarField& phi = this->phi_;
+    const alphaField& alpha = this->alpha_;
+    const rhoField& rho = this->rho_;
+    const surfaceScalarField& alphaRhoPhi = this->alphaRhoPhi_;
     const volVectorField& U = this->U_;
     fv::options& fvOptions(fv::options::New(this->mesh_));
 
@@ -183,19 +185,19 @@ void dynamicLagrangian<BasicTurbulenceModel>::correct()
 
     volScalarField invT
     (
-        (1.0/(theta_.value()*this->delta()))*pow(flm_*fmm_, 1.0/8.0)
+        alpha*rho*(1.0/(theta_.value()*this->delta()))*pow(flm_*fmm_, 1.0/8.0)
     );
 
     volScalarField LM(L && M);
 
     fvScalarMatrix flmEqn
     (
-        fvm::ddt(flm_)
-      + fvm::div(phi, flm_)
+        fvm::ddt(alpha, rho, flm_)
+      + fvm::div(alphaRhoPhi, flm_)
      ==
         invT*LM
       - fvm::Sp(invT, flm_)
-      + fvOptions(flm_)
+      + fvOptions(alpha, rho, flm_)
     );
 
     flmEqn.relax();
@@ -208,12 +210,12 @@ void dynamicLagrangian<BasicTurbulenceModel>::correct()
 
     fvScalarMatrix fmmEqn
     (
-        fvm::ddt(fmm_)
-      + fvm::div(phi, fmm_)
+        fvm::ddt(alpha, rho, fmm_)
+      + fvm::div(alphaRhoPhi, fmm_)
      ==
         invT*MM
       - fvm::Sp(invT, fmm_)
-      + fvOptions(fmm_)
+      + fvOptions(alpha, rho, fmm_)
     );
 
     fmmEqn.relax();

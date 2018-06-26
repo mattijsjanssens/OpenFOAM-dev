@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2016-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -24,6 +24,8 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "wallHeatFlux.H"
+#include "turbulentFluidThermoModel.H"
+#include "solidThermo.H"
 #include "surfaceInterpolate.H"
 #include "fvcSnGrad.H"
 #include "wallPolyPatch.H"
@@ -58,36 +60,41 @@ void Foam::functionObjects::wallHeatFlux::writeFileHeader(const label i)
 
 void Foam::functionObjects::wallHeatFlux::calcHeatFlux
 (
-    const compressible::turbulenceModel& model,
+    const volScalarField& alpha,
+    const volScalarField& he,
     volScalarField& wallHeatFlux
 )
 {
-    surfaceScalarField heatFlux
-    (
-        fvc::interpolate(model.alphaEff())*fvc::snGrad(model.transport().he())
-    );
-
     volScalarField::Boundary& wallHeatFluxBf =
         wallHeatFlux.boundaryFieldRef();
 
-    const surfaceScalarField::Boundary& heatFluxBf =
-        heatFlux.boundaryField();
+    const volScalarField::Boundary& heBf =
+        he.boundaryField();
+
+    const volScalarField::Boundary& alphaBf =
+        alpha.boundaryField();
 
     forAll(wallHeatFluxBf, patchi)
     {
-        wallHeatFluxBf[patchi] = heatFluxBf[patchi];
+        if (!wallHeatFluxBf[patchi].coupled())
+        {
+            wallHeatFluxBf[patchi] = alphaBf[patchi]*heBf[patchi].snGrad();
+        }
     }
 
-    if (foundObject<volScalarField>("Qr"))
+    if (foundObject<volScalarField>("qr"))
     {
-        const volScalarField& Qr = lookupObject<volScalarField>("Qr");
+        const volScalarField& qr = lookupObject<volScalarField>("qr");
 
         const volScalarField::Boundary& radHeatFluxBf =
-            Qr.boundaryField();
+            qr.boundaryField();
 
         forAll(wallHeatFluxBf, patchi)
         {
-            wallHeatFluxBf[patchi] += radHeatFluxBf[patchi];
+            if (!wallHeatFluxBf[patchi].coupled())
+            {
+                wallHeatFluxBf[patchi] -= radHeatFluxBf[patchi];
+            }
         }
     }
 }
@@ -198,10 +205,7 @@ bool Foam::functionObjects::wallHeatFlux::read(const dictionary& dict)
 
 bool Foam::functionObjects::wallHeatFlux::execute()
 {
-    volScalarField& wallHeatFlux = const_cast<volScalarField&>
-    (
-        lookupObject<volScalarField>(type())
-    );
+    volScalarField& wallHeatFlux = lookupObjectRef<volScalarField>(type());
 
     if
     (
@@ -217,7 +221,19 @@ bool Foam::functionObjects::wallHeatFlux::execute()
                 turbulenceModel::propertiesName
             );
 
-        calcHeatFlux(turbModel, wallHeatFlux);
+        calcHeatFlux
+        (
+            turbModel.alphaEff(),
+            turbModel.transport().he(),
+            wallHeatFlux
+        );
+    }
+    else if (foundObject<solidThermo>(solidThermo::dictName))
+    {
+        const solidThermo& thermo =
+            lookupObject<solidThermo>(solidThermo::dictName);
+
+        calcHeatFlux(thermo.alpha(), thermo.he(), wallHeatFlux);
     }
     else
     {
@@ -261,10 +277,10 @@ bool Foam::functionObjects::wallHeatFlux::write()
         {
             file()
                 << mesh_.time().value()
-                << token::TAB << pp.name()
-                << token::TAB << minHfp
-                << token::TAB << maxHfp
-                << token::TAB << integralHfp
+                << tab << pp.name()
+                << tab << minHfp
+                << tab << maxHfp
+                << tab << integralHfp
                 << endl;
         }
 

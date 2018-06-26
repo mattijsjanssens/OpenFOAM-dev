@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -46,11 +46,12 @@ using namespace Foam;
 
 int main(int argc, char *argv[])
 {
-    argList::noParallel();
-    argList::validArgs.append("surfaceFile");
+    #include "removeCaseOptions.H"
+
+    argList::validArgs.append("surface file");
+    argList::validArgs.append("output surface file");
     argList::validArgs.append("min length");
     argList::validArgs.append("min quality");
-    argList::validArgs.append("output surfaceFile");
     argList::addBoolOption
     (
         "noClean",
@@ -59,9 +60,9 @@ int main(int argc, char *argv[])
     argList args(argc, argv);
 
     const fileName inFileName = args[1];
-    const scalar minLen = args.argRead<scalar>(2);
-    const scalar minQuality = args.argRead<scalar>(3);
-    const fileName outFileName = args[4];
+    const fileName outFileName = args[2];
+    const scalar minLen = args.argRead<scalar>(3);
+    const scalar minQuality = args.argRead<scalar>(4);
 
     Info<< "Reading surface " << inFileName << nl
         << "Collapsing all triangles with" << nl

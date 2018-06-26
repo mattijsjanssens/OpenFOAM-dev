@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -127,15 +127,20 @@ public:
     };
 
 
+    //- Use base tracking data
+    typedef typename ParcelType::trackingData trackingData;
+
+
 private:
 
     // Private Member Functions
 
         //- Return the mixture effective specific heat capacity
-        template<class TrackData>
+        template<class TrackCloudType>
         scalar CpEff
         (
-            TrackData& td,
+            TrackCloudType& cloud,
+            trackingData& td,
             const scalar p,
             const scalar T,
             const label idG,
@@ -144,10 +149,11 @@ private:
         ) const;
 
         //- Return the mixture effective sensible enthalpy
-        template<class TrackData>
+        template<class TrackCloudType>
         scalar HsEff
         (
-            TrackData& td,
+            TrackCloudType& cloud,
+            trackingData& td,
             const scalar p,
             const scalar T,
             const label idG,
@@ -156,10 +162,11 @@ private:
         ) const;
 
         //- Return the mixture effective latent heat
-        template<class TrackData>
+        template<class TrackCloudType>
         scalar LEff
         (
-            TrackData& td,
+            TrackCloudType& cloud,
+            trackingData& td,
             const scalar p,
             const scalar T,
             const label idG,
@@ -204,10 +211,11 @@ protected:
     // Protected Member Functions
 
         //- Calculate Devolatilisation
-        template<class TrackData>
+        template<class TrackCloudType>
         void calcDevolatilisation
         (
-            TrackData& td,
+            TrackCloudType& cloud,
+            trackingData& td,
             const scalar dt,           // timestep
             const scalar age,          // age
             const scalar Ts,           // surface temperature
@@ -227,12 +235,12 @@ protected:
         ) const;
 
         //- Calculate surface reactions
-        template<class TrackData>
+        template<class TrackCloudType>
         void calcSurfaceReactions
         (
-            TrackData& td,
+            TrackCloudType& cloud,
+            trackingData& td,
             const scalar dt,           // timestep
-            const label celli,         // owner cell
             const scalar d,            // diameter
             const scalar T,            // temperature
             const scalar mass,         // mass
@@ -270,23 +278,31 @@ public:
 
     // Constructors
 
-        //- Construct from owner, position, and cloud owner
+        //- Construct from mesh, position and topology
         //  Other properties initialised as null
         inline ReactingMultiphaseParcel
         (
             const polyMesh& mesh,
-            const vector& position,
+            const barycentric& coordinates,
             const label celli,
             const label tetFacei,
             const label tetPti
         );
 
+        //- Construct from a position and a cell, searching for the rest of the
+        //  required topology. Other properties are initialised as null.
+        inline ReactingMultiphaseParcel
+        (
+            const polyMesh& mesh,
+            const vector& position,
+            const label celli
+        );
 
         //- Construct from components
         inline ReactingMultiphaseParcel
         (
             const polyMesh& mesh,
-            const vector& position,
+            const barycentric& coordinates,
             const label celli,
             const label tetFacei,
             const label tetPti,
@@ -396,30 +412,25 @@ public:
         // Main calculation loop
 
             //- Set cell values
-            template<class TrackData>
-            void setCellValues
-            (
-                TrackData& td,
-                const scalar dt,
-                const label celli
-            );
+            template<class TrackCloudType>
+            void setCellValues(TrackCloudType& cloud, trackingData& td);
 
             //- Correct cell values using latest transfer information
-            template<class TrackData>
+            template<class TrackCloudType>
             void cellValueSourceCorrection
             (
-                TrackData& td,
-                const scalar dt,
-                const label celli
+                TrackCloudType& cloud,
+                trackingData& td,
+                const scalar dt
             );
 
             //- Update parcel properties over the time interval
-            template<class TrackData>
+            template<class TrackCloudType>
             void calc
             (
-                TrackData& td,
-                const scalar dt,
-                const label celli
+                TrackCloudType& cloud,
+                trackingData& td,
+                const scalar dt
             );
 
 

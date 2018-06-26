@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -97,7 +97,7 @@ Foam::LUscalarMatrix::LUscalarMatrix
                     (
                         IPstream
                         (
-                            Pstream::scheduled,
+                            Pstream::commsTypes::scheduled,
                             slave,
                             0,          // bufSize
                             Pstream::msgType(),
@@ -111,7 +111,7 @@ Foam::LUscalarMatrix::LUscalarMatrix
         {
             OPstream toMaster
             (
-                Pstream::scheduled,
+                Pstream::commsTypes::scheduled,
                 Pstream::masterNo(),
                 0,              // bufSize
                 Pstream::msgType(),
@@ -165,7 +165,7 @@ Foam::LUscalarMatrix::LUscalarMatrix
                 Pout<< "    connects to upper cells :";
                 for (label columnI = rowI+1; columnI < nColumns; columnI++)
                 {
-                    if (mag(row[columnI]) > SMALL)
+                    if (mag(row[columnI]) > small)
                     {
                         Pout<< ' ' << columnI << " (coeff:" << row[columnI]
                             << ")";
@@ -175,7 +175,7 @@ Foam::LUscalarMatrix::LUscalarMatrix
                 Pout<< "    connects to lower cells :";
                 for (label columnI = 0; columnI < rowI; columnI++)
                 {
-                    if (mag(row[columnI]) > SMALL)
+                    if (mag(row[columnI]) > small)
                     {
                         Pout<< ' ' << columnI << " (coeff:" << row[columnI]
                             << ")";

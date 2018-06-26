@@ -29,10 +29,10 @@ addLayers       true;
 // - to 'snap' the mesh boundary to the surface
 geometry
 {
-    bullet.stl
+    bullet
     {
         type triSurfaceMesh;
-        name bullet;
+        file "bullet.stl";
 
         regions
         {
@@ -320,7 +320,7 @@ meshQualityControls
     //- minVolRatio (0 -> 1)
     minVolRatio 0.01;
 
-    //must be >0 for Fluent compatibility
+    // must be >0 for Fluent compatibility
     minTriangleTwist -1;
 
 

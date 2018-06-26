@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -24,9 +24,6 @@ License
 Class
     Foam::functionObjects::streamLine
 
-Group
-    grpFieldFunctionObjects
-
 Description
     Generates streamline data by sampling a set of user-specified fields along a
     particle track, transported by a user-specified velocity field.
@@ -41,21 +38,24 @@ Description
         writeControl    writeTime;
 
         setFormat       vtk;
+        U               U;
         trackForward    yes;
+
         fields
         (
             U
             p
         );
+
         lifeTime        10000;
         trackLength     1e-3;
         nSubCycle       5;
         cloudName       particleTracks;
-        seedSampleSet   uniform;
-        uniformCoeffs
+
+        seedSampleSet
         {
             type        uniform;
-            axis        x;  //distance;
+            axis        x;  // distance;
             start       (-0.0205 0.0001 0.00001);
             end         (-0.0205 0.0005 0.00001);
             nPoints     100;
@@ -68,7 +68,7 @@ Usage
         Property     | Description             | Required    | Default value
         type         | Type name: streamLine   | yes         |
         setFormat    | Output data type        | yes         |
-        U            | Tracking velocity field name | yes    |
+        U            | Tracking velocity field name | no     | U
         fields       | Fields to sample        | yes         |
         lifetime     | Maximum number of particle tracking steps | yes |
         trackLength  | Tracking segment length | no          |
@@ -77,7 +77,7 @@ Usage
         seedSampleSet| Seeding method (see below)| yes       |
     \endtable
 
-    Where \c seedSampleSet is typically one of
+    Where \c seedSampleSet \c type is typically one of
     \plaintable
         uniform | uniform particle seeding
         cloud   | cloud of points
@@ -109,6 +109,7 @@ SourceFiles
 #include "vectorList.H"
 #include "writer.H"
 #include "indirectPrimitivePatch.H"
+#include "NamedEnum.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -130,6 +131,24 @@ class streamLine
 :
     public fvMeshFunctionObject
 {
+public:
+
+    // Public data types
+
+        //- Track direction enumerations
+        enum trackDirection
+        {
+            FORWARD,
+            BACKWARD,
+            BOTH
+        };
+
+        //- Track direction enumeration names
+        static const NamedEnum<trackDirection, 3> trackDirectionNames_;
+
+
+private:
+
     // Private data
 
         //- Input dictionary
@@ -144,8 +163,8 @@ class streamLine
         //- Interpolation scheme to use
         word interpolationScheme_;
 
-        //- Whether to use +u or -u
-        bool trackForward_;
+        //- The direction in which to track
+        trackDirection trackDirection_;
 
         //- Maximum lifetime (= number of cells) of particle
         label lifeTime_;

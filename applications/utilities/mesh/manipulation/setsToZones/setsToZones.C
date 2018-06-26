@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -84,10 +84,12 @@ int main(int argc, char *argv[])
 
     #include "createNamedPolyMesh.H"
 
+    const fileName setsSubPath(mesh.dbDir()/polyMesh::meshSubDir/"sets");
+
     // Search for list of objects for the time of the mesh
     word setsInstance = runTime.findInstance
     (
-        polyMesh::meshSubDir/"sets",
+        setsSubPath,
         word::null,
         IOobject::MUST_READ,
         mesh.facesInstance()
@@ -95,7 +97,7 @@ int main(int argc, char *argv[])
 
     IOobjectList objects(mesh, setsInstance, polyMesh::meshSubDir/"sets");
 
-    Info<< "Searched : " << setsInstance/polyMesh::meshSubDir/"sets"
+    Info<< "Searched : " << setsInstance/setsSubPath
         << nl
         << "Found    : " << objects.names() << nl
         << endl;
@@ -103,7 +105,7 @@ int main(int argc, char *argv[])
 
     IOobjectList pointObjects(objects.lookupClass(pointSet::typeName));
 
-    //Pout<< "pointSets:" << pointObjects.names() << endl;
+    // Pout<< "pointSets:" << pointObjects.names() << endl;
 
     forAllConstIter(IOobjectList, pointObjects, iter)
     {
@@ -122,10 +124,10 @@ int main(int argc, char *argv[])
                 sz,
                 new pointZone
                 (
-                    set.name(),             //name
-                    pointLabels,            //addressing
-                    sz,                     //index
-                    mesh.pointZones()       //pointZoneMesh
+                    set.name(),             // name
+                    pointLabels,            // addressing
+                    sz,                     // index
+                    mesh.pointZones()       // pointZoneMesh
                 )
             );
             mesh.pointZones().writeOpt() = IOobject::AUTO_WRITE;
@@ -147,7 +149,7 @@ int main(int argc, char *argv[])
 
     HashSet<word> slaveCellSets;
 
-    //Pout<< "faceSets:" << faceObjects.names() << endl;
+    // Pout<< "faceSets:" << faceObjects.names() << endl;
 
     forAllConstIter(IOobjectList, faceObjects, iter)
     {
@@ -253,11 +255,11 @@ int main(int argc, char *argv[])
                 sz,
                 new faceZone
                 (
-                    set.name(),             //name
-                    addressing.shrink(),    //addressing
-                    flipMap.shrink(),       //flipmap
-                    sz,                     //index
-                    mesh.faceZones()        //pointZoneMesh
+                    set.name(),             // name
+                    addressing.shrink(),    // addressing
+                    flipMap.shrink(),       // flipmap
+                    sz,                     // index
+                    mesh.faceZones()        // pointZoneMesh
                 )
             );
             mesh.faceZones().writeOpt() = IOobject::AUTO_WRITE;
@@ -281,7 +283,7 @@ int main(int argc, char *argv[])
 
     IOobjectList cellObjects(objects.lookupClass(cellSet::typeName));
 
-    //Pout<< "cellSets:" << cellObjects.names() << endl;
+    // Pout<< "cellSets:" << cellObjects.names() << endl;
 
     forAllConstIter(IOobjectList, cellObjects, iter)
     {
@@ -302,10 +304,10 @@ int main(int argc, char *argv[])
                     sz,
                     new cellZone
                     (
-                        set.name(),             //name
-                        cellLabels,             //addressing
-                        sz,                     //index
-                        mesh.cellZones()        //pointZoneMesh
+                        set.name(),             // name
+                        cellLabels,             // addressing
+                        sz,                     // index
+                        mesh.cellZones()        // pointZoneMesh
                     )
                 );
                 mesh.cellZones().writeOpt() = IOobject::AUTO_WRITE;

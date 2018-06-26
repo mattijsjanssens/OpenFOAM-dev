@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2015-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -28,7 +28,10 @@ License
 #include "phaseSystem.H"
 #include "multiphaseSystem.H"
 #include "MomentumTransferPhaseSystem.H"
-#include "HeatTransferPhaseSystem.H"
+#include "OneResistanceHeatTransferPhaseSystem.H"
+#include "TwoResistanceHeatTransferPhaseSystem.H"
+#include "PhaseTransferPhaseSystem.H"
+#include "PopulationBalancePhaseSystem.H"
 #include "InterfaceCompositionPhaseChangePhaseSystem.H"
 #include "ThermalPhaseChangePhaseSystem.H"
 
@@ -37,24 +40,33 @@ License
 namespace Foam
 {
     typedef
-        HeatTransferPhaseSystem
+        PhaseTransferPhaseSystem
         <
-            MomentumTransferPhaseSystem<multiphaseSystem>
+            OneResistanceHeatTransferPhaseSystem
+            <
+                MomentumTransferPhaseSystem<multiphaseSystem>
+            >
         >
-        heatAndMomentumTransferMultiphaseSystem;
+        basicMultiphaseSystem;
 
     addNamedToRunTimeSelectionTable
     (
         multiphaseSystem,
-        heatAndMomentumTransferMultiphaseSystem,
+        basicMultiphaseSystem,
         dictionary,
-        heatAndMomentumTransferMultiphaseSystem
+        basicMultiphaseSystem
     );
 
     typedef
         InterfaceCompositionPhaseChangePhaseSystem
         <
-            MomentumTransferPhaseSystem<multiphaseSystem>
+            PhaseTransferPhaseSystem
+            <
+                TwoResistanceHeatTransferPhaseSystem
+                <
+                    MomentumTransferPhaseSystem<multiphaseSystem>
+                >
+            >
         >
         interfaceCompositionPhaseChangeMultiphaseSystem;
 
@@ -69,7 +81,13 @@ namespace Foam
     typedef
         ThermalPhaseChangePhaseSystem
         <
-            MomentumTransferPhaseSystem<multiphaseSystem>
+            PhaseTransferPhaseSystem
+            <
+                TwoResistanceHeatTransferPhaseSystem
+                <
+                    MomentumTransferPhaseSystem<multiphaseSystem>
+                >
+            >
         >
         thermalPhaseChangeMultiphaseSystem;
 
@@ -79,6 +97,51 @@ namespace Foam
         thermalPhaseChangeMultiphaseSystem,
         dictionary,
         thermalPhaseChangeMultiphaseSystem
+    );
+
+    typedef
+        PopulationBalancePhaseSystem
+        <
+            PhaseTransferPhaseSystem
+            <
+                OneResistanceHeatTransferPhaseSystem
+                <
+                    MomentumTransferPhaseSystem<multiphaseSystem>
+                >
+            >
+        >
+        populationBalanceMultiphaseSystem;
+
+    addNamedToRunTimeSelectionTable
+    (
+        multiphaseSystem,
+        populationBalanceMultiphaseSystem,
+        dictionary,
+        populationBalanceMultiphaseSystem
+    );
+
+    typedef
+        ThermalPhaseChangePhaseSystem
+        <
+            PopulationBalancePhaseSystem
+            <
+                PhaseTransferPhaseSystem
+                <
+                    TwoResistanceHeatTransferPhaseSystem
+                    <
+                        MomentumTransferPhaseSystem<multiphaseSystem>
+                    >
+                >
+            >
+        >
+        thermalPhaseChangePopulationBalanceMultiphaseSystem;
+
+    addNamedToRunTimeSelectionTable
+    (
+        multiphaseSystem,
+        thermalPhaseChangePopulationBalanceMultiphaseSystem,
+        dictionary,
+        thermalPhaseChangePopulationBalanceMultiphaseSystem
     );
 }
 

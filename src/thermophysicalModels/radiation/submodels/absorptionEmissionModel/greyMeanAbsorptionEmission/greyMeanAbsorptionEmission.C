@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -56,7 +56,7 @@ Foam::radiation::greyMeanAbsorptionEmission::greyMeanAbsorptionEmission
 )
 :
     absorptionEmissionModel(dict, mesh),
-    coeffsDict_((dict.subDict(typeName + "Coeffs"))),
+    coeffsDict_((dict.optionalSubDict(typeName + "Coeffs"))),
     speciesNames_(0),
     specieIndex_(label(0)),
     lookUpTablePtr_(),
@@ -73,7 +73,7 @@ Foam::radiation::greyMeanAbsorptionEmission::greyMeanAbsorptionEmission
 
 
     label nFunc = 0;
-    const dictionary& functionDicts = dict.subDict(typeName + "Coeffs");
+    const dictionary& functionDicts = dict.optionalSubDict(typeName + "Coeffs");
 
     forAllConstIter(dictionary, functionDicts, iter)
     {
@@ -133,12 +133,7 @@ Foam::radiation::greyMeanAbsorptionEmission::greyMeanAbsorptionEmission
             }
             else if (mesh.foundObject<volScalarField>(iter.key()))
             {
-                volScalarField& Y =
-                    const_cast<volScalarField&>
-                    (
-                        mesh.lookupObject<volScalarField>(iter.key())
-                    );
-                Yj_.set(j, &Y);
+                Yj_.set(j, &mesh.lookupObjectRef<volScalarField>(iter.key()));
                 specieIndex_[iter()] = 0;
                 j++;
                 Info<< "specie: " << iter.key() << " is being solved" << endl;
@@ -155,13 +150,7 @@ Foam::radiation::greyMeanAbsorptionEmission::greyMeanAbsorptionEmission
         }
         else if (mesh.foundObject<volScalarField>(iter.key()))
         {
-            volScalarField& Y =
-                const_cast<volScalarField&>
-                (
-                    mesh.lookupObject<volScalarField>(iter.key())
-                );
-
-            Yj_.set(j, &Y);
+            Yj_.set(j, &mesh.lookupObjectRef<volScalarField>(iter.key()));
             specieIndex_[iter()] = 0;
             j++;
         }
@@ -223,12 +212,12 @@ Foam::radiation::greyMeanAbsorptionEmission::aCont(const label bandI) const
             scalar Xipi = 0.0;
             if (specieIndex_[n] != 0)
             {
-                //Specie found in the lookUpTable.
+                // Specie found in the lookUpTable.
                 const volScalarField& ft =
                     mesh_.lookupObject<volScalarField>("ft");
 
                 const List<scalar>& Ynft = lookUpTablePtr_().lookUp(ft[celli]);
-                //moles x pressure [atm]
+                // moles x pressure [atm]
                 Xipi = Ynft[specieIndex_[n]]*paToAtm(p[celli]);
             }
             else

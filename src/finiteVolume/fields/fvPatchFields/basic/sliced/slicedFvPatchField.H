@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,9 +23,6 @@ License
 
 Class
     Foam::slicedFvPatchField
-
-Group
-    grpGenericBoundaryConditions
 
 Description
     Specialization of fvPatchField which creates the underlying
@@ -176,14 +173,16 @@ public:
             //- Initialise the evaluation of the patch field
             virtual void initEvaluate
             (
-                const Pstream::commsTypes commsType=Pstream::blocking
+                const Pstream::commsTypes commsType =
+                    Pstream::commsTypes::blocking
             )
             {}
 
             //- Evaluate the patch field, sets Updated to false
             virtual void evaluate
             (
-                const Pstream::commsTypes commsType=Pstream::blocking
+                const Pstream::commsTypes commsType =
+                    Pstream::commsTypes::blocking
             )
             {}
 

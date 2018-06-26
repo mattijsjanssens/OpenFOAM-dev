@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -29,6 +29,7 @@ License
 #include "OFstream.H"
 #include "globalIndex.H"
 #include "SubField.H"
+#include "PstreamGlobals.H"
 
 extern "C"
 {
@@ -141,7 +142,8 @@ void Foam::ptscotchDecomp::check(const int retVal, const char* str)
 //    if (Pstream::myProcNo() >= 1 && nSendCells[Pstream::myProcNo()-1] > 0)
 //    {
 //        // Receive cells from previous processor
-//        IPstream fromPrevProc(Pstream::blocking, Pstream::myProcNo()-1);
+//        IPstream fromPrevProc(Pstream::commsTypes::blocking,
+//            Pstream::myProcNo()-1);
 //
 //        Field<int> prevXadj(fromPrevProc);
 //        Field<int> prevAdjncy(fromPrevProc);
@@ -171,7 +173,8 @@ void Foam::ptscotchDecomp::check(const int retVal, const char* str)
 //    if (nSendCells[Pstream::myProcNo()] > 0)
 //    {
 //        // Send cells to next processor
-//        OPstream toNextProc(Pstream::blocking, Pstream::myProcNo()+1);
+//        OPstream toNextProc(Pstream::commsTypes::blocking,
+//            Pstream::myProcNo()+1);
 //
 //        label nCells = nSendCells[Pstream::myProcNo()];
 //        label startCell = xadj.size()-1 - nCells;
@@ -220,7 +223,8 @@ void Foam::ptscotchDecomp::check(const int retVal, const char* str)
 //    // Receive back from next processor if I sent something
 //    if (nSendCells[Pstream::myProcNo()] > 0)
 //    {
-//        IPstream fromNextProc(Pstream::blocking, Pstream::myProcNo()+1);
+//        IPstream fromNextProc(Pstream::commsTypes::blocking,
+//            Pstream::myProcNo()+1);
 //
 //        List<label> nextFinalDecomp(fromNextProc);
 //
@@ -239,7 +243,8 @@ void Foam::ptscotchDecomp::check(const int retVal, const char* str)
 //    // Send back to previous processor.
 //    if (Pstream::myProcNo() >= 1 && nSendCells[Pstream::myProcNo()-1] > 0)
 //    {
-//        OPstream toPrevProc(Pstream::blocking, Pstream::myProcNo()-1);
+//        OPstream toPrevProc(Pstream::commsTypes::blocking,
+//            Pstream::myProcNo()-1);
 //
 //        label nToPrevious = nSendCells[Pstream::myProcNo()-1];
 //
@@ -378,9 +383,9 @@ Foam::label Foam::ptscotchDecomp::decompose
                 Info<< "ptscotchDecomp : Using strategy " << strategy << endl;
             }
             SCOTCH_stratDgraphMap(&stradat, strategy.c_str());
-            //fprintf(stdout, "S\tStrat=");
-            //SCOTCH_stratSave(&stradat, stdout);
-            //fprintf(stdout, "\n");
+            // fprintf(stdout, "S\tStrat=");
+            // SCOTCH_stratSave(&stradat, stdout);
+            // fprintf(stdout, "\n");
         }
     }
 
@@ -464,7 +469,11 @@ Foam::label Foam::ptscotchDecomp::decompose
         Pout<< "SCOTCH_dgraphInit" << endl;
     }
     SCOTCH_Dgraph grafdat;
-    check(SCOTCH_dgraphInit(&grafdat, MPI_COMM_WORLD), "SCOTCH_dgraphInit");
+    check
+    (
+        SCOTCH_dgraphInit(&grafdat, PstreamGlobals::MPI_COMM_FOAM),
+        "SCOTCH_dgraphInit"
+    );
 
 
     if (debug)
@@ -595,8 +604,8 @@ Foam::label Foam::ptscotchDecomp::decompose
 
 
 
-    //finalDecomp.setSize(xadjSize-1);
-    //check
+    // finalDecomp.setSize(xadjSize-1);
+    // check
     //(
     //    SCOTCH_dgraphPart
     //    (

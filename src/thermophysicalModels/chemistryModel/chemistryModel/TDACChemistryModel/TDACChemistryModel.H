@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2016-2017 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2016-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -25,7 +25,7 @@ Class
     Foam::TDACChemistryModel
 
 Description
-    Extends chemistryModel by adding the TDAC method.
+    Extends StandardChemistryModel by adding the TDAC method.
 
     References:
     \verbatim
@@ -64,7 +64,7 @@ SourceFiles
 #ifndef TDACChemistryModel_H
 #define TDACChemistryModel_H
 
-#include "chemistryModel.H"
+#include "StandardChemistryModel.H"
 #include "chemistryReductionMethod.H"
 #include "chemistryTabulationMethod.H"
 #include "OFstream.H"
@@ -78,12 +78,14 @@ namespace Foam
                       Class TDACChemistryModel Declaration
 \*---------------------------------------------------------------------------*/
 
-template<class CompType, class ThermoType>
+template<class ReactionThermo, class ThermoType>
 class TDACChemistryModel
 :
-    public chemistryModel<CompType, ThermoType>
+    public StandardChemistryModel<ReactionThermo, ThermoType>
 {
     // Private member data
+
+        bool variableTimeStep_;
 
         label timeSteps_;
 
@@ -95,10 +97,12 @@ class TDACChemistryModel
         List<List<specieElement>> specieComp_;
         Field<label> completeToSimplifiedIndex_;
         DynamicList<label> simplifiedToCompleteIndex_;
-        autoPtr<chemistryReductionMethod<CompType, ThermoType>> mechRed_;
+        autoPtr<chemistryReductionMethod<ReactionThermo, ThermoType>>
+            mechRed_;
 
         // Tabulation
-        autoPtr<chemistryTabulationMethod<CompType, ThermoType>> tabulation_;
+        autoPtr<chemistryTabulationMethod<ReactionThermo, ThermoType>>
+            tabulation_;
 
         // Log file for the average time spent reducing the chemistry
         autoPtr<OFstream> cpuReduceFile_;
@@ -108,6 +112,9 @@ class TDACChemistryModel
 
         //- Log file for the average time spent adding tabulated data
         autoPtr<OFstream> cpuAddFile_;
+
+        //- Log file for the average time spent growing tabulated data
+        autoPtr<OFstream> cpuGrowFile_;
 
         //- Log file for the average time spent retrieving tabulated data
         autoPtr<OFstream> cpuRetrieveFile_;
@@ -140,17 +147,13 @@ class TDACChemistryModel
 public:
 
     //- Runtime type information
-    TypeName("TDACChemistryModel");
+    TypeName("TDAC");
 
 
     // Constructors
 
-        //- Construct from mesh
-        TDACChemistryModel
-        (
-            const fvMesh& mesh,
-            const word& phaseName
-        );
+        //- Construct from thermo
+        TDACChemistryModel(ReactionThermo& thermo);
 
 
     //- Destructor
@@ -159,11 +162,11 @@ public:
 
     // Member Functions
 
-        inline label timeSteps() const
-        {
-            return timeSteps_;
-        }
+        //- Return true if the time-step is variable and/or non-uniform
+        inline bool variableTimeStep() const;
 
+        //- Return the number of chemistry evaluations (used by ISAT)
+        inline label timeSteps() const;
 
         //- Create and return a TDAC log file of the given name
         inline autoPtr<OFstream> logFile(const word& name) const;
@@ -197,7 +200,7 @@ public:
 
 
         // Chemistry model functions (overriding functions in
-        // chemistryModel to use the private solve function)
+        // StandardChemistryModel to use the private solve function)
 
             //- Solve the reaction system for the given time step
             //  and return the characteristic time
@@ -208,8 +211,8 @@ public:
             virtual scalar solve(const scalarField& deltaT);
 
 
-        // ODE functions (overriding functions in chemistryModel to take into
-        // account the variable number of species)
+        // ODE functions (overriding functions in StandardChemistryModel to take
+        // into account the variable number of species)
 
             virtual void derivatives
             (
@@ -218,20 +221,12 @@ public:
                 scalarField& dcdt
             ) const;
 
-            //- Pure jacobian function for tabulation
-            void jacobian
-            (
-                const scalar t,
-                const scalarField& c,
-                scalarSquareMatrix& dfdc
-            ) const;
-
             virtual void jacobian
             (
                 const scalar t,
                 const scalarField& c,
                 scalarField& dcdt,
-                scalarSquareMatrix& dfdc
+                scalarSquareMatrix& J
             ) const;
 
             virtual void solve
@@ -268,7 +263,8 @@ public:
 
             inline List<List<specieElement>>& specieComp();
 
-            inline autoPtr<chemistryReductionMethod<CompType, ThermoType>>&
+            inline
+                autoPtr<chemistryReductionMethod<ReactionThermo, ThermoType>>&
                 mechRed();
 
             tmp<volScalarField> tabulationResults() const
@@ -281,6 +277,8 @@ public:
             void setTabulationResultsGrow(const label celli);
 
             void setTabulationResultsRetrieve(const label celli);
+
+            inline void resetTabulationResults();
 };
 
 

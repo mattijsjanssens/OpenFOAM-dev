@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2016-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -33,7 +33,7 @@ void Foam::laminarModel<BasicTurbulenceModel>::printCoeffs(const word& type)
 {
     if (printCoeffs_)
     {
-        Info<< type << "Coeffs" << coeffDict_ << endl;
+        Info<< coeffDict_.dictName() << coeffDict_ << endl;
     }
 }
 
@@ -67,7 +67,7 @@ Foam::laminarModel<BasicTurbulenceModel>::laminarModel
 
     laminarDict_(this->subOrEmptyDict("laminar")),
     printCoeffs_(laminarDict_.lookupOrDefault<Switch>("printCoeffs", false)),
-    coeffDict_(laminarDict_.subOrEmptyDict(type + "Coeffs"))
+    coeffDict_(laminarDict_.optionalSubDict(type + "Coeffs"))
 {
     // Force the construction of the mesh deltaCoeffs which may be needed
     // for the construction of the derived models and BCs
@@ -94,7 +94,7 @@ Foam::laminarModel<BasicTurbulenceModel>::New
     (
         IOobject
         (
-            IOobject::groupName(propertiesName, U.group()),
+            IOobject::groupName(propertiesName, alphaRhoPhi.group()),
             U.time().constant(),
             U.db(),
             IOobject::MUST_READ_IF_MODIFIED,
@@ -170,14 +170,7 @@ bool Foam::laminarModel<BasicTurbulenceModel>::read()
     {
         laminarDict_ <<= this->subDict("laminar");
 
-        if
-        (
-            const dictionary* dictPtr =
-                laminarDict_.subDictPtr(type() + "Coeffs")
-        )
-        {
-            coeffDict_ <<= *dictPtr;
-        }
+        coeffDict_ <<= laminarDict_.optionalSubDict(type() + "Coeffs");
 
         return true;
     }
@@ -198,7 +191,7 @@ Foam::laminarModel<BasicTurbulenceModel>::nut() const
         (
             IOobject
             (
-                IOobject::groupName("nut", this->U_.group()),
+                IOobject::groupName("nut", this->alphaRhoPhi_.group()),
                 this->runTime_.timeName(),
                 this->mesh_,
                 IOobject::NO_READ,
@@ -234,7 +227,7 @@ Foam::laminarModel<BasicTurbulenceModel>::nuEff() const
     (
         new volScalarField
         (
-            IOobject::groupName("nuEff", this->U_.group()), this->nu()
+            IOobject::groupName("nuEff", this->alphaRhoPhi_.group()), this->nu()
         )
     );
 }
@@ -261,7 +254,7 @@ Foam::laminarModel<BasicTurbulenceModel>::k() const
         (
             IOobject
             (
-                IOobject::groupName("k", this->U_.group()),
+                IOobject::groupName("k", this->alphaRhoPhi_.group()),
                 this->runTime_.timeName(),
                 this->mesh_,
                 IOobject::NO_READ,
@@ -285,7 +278,7 @@ Foam::laminarModel<BasicTurbulenceModel>::epsilon() const
         (
             IOobject
             (
-                IOobject::groupName("epsilon", this->U_.group()),
+                IOobject::groupName("epsilon", this->alphaRhoPhi_.group()),
                 this->runTime_.timeName(),
                 this->mesh_,
                 IOobject::NO_READ,
@@ -312,7 +305,7 @@ Foam::laminarModel<BasicTurbulenceModel>::R() const
         (
             IOobject
             (
-                IOobject::groupName("R", this->U_.group()),
+                IOobject::groupName("R", this->alphaRhoPhi_.group()),
                 this->runTime_.timeName(),
                 this->mesh_,
                 IOobject::NO_READ,

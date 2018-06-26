@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -47,15 +47,16 @@ using namespace Foam;
 
 int main(int argc, char *argv[])
 {
+    #include "removeCaseOptions.H"
+
     argList::addNote
     (
         "add two surfaces via a geometric merge on points."
     );
 
-    argList::noParallel();
-    argList::validArgs.append("surfaceFile");
-    argList::validArgs.append("surfaceFile");
-    argList::validArgs.append("output surfaceFile");
+    argList::validArgs.append("surface file");
+    argList::validArgs.append("surface file");
+    argList::validArgs.append("output surface file");
 
     argList::addOption
     (

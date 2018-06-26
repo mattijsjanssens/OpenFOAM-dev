@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2012-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2012-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -432,8 +432,8 @@ Foam::autoPtr<Foam::fvMesh> Foam::conformalVoronoiMesh::createDummyMesh
         {
             patches[patchi] = new processorPolyPatch
             (
-                0,          //patchSizes[p],
-                0,          //patchStarts[p],
+                0,          // patchSizes[p],
+                0,          // patchStarts[p],
                 patchi,
                 mesh.boundaryMesh(),
                 readLabel(patchDicts[patchi].lookup("myProcNo")),
@@ -447,8 +447,8 @@ Foam::autoPtr<Foam::fvMesh> Foam::conformalVoronoiMesh::createDummyMesh
             (
                 patchDicts[patchi].lookup("type"),
                 patchNames[patchi],
-                0,          //patchSizes[p],
-                0,          //patchStarts[p],
+                0,          // patchSizes[p],
+                0,          // patchStarts[p],
                 patchi,
                 mesh.boundaryMesh()
             ).ptr();
@@ -620,28 +620,11 @@ void Foam::conformalVoronoiMesh::reorderProcessorPatches
     );
     const fvMesh& sortMesh = sortMeshPtr();
 
-    // Change the transform type on processors to coincident full match.
-//    forAll(sortMesh.boundaryMesh(), patchi)
-//    {
-//        const polyPatch& patch = sortMesh.boundaryMesh()[patchi];
-//
-//        if (isA<processorPolyPatch>(patch))
-//        {
-//            const processorPolyPatch& cpPatch
-//                = refCast<const processorPolyPatch>(patch);
-//
-//            processorPolyPatch& pPatch
-//                = const_cast<processorPolyPatch&>(cpPatch);
-//
-//            pPatch.transform() = coupledPolyPatch::COINCIDENTFULLMATCH;
-//        }
-//    }
-
     // Rotation on new faces.
     labelList rotation(faces.size(), label(0));
     labelList faceMap(faces.size(), label(-1));
 
-    PstreamBuffers pBufs(Pstream::nonBlocking);
+    PstreamBuffers pBufs(Pstream::commsTypes::nonBlocking);
 
     // Send ordering
     forAll(sortMesh.boundaryMesh(), patchi)
@@ -856,8 +839,7 @@ void Foam::conformalVoronoiMesh::writeMesh
             const_cast<dictionary&>(patchDicts[p]).set
             (
                 "transform",
-                "noOrdering"
-                //"coincidentFullMatch"
+                "coincidentFullMatch"
             );
 
             // Do not create empty processor patches

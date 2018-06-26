@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2015-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -28,7 +28,10 @@ License
 #include "phaseSystem.H"
 #include "twoPhaseSystem.H"
 #include "MomentumTransferPhaseSystem.H"
-#include "HeatTransferPhaseSystem.H"
+#include "OneResistanceHeatTransferPhaseSystem.H"
+#include "TwoResistanceHeatTransferPhaseSystem.H"
+#include "PhaseTransferPhaseSystem.H"
+#include "PopulationBalancePhaseSystem.H"
 #include "InterfaceCompositionPhaseChangePhaseSystem.H"
 #include "ThermalPhaseChangePhaseSystem.H"
 
@@ -37,24 +40,33 @@ License
 namespace Foam
 {
     typedef
-        HeatTransferPhaseSystem
+        PhaseTransferPhaseSystem
         <
-            MomentumTransferPhaseSystem<twoPhaseSystem>
+            OneResistanceHeatTransferPhaseSystem
+            <
+                MomentumTransferPhaseSystem<twoPhaseSystem>
+            >
         >
-        heatAndMomentumTransferTwoPhaseSystem;
+        basicTwoPhaseSystem;
 
     addNamedToRunTimeSelectionTable
     (
         twoPhaseSystem,
-        heatAndMomentumTransferTwoPhaseSystem,
+        basicTwoPhaseSystem,
         dictionary,
-        heatAndMomentumTransferTwoPhaseSystem
+        basicTwoPhaseSystem
     );
 
     typedef
         InterfaceCompositionPhaseChangePhaseSystem
         <
-            MomentumTransferPhaseSystem<twoPhaseSystem>
+            PhaseTransferPhaseSystem
+            <
+                TwoResistanceHeatTransferPhaseSystem
+                <
+                    MomentumTransferPhaseSystem<twoPhaseSystem>
+                >
+            >
         >
         interfaceCompositionPhaseChangeTwoPhaseSystem;
 
@@ -69,7 +81,13 @@ namespace Foam
     typedef
         ThermalPhaseChangePhaseSystem
         <
-            MomentumTransferPhaseSystem<twoPhaseSystem>
+            PhaseTransferPhaseSystem
+            <
+                TwoResistanceHeatTransferPhaseSystem
+                <
+                    MomentumTransferPhaseSystem<twoPhaseSystem>
+                >
+            >
         >
         thermalPhaseChangeTwoPhaseSystem;
 
@@ -80,6 +98,51 @@ namespace Foam
         dictionary,
         thermalPhaseChangeTwoPhaseSystem
     );
+
+    typedef
+        PopulationBalancePhaseSystem
+        <
+            PhaseTransferPhaseSystem
+            <
+                OneResistanceHeatTransferPhaseSystem
+                <
+                    MomentumTransferPhaseSystem<twoPhaseSystem>
+                >
+            >
+        >
+        populationBalanceTwoPhaseSystem;
+
+    addNamedToRunTimeSelectionTable
+    (
+        twoPhaseSystem,
+        populationBalanceTwoPhaseSystem,
+        dictionary,
+        populationBalanceTwoPhaseSystem
+    );
+
+    typedef
+        ThermalPhaseChangePhaseSystem
+        <
+            PopulationBalancePhaseSystem
+            <
+                PhaseTransferPhaseSystem
+                <
+                    TwoResistanceHeatTransferPhaseSystem
+                    <
+                        MomentumTransferPhaseSystem<twoPhaseSystem>
+                    >
+                >
+            >
+        >
+        thermalPhaseChangePopulationBalanceTwoPhaseSystem;
+
+        addNamedToRunTimeSelectionTable
+        (
+            twoPhaseSystem,
+            thermalPhaseChangePopulationBalanceTwoPhaseSystem,
+            dictionary,
+            thermalPhaseChangePopulationBalanceTwoPhaseSystem
+        );
 }
 
 

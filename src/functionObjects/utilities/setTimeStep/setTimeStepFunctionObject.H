@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2013-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -24,14 +24,11 @@ License
 Class
     Foam::functionObjects::setTimeStepFunctionObject
 
-Group
-    grpUtilitiesFunctionObjects
-
 Description
     Overrides the timeStep. Can only be used with
     solvers with adjustTimeStep control (e.g. pimpleFoam). Makes no attempt
     to cooperate with other timeStep 'controllers' (maxCo, other
-    functionObjects). Supports 'enabled' flag but none of othe other ones
+    functionObjects). Supports 'enabled' flag but none of the other ones
     'timeStart', 'timeEnd', 'writeControl' etc.
 
 SourceFiles
@@ -104,8 +101,8 @@ public:
         //- Return time database
         const Time& time() const;
 
-        //- Called at the end of Time::adjustDeltaT() if adjustTime is true
-        virtual bool adjustTimeStep();
+        //- Override the time-step value
+        virtual bool setTimeStep();
 
         //- Read and set the function object if its data have changed
         virtual bool read(const dictionary&);

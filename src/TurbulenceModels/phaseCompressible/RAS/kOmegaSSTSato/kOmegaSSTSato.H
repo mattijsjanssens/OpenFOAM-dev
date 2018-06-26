@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2014-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2014-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,9 +23,6 @@ License
 
 Class
     Foam::RASModels::kOmegaSSTSato
-
-Group
-    grpRASTurbulence
 
 Description
     Implementation of the k-omega-SST turbulence model for dispersed bubbly
@@ -68,8 +65,8 @@ Description
     to specify the near-wall omega as appropriate.
 
     The blending functions (15) and (16) are not currently used because of the
-    uncertainty in their origin, range of applicability and that is y+ becomes
-    sufficiently small blending u_tau in this manner clearly becomes nonsense.
+    uncertainty in their origin, range of applicability and that as y+ becomes
+    sufficiently small blending u_tau in this manner is clearly nonsense.
 
     The default model coefficients correspond to the following:
     \verbatim
@@ -156,7 +153,12 @@ protected:
 
     // Protected Member Functions
 
-        virtual void correctNut();
+        virtual void correctNut
+        (
+            const volScalarField& S2,
+            const volScalarField& F2
+        );
+
 
 public:
 

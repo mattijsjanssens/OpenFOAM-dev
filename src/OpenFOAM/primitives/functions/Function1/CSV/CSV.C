@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -25,63 +25,63 @@ License
 
 #include "CSV.H"
 #include "DynamicList.H"
-#include "IFstream.H"
+//#include "IFstream.H"
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
 template<>
 Foam::label Foam::Function1Types::CSV<Foam::label>::readValue
 (
-    const List<string>& splitted
+    const List<string>& split
 )
 {
-    if (componentColumns_[0] >= splitted.size())
+    if (componentColumns_[0] >= split.size())
     {
         FatalErrorInFunction
             << "No column " << componentColumns_[0] << " in "
-            << splitted << endl
+            << split << endl
             << exit(FatalError);
     }
 
-    return readLabel(IStringStream(splitted[componentColumns_[0]])());
+    return readLabel(IStringStream(split[componentColumns_[0]])());
 }
 
 
 template<>
 Foam::scalar Foam::Function1Types::CSV<Foam::scalar>::readValue
 (
-    const List<string>& splitted
+    const List<string>& split
 )
 {
-    if (componentColumns_[0] >= splitted.size())
+    if (componentColumns_[0] >= split.size())
     {
         FatalErrorInFunction
             << "No column " << componentColumns_[0] << " in "
-            << splitted << endl
+            << split << endl
             << exit(FatalError);
     }
 
-    return readScalar(IStringStream(splitted[componentColumns_[0]])());
+    return readScalar(IStringStream(split[componentColumns_[0]])());
 }
 
 
 template<class Type>
-Type Foam::Function1Types::CSV<Type>::readValue(const List<string>& splitted)
+Type Foam::Function1Types::CSV<Type>::readValue(const List<string>& split)
 {
     Type result;
 
     for (label i = 0; i < pTraits<Type>::nComponents; i++)
     {
-        if (componentColumns_[i] >= splitted.size())
+        if (componentColumns_[i] >= split.size())
         {
             FatalErrorInFunction
             << "No column " << componentColumns_[i] << " in "
-                << splitted << endl
+                << split << endl
                 << exit(FatalError);
         }
 
         result[i] =
-        readScalar(IStringStream(splitted[componentColumns_[i]])());
+        readScalar(IStringStream(split[componentColumns_[i]])());
     }
 
     return result;
@@ -92,7 +92,9 @@ template<class Type>
 void Foam::Function1Types::CSV<Type>::read()
 {
     fileName expandedFile(fName_);
-    IFstream is(expandedFile.expand());
+    // IFstream is(expandedFile.expand());
+    autoPtr<ISstream> isPtr(fileHandler().NewIFstream(expandedFile.expand()));
+    ISstream& is = isPtr();
 
     if (!is.good())
     {
@@ -121,7 +123,7 @@ void Foam::Function1Types::CSV<Type>::read()
 
         label n = 0;
         std::size_t pos = 0;
-        DynamicList<string> splitted;
+        DynamicList<string> split;
 
         if (mergeSeparators_)
         {
@@ -148,13 +150,13 @@ void Foam::Function1Types::CSV<Type>::read()
 
                 if (nPos == std::string::npos)
                 {
-                    splitted.append(line.substr(pos));
+                    split.append(line.substr(pos));
                     pos = nPos;
                     n++;
                 }
                 else
                 {
-                    splitted.append(line.substr(pos, nPos - pos));
+                    split.append(line.substr(pos, nPos - pos));
                     pos = nPos + 1;
                     n++;
                 }
@@ -168,13 +170,13 @@ void Foam::Function1Types::CSV<Type>::read()
 
                 if (nPos == std::string::npos)
                 {
-                    splitted.append(line.substr(pos));
+                    split.append(line.substr(pos));
                     pos = nPos;
                     n++;
                 }
                 else
                 {
-                    splitted.append(line.substr(pos, nPos - pos));
+                    split.append(line.substr(pos, nPos - pos));
                     pos = nPos + 1;
                     n++;
                 }
@@ -182,13 +184,13 @@ void Foam::Function1Types::CSV<Type>::read()
         }
 
 
-        if (splitted.size() <= 1)
+        if (split.size() <= 1)
         {
             break;
         }
 
-        scalar x = readScalar(IStringStream(splitted[refColumn_])());
-        Type value = readValue(splitted);
+        scalar x = readScalar(IStringStream(split[refColumn_])());
+        Type value = readValue(split);
 
         values.append(Tuple2<scalar,Type>(x, value));
     }
@@ -203,18 +205,16 @@ template<class Type>
 Foam::Function1Types::CSV<Type>::CSV
 (
     const word& entryName,
-    const dictionary& dict,
-    const word& ext
+    const dictionary& dict
 )
 :
-    TableBase<Type>(entryName, dict.subDict(entryName + ext)),
-    coeffs_(dict.subDict(entryName + ext)),
-    nHeaderLine_(readLabel(coeffs_.lookup("nHeaderLine"))),
-    refColumn_(readLabel(coeffs_.lookup("refColumn"))),
-    componentColumns_(coeffs_.lookup("componentColumns")),
-    separator_(coeffs_.lookupOrDefault<string>("separator", string(","))[0]),
-    mergeSeparators_(readBool(coeffs_.lookup("mergeSeparators"))),
-    fName_(coeffs_.lookup("file"))
+    TableBase<Type>(entryName, dict),
+    nHeaderLine_(readLabel(dict.lookup("nHeaderLine"))),
+    refColumn_(readLabel(dict.lookup("refColumn"))),
+    componentColumns_(dict.lookup("componentColumns")),
+    separator_(dict.lookupOrDefault<string>("separator", string(","))[0]),
+    mergeSeparators_(readBool(dict.lookup("mergeSeparators"))),
+    fName_(dict.lookup("file"))
 {
     if (componentColumns_.size() != pTraits<Type>::nComponents)
     {
@@ -273,21 +273,10 @@ void Foam::Function1Types::CSV<Type>::writeData(Ostream& os) const
 
     os.writeKeyword("nHeaderLine") << nHeaderLine_ << token::END_STATEMENT
         << nl;
+
     os.writeKeyword("refColumn") << refColumn_ << token::END_STATEMENT << nl;
 
-    // Force writing labelList in ascii
-    os.writeKeyword("componentColumns");
-    if (os.format() == IOstream::BINARY)
-    {
-        os.format(IOstream::ASCII);
-        os  << componentColumns_;
-        os.format(IOstream::BINARY);
-    }
-    else
-    {
-        os  << componentColumns_;
-    }
-    os  << token::END_STATEMENT << nl;
+    componentColumns_.writeEntry("componentColumns", os);
 
     os.writeKeyword("separator") << string(separator_)
         << token::END_STATEMENT << nl;

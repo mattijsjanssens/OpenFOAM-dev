@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2015-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2015-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -131,6 +131,12 @@ Foam::tmp<Foam::volScalarField> Foam::phaseModel::d() const
 }
 
 
+const Foam::autoPtr<Foam::diameterModel>& Foam::phaseModel::dPtr() const
+{
+    return diameterModel_;
+}
+
+
 void Foam::phaseModel::correct()
 {
     diameterModel_->correct();
@@ -159,46 +165,21 @@ bool Foam::phaseModel::read()
 }
 
 
-bool Foam::phaseModel::compressible() const
+void Foam::phaseModel::correctInflowOutflow(surfaceScalarField& alphaPhi) const
 {
-    return false;
-}
+    surfaceScalarField::Boundary& alphaPhiBf = alphaPhi.boundaryFieldRef();
+    const volScalarField::Boundary& alphaBf = boundaryField();
+    const surfaceScalarField::Boundary& phiBf = phi()().boundaryField();
 
+    forAll(alphaPhiBf, patchi)
+    {
+        fvsPatchScalarField& alphaPhip = alphaPhiBf[patchi];
 
-const Foam::tmp<Foam::volScalarField>& Foam::phaseModel::divU() const
-{
-    NotImplemented;
-    static tmp<Foam::volScalarField> divU_(nullptr);
-    return divU_;
-}
-
-
-void Foam::phaseModel::divU(const tmp<volScalarField>& divU)
-{
-    WarningInFunction
-        << "Attempt to set the dilatation rate of an incompressible phase"
-        << endl;
-}
-
-
-const Foam::volScalarField& Foam::phaseModel::K() const
-{
-    NotImplemented;
-    return volScalarField::null();
-}
-
-
-const Foam::surfaceScalarField& Foam::phaseModel::DbyA() const
-{
-    return surfaceScalarField::null();
-}
-
-
-void Foam::phaseModel::DbyA(const tmp<surfaceScalarField>& DbyA)
-{
-    WarningInFunction
-        << "Attempt to set the dilatation rate of an incompressible phase"
-        << endl;
+        if (!alphaPhip.coupled())
+        {
+            alphaPhip = phiBf[patchi]*alphaBf[patchi];
+        }
+    }
 }
 
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -32,7 +32,7 @@ Description
     Addressing arrays must be supplied for the upper and lower triangles.
 
 Note
-    It might be better if this class were organised as a hierachy starting
+    It might be better if this class were organised as a hierarchy starting
     from an empty matrix, then deriving diagonal, symmetric and asymmetric
     matrices.
 
@@ -121,6 +121,9 @@ public:
 
             //- Dictionary of controls
             dictionary controlDict_;
+
+            //- Default maximum number of iterations in the solver
+            static const label defaultMaxIter_ = 1000;
 
             //- Maximum number of iterations in the solver
             label maxIter_;

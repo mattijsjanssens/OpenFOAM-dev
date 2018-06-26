@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2013-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -53,7 +53,7 @@ Foam::laminarFlameSpeedModels::RaviPetersen::RaviPetersen
 )
 :
     laminarFlameSpeed(dict, ct),
-    coeffsDict_(dict.subDict(typeName + "Coeffs").subDict(fuel_)),
+    coeffsDict_(dict.optionalSubDict(typeName + "Coeffs").subDict(fuel_)),
     pPoints_(coeffsDict_.lookup("pPoints")),
     EqRPoints_(coeffsDict_.lookup("EqRPoints")),
     alpha_(coeffsDict_.lookup("alpha")),
@@ -318,7 +318,7 @@ Foam::laminarFlameSpeedModels::RaviPetersen::operator()() const
             dimensionedScalar
             (
                 psiuReactionThermo_.lookup("stoichiometricAirFuelMassRatio")
-            )*ft/max(1 - ft, SMALL);
+            )*ft/max(1 - ft, small);
     }
     else
     {

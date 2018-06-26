@@ -18,26 +18,22 @@ FoamFile
 thermoType
 {
     type            heRhoThermo;
-    mixture         multiComponentMixture;
+    mixture         pureMixture;
     transport       const;
     thermo          hRefConst;
     equationOfState perfectGas;
     specie          specie;
-    energy          sensibleInternalEnergy;
+    energy          sensibleEnthalpy;
 }
 
-species
-(
-    water
-);
+dpdt yes;
 
-inertSpecie water;
+pressureWorkAlphaLimit 0;
 
-water
+mixture
 {
     specie
     {
-        nMoles          1;
         molWeight       18.0153;
     }
 

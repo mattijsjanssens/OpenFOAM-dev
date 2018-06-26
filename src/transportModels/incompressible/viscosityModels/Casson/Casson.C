@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2016-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -63,7 +63,7 @@ Foam::viscosityModels::Casson::calcNu() const
                    /max
                     (
                         strainRate(),
-                        dimensionedScalar("VSMALL", dimless/dimTime, VSMALL)
+                        dimensionedScalar("vSmall", dimless/dimTime, vSmall)
                     )
                 ) + sqrt(m_)
             )
@@ -83,7 +83,7 @@ Foam::viscosityModels::Casson::Casson
 )
 :
     viscosityModel(name, viscosityProperties, U, phi),
-    CassonCoeffs_(viscosityProperties.subDict(typeName + "Coeffs")),
+    CassonCoeffs_(viscosityProperties.optionalSubDict(typeName + "Coeffs")),
     m_("m", dimViscosity, CassonCoeffs_),
     tau0_("tau0", dimViscosity/dimTime, CassonCoeffs_),
     nuMin_("nuMin", dimViscosity, CassonCoeffs_),
@@ -112,7 +112,7 @@ bool Foam::viscosityModels::Casson::read
 {
     viscosityModel::read(viscosityProperties);
 
-    CassonCoeffs_ = viscosityProperties.subDict(typeName + "Coeffs");
+    CassonCoeffs_ = viscosityProperties.optionalSubDict(typeName + "Coeffs");
 
     CassonCoeffs_.lookup("m") >> m_;
     CassonCoeffs_.lookup("tau0") >> tau0_;

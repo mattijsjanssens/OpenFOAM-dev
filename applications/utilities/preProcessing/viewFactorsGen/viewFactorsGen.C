@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -31,7 +31,7 @@ Description
     Each view factor between the agglomerated faces i and j (Fij) is calculated
     using a double integral of the sub-areas composing the agglomaration.
 
-    The patches involved in the view factor calculation are taken from the Qr
+    The patches involved in the view factor calculation are taken from the qr
     volScalarField (radiative flux) when is greyDiffusiveRadiationViewFactor
     otherwise they are not included.
 
@@ -196,7 +196,7 @@ scalar calculateViewFactorFij
     vector r = i - j;
     scalar rMag = mag(r);
 
-    if (rMag > SMALL)
+    if (rMag > small)
     {
         scalar dAiMag = mag(dAi);
         scalar dAjMag = mag(dAj);
@@ -272,11 +272,11 @@ int main(int argc, char *argv[])
 
     const label debug = viewFactorDict.lookupOrDefault<label>("debug", 0);
 
-    volScalarField Qr
+    volScalarField qr
     (
         IOobject
         (
-            "Qr",
+            "qr",
             runTime.timeName(),
             mesh,
             IOobject::MUST_READ,
@@ -330,25 +330,25 @@ int main(int argc, char *argv[])
     // Calculate total number of fine and coarse faces
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    label nCoarseFaces = 0;      //total number of coarse faces
-    label nFineFaces = 0;        //total number of fine faces
+    label nCoarseFaces = 0;      // total number of coarse faces
+    label nFineFaces = 0;        // total number of fine faces
 
     const polyBoundaryMesh& patches = mesh.boundaryMesh();
     const polyBoundaryMesh& coarsePatches = coarseMesh.boundaryMesh();
 
     labelList viewFactorsPatches(patches.size());
 
-    const volScalarField::Boundary& Qrb = Qr.boundaryField();
+    const volScalarField::Boundary& qrb = qr.boundaryField();
 
     label count = 0;
-    forAll(Qrb, patchi)
+    forAll(qrb, patchi)
     {
         const polyPatch& pp = patches[patchi];
-        const fvPatchScalarField& QrpI = Qrb[patchi];
+        const fvPatchScalarField& qrpI = qrb[patchi];
 
-        if ((isA<fixedValueFvPatchScalarField>(QrpI)) && (pp.size() > 0))
+        if ((isA<fixedValueFvPatchScalarField>(qrpI)) && (pp.size() > 0))
         {
-            viewFactorsPatches[count] = QrpI.patch().index();
+            viewFactorsPatches[count] = qrpI.patch().index();
             nCoarseFaces += coarsePatches[patchi].size();
             nFineFaces += patches[patchi].size();
             count ++;
@@ -434,7 +434,7 @@ int main(int argc, char *argv[])
             ) = upp.localPoints();
 
             point cfo = cf;
-            scalar dist = GREAT;
+            scalar dist = great;
             forAll(availablePoints, iPoint)
             {
                 point cfFine = availablePoints[iPoint];

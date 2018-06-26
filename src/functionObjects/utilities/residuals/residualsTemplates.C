@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2015-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2015-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -83,9 +83,13 @@ void Foam::functionObjects::residuals::writeResidual(const word& fieldName)
             {
                 if (component(validComponents, cmpt) != -1)
                 {
-                    file() << token::TAB << component(residual, cmpt);
+                    file() << tab << component(residual, cmpt);
                 }
             }
+        }
+        else
+        {
+            file() << tab << "N/A";
         }
     }
 }

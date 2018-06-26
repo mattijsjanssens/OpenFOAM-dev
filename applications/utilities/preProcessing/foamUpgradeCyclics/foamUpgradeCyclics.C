@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -74,7 +74,8 @@ void rewriteBoundary
     HashTable<word>& nbrNames
 )
 {
-    Info<< "Reading boundary from " << io.filePath() << endl;
+    Info<< "Reading boundary from " << typeFilePath<IOPtrList<entry>>(io)
+        << endl;
 
     // Read PtrList of dictionary.
     const word oldTypeName = IOPtrList<entry>::typeName;
@@ -237,7 +238,7 @@ void rewriteBoundary
     {
         if (isTestRun)
         {
-            //Info<< "-test option: no changes made" << nl << endl;
+            // Info<< "-test option: no changes made" << nl << endl;
         }
         else
         {
@@ -336,13 +337,13 @@ void rewriteField
         }
     }
 
-    //Info<< "New boundaryField:" << boundaryField << endl;
+    // Info<< "New boundaryField:" << boundaryField << endl;
 
     if (returnReduce(nChanged, sumOp<label>()) > 0)
     {
         if (isTestRun)
         {
-            //Info<< "-test option: no changes made" << endl;
+            // Info<< "-test option: no changes made" << endl;
         }
         else
         {
@@ -446,7 +447,7 @@ int main(int argc, char *argv[])
         false
     );
 
-    if (io.headerOk())
+    if (io.typeHeaderOk<IOPtrList<entry>>(false))
     {
         rewriteBoundary
         (
@@ -480,7 +481,7 @@ int main(int argc, char *argv[])
             false
         );
 
-        if (io.headerOk())
+        if (io.typeHeaderOk<IOPtrList<entry>>(false))
         {
             rewriteBoundary
             (

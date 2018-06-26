@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -31,11 +31,12 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "fvCFD.H"
-#include "rhoThermo.H"
+#include "fluidThermo.H"
 #include "turbulentFluidThermoModel.H"
+#include "simpleControl.H"
+#include "pressureControl.H"
 #include "fvOptions.H"
 #include "IOporosityModelList.H"
-#include "simpleControl.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -43,12 +44,11 @@ int main(int argc, char *argv[])
 {
     #include "postProcess.H"
 
-    #include "setRootCase.H"
+    #include "setRootCaseLists.H"
     #include "createTime.H"
     #include "createMesh.H"
     #include "createControl.H"
     #include "createFields.H"
-    #include "createFvOptions.H"
     #include "createZones.H"
     #include "initContinuityErrs.H"
 
@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
 
     Info<< "\nStarting time loop\n" << endl;
 
-    while (simple.loop())
+    while (simple.loop(runTime))
     {
         Info<< "Time = " << runTime.timeName() << nl << endl;
 

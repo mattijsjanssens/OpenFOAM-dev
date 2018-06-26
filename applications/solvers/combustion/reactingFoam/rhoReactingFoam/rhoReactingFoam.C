@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -31,10 +31,12 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "fvCFD.H"
-#include "rhoCombustionModel.H"
+#include "rhoReactionThermo.H"
+#include "CombustionModel.H"
 #include "turbulentFluidThermoModel.H"
 #include "multivariateScheme.H"
 #include "pimpleControl.H"
+#include "pressureControl.H"
 #include "fvOptions.H"
 #include "localEulerDdtScheme.H"
 #include "fvcSmooth.H"
@@ -45,15 +47,15 @@ int main(int argc, char *argv[])
 {
     #include "postProcess.H"
 
-    #include "setRootCase.H"
+    #include "setRootCaseLists.H"
     #include "createTime.H"
     #include "createMesh.H"
     #include "createControl.H"
-    #include "createTimeControls.H"
     #include "initContinuityErrs.H"
     #include "createFields.H"
     #include "createFieldRefs.H"
-    #include "createFvOptions.H"
+    #include "createRhoUfIfPresent.H"
+    #include "createTimeControls.H"
 
     turbulence->validate();
 
@@ -97,7 +99,14 @@ int main(int argc, char *argv[])
             // --- Pressure corrector loop
             while (pimple.correct())
             {
-                #include "pEqn.H"
+                if (pimple.consistent())
+                {
+                    #include "../../../compressible/rhoPimpleFoam/pcEqn.H"
+                }
+                else
+                {
+                    #include "../../../compressible/rhoPimpleFoam/pEqn.H"
+                }
             }
 
             if (pimple.turbCorr())

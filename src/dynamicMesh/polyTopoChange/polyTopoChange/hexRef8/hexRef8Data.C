@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2015-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2015-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -41,7 +41,11 @@ Foam::hexRef8Data::hexRef8Data(const IOobject& io)
     {
         IOobject rio(io);
         rio.rename("cellLevel");
-        bool haveFile = returnReduce(rio.headerOk(), orOp<bool>());
+        bool haveFile = returnReduce
+        (
+            rio.typeHeaderOk<labelIOList>(true),
+            orOp<bool>()
+        );
         if (haveFile)
         {
             Info<< "Reading hexRef8 data : " << rio.name() << endl;
@@ -51,7 +55,11 @@ Foam::hexRef8Data::hexRef8Data(const IOobject& io)
     {
         IOobject rio(io);
         rio.rename("pointLevel");
-        bool haveFile = returnReduce(rio.headerOk(), orOp<bool>());
+        bool haveFile = returnReduce
+        (
+            rio.typeHeaderOk<labelIOList>(true),
+            orOp<bool>()
+        );
         if (haveFile)
         {
             Info<< "Reading hexRef8 data : " << rio.name() << endl;
@@ -61,7 +69,11 @@ Foam::hexRef8Data::hexRef8Data(const IOobject& io)
     {
         IOobject rio(io);
         rio.rename("level0Edge");
-        bool haveFile = returnReduce(rio.headerOk(), orOp<bool>());
+        bool haveFile = returnReduce
+        (
+            rio.typeHeaderOk<uniformDimensionedScalarField>(true),
+            orOp<bool>()
+        );
         if (haveFile)
         {
             Info<< "Reading hexRef8 data : " << rio.name() << endl;
@@ -71,7 +83,11 @@ Foam::hexRef8Data::hexRef8Data(const IOobject& io)
     {
         IOobject rio(io);
         rio.rename("refinementHistory");
-        bool haveFile = returnReduce(rio.headerOk(), orOp<bool>());
+        bool haveFile = returnReduce
+        (
+            rio.typeHeaderOk<refinementHistory>(true),
+            orOp<bool>()
+        );
         if (haveFile)
         {
             Info<< "Reading hexRef8 data : " << rio.name() << endl;
@@ -289,6 +305,29 @@ void Foam::hexRef8Data::sync(const IOobject& io)
         rio.rename("refinementHistory");
         rio.readOpt() = IOobject::NO_READ;
         refHistoryPtr_.reset(new refinementHistory(rio, mesh.nCells(), true));
+    }
+}
+
+
+void Foam::hexRef8Data::updateMesh(const mapPolyMesh& map)
+{
+    if (cellLevelPtr_.valid())
+    {
+        cellLevelPtr_() = labelList(cellLevelPtr_(), map.cellMap());
+        cellLevelPtr_().instance() = map.mesh().facesInstance();
+    }
+    if (pointLevelPtr_.valid())
+    {
+        pointLevelPtr_() = labelList(pointLevelPtr_(), map.pointMap());
+        pointLevelPtr_().instance() = map.mesh().facesInstance();
+    }
+
+    // No need to distribute the level0Edge
+
+    if (refHistoryPtr_.valid() && refHistoryPtr_().active())
+    {
+        refHistoryPtr_().updateMesh(map);
+        refHistoryPtr_().instance() = map.mesh().facesInstance();
     }
 }
 

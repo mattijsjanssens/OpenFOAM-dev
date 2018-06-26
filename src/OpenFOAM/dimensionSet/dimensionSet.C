@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -31,8 +31,8 @@ License
 
 namespace Foam
 {
-defineTypeNameAndDebug(dimensionSet, 1);
-const scalar dimensionSet::smallExponent = SMALL;
+    defineTypeNameAndDebug(dimensionSet, 1);
+    const scalar dimensionSet::smallExponent = small;
 }
 
 
@@ -411,7 +411,19 @@ Foam::dimensionSet Foam::pos(const dimensionSet&)
 }
 
 
+Foam::dimensionSet Foam::pos0(const dimensionSet&)
+{
+    return dimless;
+}
+
+
 Foam::dimensionSet Foam::neg(const dimensionSet&)
+{
+    return dimless;
+}
+
+
+Foam::dimensionSet Foam::neg0(const dimensionSet&)
 {
     return dimless;
 }

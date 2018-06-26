@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -135,6 +135,29 @@ void Foam::polyMesh::calcDirections() const
 }
 
 
+Foam::autoPtr<Foam::labelIOList> Foam::polyMesh::readTetBasePtIs() const
+{
+    IOobject io
+    (
+        "tetBasePtIs",
+        instance(),
+        meshSubDir,
+        *this,
+        IOobject::READ_IF_PRESENT,
+        IOobject::NO_WRITE
+    );
+
+    if (io.typeHeaderOk<labelIOList>())
+    {
+        return autoPtr<labelIOList>(new labelIOList(io));
+    }
+    else
+    {
+        return autoPtr<labelIOList>(nullptr);
+    }
+}
+
+
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 Foam::polyMesh::polyMesh(const IOobject& io)
@@ -207,7 +230,7 @@ Foam::polyMesh::polyMesh(const IOobject& io)
     comm_(UPstream::worldComm),
     geometricD_(Zero),
     solutionD_(Zero),
-    tetBasePtIsPtr_(nullptr),
+    tetBasePtIsPtr_(readTetBasePtIs()),
     cellTreePtr_(nullptr),
     pointZones_
     (
@@ -269,7 +292,7 @@ Foam::polyMesh::polyMesh(const IOobject& io)
     curMotionTimeIndex_(time().timeIndex()),
     oldPointsPtr_(nullptr)
 {
-    if (exists(owner_.objectPath()))
+    if (!owner_.headerClassName().empty())
     {
         initMesh();
     }
@@ -401,7 +424,7 @@ Foam::polyMesh::polyMesh
     comm_(UPstream::worldComm),
     geometricD_(Zero),
     solutionD_(Zero),
-    tetBasePtIsPtr_(nullptr),
+    tetBasePtIsPtr_(readTetBasePtIs()),
     cellTreePtr_(nullptr),
     pointZones_
     (
@@ -552,7 +575,7 @@ Foam::polyMesh::polyMesh
     comm_(UPstream::worldComm),
     geometricD_(Zero),
     solutionD_(Zero),
-    tetBasePtIsPtr_(nullptr),
+    tetBasePtIsPtr_(readTetBasePtIs()),
     cellTreePtr_(nullptr),
     pointZones_
     (
@@ -815,7 +838,7 @@ Foam::label Foam::polyMesh::nSolutionD() const
 }
 
 
-const Foam::labelList& Foam::polyMesh::tetBasePtIs() const
+const Foam::labelIOList& Foam::polyMesh::tetBasePtIs() const
 {
     if (tetBasePtIsPtr_.empty())
     {
@@ -828,8 +851,17 @@ const Foam::labelList& Foam::polyMesh::tetBasePtIs() const
 
         tetBasePtIsPtr_.reset
         (
-            new labelList
+            new labelIOList
             (
+                IOobject
+                (
+                    "tetBasePtIs",
+                    instance(),
+                    meshSubDir,
+                    *this,
+                    IOobject::READ_IF_PRESENT,
+                    IOobject::NO_WRITE
+                ),
                 polyMeshTetDecomposition::findFaceBasePts(*this)
             )
         );
@@ -844,14 +876,6 @@ Foam::polyMesh::cellTree() const
 {
     if (cellTreePtr_.empty())
     {
-        treeBoundBox overallBb(points());
-
-        Random rndGen(261782);
-
-        overallBb = overallBb.extend(rndGen, 1e-4);
-        overallBb.min() -= point(ROOTVSMALL, ROOTVSMALL, ROOTVSMALL);
-        overallBb.max() += point(ROOTVSMALL, ROOTVSMALL, ROOTVSMALL);
-
         cellTreePtr_.reset
         (
             new indexedOctree<treeDataCell>
@@ -862,7 +886,7 @@ Foam::polyMesh::cellTree() const
                     *this,
                     CELL_TETS   // use tet-decomposition for any inside test
                 ),
-                overallBb,
+                treeBoundBox(points()).extend(1e-4),
                 8,              // maxLevel
                 10,             // leafsize
                 5.0             // duplicity
@@ -901,7 +925,7 @@ void Foam::polyMesh::addPatches
 
     // parallelData depends on the processorPatch ordering so force
     // recalculation. Problem: should really be done in removeBoundary but
-    // there is some info in parallelData which might be interesting inbetween
+    // there is some info in parallelData which might be interesting in between
     // removeBoundary and addPatches.
     globalMeshDataPtr_.clear();
 
@@ -1087,6 +1111,13 @@ Foam::tmp<Foam::scalarField> Foam::polyMesh::movePoints
     points_.writeOpt() = IOobject::AUTO_WRITE;
     points_.instance() = time().timeName();
     points_.eventNo() = getEvent();
+
+    if (tetBasePtIsPtr_.valid())
+    {
+        tetBasePtIsPtr_().writeOpt() = IOobject::AUTO_WRITE;
+        tetBasePtIsPtr_().instance() = time().timeName();
+        tetBasePtIsPtr_().eventNo() = getEvent();
+    }
 
     tmp<scalarField> sweptVols = primitiveMesh::movePoints
     (
@@ -1294,7 +1325,7 @@ bool Foam::polyMesh::pointInCell
 
                     vector proj = p - faceTri.centre();
 
-                    if ((faceTri.normal() & proj) > 0)
+                    if ((faceTri.area() & proj) > 0)
                     {
                         return false;
                     }
@@ -1318,22 +1349,13 @@ bool Foam::polyMesh::pointInCell
                 for (label tetPti = 1; tetPti < f.size() - 1; tetPti++)
                 {
                     // Get tetIndices of face triangle
-                    tetIndices faceTetIs
-                    (
-                        polyMeshTetDecomposition::triangleTetIndices
-                        (
-                            *this,
-                            facei,
-                            celli,
-                            tetPti
-                        )
-                    );
+                    tetIndices faceTetIs(celli, facei, tetPti);
 
                     triPointRef faceTri = faceTetIs.faceTri(*this);
 
                     vector proj = p - faceTri.centre();
 
-                    if ((faceTri.normal() & proj) > 0)
+                    if ((faceTri.area() & proj) > 0)
                     {
                         return false;
                     }

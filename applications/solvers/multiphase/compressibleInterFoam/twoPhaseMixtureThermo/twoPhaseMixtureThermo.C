@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2013-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -26,7 +26,7 @@ License
 #include "twoPhaseMixtureThermo.H"
 #include "gradientEnergyFvPatchScalarField.H"
 #include "mixedEnergyFvPatchScalarField.H"
-
+#include "collatedFileOperation.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -40,29 +40,61 @@ namespace Foam
 
 Foam::twoPhaseMixtureThermo::twoPhaseMixtureThermo
 (
-    const fvMesh& mesh
+    const volVectorField& U,
+    const surfaceScalarField& phi
 )
 :
-    psiThermo(mesh, word::null),
-    twoPhaseMixture(mesh, *this),
+    psiThermo(U.mesh(), word::null),
+    twoPhaseMixture(U.mesh(), *this),
+    interfaceProperties(alpha1(), U, *this),
     thermo1_(nullptr),
     thermo2_(nullptr)
 {
+    // Note: we're writing files to be read in immediately afterwards.
+    //       Avoid any thread-writing problems.
+    float bufSz =
+        fileOperations::collatedFileOperation::maxThreadFileBufferSize;
+    fileOperations::collatedFileOperation::maxThreadFileBufferSize = 0;
+
     {
-        volScalarField T1(IOobject::groupName("T", phase1Name()), T_);
+        volScalarField T1
+        (
+            IOobject
+            (
+                IOobject::groupName("T", phase1Name()),
+                U.mesh().time().timeName(),
+                U.mesh()
+            ),
+            T_,
+            calculatedFvPatchScalarField::typeName
+        );
         T1.write();
     }
 
     {
-        volScalarField T2(IOobject::groupName("T", phase2Name()), T_);
+        volScalarField T2
+        (
+            IOobject
+            (
+                IOobject::groupName("T", phase2Name()),
+                U.mesh().time().timeName(),
+                U.mesh()
+            ),
+            T_,
+            calculatedFvPatchScalarField::typeName
+        );
         T2.write();
     }
 
-    thermo1_ = rhoThermo::New(mesh, phase1Name());
-    thermo2_ = rhoThermo::New(mesh, phase2Name());
+    fileOperations::collatedFileOperation::maxThreadFileBufferSize =
+        bufSz;
 
-    thermo1_->validate(phase1Name(), "e");
-    thermo2_->validate(phase2Name(), "e");
+
+    thermo1_ = rhoThermo::New(U.mesh(), phase1Name());
+    thermo2_ = rhoThermo::New(U.mesh(), phase2Name());
+
+    // thermo1_->validate(phase1Name(), "e");
+    // thermo2_->validate(phase2Name(), "e");
 
     correct();
 }
@@ -76,17 +108,31 @@ Foam::twoPhaseMixtureThermo::~twoPhaseMixtureThermo()
 
 // * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
 
-void Foam::twoPhaseMixtureThermo::correct()
+void Foam::twoPhaseMixtureThermo::correctThermo()
 {
+    thermo1_->T() = T_;
     thermo1_->he() = thermo1_->he(p_, T_);
     thermo1_->correct();
 
+    thermo2_->T() = T_;
     thermo2_->he() = thermo2_->he(p_, T_);
     thermo2_->correct();
+}
 
+
+void Foam::twoPhaseMixtureThermo::correct()
+{
     psi_ = alpha1()*thermo1_->psi() + alpha2()*thermo2_->psi();
     mu_ = alpha1()*thermo1_->mu() + alpha2()*thermo2_->mu();
     alpha_ = alpha1()*thermo1_->alpha() + alpha2()*thermo2_->alpha();
+
+    interfaceProperties::correct();
+}
+
+
+Foam::word Foam::twoPhaseMixtureThermo::thermoName() const
+{
+    return thermo1_->thermoName() + ',' + thermo2_->thermoName();
 }
 
 
@@ -267,6 +313,12 @@ Foam::tmp<Foam::scalarField> Foam::twoPhaseMixtureThermo::CpByCpv
 }
 
 
+Foam::tmp<Foam::volScalarField> Foam::twoPhaseMixtureThermo::W() const
+{
+    return alpha1()*thermo1_->W() + alpha2()*thermo1_->W();
+}
+
+
 Foam::tmp<Foam::volScalarField> Foam::twoPhaseMixtureThermo::nu() const
 {
     return mu()/(alpha1()*thermo1_->rho() + alpha2()*thermo2_->rho());
@@ -323,8 +375,7 @@ Foam::tmp<Foam::scalarField> Foam::twoPhaseMixtureThermo::kappaEff
 {
     return
         alpha1().boundaryField()[patchi]*thermo1_->kappaEff(alphat, patchi)
-      + alpha2().boundaryField()[patchi]*thermo2_->kappaEff(alphat, patchi)
-    ;
+      + alpha2().boundaryField()[patchi]*thermo2_->kappaEff(alphat, patchi);
 }
 
 
@@ -347,8 +398,20 @@ Foam::tmp<Foam::scalarField> Foam::twoPhaseMixtureThermo::alphaEff
 {
     return
         alpha1().boundaryField()[patchi]*thermo1_->alphaEff(alphat, patchi)
-      + alpha2().boundaryField()[patchi]*thermo2_->alphaEff(alphat, patchi)
-    ;
+      + alpha2().boundaryField()[patchi]*thermo2_->alphaEff(alphat, patchi);
+}
+
+
+bool Foam::twoPhaseMixtureThermo::read()
+{
+    if (psiThermo::read())
+    {
+        return interfaceProperties::read();
+    }
+    else
+    {
+        return false;
+    }
 }
 
 

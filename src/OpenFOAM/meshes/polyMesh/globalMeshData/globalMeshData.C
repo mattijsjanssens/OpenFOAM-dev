@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -84,7 +84,7 @@ void Foam::globalMeshData::initProcAddr()
 
     if (Pstream::parRun())
     {
-        PstreamBuffers pBufs(Pstream::nonBlocking);
+        PstreamBuffers pBufs(Pstream::commsTypes::nonBlocking);
 
         // Send indices of my processor patches to my neighbours
         forAll(processorPatches_, i)
@@ -277,7 +277,7 @@ void Foam::globalMeshData::countSharedEdges
         {
             if (globalFnd() == -1)
             {
-                // Second time occurence of this edge. Assign proper
+                // Second time occurrence of this edge. Assign proper
                 // edge label.
                 globalFnd() = sharedEdgeI++;
             }
@@ -401,7 +401,7 @@ void Foam::globalMeshData::calcSharedEdges() const
             )
             {
                 // Receive the edges using shared points from the slave.
-                IPstream fromSlave(Pstream::blocking, slave);
+                IPstream fromSlave(Pstream::commsTypes::blocking, slave);
                 EdgeMap<labelList> procSharedEdges(fromSlave);
 
                 if (debug)
@@ -450,7 +450,7 @@ void Foam::globalMeshData::calcSharedEdges() const
             )
             {
                 // Receive the edges using shared points from the slave.
-                OPstream toSlave(Pstream::blocking, slave);
+                OPstream toSlave(Pstream::commsTypes::blocking, slave);
                 toSlave << globalShared;
             }
         }
@@ -459,14 +459,20 @@ void Foam::globalMeshData::calcSharedEdges() const
     {
         // Send local edges to master
         {
-            OPstream toMaster(Pstream::blocking, Pstream::masterNo());
-
+            OPstream toMaster
+            (
+                Pstream::commsTypes::blocking,
+                Pstream::masterNo()
+            );
             toMaster << localShared;
         }
         // Receive merged edges from master.
         {
-            IPstream fromMaster(Pstream::blocking, Pstream::masterNo());
-
+            IPstream fromMaster
+            (
+                Pstream::commsTypes::blocking,
+                Pstream::masterNo()
+            );
             fromMaster >> globalShared;
         }
     }
@@ -847,14 +853,14 @@ Foam::label Foam::globalMeshData::findTransform
         if (proci == Pstream::myProcNo() && pointi == localPoint)
         {
             localTransformI = transformI;
-            //Pout<< "For local :" << localPoint
+            // Pout<< "For local :" << localPoint
             //    << " found transform:" << localTransformI
             //    << endl;
         }
         if (proci == remoteProci && pointi == remoteIndex)
         {
             remoteTransformI = transformI;
-            //Pout<< "For remote:" << remotePoint
+            // Pout<< "For remote:" << remotePoint
             //    << " found transform:" << remoteTransformI
             //    << " at index:" << i
             //    << endl;
@@ -896,7 +902,7 @@ void Foam::globalMeshData::calcGlobalEdgeSlaves() const
 
 
     // The whole problem with deducting edge-connectivity from
-    // point-connectivity is that one of the the endpoints might be
+    // point-connectivity is that one of the endpoints might be
     // a local master but the other endpoint might not. So we first
     // need to make sure that all points know about connectivity and
     // the transformations.
@@ -1860,7 +1866,7 @@ const Foam::labelList& Foam::globalMeshData::sharedPointGlobalLabels() const
             IOobject::MUST_READ
         );
 
-        if (addrHeader.headerOk())
+        if (addrHeader.typeHeaderOk<labelIOList>(true))
         {
             // There is a pointProcAddressing file so use it to get labels
             // on the original mesh
@@ -1920,7 +1926,7 @@ Foam::pointField Foam::globalMeshData::sharedPoints() const
             slave++
         )
         {
-            IPstream fromSlave(Pstream::blocking, slave);
+            IPstream fromSlave(Pstream::commsTypes::blocking, slave);
 
             labelList nbrSharedPointAddr;
             pointField nbrSharedPoints;
@@ -1944,7 +1950,7 @@ Foam::pointField Foam::globalMeshData::sharedPoints() const
         {
             OPstream toSlave
             (
-                Pstream::blocking,
+                Pstream::commsTypes::blocking,
                 slave,
                 sharedPoints.size()*sizeof(Zero)
             );
@@ -1956,8 +1962,11 @@ Foam::pointField Foam::globalMeshData::sharedPoints() const
         // Slave:
         // send points
         {
-            OPstream toMaster(Pstream::blocking, Pstream::masterNo());
-
+            OPstream toMaster
+            (
+                Pstream::commsTypes::blocking,
+                Pstream::masterNo()
+            );
             toMaster
                 << pointAddr
                 << UIndirectList<point>(mesh_.points(), pointLabels)();
@@ -1965,7 +1974,11 @@ Foam::pointField Foam::globalMeshData::sharedPoints() const
 
         // Receive sharedPoints
         {
-            IPstream fromMaster(Pstream::blocking, Pstream::masterNo());
+            IPstream fromMaster
+            (
+                Pstream::commsTypes::blocking,
+                Pstream::masterNo()
+            );
             fromMaster >> sharedPoints;
         }
     }
@@ -2456,7 +2469,7 @@ Foam::autoPtr<Foam::globalIndex> Foam::globalMeshData::mergePoints
 
     label myUniquePoints = mesh_.nPoints() - cpp.nPoints() + nMaster;
 
-    //Pout<< "Points :" << nl
+    // Pout<< "Points :" << nl
     //    << "    mesh             : " << mesh_.nPoints() << nl
     //    << "    of which coupled : " << cpp.nPoints() << nl
     //    << "    of which master  : " << nMaster << nl
@@ -2572,7 +2585,7 @@ Foam::autoPtr<Foam::globalIndex> Foam::globalMeshData::mergePoints
         }
     }
 
-    //Pout<< "Patch:" << nl
+    // Pout<< "Patch:" << nl
     //    << "    points:" << meshPoints.size() << nl
     //    << "    of which on coupled patch:" << nCoupled << endl;
 
@@ -2656,7 +2669,7 @@ Foam::autoPtr<Foam::globalIndex> Foam::globalMeshData::mergePoints
 
     autoPtr<globalIndex> globalPointsPtr(new globalIndex(nMasters));
 
-    //Pout<< "Patch:" << nl
+    // Pout<< "Patch:" << nl
     //    << "    points:" << meshPoints.size() << nl
     //    << "    of which on coupled patch:" << nCoupled << nl
     //    << "    of which master:" << nMasters << endl;

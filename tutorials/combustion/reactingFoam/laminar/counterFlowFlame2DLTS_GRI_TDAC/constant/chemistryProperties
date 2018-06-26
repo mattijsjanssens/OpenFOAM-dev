@@ -17,19 +17,19 @@ FoamFile
 
 chemistryType
 {
-    chemistrySolver   ode;
-    chemistryThermo   psi;
-    TDAC              on;
+    solver            ode;
+    method            TDAC;
 }
 
 chemistry       on;
 
 initialChemicalTimeStep 1e-7;
+//maxChemicalTimeStep 1E-3;
 
 odeCoeffs
 {
     solver          seulex;
-    absTol          1e-12;
+    absTol          1e-8;
     relTol          1e-1;
 }
 
@@ -78,10 +78,8 @@ tabulation
 
     printNumRetrieve   off;
 
-    variableTimeStep   on;
-
     // Tolerance used for retrieve and grow
-    tolerance   1e-3;
+    tolerance   3e-3;
 
     // ISAT is the only method currently available
     method    ISAT;
@@ -90,7 +88,7 @@ tabulation
     scaleFactor
     {
         otherSpecies 1;
-        Temperature  25000;
+        Temperature  10000;
         Pressure     1e15;
         deltaT       1;
     }

@@ -3,9 +3,9 @@
 # =========                 |
 # \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
 #  \\    /   O peration     |
-#   \\  /    A nd           | Copyright (C) 2014-2015 OpenFOAM Foundation
+#   \\  /    A nd           | Copyright (C) 2014-2018 OpenFOAM Foundation
 #    \\/     M anipulation  |
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 # License
 #     This file is part of OpenFOAM.
 #
@@ -38,22 +38,28 @@
 Script=${0##*/}
 
 # Source the wmake functions
-. ${0%/*}/scripts/wmakeFunctions
+# shellcheck source=scripts/wmakeFunctions
+. "${0%/*}/scripts/wmakeFunctions"
 
 usage() {
-    exec 1>&2
-    while [ "$#" -ge 1 ]; do echo "$1"; shift; done
     cat<<USAGE
 
 Usage: $Script <file>
+options:
+  -help             Print the usage
 
 Find the dep-file corresponding to <file> in the current directory
 and print the path.
 
 USAGE
-    exit 1
 }
 
+error() {
+    exec 1>&2
+    while [ "$#" -ge 1 ]; do echo "$1"; shift; done
+    usage
+    exit 1
+}
 
 #------------------------------------------------------------------------------
 # Parse arguments and options
@@ -63,10 +69,10 @@ while [ "$#" -gt 0 ]
 do
     case "$1" in
     -h | -help)
-        usage
+        usage && exit 0
         ;;
     -*)
-        usage "unknown option: '$*'"
+        error "unknown option: '$*'"
         ;;
     *)
         break
@@ -80,14 +86,14 @@ checkEnv
 
 #------------------------------------------------------------------------------
 # Check <file> is is the current directory,
-# otherwise search tree for first occurrance
+# otherwise search tree for first occurrence
 #------------------------------------------------------------------------------
 
 sourceFile=$1
 
-if [ ! -e $1 ]
+if [ ! -e "$1" ]
 then
-    sourceFile=$(find . -name $sourceFile -print -quit)
+    sourceFile=$(find . -name "$sourceFile" -print -quit)
     if [ -z "$sourceFile" ]
     then
         echo "$Script: cannot find source file $1" 1>&2
@@ -101,18 +107,18 @@ fi
 # and echo path for the dep file corresponding to the specified source file
 #------------------------------------------------------------------------------
 
-findObjectDir $sourceFile
+findObjectDir "$sourceFile"
 
 fileName=${1##*/}
 
-echo $objectsDir/$fileName.dep
+echo "$objectsDir/$fileName.dep"
 
 
 #------------------------------------------------------------------------------
 # Cleanup local variables and functions
 #------------------------------------------------------------------------------
 
-unset Script usage
+unset Script usage error
 
 
 #------------------------------------------------------------------------------

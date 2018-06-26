@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -40,7 +40,7 @@ SourceFiles
 
 #include "TimePaths.H"
 #include "objectRegistry.H"
-#include "IOdictionary.H"
+#include "unwatchedIOdictionary.H"
 #include "FIFOStack.H"
 #include "clock.H"
 #include "cpuTime.H"
@@ -51,7 +51,6 @@ SourceFiles
 #include "typeInfo.H"
 #include "dlLibraryTable.H"
 #include "functionObjectList.H"
-#include "fileMonitor.H"
 #include "sigWriteNow.H"
 #include "sigStopAtWriteNow.H"
 
@@ -77,16 +76,12 @@ class Time
 {
     // Private data
 
-        //- file-change monitor for all registered files
-        mutable autoPtr<fileMonitor> monitorPtr_;
-
         //- Any loaded dynamic libraries. Make sure to construct before
         //  reading controlDict.
         dlLibraryTable libs_;
 
         //- The controlDict
-        IOdictionary controlDict_;
-
+        unwatchedIOdictionary controlDict_;
 
 public:
 
@@ -323,26 +318,8 @@ public:
             //- Read control dictionary, update controls and time
             virtual bool read();
 
-            // Automatic rereading
-
-                //- Read the objects that have been modified
-                void readModifiedObjects();
-
-                //- Add watching of a file. Returns handle
-                label addWatch(const fileName&) const;
-
-                //- Remove watch on a file (using handle)
-                bool removeWatch(const label) const;
-
-                //- Get name of file being watched (using handle)
-                const fileName& getFile(const label) const;
-
-                //- Get current state of file (using handle)
-                fileMonitor::fileState getState(const label) const;
-
-                //- Set current state of file (using handle) to unmodified
-                void setUnmodified(const label) const;
-
+            //- Read the objects that have been modified
+            void readModifiedObjects();
 
             //- Return the location of "dir" containing the file "name".
             //  (eg, used in reading mesh data)
@@ -358,6 +335,10 @@ public:
 
             //- Search the case for valid time directories
             instantList times() const;
+
+            //- Search the case for the time directory path
+            //  corresponding to the given instance
+            word findInstancePath(const fileName& path, const instant&) const;
 
             //- Search the case for the time directory path
             //  corresponding to the given instance
@@ -382,7 +363,8 @@ public:
             (
                 IOstream::streamFormat,
                 IOstream::versionNumber,
-                IOstream::compressionType
+                IOstream::compressionType,
+                const bool valid
             ) const;
 
             //- Write the objects now (not at end of iteration) and continue
@@ -458,6 +440,9 @@ public:
 
         // Check
 
+            //- Return true if run should continue without any side effects
+            virtual bool running() const;
+
             //- Return true if run should continue,
             //  also invokes the functionObjectList::end() method
             //  when the time goes out of range
@@ -528,18 +513,14 @@ public:
             virtual void setEndTime(const scalar);
 
             //- Reset time step
-            virtual void setDeltaT
-            (
-                const dimensionedScalar&,
-                const bool adjustDeltaT = true
-            );
+            virtual void setDeltaT(const dimensionedScalar&);
 
             //- Reset time step
-            virtual void setDeltaT
-            (
-                const scalar,
-                const bool adjustDeltaT = true
-            );
+            virtual void setDeltaT(const scalar);
+
+            //- Reset time step without additional adjustment or modification
+            //  by function objects
+            virtual void setDeltaTNoAdjust(const scalar);
 
             //- Set time to sub-cycle for the given number of steps
             virtual TimeState subCycle(const label nSubCycles);

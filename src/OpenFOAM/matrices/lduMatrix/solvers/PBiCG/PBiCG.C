@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -201,11 +201,21 @@ Foam::solverPerformance Foam::PBiCG::solve
         } while
         (
             (
-                solverPerf.nIterations()++ < maxIter_
+              ++solverPerf.nIterations() < maxIter_
             && !solverPerf.checkConvergence(tolerance_, relTol_)
             )
          || solverPerf.nIterations() < minIter_
         );
+    }
+
+    // Recommend PBiCGStab if PBiCG fails to converge
+    if (solverPerf.nIterations() > max(defaultMaxIter_, maxIter_))
+    {
+        FatalErrorInFunction
+            << "PBiCG has failed to converge within the maximum number"
+               " of iterations " << max(defaultMaxIter_, maxIter_) << nl
+            << "    Please try the more robust PBiCGStab solver."
+            << exit(FatalError);
     }
 
     return solverPerf;

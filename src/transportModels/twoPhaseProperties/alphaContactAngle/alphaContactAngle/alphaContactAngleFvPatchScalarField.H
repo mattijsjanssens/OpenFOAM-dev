@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -24,13 +24,10 @@ License
 Class
     Foam::alphaContactAngleFvPatchScalarField
 
-Group
-    grpWallBoundaryConditions grpGenericBoundaryConditions
-
 Description
     Abstract base class for alphaContactAngle boundary conditions.
 
-    Derived classes must implement the theta() fuction which returns the
+    Derived classes must implement the theta() function which returns the
     wall contact angle field.
 
     The essential entry "limit" controls the gradient of alpha1 on the wall:
@@ -148,7 +145,7 @@ public:
         //- Evaluate the patch field
         virtual void evaluate
         (
-            const Pstream::commsTypes commsType=Pstream::blocking
+            const Pstream::commsTypes commsType=Pstream::commsTypes::blocking
         );
 
         //- Write

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
     (
         "extract surface from a polyMesh"
     );
-    argList::validArgs.append("output file");
+    argList::validArgs.append("output surface file");
     #include "addRegionOption.H"
     argList::addBoolOption
     (
@@ -216,7 +216,7 @@ int main(int argc, char *argv[])
         forAllConstIter(HashTable<label>, zoneSize, iter)
         {
             label sz = compactZoneID.size();
-            //Info<< "For faceZone " << iter.key() << " allocating zoneID "
+            // Info<< "For faceZone " << iter.key() << " allocating zoneID "
             //    << sz << endl;
             compactZoneID.insert(iter.key(), sz);
         }
@@ -362,6 +362,7 @@ int main(int argc, char *argv[])
           ? runTime.path()/".."/outFileName
           : runTime.path()/outFileName
         );
+        globalCasePath.clean();
 
         Info<< "Writing merged surface to " << globalCasePath << endl;
 

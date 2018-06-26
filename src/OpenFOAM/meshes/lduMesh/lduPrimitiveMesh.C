@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2013-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -302,7 +302,7 @@ Foam::lduPrimitiveMesh::lduPrimitiveMesh
                 << " at index " << i
                 << " differs from that of predecessor "
                 << currentComm
-                << endl;    //exit(FatalError);
+                << endl;    // exit(FatalError);
         }
     }
 
@@ -359,7 +359,7 @@ Foam::lduPrimitiveMesh::lduPrimitiveMesh
           + procMesh.lduAddr().lowerAddr().size();
     }
 
-    // Count how faces get added. Interfaces inbetween get merged.
+    // Count how faces get added. Interfaces in between get merged.
 
     // Merged interfaces: map from two coarse processors back to
     // - procMeshes
@@ -734,7 +734,7 @@ Foam::lduPrimitiveMesh::lduPrimitiveMesh
         (
             upperTriOrder
             (
-                cellOffsets.last(), //nCells
+                cellOffsets.last(), // nCells
                 lowerAddr_,
                 upperAddr_
             )
@@ -988,12 +988,12 @@ void Foam::lduPrimitiveMesh::gather
         // Slave meshes
         for (label i = 1; i < procIDs.size(); i++)
         {
-            //Pout<< "on master :"
+            // Pout<< "on master :"
             //    << " receiving from slave " << procIDs[i] << endl;
 
             IPstream fromSlave
             (
-                Pstream::scheduled,
+                Pstream::commsTypes::scheduled,
                 procIDs[i],
                 0,          // bufSize
                 Pstream::msgType(),
@@ -1066,7 +1066,7 @@ void Foam::lduPrimitiveMesh::gather
 
         OPstream toMaster
         (
-            Pstream::scheduled,
+            Pstream::commsTypes::scheduled,
             procIDs[0],
             0,
             Pstream::msgType(),

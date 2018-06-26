@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2016-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -132,18 +132,11 @@ public:
         Sine
         (
             const word& entryName,
-            const dictionary& dict,
-            const word& ext = "Coeffs"
+            const dictionary& dict
         );
 
         //- Copy constructor
         Sine(const Sine<Type>& se);
-
-        //- Construct and return a clone
-        virtual tmp<Function1<Type>> clone() const
-        {
-            return tmp<Function1<Type>>(new Sine<Type>(*this));
-        }
 
 
     //- Destructor
@@ -153,7 +146,7 @@ public:
     // Member Functions
 
         //- Return value for time t
-        Type value(const scalar t) const;
+        virtual inline Type value(const scalar t) const;
 
         //- Write in dictionary format
         virtual void writeData(Ostream& os) const;
@@ -166,6 +159,8 @@ public:
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "SineI.H"
 
 #ifdef NoRepository
     #include "Sine.C"

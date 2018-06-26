@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -32,7 +32,7 @@ Description
     zero-gradient, fixed-gradient, fixed-value and mixed conditions.
 
     The next level of derivation covers all the specialised types with
-    specific evaluation proceedures, particularly with respect to specific
+    specific evaluation procedures, particularly with respect to specific
     fields.
 
 SourceFiles
@@ -418,7 +418,7 @@ public:
             virtual void updateCoeffs();
 
             //- Update the coefficients associated with the patch field
-            //  with a weight field (0..1). This weight field is ususally
+            //  with a weight field (0..1). This weight field is usually
             //  provided as the amount of geometric overlap for 'duplicate'
             //  patches. Sets Updated to true
             virtual void updateWeightedCoeffs(const scalarField& weights);
@@ -439,14 +439,16 @@ public:
             //- Initialise the evaluation of the patch field
             virtual void initEvaluate
             (
-                const Pstream::commsTypes commsType=Pstream::blocking
+                const Pstream::commsTypes commsType =
+                    Pstream::commsTypes::blocking
             )
             {}
 
             //- Evaluate the patch field, sets Updated to false
             virtual void evaluate
             (
-                const Pstream::commsTypes commsType=Pstream::blocking
+                const Pstream::commsTypes commsType =
+                    Pstream::commsTypes::blocking
             );
 
 

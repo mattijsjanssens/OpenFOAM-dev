@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -99,19 +99,20 @@ void Foam::processorGAMGInterfaceField::initInterfaceMatrixUpdate
     const Pstream::commsTypes commsType
 ) const
 {
-    label oldWarn = UPstream::warnComm;
-    UPstream::warnComm = comm();
-
     procInterface_.interfaceInternalField(psiInternal, scalarSendBuf_);
 
-    if (commsType == Pstream::nonBlocking && !Pstream::floatTransfer)
+    if
+    (
+        commsType == Pstream::commsTypes::nonBlocking
+     && !Pstream::floatTransfer
+    )
     {
         // Fast path.
         scalarReceiveBuf_.setSize(scalarSendBuf_.size());
         outstandingRecvRequest_ = UPstream::nRequests();
         IPstream::read
         (
-            Pstream::nonBlocking,
+            Pstream::commsTypes::nonBlocking,
             procInterface_.neighbProcNo(),
             reinterpret_cast<char*>(scalarReceiveBuf_.begin()),
             scalarReceiveBuf_.byteSize(),
@@ -122,7 +123,7 @@ void Foam::processorGAMGInterfaceField::initInterfaceMatrixUpdate
         outstandingSendRequest_ = UPstream::nRequests();
         OPstream::write
         (
-            Pstream::nonBlocking,
+            Pstream::commsTypes::nonBlocking,
             procInterface_.neighbProcNo(),
             reinterpret_cast<const char*>(scalarSendBuf_.begin()),
             scalarSendBuf_.byteSize(),
@@ -136,8 +137,6 @@ void Foam::processorGAMGInterfaceField::initInterfaceMatrixUpdate
     }
 
     const_cast<processorGAMGInterfaceField&>(*this).updatedMatrix() = false;
-
-    UPstream::warnComm = oldWarn;
 }
 
 
@@ -155,12 +154,13 @@ void Foam::processorGAMGInterfaceField::updateInterfaceMatrix
         return;
     }
 
-    label oldWarn = UPstream::warnComm;
-    UPstream::warnComm = comm();
-
     const labelUList& faceCells = procInterface_.faceCells();
 
-    if (commsType == Pstream::nonBlocking && !Pstream::floatTransfer)
+    if
+    (
+        commsType == Pstream::commsTypes::nonBlocking
+     && !Pstream::floatTransfer
+    )
     {
         // Fast path.
         if
@@ -201,8 +201,6 @@ void Foam::processorGAMGInterfaceField::updateInterfaceMatrix
     }
 
     const_cast<processorGAMGInterfaceField&>(*this).updatedMatrix() = true;
-
-    UPstream::warnComm = oldWarn;
 }
 
 

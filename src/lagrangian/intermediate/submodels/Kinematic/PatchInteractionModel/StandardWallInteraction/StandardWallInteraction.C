@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -67,9 +67,7 @@ Foam::StandardWallInteraction<CloudType>::StandardWallInteraction
             break;
         }
         default:
-        {
-            // do nothing
-        }
+        {}
     }
 }
 
@@ -105,9 +103,7 @@ bool Foam::StandardWallInteraction<CloudType>::correct
 (
     typename CloudType::parcelType& p,
     const polyPatch& pp,
-    bool& keepParticle,
-    const scalar trackFraction,
-    const tetIndices& tetIs
+    bool& keepParticle
 )
 {
     vector& U = p.U();
@@ -118,6 +114,10 @@ bool Foam::StandardWallInteraction<CloudType>::correct
     {
         switch (interactionType_)
         {
+            case PatchInteractionModel<CloudType>::itNone:
+            {
+                return false;
+            }
             case PatchInteractionModel<CloudType>::itEscape:
             {
                 keepParticle = false;
@@ -143,7 +143,7 @@ bool Foam::StandardWallInteraction<CloudType>::correct
                 vector nw;
                 vector Up;
 
-                this->owner().patchData(p, pp, trackFraction, tetIs, nw, Up);
+                this->owner().patchData(p, pp, nw, Up);
 
                 // Calculate motion relative to patch velocity
                 U -= Up;

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2012-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2012-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -97,21 +97,28 @@ Foam::autoPtr<Foam::fvMesh> Foam::loadOrCreateMesh
             slave++
         )
         {
-            OPstream toSlave(Pstream::scheduled, slave);
+            OPstream toSlave(Pstream::commsTypes::scheduled, slave);
             toSlave << patchEntries;
         }
     }
     else
     {
         // Receive patches
-        IPstream fromMaster(Pstream::scheduled, Pstream::masterNo());
+        IPstream fromMaster
+        (
+            Pstream::commsTypes::scheduled,
+            Pstream::masterNo()
+        );
         fromMaster >> patchEntries;
     }
 
 
 
     // Check who has a mesh
-    const bool haveMesh = isDir(io.time().path()/io.instance()/meshSubDir);
+    const bool haveMesh = fileHandler().isDir
+    (
+        fileHandler().filePath(io.time().path()/io.instance()/meshSubDir)
+    );
 
     if (!haveMesh)
     {
@@ -202,14 +209,14 @@ Foam::autoPtr<Foam::fvMesh> Foam::loadOrCreateMesh
             )
         );
         dummyMesh.addZones(pz, fz, cz);
-        //Pout<< "Writing dummy mesh to " << dummyMesh.polyMesh::objectPath()
+        // Pout<< "Writing dummy mesh to " << dummyMesh.polyMesh::objectPath()
         //    << endl;
         dummyMesh.write();
 
         Pstream::parRun() = oldParRun;
     }
 
-    //Pout<< "Reading mesh from " << io.objectPath() << endl;
+    // Pout<< "Reading mesh from " << io.objectPath() << endl;
     autoPtr<fvMesh> meshPtr(new fvMesh(io));
     fvMesh& mesh = meshPtr();
 
@@ -327,7 +334,7 @@ Foam::autoPtr<Foam::fvMesh> Foam::loadOrCreateMesh
     {
         // We created a dummy mesh file above. Delete it.
         const fileName meshFiles = io.time().path()/io.instance()/meshSubDir;
-        //Pout<< "Removing dummy mesh " << meshFiles << endl;
+        // Pout<< "Removing dummy mesh " << meshFiles << endl;
         mesh.removeFiles();
         rmDir(meshFiles);
     }

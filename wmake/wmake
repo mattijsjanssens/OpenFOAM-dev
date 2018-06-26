@@ -3,9 +3,9 @@
 # =========                 |
 # \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
 #  \\    /   O peration     |
-#   \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+#   \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
 #    \\/     M anipulation  |
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 # License
 #     This file is part of OpenFOAM.
 #
@@ -56,27 +56,33 @@
 Script=${0##*/}
 
 # Source the wmake functions
-. ${0%/*}/scripts/wmakeFunctions
+# shellcheck source=scripts/wmakeFunctions
+. "${0%/*}/scripts/wmakeFunctions"
 
-usage() {
+error() {
     exec 1>&2
     while [ "$#" -ge 1 ]; do echo "$1"; shift; done
+    usage
+    exit 1
+}
+
+usage() {
     cat<<USAGE
 
 Usage: $Script [OPTION] [dir]
        $Script [OPTION] target [dir [MakeDir]]
 
 options:
-  -s | -silent      Quiet mode (does not echo commands)
-  -a | -all         wmake all sub-directories, running Allwmake if present
-  -q | -queue       wmakeCollect all sub-directories, running Allwmake if present
-  -k or -non-stop   Compile without stopping when errors occur
+  -silent   | -s    Quiet mode (does not echo commands)
+  -all      | -a    wmake all sub-directories, running Allwmake if present
+  -queue    | -q    wmakeCollect all sub-directories, running Allwmake if present
+  -non-stop | -k    Compile without stopping when errors occur
   -j                Compile using all local cores/hyperthreads
-  -jN or -j N       Compile using N cores/hyperthreads
+  -j <N>    | -j<N> Compile using N cores/hyperthreads
   -no-scheduler     Compile without wmakeScheduler
   -update           Update lnInclude directories, dep files, remove deprecated
                     files and directories
-  -h | -help        Print the usage
+  -help     | -h    Print the usage
 
 
 A general, easy-to-use make system for multi-platform development
@@ -93,11 +99,9 @@ or a special target:
   libo              Compile statically linked lib (.o)
   libso             Compile dynamically linked lib (.so)
   dep               Compile lnInclude and dependencies only
-  updatedep         Compile dependencies only (in case of broken dependencies)
   objects           Compile but not link
 
 USAGE
-    exit 1
 }
 
 
@@ -113,7 +117,7 @@ useAllCores()
 {
     if [ -r /proc/cpuinfo ]
     then
-        WM_NCOMPPROCS=$(egrep "^processor" /proc/cpuinfo | wc -l)
+        WM_NCOMPPROCS=$(grep -Ec "^processor" /proc/cpuinfo)
     else
         WM_NCOMPPROCS=1
     fi
@@ -135,7 +139,7 @@ do
     case "$1" in
         # Print help
         -h | -help)
-            usage
+            usage && exit 0
             ;;
         -s | -silent)
             export WM_QUIET=1
@@ -149,7 +153,7 @@ do
         # Parallel compilation on all cores of local machine
         -j)
             useAllCores
-            test $# -ge 2 && expr $2 + 1 > /dev/null 2>&1 \
+            [ $# -ge 2 ] && [ "$2" -gt 0 ] > /dev/null 2>&1 \
                 && shift && export WM_NCOMPPROCS=$1
             echo "Compiling enabled on $WM_NCOMPPROCS cores"
             ;;
@@ -181,7 +185,7 @@ do
             break
             ;;
         -*)
-            usage "unknown option: '$*'"
+            error "unknown option: '$*'"
             ;;
         *)
             break
@@ -199,7 +203,7 @@ checkEnv
 
 # When compiling anything but a standalone exe WM_PROJECT and WM_PROJECT_DIR
 # must be set
-[ "$1" = exe -o \( "$WM_PROJECT" -a "$WM_PROJECT_DIR" \) ] || {
+[ "$1" = exe ] || { [ "$WM_PROJECT" ] && [ "$WM_PROJECT_DIR" ]; } || {
     echo "$Script error:" 1>&2
     echo "    environment variable \$WM_PROJECT or " \
          "\$WM_PROJECT_DIR not set" 1>&2
@@ -213,25 +217,24 @@ checkEnv
 #------------------------------------------------------------------------------
 
 # Set WM_NCOMPPROCS automatically when both WM_HOSTS and WM_SCHEDULER are set
-if [ -z "$WM_NCOMPPROCS" -a -n "$WM_HOSTS" -a -n "$WM_SCHEDULER" ]
+if [ -z "$WM_NCOMPPROCS" ] && [ -n "$WM_HOSTS" ] && [ -n "$WM_SCHEDULER" ]
 then
-    WM_NCOMPPROCS=$(wmakeScheduler -count)
-    [ $? -eq 0 ] || unset WM_NCOMPPROCS
+    WM_NCOMPPROCS=$(wmakeScheduler -count) || unset WM_NCOMPPROCS
 fi
 
-if [ "$WM_NCOMPPROCS" ]
+if [ -n "$WM_NCOMPPROCS" ]
 then
     parOpt="-j $WM_NCOMPPROCS"
 
-    if [ "$WM_NCOMPPROCS" -gt 1 -a ! "$MAKEFLAGS" ]
+    if [ "$WM_NCOMPPROCS" -gt 1 ] && [ -z "$MAKEFLAGS" ]
     then
         lockDir=$HOME/.$WM_PROJECT/.wmake
 
-        if [ -d $lockDir ]
+        if [ -d "$lockDir" ]
         then
-            rm -f $lockDir/*
+            rm -f "$lockDir/*"
         else
-            mkdir -p $lockDir
+            mkdir -p "$lockDir"
         fi
 
         make="$make --no-print-directory $parOpt"
@@ -263,7 +266,7 @@ then
 
     if [ "$dir" ]
     then
-        cd $dir 2>/dev/null || {
+        cd "$dir" 2>/dev/null || {
             echo "$Script error: could not change to directory '$dir'" 1>&2
             exit 1
         }
@@ -283,9 +286,12 @@ if [ -n "$update" ]
 then
     wrmdep -update
     wrmdep -old
-    wmakeLnIncludeAll -update $parOpt
+    wmakeLnIncludeAll -update "$parOpt"
     wclean empty
     export WM_UPDATE_DEPENDENCIES=yes
+elif  [ -z "$all" ]
+then
+    wmakeLnIncludeAll -dep "$parOpt"
 fi
 
 
@@ -297,7 +303,7 @@ if [ "$all" = "all" ]
 then
     if [ -e Allwmake ]
     then
-        ./Allwmake -fromWmake $targetType
+        ./Allwmake -fromWmake "$targetType"
         exit $?
     else
         # Have to keep track of the main exit code for the call to "make"
@@ -306,7 +312,7 @@ then
         # Find all the sub-directories containing a 'Make' directory
         FOAM_APPS=$(\
                        for d in *; \
-                       do [ -d "$d" -a "$d" != Optional -a "$d" != Make ] \
+                       do [ -d "$d" ] && [ "$d" != Optional ] && [ "$d" != Make ] \
                           && echo "$d"; \
                        done | xargs \
                  )
@@ -314,13 +320,13 @@ then
         then
             # Compile all applications in sub-directories
             $make ${WM_CONTINUE_ON_ERROR:+-k} \
-                  -f $WM_DIR/makefiles/apps \
+                  -f "$WM_DIR/makefiles/apps" \
                   TARGET="$targetType" FOAM_APPS="$FOAM_APPS"
             makeExitCode=$?
         fi
         # If the current directory contains a 'Make' directory continue
         # otherwise exit, or always exit in case of error
-        if [ ! -d $MakeDir -o $makeExitCode -ne 0 ]
+        if [ ! -d "$MakeDir" ] || [ "$makeExitCode" -ne 0 ]
         then
             exit $makeExitCode
         fi
@@ -337,7 +343,7 @@ fi
 
 if [ "$all" = "queue" ]
 then
-    [ -n "$update" ] || wmakeLnIncludeAll $parOpt
+    [ -n "$update" ] || wmakeLnIncludeAll "$parOpt"
 
     (
         export WM_COLLECT_DIR=$WM_PROJECT_DIR/platforms/${WM_OPTIONS}/${PWD////_}
@@ -378,7 +384,6 @@ then
     case "$targetType" in
       lib*)
         unset targetType
-        break
         ;;
     esac
 fi
@@ -390,23 +395,23 @@ fi
 #------------------------------------------------------------------------------
 
 objectsDir=$MakeDir/$WM_OPTIONS
-if [ $(echo $PWD | grep "$WM_PROJECT_DIR") ]
+if [[ "$PWD" = *"$WM_PROJECT_DIR"* ]]
 then
     platformPath=$WM_PROJECT_DIR/platforms/${WM_OPTIONS}
-    objectsDir=$platformPath$(echo $PWD | sed s%$WM_PROJECT_DIR%% )
+    objectsDir=$platformPath${PWD//$WM_PROJECT_DIR/}
 fi
 
 (
     unset MAKEFLAGS
-    mkdir -p $objectsDir
+    mkdir -p "$objectsDir"
 
     # Pre-build the $WM_OPTIONS/options file
     # which is included when building the $WM_OPTIONS/files file
-    $make -s -f $WM_DIR/makefiles/files MAKE_DIR=$MakeDir \
-          OBJECTS_DIR=$objectsDir $objectsDir/options
+    $make -s -f "$WM_DIR/makefiles/files" MAKE_DIR="$MakeDir" \
+          OBJECTS_DIR="$objectsDir" "$objectsDir/options"
 
-    $make -s -f $WM_DIR/makefiles/files MAKE_DIR=$MakeDir \
-          OBJECTS_DIR=$objectsDir
+    $make -s -f "$WM_DIR/makefiles/files" MAKE_DIR="$MakeDir" \
+          OBJECTS_DIR="$objectsDir"
 )
 
 
@@ -414,7 +419,7 @@ fi
 # Check the $objectsDir/sourceFiles file was created successfully
 #------------------------------------------------------------------------------
 
-[ -r $objectsDir/sourceFiles ] || {
+[ -r "$objectsDir/sourceFiles" ] || {
     echo "$Script error: file '$objectsDir/sourceFiles'" \
          "could not be created in $PWD" 1>&2
     exit 1
@@ -431,8 +436,8 @@ case "$targetType" in
         # ... but only if 'LIB' is declared in 'Make/files'
         if grep -e '^ *LIB *=' "$MakeDir/files" >/dev/null 2>&1
         then
-            $make -s -f $WM_DIR/makefiles/general MAKE_DIR=$MakeDir \
-                  OBJECTS_DIR=$objectsDir lnInclude
+            $make -s -f "$WM_DIR/makefiles/general" MAKE_DIR="$MakeDir" \
+                  OBJECTS_DIR="$objectsDir" lnInclude
         fi
         ;;
 esac
@@ -445,8 +450,8 @@ esac
 if [ -n "$WM_UPDATE_DEPENDENCIES" ]
 then
 
-    $make -f $WM_DIR/makefiles/general MAKE_DIR=$MakeDir \
-        OBJECTS_DIR=$objectsDir updatedep
+    $make -f "$WM_DIR"/makefiles/general MAKE_DIR="$MakeDir" \
+        OBJECTS_DIR="$objectsDir" dep
     makeExitCode=$?
 
     if [ $makeExitCode -ne 0 ]
@@ -462,15 +467,16 @@ fi
 # Make the dependency files or object files and link
 #------------------------------------------------------------------------------
 
-exec $make -f $WM_DIR/makefiles/general MAKE_DIR=$MakeDir \
-     OBJECTS_DIR=$objectsDir $targetType
+# shellcheck disable=SC2093,SC2086
+exec $make -f "$WM_DIR/makefiles/general" MAKE_DIR="$MakeDir" \
+     OBJECTS_DIR="$objectsDir" $targetType
 
 
 #------------------------------------------------------------------------------
 # Cleanup local variables and functions
 #------------------------------------------------------------------------------
 
-unset Script usage useAllCores update expandPath findTarget
+unset Script usage error useAllCores update expandPath findTarget
 
 
 #------------------------------------------------------------------------------

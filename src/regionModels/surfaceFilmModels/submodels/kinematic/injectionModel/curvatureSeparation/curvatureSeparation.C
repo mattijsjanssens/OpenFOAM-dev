@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -65,12 +65,12 @@ tmp<volScalarField> curvatureSeparation::calcInvR1
 /*
     tmp<volScalarField> tinvR1
     (
-        new volScalarField("invR1", fvc::div(owner().nHat()))
+        new volScalarField("invR1", fvc::div(film().nHat()))
     );
 */
 
     // method 2
-    dimensionedScalar smallU("smallU", dimVelocity, ROOTVSMALL);
+    dimensionedScalar smallU("smallU", dimVelocity, rootVSmall);
     volVectorField UHat(U/(mag(U) + smallU));
     tmp<volScalarField> tinvR1
     (
@@ -82,7 +82,7 @@ tmp<volScalarField> curvatureSeparation::calcInvR1
 
     // apply defined patch radii
     const scalar rMin = 1e-6;
-    const fvMesh& mesh = owner().regionMesh();
+    const fvMesh& mesh = film().regionMesh();
     const polyBoundaryMesh& pbm = mesh.boundaryMesh();
     forAll(definedPatchRadii_, i)
     {
@@ -115,12 +115,12 @@ tmp<scalarField> curvatureSeparation::calcCosAngle
     const surfaceScalarField& phi
 ) const
 {
-    const fvMesh& mesh = owner().regionMesh();
+    const fvMesh& mesh = film().regionMesh();
     const vectorField nf(mesh.Sf()/mesh.magSf());
     const unallocLabelList& own = mesh.owner();
     const unallocLabelList& nbr = mesh.neighbour();
 
-    scalarField phiMax(mesh.nCells(), -GREAT);
+    scalarField phiMax(mesh.nCells(), -great);
     scalarField cosAngle(mesh.nCells(), 0.0);
     forAll(nbr, facei)
     {
@@ -212,7 +212,7 @@ tmp<scalarField> curvatureSeparation::calcCosAngle
         volCosAngle.write();
     }
 
-    return max(min(cosAngle, scalar(1.0)), scalar(-1.0));
+    return max(min(cosAngle, scalar(1)), scalar(-1));
 }
 
 
@@ -220,28 +220,28 @@ tmp<scalarField> curvatureSeparation::calcCosAngle
 
 curvatureSeparation::curvatureSeparation
 (
-    surfaceFilmModel& owner,
+    surfaceFilmRegionModel& film,
     const dictionary& dict
 )
 :
-    injectionModel(type(), owner, dict),
-    gradNHat_(fvc::grad(owner.nHat())),
+    injectionModel(type(), film, dict),
+    gradNHat_(fvc::grad(film.nHat())),
     deltaByR1Min_(coeffDict_.lookupOrDefault<scalar>("deltaByR1Min", 0.0)),
     definedPatchRadii_(),
-    magG_(mag(owner.g().value())),
+    magG_(mag(film.g().value())),
     gHat_(Zero)
 {
-    if (magG_ < ROOTVSMALL)
+    if (magG_ < rootVSmall)
     {
         FatalErrorInFunction
             << "Acceleration due to gravity must be non-zero"
             << exit(FatalError);
     }
 
-    gHat_ = owner.g().value()/magG_;
+    gHat_ = film.g().value()/magG_;
 
     List<Tuple2<word, scalar>> prIn(coeffDict_.lookup("definedPatchRadii"));
-    const wordList& allPatchNames = owner.regionMesh().boundaryMesh().names();
+    const wordList& allPatchNames = film.regionMesh().boundaryMesh().names();
 
     DynamicList<Tuple2<label, scalar>> prData(allPatchNames.size());
 
@@ -284,7 +284,7 @@ void curvatureSeparation::correct
 )
 {
     const kinematicSingleLayer& film =
-        refCast<const kinematicSingleLayer>(this->owner());
+        refCast<const kinematicSingleLayer>(this->film());
     const fvMesh& mesh = film.regionMesh();
 
     const volScalarField& delta = film.delta();
@@ -305,7 +305,7 @@ void curvatureSeparation::correct
     {
         if ((invR1[i] > 0) && (delta[i]*invR1[i] > deltaByR1Min_))
         {
-            scalar R1 = 1.0/(invR1[i] + ROOTVSMALL);
+            scalar R1 = 1.0/(invR1[i] + rootVSmall);
             scalar R2 = R1 + delta[i];
 
             // inertial force

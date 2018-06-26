@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -29,8 +29,8 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef HashSignedLabel_H
-#define HashSignedLabel_H
+#ifndef hashSignedLabel_H
+#define hashSignedLabel_H
 
 #include "List.H"
 #include "word.H"
@@ -64,4 +64,3 @@ public:
 #endif
 
 // ************************************************************************* //
-

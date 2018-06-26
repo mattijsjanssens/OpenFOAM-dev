@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013-2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2013-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -65,7 +65,7 @@ scalar sumReduce
                 scalar slaveValue;
                 UIPstream::read
                 (
-                    Pstream::blocking,
+                    Pstream::commsTypes::blocking,
                     slave,
                     reinterpret_cast<char*>(&slaveValue),
                     sizeof(scalar),
@@ -87,7 +87,7 @@ scalar sumReduce
             {
                 UOPstream::write
                 (
-                    UPstream::blocking,
+                    UPstream::commsTypes::blocking,
                     slave,
                     reinterpret_cast<const char*>(&sum),
                     sizeof(scalar),
@@ -101,7 +101,7 @@ scalar sumReduce
             {
                 UOPstream::write
                 (
-                    UPstream::blocking,
+                    UPstream::commsTypes::blocking,
                     UPstream::masterNo(),
                     reinterpret_cast<const char*>(&localValue),
                     sizeof(scalar),
@@ -113,7 +113,7 @@ scalar sumReduce
             {
                 UIPstream::read
                 (
-                    UPstream::blocking,
+                    UPstream::commsTypes::blocking,
                     UPstream::masterNo(),
                     reinterpret_cast<char*>(&sum),
                     sizeof(scalar),
@@ -150,7 +150,7 @@ int main(int argc, char *argv[])
         top.append(i);
     }
 
-    //Pout<< "bottom:" << bottom << endl;
+    // Pout<< "bottom:" << bottom << endl;
     Pout<< "top             :" << top << endl;
 
 
@@ -171,9 +171,9 @@ int main(int argc, char *argv[])
 
     if (Pstream::myProcNo(comm) != -1)
     {
-        //scalar sum = sumReduce(comm, localValue);
-        //scalar sum = localValue;
-        //reduce
+        // scalar sum = sumReduce(comm, localValue);
+        // scalar sum = localValue;
+        // reduce
         //(
         //    UPstream::treeCommunication(comm),
         //    sum,

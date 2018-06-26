@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -25,7 +25,7 @@ Class
     Foam::triangle
 
 Description
-    A triangle primitive used to calculate face normals and swept volumes.
+    A triangle primitive used to calculate face areas and swept volumes.
 
 SourceFiles
     triangleI.H
@@ -40,10 +40,10 @@ SourceFiles
 #include "tensor.H"
 #include "pointHit.H"
 #include "Random.H"
-#include "cachedRandom.H"
 #include "FixedList.H"
 #include "UList.H"
 #include "linePointRef.H"
+#include "barycentric2D.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -131,10 +131,13 @@ public:
             //- Return centre (centroid)
             inline Point centre() const;
 
+            //- Return vector area
+            inline vector area() const;
+
             //- Return scalar magnitude
             inline scalar mag() const;
 
-            //- Return vector normal
+            //- Return unit normal
             inline vector normal() const;
 
             //- Return circum-centre
@@ -163,17 +166,18 @@ public:
             //  distribution
             inline Point randomPoint(Random& rndGen) const;
 
-            //- Return a random point on the triangle from a uniform
-            //  distribution
-            inline Point randomPoint(cachedRandom& rndGen) const;
+            //- Calculate the point from the given barycentric coordinates.
+            inline Point barycentricToPoint(const barycentric2D& bary) const;
 
-            //- Calculate the barycentric coordinates of the given
-            //  point, in the same order as a, b, c.  Returns the
-            //  determinant of the solution.
-            inline scalar barycentric
+            //- Calculate the barycentric coordinates from the given point
+            inline barycentric2D pointToBarycentric(const point& pt) const;
+
+            //- Calculate the barycentric coordinates from the given point.
+            //  Returns the determinant.
+            inline scalar pointToBarycentric
             (
                 const point& pt,
-                FixedList<scalar, 3>& bary
+                barycentric2D& bary
             ) const;
 
             //- Return point intersection with a ray.

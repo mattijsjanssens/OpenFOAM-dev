@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -42,26 +42,29 @@ Description
                                     //(from Y to X)
             nTheta      0;          // polar angles in PI (from Z to X-Y plane)
             convergence 1e-3;       // convergence criteria for radiation
-                                    //iteration
+                                    // iteration
             maxIter     4;          // maximum number of iterations
         }
 
         solverFreq   1; // Number of flow iterations per radiation iteration
     \endverbatim
 
-    The total number of solid angles is  4*nPhi*nTheta.
+    In 1-D the ray directions are bound to one of the X, Y or Z directions. The
+    total number of solid angles is 2. nPhi and nTheta are ignored.
 
-    In 1D the direction of the rays is X (nPhi and nTheta are ignored)
-    In 2D the direction of the rays is on X-Y plane (only nPhi is considered)
-    In 3D (nPhi and nTheta are considered)
+    In 2-D the ray directions are within one of the X-Y, X-Z or Y-Z planes. The
+    total number of solid angles is 4*nPhi. nTheta is ignored.
+
+    In 3D the rays span all directions. The total number of solid angles is
+    4*nPhi*nTheta.
 
 SourceFiles
     fvDOM.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef radiationModelfvDOM_H
-#define radiationModelfvDOM_H
+#ifndef radiation_fvDOM_H
+#define radiation_fvDOM_H
 
 #include "radiativeIntensityRay.H"
 #include "radiationModel.H"
@@ -89,13 +92,13 @@ class fvDOM
         volScalarField G_;
 
         //- Total radiative heat flux [W/m2]
-        volScalarField Qr_;
+        volScalarField qr_;
 
-         //- Emmited radiative heat flux [W/m2]
-        volScalarField Qem_;
+         //- Emitted radiative heat flux [W/m2]
+        volScalarField qem_;
 
         //- Incidet radiative heat flux [W/m2]
-        volScalarField Qin_;
+        volScalarField qin_;
 
         //- Total absorption coefficient [1/m]
         volScalarField a_;
@@ -121,8 +124,8 @@ class fvDOM
         //- List of pointers to radiative intensity rays
         PtrList<radiativeIntensityRay> IRay_;
 
-        //- Convergence criterion
-        scalar convergence_;
+        //- Convergence tolerance
+        scalar tolerance_;
 
         //- Maximum number of iterations
         label maxIter_;
@@ -228,13 +231,13 @@ public:
             inline const volScalarField& G() const;
 
             //- Const access to total radiative heat flux field
-            inline const volScalarField& Qr() const;
+            inline const volScalarField& qr() const;
 
             //- Const access to incident radiative heat flux field
-            inline const volScalarField& Qin() const;
+            inline const volScalarField& qin() const;
 
             //- Const access to emitted radiative heat flux field
-            inline const volScalarField& Qem() const;
+            inline const volScalarField& qem() const;
 
             //- Const access to black body
             inline const blackBodyEmission& blackBody() const;

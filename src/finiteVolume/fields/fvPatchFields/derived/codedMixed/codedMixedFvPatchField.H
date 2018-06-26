@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,9 +23,6 @@ License
 
 Class
     Foam::codedMixedFvPatchField
-
-Group
-    grpGenericBoundaryConditions
 
 Description
     Constructs on-the-fly a new boundary condition (derived from
@@ -53,12 +50,12 @@ Usage
             this->valueFraction() = 1.0;
         #};
 
-        //codeInclude
+        // codeInclude
         //#{
         //    #include "fvCFD.H"
         //#};
 
-        //codeOptions
+        // codeOptions
         //#{
         //    -I$(LIB_SRC)/finiteVolume/lnInclude
         //#};
@@ -239,7 +236,7 @@ public:
         //  to false.
         virtual void evaluate
         (
-            const Pstream::commsTypes commsType=Pstream::blocking
+            const Pstream::commsTypes commsType=Pstream::commsTypes::blocking
         );
 
         //- Write

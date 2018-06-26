@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -69,10 +69,10 @@ Foam::InflationInjection<CloudType>::InflationInjection
     volumeAccumulator_(0.0),
     fraction_(1.0),
     selfSeed_(this->coeffDict().lookupOrDefault("selfSeed", false)),
-    dSeed_(SMALL),
+    dSeed_(small),
     sizeDistribution_
     (
-        distributionModels::distributionModel::New
+        distributionModel::New
         (
             this->coeffDict().subDict("sizeDistribution"),
             owner.rndGen()
@@ -155,9 +155,7 @@ Foam::InflationInjection<CloudType>::~InflationInjection()
 
 template<class CloudType>
 void Foam::InflationInjection<CloudType>::updateMesh()
-{
-    // do nothing
-}
+{}
 
 
 template<class CloudType>
@@ -205,7 +203,7 @@ Foam::label Foam::InflationInjection<CloudType>::parcelsToInject
 
     newParticles_.clear();
 
-    cachedRandom& rnd = this->owner().rndGen();
+    Random& rnd = this->owner().rndGen();
 
     // Diameter factor, when splitting particles into 4, this is the
     // factor that modifies the diameter.
@@ -243,14 +241,8 @@ Foam::label Foam::InflationInjection<CloudType>::parcelsToInject
             break;
         }
 
-        label cI = generationCells_
-        [
-            rnd.position
-            (
-                label(0),
-                generationCells_.size() - 1
-            )
-        ];
+        label cI =
+            generationCells_[rnd.sampleAB<label>(0, generationCells_.size())];
 
         // Pick a particle at random from the cell - if there are
         // none, insert one at the cell centre.  Otherwise, split an
@@ -278,7 +270,7 @@ Foam::label Foam::InflationInjection<CloudType>::parcelsToInject
         }
         else
         {
-            label cPI = rnd.position(label(0), cellOccupancy[cI].size() - 1);
+            label cPI = rnd.sampleAB<label>(0, cellOccupancy[cI].size());
 
             // This has to be a reference to the pointer so that it
             // can be set to nullptr when the particle is deleted.

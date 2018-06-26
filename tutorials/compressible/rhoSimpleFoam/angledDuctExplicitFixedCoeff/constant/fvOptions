@@ -18,7 +18,6 @@ FoamFile
 porosity
 {
     type            explicitPorositySource;
-    active          yes;
 
     explicitPorositySourceCoeffs
     {
@@ -26,7 +25,6 @@ porosity
         cellZone        porosity;
         type            fixedCoeff;
         active          yes;
-        cellZone        porosity;
 
         fixedCoeffCoeffs
         {
@@ -53,32 +51,24 @@ porosity
 fixedTemperature
 {
     type            fixedTemperatureConstraint;
-    active          yes;
 
-    fixedTemperatureConstraintCoeffs
-    {
-        selectionMode   cellZone;
-        cellZone        porosity;
-        mode            uniform;
-        temperature     350;
-    }
+    selectionMode   cellZone;
+    cellZone        porosity;
+    mode            uniform;
+    temperature     350;
 }
 
 
 porosityTurbulence
 {
     type            scalarFixedValueConstraint;
-    active          yes;
 
-    scalarFixedValueConstraintCoeffs
+    selectionMode   cellZone;
+    cellZone        porosity;
+    fieldValues
     {
-        selectionMode   cellZone;
-        cellZone        porosity;
-        fieldValues
-        {
-            k           1;
-            epsilon     150;
-        }
+        k           1;
+        epsilon     150;
     }
 }
 

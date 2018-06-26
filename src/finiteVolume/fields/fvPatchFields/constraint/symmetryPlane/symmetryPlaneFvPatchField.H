@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2013-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,9 +23,6 @@ License
 
 Class
     Foam::symmetryPlaneFvPatchField
-
-Group
-    grpConstraintBoundaryConditions
 
 Description
     This boundary condition enforces a symmetryPlane constraint
@@ -143,19 +140,17 @@ public:
 
     // Member functions
 
-        // Evaluation functions
+        //- Return gradient at boundary
+        virtual tmp<Field<Type>> snGrad() const;
 
-            //- Return gradient at boundary
-            virtual tmp<Field<Type>> snGrad() const;
+        //- Evaluate the patch field
+        virtual void evaluate
+        (
+            const Pstream::commsTypes commsType=Pstream::commsTypes::blocking
+        );
 
-            //- Evaluate the patch field
-            virtual void evaluate
-            (
-                const Pstream::commsTypes commsType=Pstream::blocking
-            );
-
-            //- Return face-gradient transform diagonal
-            virtual tmp<Field<Type>> snGradTransformDiag() const;
+        //- Return face-gradient transform diagonal
+        virtual tmp<Field<Type>> snGradTransformDiag() const;
 };
 
 

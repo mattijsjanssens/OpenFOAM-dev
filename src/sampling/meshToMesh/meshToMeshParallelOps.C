@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2012-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2012-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -123,7 +123,7 @@ Foam::autoPtr<Foam::mapDistribute> Foam::meshToMesh::calcProcMap
         procBb[Pstream::myProcNo()] = boundBox(src.points(), false);
 
         // slightly increase size of bounding boxes to allow for cases where
-        // bounding boxes are perfectly alligned
+        // bounding boxes are perfectly aligned
         procBb[Pstream::myProcNo()].inflate(0.01);
     }
     else
@@ -271,7 +271,7 @@ void Foam::meshToMesh::distributeCells
     List<labelList>& procLocalFaceIDs
 ) const
 {
-    PstreamBuffers pBufs(Pstream::nonBlocking);
+    PstreamBuffers pBufs(Pstream::commsTypes::nonBlocking);
 
     points.setSize(Pstream::nProcs());
     nInternalFaces.setSize(Pstream::nProcs(), 0);
@@ -841,7 +841,7 @@ void Foam::meshToMesh::distributeAndMergeCells
         bool hasMerged = mergePoints
         (
             tgtPoints,
-            SMALL,
+            small,
             false,
             oldToNew,
             newTgtPoints

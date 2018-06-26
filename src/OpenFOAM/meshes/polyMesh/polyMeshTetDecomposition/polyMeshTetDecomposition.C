@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -30,7 +30,7 @@ License
 // Note: the use of this tolerance is ad-hoc, there may be extreme
 // cases where the resulting tetrahedra still have particle tracking
 // problems, or tets with lower quality may track OK.
-const Foam::scalar Foam::polyMeshTetDecomposition::minTetQuality = sqr(SMALL);
+const Foam::scalar Foam::polyMeshTetDecomposition::minTetQuality = sqr(small);
 
 
 // * * * * * * * * * * * * * Static Member Functions * * * * * * * * * * * * //
@@ -59,7 +59,7 @@ Foam::label Foam::polyMeshTetDecomposition::findSharedBasePoint
 
     forAll(f, faceBasePtI)
     {
-        scalar thisBaseMinTetQuality = VGREAT;
+        scalar thisBaseMinTetQuality = vGreat;
 
         const point& tetBasePt = pPts[f[faceBasePtI]];
 
@@ -154,7 +154,7 @@ Foam::label Foam::polyMeshTetDecomposition::findBasePoint
 
     forAll(f, faceBasePtI)
     {
-        scalar thisBaseMinTetQuality = VGREAT;
+        scalar thisBaseMinTetQuality = vGreat;
 
         const point& tetBasePt = pPts[f[faceBasePtI]];
 
@@ -530,11 +530,7 @@ Foam::List<Foam::tetIndices> Foam::polyMeshTetDecomposition::faceTetIndices
     label cI
 )
 {
-    static label nWarnings = 0;
-    static const label maxWarnings = 100;
-
     const faceList& pFaces = mesh.faces();
-    const labelList& pOwner = mesh.faceOwner();
 
     const face& f = pFaces[fI];
 
@@ -542,118 +538,12 @@ Foam::List<Foam::tetIndices> Foam::polyMeshTetDecomposition::faceTetIndices
 
     List<tetIndices> faceTets(nTets);
 
-    bool own = (pOwner[fI] == cI);
-
-    label tetBasePtI = mesh.tetBasePtIs()[fI];
-
-    if (tetBasePtI == -1)
+    for (label tetPtI = 1; tetPtI < f.size() - 1; tetPtI ++)
     {
-        if (nWarnings < maxWarnings)
-        {
-            WarningInFunction
-                << "No base point for face " << fI << ", " << f
-                << ", produces a valid tet decomposition."
-                << endl;
-            nWarnings++;
-        }
-        if (nWarnings == maxWarnings)
-        {
-            Warning<< "Suppressing any further warnings." << endl;
-            nWarnings++;
-        }
-
-        tetBasePtI = 0;
-    }
-
-    for (label tetPtI = 1; tetPtI < f.size() - 1; tetPtI++)
-    {
-        tetIndices& faceTetIs = faceTets[tetPtI - 1];
-
-        label facePtI = (tetPtI + tetBasePtI) % f.size();
-        label otherFacePtI = f.fcIndex(facePtI);
-
-        faceTetIs.cell() = cI;
-
-        faceTetIs.face() = fI;
-
-        faceTetIs.faceBasePt() = tetBasePtI;
-
-        if (own)
-        {
-            faceTetIs.facePtA() = facePtI;
-            faceTetIs.facePtB() = otherFacePtI;
-        }
-        else
-        {
-            faceTetIs.facePtA() = otherFacePtI;
-            faceTetIs.facePtB() = facePtI;
-        }
-
-        faceTetIs.tetPt() = tetPtI;
+        faceTets[tetPtI - 1] = tetIndices(cI, fI, tetPtI);
     }
 
     return faceTets;
-}
-
-
-Foam::tetIndices Foam::polyMeshTetDecomposition::triangleTetIndices
-(
-    const polyMesh& mesh,
-    const label fI,
-    const label cI,
-    const label tetPtI
-)
-{
-    static label nWarnings = 0;
-    static const label maxWarnings = 100;
-
-    const face& f = mesh.faces()[fI];
-    bool own = (mesh.faceOwner()[fI] == cI);
-    label tetBasePtI = mesh.tetBasePtIs()[fI];
-    if (tetBasePtI == -1)
-    {
-        if (nWarnings < maxWarnings)
-        {
-            WarningInFunction
-                << "No base point for face " << fI << ", " << f
-                << ", produces a valid tet decomposition."
-                << endl;
-            nWarnings++;
-        }
-        if (nWarnings == maxWarnings)
-        {
-            Warning<< "Suppressing any further warnings." << endl;
-            nWarnings++;
-        }
-
-        tetBasePtI = 0;
-    }
-
-    tetIndices faceTetIs;
-
-    label facePtI = (tetPtI + tetBasePtI) % f.size();
-    label otherFacePtI = f.fcIndex(facePtI);
-
-    faceTetIs.cell() = cI;
-
-    faceTetIs.face() = fI;
-
-    faceTetIs.faceBasePt() = tetBasePtI;
-
-    if (own)
-    {
-        faceTetIs.facePtA() = facePtI;
-        faceTetIs.facePtB() = otherFacePtI;
-    }
-    else
-    {
-        faceTetIs.facePtA() = otherFacePtI;
-        faceTetIs.facePtB() = facePtI;
-    }
-
-    faceTetIs.tetPt() = tetPtI;
-
-    return faceTetIs;
 }
 
 
@@ -711,16 +601,7 @@ Foam::tetIndices Foam::polyMeshTetDecomposition::findTet
         for (label tetPtI = 1; tetPtI < f.size() - 1; tetPtI++)
         {
             // Get tetIndices of face triangle
-            tetIndices faceTetIs
-            (
-                triangleTetIndices
-                (
-                    mesh,
-                    fI,
-                    cI,
-                    tetPtI
-                )
-            );
+            tetIndices faceTetIs(cI, fI, tetPtI);
 
             // Check if inside
             if (faceTetIs.tet(mesh).inside(pt))

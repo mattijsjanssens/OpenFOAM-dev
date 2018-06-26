@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -135,6 +135,17 @@ public:
 
     // Selectors
 
+        //- Generic lookup for thermodynamics package thermoTypeName
+        template<class Thermo, class Table>
+        static typename Table::iterator lookupThermo
+        (
+            const dictionary& thermoTypeDict,
+            Table* tablePtr,
+            const int nCmpt,
+            const char* cmptNames[],
+            const word& thermoTypeName
+        );
+
         //- Generic lookup for each of the related thermodynamics packages
         template<class Thermo, class Table>
         static typename Table::iterator lookupThermo
@@ -239,6 +250,9 @@ public:
 
         //- Update properties
         virtual void correct() = 0;
+
+        //- Return the name of the thermo physics
+        virtual word thermoName() const = 0;
 
         //- Return true if the equation of state is incompressible
         //  i.e. rho != f(p)
@@ -386,6 +400,9 @@ public:
                 const scalarField& T,
                 const label patchi
             ) const = 0;
+
+            //- Molecular weight [kg/kmol]
+            virtual tmp<volScalarField> W() const = 0;
 
 
         // Access to transport state variables

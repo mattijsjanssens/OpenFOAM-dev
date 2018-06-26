@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -94,10 +94,10 @@ void Foam::domainDecomposition::addInterProcFace
 }
 
 
-void Foam::domainDecomposition::decomposeMesh()
+void Foam::domainDecomposition::decomposeMesh(const fileName& dict)
 {
     // Decide which cell goes to which processor
-    distributeCells();
+    distributeCells(dict);
 
     // Distribute the cells according to the given processor label
 
@@ -328,7 +328,7 @@ void Foam::domainDecomposition::decomposeMesh()
         procProcessorPatchSubPatchIDs_[proci].setSize(nInterfaces);
         procProcessorPatchSubPatchStarts_[proci].setSize(nInterfaces);
 
-        //Info<< "Processor " << proci << endl;
+        // Info<< "Processor " << proci << endl;
 
         // Get sorted neighbour processors
         const Map<label>& curNbrToInterPatch = procNbrToInterPatch[proci];
@@ -365,15 +365,15 @@ void Foam::domainDecomposition::decomposeMesh()
                 subPatchStarts[proci][interPatch]
             );
 
-            //Info<< "    nbr:" << nbrProc << endl;
-            //Info<< "    interpatch:" << interPatch << endl;
-            //Info<< "    size:" << procProcessorPatchSize_[proci][i] << endl;
-            //Info<< "    start:" << procProcessorPatchStartIndex_[proci][i]
+            // Info<< "    nbr:" << nbrProc << endl;
+            // Info<< "    interpatch:" << interPatch << endl;
+            // Info<< "    size:" << procProcessorPatchSize_[proci][i] << endl;
+            // Info<< "    start:" << procProcessorPatchStartIndex_[proci][i]
             //    << endl;
-            //Info<< "    subPatches:"
+            // Info<< "    subPatches:"
             //    << procProcessorPatchSubPatchIDs_[proci][i]
             //    << endl;
-            //Info<< "    subStarts:"
+            // Info<< "    subStarts:"
             //    << procProcessorPatchSubPatchStarts_[proci][i] << endl;
 
             // And add all the face labels for interPatch

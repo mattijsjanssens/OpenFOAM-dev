@@ -28,7 +28,7 @@ int USERD_set_filenames
         // remove the last '/' from rootDir
         if (the_path[lRoot-1] == '/')
         {
-            the_path[lRoot-1] = char(NULL);
+            the_path[lRoot-1] = '\0';
         }
         else
         {
@@ -93,7 +93,7 @@ int USERD_set_filenames
     fieldNames = objects.names();
 
     // because of the spray being a 'field' ...
-    // get the availabe number of variables and
+    // get the available number of variables and
     // check for type (scalar/vector/tensor)
 
     label nVar = 0;
@@ -171,7 +171,7 @@ int USERD_set_filenames
         false
     );
 
-    if (sprayHeader.headerOk())
+    if (sprayHeader.typeHeaderOk<Cloud<passiveParticle>>(false))
     {
         Info<< "[Found lagrangian]" << endl;
 

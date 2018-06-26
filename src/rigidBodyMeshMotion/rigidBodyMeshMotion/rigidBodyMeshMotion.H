@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2016-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -40,6 +40,7 @@ SourceFiles
 
 #include "displacementMotionSolver.H"
 #include "rigidBodyMotion.H"
+#include "ramp.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -116,6 +117,9 @@ class rigidBodyMeshMotion
         //  as rhoInf
         word rhoName_;
 
+        //- Ramp the forces according to the specified function and period
+        autoPtr<Function1<scalar>> ramp_;
+
         //- Current time index (used for updating)
         label curTimeIndex_;
 
@@ -165,7 +169,8 @@ public:
         (
             IOstream::streamFormat fmt,
             IOstream::versionNumber ver,
-            IOstream::compressionType cmp
+            IOstream::compressionType cmp,
+            const bool valid
         ) const;
 
         //- Read dynamicMeshDict dictionary

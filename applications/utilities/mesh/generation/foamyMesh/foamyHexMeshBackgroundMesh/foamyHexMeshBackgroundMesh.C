@@ -1,9 +1,9 @@
 /*---------------------------------------------------------------------------*\
- =========                   |
- \\      /   F ield          | OpenFOAM: The Open Source CFD Toolbox
-  \\    /    O peration      |
-   \\  /     A nd            | Copyright (C) 2012-2016 OpenFOAM Foundation
-    \\/      M anipulation   |
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     |
+    \\  /    A nd           | Copyright (C) 2012-2018 OpenFOAM Foundation
+     \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
     This file is part of OpenFOAM.
@@ -310,8 +310,8 @@ tmp<scalarField> signedDistance
     const labelList& surfaces
 )
 {
-    tmp<scalarField> tfld(new scalarField(points.size(), Foam::sqr(GREAT)));
-    scalarField& fld = tfld();
+    tmp<scalarField> tfld(new scalarField(points.size(), Foam::sqr(great)));
+    scalarField& fld = tfld.ref();
 
     // Find nearest
     List<pointIndexHit> nearest;
@@ -321,7 +321,7 @@ tmp<scalarField> signedDistance
         geometry,
         surfaces,
         points,
-        scalarField(points.size(), Foam::sqr(GREAT)),//distSqr
+        scalarField(points.size(), Foam::sqr(great)),//distSqr
         nearestSurfaces,
         nearest
     );
@@ -562,8 +562,8 @@ int main(int argc, char *argv[])
         autoPtr<mapDistributePolyMesh> map = distributor.distribute(decomp);
 
         // Print some statistics
-        //Info<< "After distribution:" << endl;
-        //printMeshData(mesh);
+        // Info<< "After distribution:" << endl;
+        // printMeshData(mesh);
 
         mesh.setInstance(runTime.constant());
         Info<< "Writing redistributed mesh" << nl << endl;
@@ -571,7 +571,7 @@ int main(int argc, char *argv[])
     }
 
 
-    Info<< "Refining backgroud mesh according to cell size specification" << nl
+    Info<< "Refining background mesh according to cell size specification" << nl
         << endl;
 
     backgroundMeshDecomposition backgroundMesh
@@ -647,7 +647,8 @@ int main(int argc, char *argv[])
             forAll(fvm.C().boundaryField(), patchi)
             {
                 const pointField& cc = fvm.C().boundaryField()[patchi];
-                fvPatchScalarField& fld = cellDistance.boundaryField()[patchi];
+                fvPatchScalarField& fld =
+                    cellDistance.boundaryFieldRef()[patchi];
                 scalarField patchDistSqr
                 (
                     fld.patch().patchInternalField(distSqr)
@@ -681,7 +682,7 @@ int main(int argc, char *argv[])
             dimensionedScalar("zero", dimLength, 0)
         );
         {
-            scalarField pointDistSqr(fvm.nPoints(), -sqr(GREAT));
+            scalarField pointDistSqr(fvm.nPoints(), -sqr(great));
             for (label facei = 0; facei < fvm.nInternalFaces(); facei++)
             {
                 label own = fvm.faceOwner()[facei];
@@ -698,7 +699,7 @@ int main(int argc, char *argv[])
                 fvm,
                 pointDistSqr,
                 maxEqOp<scalar>(),
-                -sqr(GREAT)             // null value
+                -sqr(great)             // null value
             );
 
             pointDistance.primitiveFieldRef() = signedDistance
@@ -720,8 +721,8 @@ int main(int argc, char *argv[])
             fvm,
             cellDistance,
             pointDistance,
-            0,      //distance,
-            false   //regularise
+            0,      // distance,
+            false   // regularise
         );
 
         isoFaces.setSize(iso.size());

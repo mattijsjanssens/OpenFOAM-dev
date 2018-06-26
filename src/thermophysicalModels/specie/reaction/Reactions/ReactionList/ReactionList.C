@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -61,25 +61,6 @@ Foam::ReactionList<ThermoType>::ReactionList
 
 
 template<class ThermoType>
-Foam::ReactionList<ThermoType>::ReactionList
-(
-    const speciesTable& species,
-    const HashPtrTable<ThermoType>& thermoDb,
-    const fileName& fName
-)
-:
-    SLPtrList<Reaction<ThermoType>>
-    (
-        dictionary(IFstream(fName)()).lookup("reactions"),
-        Reaction<ThermoType>::iNew(species, thermoDb)
-    ),
-    species_(species),
-    thermoDb_(thermoDb),
-    dict_(dictionary::null)
-{}
-
-
-template<class ThermoType>
 Foam::ReactionList<ThermoType>::ReactionList(const ReactionList& reactions)
 :
     SLPtrList<Reaction<ThermoType>>(reactions),
@@ -102,6 +83,13 @@ template<class ThermoType>
 bool Foam::ReactionList<ThermoType>::readReactionDict()
 {
     const dictionary& reactions(dict_.subDict("reactions"));
+
+    // Set general temperature limits from the dictionary
+    Reaction<ThermoType>::TlowDefault =
+        dict_.lookupOrDefault<scalar>("Tlow", 0);
+
+    Reaction<ThermoType>::ThighDefault =
+        dict_.lookupOrDefault<scalar>("Thigh", great);
 
     forAllConstIter(dictionary, reactions, iter)
     {

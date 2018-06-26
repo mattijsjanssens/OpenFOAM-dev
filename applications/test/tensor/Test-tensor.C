@@ -23,7 +23,7 @@ int main()
     Info<< t1.x() << t1.y() << t1.z() << endl;
 
     tensor t6(1,0,-4,0,5,4,-4,4,3);
-    //tensor t6(1,2,0,2,5,0,0,0,0);
+    // tensor t6(1,2,0,2,5,0,0,0,0);
 
     Info<< "tensor " << t6 << endl;
     vector e = eigenValues(t6);
@@ -35,9 +35,10 @@ int main()
     Info<< "Check determinant " << e.x()*e.y()*e.z() << " " << det(t6) << endl;
 
     Info<< "Check eigenvectors "
-        << (eigenVector(t6, e[0]) & t6) << e[0]*eigenVector(t6, e[0]) << " "
-        << (eigenVector(t6, e[1]) & t6) << e[1]*eigenVector(t6, e[1]) << " "
-        << (eigenVector(t6, e[2]) & t6) << e[2]*eigenVector(t6, e[2])
+        << (eigenVectors(t6, e) & t6) << " "
+        << (e.x()*eigenVectors(t6, e).x())
+        << (e.y()*eigenVectors(t6, e).y())
+        << (e.z()*eigenVectors(t6, e).z())
         << endl;
 
     Info<< "Check eigenvalues for symmTensor "

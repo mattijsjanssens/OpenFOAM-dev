@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2016-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,9 +23,6 @@ License
 
 Class
     Foam::extrapolatedCalculatedFvPatchField
-
-Group
-    grpGenericBoundaryConditions
 
 Description
     This boundary condition applies a zero-gradient condition from the patch
@@ -136,13 +133,11 @@ public:
 
     // Member functions
 
-        // Evaluation functions
-
-            //- Evaluate the patch field
-            virtual void evaluate
-            (
-                const Pstream::commsTypes commsType=Pstream::blocking
-            );
+        //- Evaluate the patch field
+        virtual void evaluate
+        (
+            const Pstream::commsTypes commsType=Pstream::commsTypes::blocking
+        );
 };
 
 

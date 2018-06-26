@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2015-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -44,32 +44,19 @@ void Foam::fv::tabulatedAccelerationSource::addSup
     if (mesh_.foundObject<uniformDimensionedVectorField>("g"))
     {
         uniformDimensionedVectorField& g =
-            const_cast<uniformDimensionedVectorField&>
-            (
-                mesh_.lookupObject<uniformDimensionedVectorField>("g")
-            );
+            mesh_.lookupObjectRef<uniformDimensionedVectorField>("g");
 
         const uniformDimensionedScalarField& hRef =
             mesh_.lookupObject<uniformDimensionedScalarField>("hRef");
 
         g = g0_ - dimensionedVector("a", dimAcceleration, acceleration.x());
 
-        dimensionedScalar ghRef
-        (
-            mag(g.value()) > SMALL
-          ? g & (cmptMag(g.value())/mag(g.value()))*hRef
-          : dimensionedScalar("ghRef", g.dimensions()*dimLength, 0)
-        );
+        dimensionedScalar ghRef(- mag(g)*hRef);
 
-        const_cast<volScalarField&>
-        (
-            mesh_.lookupObject<volScalarField>("gh")
-        ) = (g & mesh_.C()) - ghRef;
+        mesh_.lookupObjectRef<volScalarField>("gh") = (g & mesh_.C()) - ghRef;
 
-        const_cast<surfaceScalarField&>
-        (
-            mesh_.lookupObject<surfaceScalarField>("ghf")
-        ) = (g & mesh_.Cf()) - ghRef;
+        mesh_.lookupObjectRef<surfaceScalarField>("ghf") =
+            (g & mesh_.Cf()) - ghRef;
     }
     // ... otherwise include explicitly in the momentum equation
     else

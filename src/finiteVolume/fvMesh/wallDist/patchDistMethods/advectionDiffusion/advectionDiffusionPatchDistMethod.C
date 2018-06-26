@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2015-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2015-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -56,7 +56,7 @@ Foam::patchDistMethods::advectionDiffusion::advectionDiffusion
 )
 :
     patchDistMethod(mesh, patchIDs),
-    coeffs_(dict.subDict(type() + "Coeffs")),
+    coeffs_(dict.optionalSubDict(type() + "Coeffs")),
     pdmPredictor_
     (
         patchDistMethod::New
@@ -124,10 +124,10 @@ bool Foam::patchDistMethods::advectionDiffusion::correct
     do
     {
         ny = fvc::grad(y);
-        ny /= (mag(ny) + SMALL);
+        ny /= (mag(ny) + small);
 
         surfaceVectorField nf(fvc::interpolate(ny));
-        nf /= (mag(nf) + SMALL);
+        nf /= (mag(nf) + small);
 
         surfaceScalarField yPhi("yPhi", mesh_.Sf() & nf);
 

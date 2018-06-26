@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -71,9 +71,7 @@ void Foam::CFCFaceToCellStencil::calcFaceBoundaryData
             }
         }
         else if (isA<emptyPolyPatch>(pp))
-        {
-            // Do nothing.
-        }
+        {}
         else
         {
             // Do nothing since face itself already in stencil
@@ -207,11 +205,11 @@ void Foam::CFCFaceToCellStencil::calcCellStencil
         }
 
         globalCellFaces[celli] = allGlobalFaces;
-        //Pout<< "** cell:" << celli
+        // Pout<< "** cell:" << celli
         //    << " at:" << mesh().cellCentres()[celli]
         //    << endl;
-        //const labelList& globalFaces = globalCellFaces[celli];
-        //forAll(globalFaces, i)
+        // const labelList& globalFaces = globalCellFaces[celli];
+        // forAll(globalFaces, i)
         //{
         //    label facei = globalNumbering().toLocal(globalFaces[i]);
         //    Pout<< "    face:" << facei

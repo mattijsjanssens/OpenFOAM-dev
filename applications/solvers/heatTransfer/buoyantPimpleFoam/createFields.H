@@ -71,6 +71,21 @@ volScalarField p_rgh
 // Force p_rgh to be consistent with p
 p_rgh = p - rho*gh;
 
+label pRefCell = 0;
+scalar pRefValue = 0.0;
+
+if (thermo.incompressible())
+{
+    setRefCell
+    (
+        p,
+        p_rgh,
+        pimple.dict(),
+        pRefCell,
+        pRefValue
+    );
+}
+
 mesh.setFluxRequired(p_rgh.name());
 
 Info<< "Creating field dpdt\n" << endl;
@@ -91,3 +106,4 @@ volScalarField K("K", 0.5*magSqr(U));
 
 #include "createMRF.H"
 #include "createRadiationModel.H"
+#include "createFvOptions.H"

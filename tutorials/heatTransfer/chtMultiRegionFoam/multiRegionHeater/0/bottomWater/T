@@ -15,58 +15,36 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-dimensions      [0 0 0 1 0 0 0];
+dimensions      [ 0 0 0 1 0 0 0 ];
 
 internalField   uniform 300;
 
 boundaryField
 {
+    #includeEtc "caseDicts/setConstraintTypes"
+
     minX
     {
         type            fixedValue;
-        value           uniform 300;
+        value           $internalField;
     }
     maxX
     {
         type            inletOutlet;
-        value           uniform 300;
-        inletValue      uniform 300;
+        value           $internalField;
+        inletValue      $internalField;
     }
-    minY
+    "(min|max)(Y|Z)"
     {
         type            zeroGradient;
-        value           uniform 300;
+        value           $internalField;
     }
-    minZ
-    {
-        type            zeroGradient;
-        value           uniform 300;
-    }
-    maxZ
-    {
-        type            zeroGradient;
-        value           uniform 300;
-    }
-    bottomWater_to_rightSolid
+    "bottomWater_to_.*"
     {
         type            compressible::turbulentTemperatureCoupledBaffleMixed;
-        value           uniform 300;
+        value           $internalField;
         Tnbr            T;
-        kappaMethod     fluidthermo;
-    }
-    bottomWater_to_leftSolid
-    {
-        type            compressible::turbulentTemperatureCoupledBaffleMixed;
-        value           uniform 300;
-        Tnbr            T;
-        kappaMethod     fluidthermo;
-    }
-    bottomWater_to_heater
-    {
-        type            compressible::turbulentTemperatureCoupledBaffleMixed;
-        value           uniform 300;
-        Tnbr            T;
-        kappaMethod     fluidthermo;
+        kappaMethod     fluidThermo;
     }
 }
 

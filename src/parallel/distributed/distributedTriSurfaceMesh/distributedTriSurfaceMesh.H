@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -130,7 +130,7 @@ private:
 
             //- Split segment into subsegments overlapping the processor
             //  bounding box.
-            //void Foam::distributedTriSurfaceMesh::splitSegment
+            // void Foam::distributedTriSurfaceMesh::splitSegment
             //(
             //    const label segmentI,
             //    const point& start,
@@ -454,10 +454,31 @@ public:
             (
                 IOstream::streamFormat fmt,
                 IOstream::versionNumber ver,
-                IOstream::compressionType cmp
+                IOstream::compressionType cmp,
+                const bool valid
             ) const;
 
+            //- Is object global
+            virtual bool global() const
+            {
+                return false;
+            }
+
+            //- Return complete path + object name if the file exists
+            //  either in the case/processor or case otherwise null
+            virtual fileName filePath() const
+            {
+                return searchableSurface::localFilePath(type());
+            }
 };
+
+
+//- Template function for obtaining global status
+template<>
+inline bool typeGlobal<distributedTriSurfaceMesh>()
+{
+    return false;
+}
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

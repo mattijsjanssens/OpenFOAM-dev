@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -42,6 +42,7 @@ Foam::basicMultiComponentMixture::basicMultiComponentMixture
     const word& phaseName
 )
 :
+    basicMixture(thermoDict, mesh, phaseName),
     species_(specieNames),
     active_(species_.size(), true),
     Y_(species_.size())
@@ -58,8 +59,8 @@ Foam::basicMultiComponentMixture::basicMultiComponentMixture
             IOobject::NO_READ
         );
 
-        // Check if field exists and can be read
-        if (header.headerOk())
+        // check if field exists and can be read
+        if (header.typeHeaderOk<volScalarField>(true))
         {
             Y_.set
             (
@@ -85,32 +86,45 @@ Foam::basicMultiComponentMixture::basicMultiComponentMixture
             {
                 word YdefaultName(IOobject::groupName("Ydefault", phaseName));
 
-                tYdefault = new volScalarField
+                IOobject timeIO
                 (
-                    IOobject
-                    (
-                        YdefaultName,
-                        exists
-                        (
-                            mesh.time().path()/mesh.time().timeName()
-                           /YdefaultName
-                        )
-                      ? mesh.time().timeName()
-                      : (
-                            exists
-                            (
-                                mesh.time().path()/mesh.time().constant()
-                               /YdefaultName
-                            )
-                          ? mesh.time().constant()
-                          : Time::timeName(0)
-                        ),
-                        mesh,
-                        IOobject::MUST_READ,
-                        IOobject::NO_WRITE
-                    ),
-                    mesh
+                    YdefaultName,
+                    mesh.time().timeName(),
+                    mesh,
+                    IOobject::MUST_READ,
+                    IOobject::NO_WRITE
                 );
+
+                IOobject constantIO
+                (
+                    YdefaultName,
+                    mesh.time().constant(),
+                    mesh,
+                    IOobject::MUST_READ,
+                    IOobject::NO_WRITE
+                );
+
+                IOobject time0IO
+                (
+                    YdefaultName,
+                    Time::timeName(0),
+                    mesh,
+                    IOobject::MUST_READ,
+                    IOobject::NO_WRITE
+                );
+
+                if (timeIO.typeHeaderOk<volScalarField>(true))
+                {
+                    tYdefault = new volScalarField(timeIO, mesh);
+                }
+                else if (constantIO.typeHeaderOk<volScalarField>(true))
+                {
+                    tYdefault = new volScalarField(constantIO, mesh);
+                }
+                else
+                {
+                    tYdefault = new volScalarField(time0IO, mesh);
+                }
             }
 
             Y_.set

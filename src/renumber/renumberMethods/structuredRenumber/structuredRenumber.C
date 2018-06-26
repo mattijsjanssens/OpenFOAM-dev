@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2012-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2012-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -52,7 +52,7 @@ Foam::structuredRenumber::structuredRenumber
 )
 :
     renumberMethod(renumberDict),
-    methodDict_(renumberDict.subDict(typeName + "Coeffs")),
+    methodDict_(renumberDict.optionalSubDict(typeName + "Coeffs")),
     patches_(methodDict_.lookup("patches")),
     nLayers_(methodDict_.lookupOrDefault<label>("nLayers", labelMax)),
     depthFirst_(methodDict_.lookup("depthFirst")),
@@ -247,7 +247,7 @@ Foam::labelList Foam::structuredRenumber::renumber
         << " cells out of " << nTotalCells
         << "; using " << method_().type() << " renumbering for these" << endl;
 
-    // Get cell order using the method(). These values will get overwitten
+    // Get cell order using the method(). These values will get overwritten
     // by any visited cell so are used only if the number of nLayers is limited.
     labelList oldToOrdered
     (

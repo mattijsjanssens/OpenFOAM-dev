@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2015-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2015-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -45,7 +45,7 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class phaseModel Declaration
+                     Class IsothermalPhaseModel Declaration
 \*---------------------------------------------------------------------------*/
 
 template<class BasePhaseModel>
@@ -73,6 +73,9 @@ public:
 
         //- Correct the thermodynamics
         virtual void correctThermo();
+
+        //- Return whether the phase is isothermal
+        virtual bool isothermal() const;
 
         //- Return the enthalpy equation
         virtual tmp<fvScalarMatrix> heEqn();

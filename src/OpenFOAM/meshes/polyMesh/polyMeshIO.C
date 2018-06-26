@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -59,6 +59,12 @@ void Foam::polyMesh::setInstance(const fileName& inst)
 
     cellZones_.writeOpt() = IOobject::AUTO_WRITE;
     cellZones_.instance() = inst;
+
+    if (tetBasePtIsPtr_.valid())
+    {
+        tetBasePtIsPtr_->writeOpt() = IOobject::AUTO_WRITE;
+        tetBasePtIsPtr_->instance() = inst;
+    }
 }
 
 
@@ -72,7 +78,7 @@ Foam::polyMesh::readUpdateState Foam::polyMesh::readUpdate()
     // Find the point and cell instance
     fileName pointsInst(time().findInstance(meshDir(), "points"));
     fileName facesInst(time().findInstance(meshDir(), "faces"));
-    //fileName boundaryInst(time().findInstance(meshDir(), "boundary"));
+    // fileName boundaryInst(time().findInstance(meshDir(), "boundary"));
 
     if (debug)
     {
@@ -231,7 +237,7 @@ Foam::polyMesh::readUpdateState Foam::polyMesh::readUpdate()
         // Boundary is set so can use initMesh now (uses boundary_ to
         // determine internal and active faces)
 
-        if (exists(owner_.objectPath()))
+        if (!owner_.headerClassName().empty())
         {
             initMesh();
         }
@@ -386,6 +392,9 @@ Foam::polyMesh::readUpdateState Foam::polyMesh::readUpdate()
             cellZones_.set(czI, newCellZones[czI].clone(cellZones_));
         }
 
+        // Re-read tet base points
+        tetBasePtIsPtr_ = readTetBasePtIs();
+
 
         if (boundaryChanged)
         {
@@ -437,6 +446,13 @@ Foam::polyMesh::readUpdateState Foam::polyMesh::readUpdate()
 
         points_.transfer(newPoints);
         points_.instance() = pointsInst;
+
+        // Re-read tet base points
+        autoPtr<labelIOList> newTetBasePtIsPtr = readTetBasePtIs();
+        if (newTetBasePtIsPtr.valid())
+        {
+            tetBasePtIsPtr_ = newTetBasePtIsPtr;
+        }
 
         // Calculate the geometry for the patches (transformation tensors etc.)
         boundary_.calcGeometry();

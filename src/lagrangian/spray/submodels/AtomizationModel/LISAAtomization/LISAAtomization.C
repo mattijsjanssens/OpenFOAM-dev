@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -118,10 +118,10 @@ void Foam::LISAAtomization<CloudType>::update
     const vector& injectionPos,
     const scalar pAmbient,
     const scalar chi,
-    cachedRandom& rndGen
+    Random& rndGen
 ) const
 {
-    if (volFlowRate < SMALL)
+    if (volFlowRate < small)
     {
         return;
     }
@@ -246,7 +246,7 @@ void Foam::LISAAtomization<CloudType>::update
 
     scalar pExp = 0.135;
 
-    //  modifing dD to take account of flash boiling
+    //  modifying dD to take account of flash boiling
     dD = dD*(1.0 - chi*pow(pRatio, -pExp));
     scalar lBU = Cl_ * mag(Urel)*tau;
 

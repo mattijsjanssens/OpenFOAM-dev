@@ -2,11 +2,11 @@
 
 Info<< "Reading thermophysical properties\n" << endl;
 
-autoPtr<psiThermo> pThermo
+autoPtr<fluidThermo> pThermo
 (
-    psiThermo::New(mesh)
+    fluidThermo::New(mesh)
 );
-psiThermo& thermo = pThermo();
+fluidThermo& thermo = pThermo();
 thermo.validate(args.executable(), "h", "e");
 
 volScalarField& p = thermo.p();
@@ -40,27 +40,9 @@ volVectorField U
 
 #include "compressibleCreatePhi.H"
 
-dimensionedScalar rhoMax
-(
-    dimensionedScalar::lookupOrDefault
-    (
-        "rhoMax",
-        pimple.dict(),
-        dimDensity,
-        GREAT
-    )
-);
+pressureControl pressureControl(p, rho, pimple.dict(), false);
 
-dimensionedScalar rhoMin
-(
-    dimensionedScalar::lookupOrDefault
-    (
-        "rhoMin",
-        pimple.dict(),
-        dimDensity,
-        0
-    )
-);
+mesh.setFluxRequired(p.name());
 
 Info<< "Creating turbulence model\n" << endl;
 autoPtr<compressible::turbulenceModel> turbulence
@@ -73,8 +55,6 @@ autoPtr<compressible::turbulenceModel> turbulence
         thermo
     )
 );
-
-mesh.setFluxRequired(p.name());
 
 Info<< "Creating field dpdt\n" << endl;
 volScalarField dpdt
@@ -93,3 +73,4 @@ Info<< "Creating field kinetic energy K\n" << endl;
 volScalarField K("K", 0.5*magSqr(U));
 
 #include "createMRF.H"
+#include "createFvOptions.H"

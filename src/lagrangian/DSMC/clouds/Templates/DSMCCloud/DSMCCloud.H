@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -44,6 +44,7 @@ SourceFiles
 #include "fvMesh.H"
 #include "volFields.H"
 #include "scalarIOField.H"
+#include "barycentric.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -227,7 +228,7 @@ public:
                 //- Return the cloud type
                 inline const word& cloudName() const;
 
-                //- Return refernce to the mesh
+                //- Return references to the mesh
                 inline const fvMesh& mesh() const;
 
 
@@ -263,7 +264,7 @@ public:
                 inline const typename ParcelType::constantProperties&
                     constProps(label typeId) const;
 
-                //- Return refernce to the random object
+                //- Return references to the random object
                 inline Random& rndGen();
 
 
@@ -451,11 +452,9 @@ public:
             void addNewParcel
             (
                 const vector& position,
+                const label celli,
                 const vector& U,
                 const scalar Ei,
-                const label celli,
-                const label tetFacei,
-                const label tetPti,
                 const label typeId
             );
 

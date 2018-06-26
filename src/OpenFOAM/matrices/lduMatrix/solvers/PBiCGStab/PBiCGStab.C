@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2016-2017 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -30,6 +30,9 @@ License
 namespace Foam
 {
     defineTypeNameAndDebug(PBiCGStab, 0);
+
+    lduMatrix::solver::addsymMatrixConstructorToTable<PBiCGStab>
+        addPBiCGStabSymMatrixConstructorToTable_;
 
     lduMatrix::solver::addasymMatrixConstructorToTable<PBiCGStab>
         addPBiCGStabAsymMatrixConstructorToTable_;
@@ -238,7 +241,7 @@ Foam::solverPerformance Foam::PBiCGStab::solve
         } while
         (
             (
-                solverPerf.nIterations()++ < maxIter_
+              ++solverPerf.nIterations() < maxIter_
             && !solverPerf.checkConvergence(tolerance_, relTol_)
             )
          || solverPerf.nIterations() < minIter_

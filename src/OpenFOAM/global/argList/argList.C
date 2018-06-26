@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -29,16 +29,18 @@ License
 #include "IFstream.H"
 #include "dictionary.H"
 #include "IOobject.H"
-#include "JobInfo.H"
+#include "jobInfo.H"
 #include "labelList.H"
 #include "regIOobject.H"
 #include "dynamicCode.H"
+#include "fileOperation.H"
+#include "fileOperationInitialise.H"
+#include "stringListOps.H"
 
 #include <cctype>
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-bool Foam::argList::bannerEnabled = true;
 Foam::SLList<Foam::string>    Foam::argList::validArgs;
 Foam::HashTable<Foam::string> Foam::argList::validOptions;
 Foam::HashTable<Foam::string> Foam::argList::validParOptions;
@@ -64,13 +66,38 @@ Foam::argList::initValidTables::initValidTables()
     );
     validParOptions.set("roots", "(dir1 .. dirN)");
 
+    argList::addOption
+    (
+        "hostRoots", "(((host1 dir1) .. (hostN dirN))",
+        "slave root directories (per host) for distributed running"
+    );
+    validParOptions.set("hostRoots", "((host1 dir1) .. (hostN dirN))");
+
     argList::addBoolOption
     (
         "noFunctionObjects",
         "do not execute functionObjects"
     );
 
+    argList::addOption
+    (
+        "fileHandler",
+        "handler",
+        "override the fileHandler"
+     );
+
     Pstream::addValidParOptions(validParOptions);
+}
+
+
+void Foam::argList::initValidTables::clear()
+{
+    argList::removeOption("case");
+    argList::removeOption("parallel");
+    argList::removeOption("roots");
+    argList::removeOption("hostRoots");
+    argList::removeOption("noFunctionObjects");
+    argList::removeOption("fileHandler");
 }
 
 
@@ -137,16 +164,11 @@ void Foam::argList::removeOption(const word& opt)
 }
 
 
-void Foam::argList::noBanner()
-{
-    bannerEnabled = false;
-}
-
-
 void Foam::argList::noParallel()
 {
     removeOption("parallel");
     removeOption("roots");
+    removeOption("hostRoots");
     validParOptions.clear();
 }
 
@@ -394,6 +416,34 @@ Foam::argList::argList
     args_(argc),
     options_(argc)
 {
+    // Check for fileHandler
+    word handlerType(getEnv("FOAM_FILEHANDLER"));
+    for (int argI = 0; argI < argc; ++argI)
+    {
+        if (argv[argI][0] == '-')
+        {
+            const char *optionName = &argv[argI][1];
+            if (string(optionName) == "fileHandler")
+            {
+                handlerType = argv[argI+1];
+                break;
+            }
+        }
+    }
+    if (handlerType.empty())
+    {
+        handlerType = fileOperation::defaultFileHandler;
+    }
+
+    // Detect any parallel options
+    bool needsThread = fileOperations::fileOperationInitialise::New
+    (
+        handlerType,
+        argc,
+        argv
+    )().needsThreading();
+
+
     // Check if this run is a parallel run by searching for any parallel option
     // If found call runPar which might filter argv
     for (int argI = 0; argI < argc; ++argI)
@@ -404,7 +454,7 @@ Foam::argList::argList
 
             if (validParOptions.found(optionName))
             {
-                parRunControl_.runPar(argc, argv);
+                parRunControl_.runPar(argc, argv, needsThread);
                 break;
             }
         }
@@ -549,7 +599,7 @@ void Foam::argList::parse
         string timeString = clock::clockTime();
 
         // Print the banner once only for parallel runs
-        if (Pstream::master() && bannerEnabled)
+        if (Pstream::master() && writeInfoHeader)
         {
             IOobject::writeBanner(Info, true)
                 << "Build  : " << Foam::FOAMbuild << nl
@@ -560,15 +610,15 @@ void Foam::argList::parse
                 << "PID    : " << pid() << endl;
         }
 
-        jobInfo.add("startDate", dateString);
-        jobInfo.add("startTime", timeString);
-        jobInfo.add("userName", userName());
-        jobInfo.add("foamVersion", word(FOAMversion));
-        jobInfo.add("code", executable_);
-        jobInfo.add("argList", argListStr_);
-        jobInfo.add("currentDir", cwd());
-        jobInfo.add("PPID", ppid());
-        jobInfo.add("PGID", pgid());
+        jobInfo_.add("startDate", dateString);
+        jobInfo_.add("startTime", timeString);
+        jobInfo_.add("userName", userName());
+        jobInfo_.add("foamVersion", word(FOAMversion));
+        jobInfo_.add("code", executable_);
+        jobInfo_.add("argList", argListStr_);
+        jobInfo_.add("currentDir", cwd());
+        jobInfo_.add("PPID", ppid());
+        jobInfo_.add("PGID", pgid());
 
         // Add build information - only use the first word
         {
@@ -578,16 +628,98 @@ void Foam::argList::parse
             {
                 build.resize(found);
             }
-            jobInfo.add("foamBuild", build);
+            jobInfo_.add("foamBuild", build);
         }
     }
+
+
+    // Set fileHandler. In increasing order of priority:
+    // 1. default = uncollated
+    // 2. environment var FOAM_FILEHANDLER
+    // 3. etc/controlDict optimisationSwitches 'fileHandler'
+    // 4. system/controlDict 'fileHandler' (not handled here; done in TimeIO.C)
+
+    {
+        word handlerType(getEnv("FOAM_FILEHANDLER"));
+        HashTable<string>::const_iterator iter = options_.find("fileHandler");
+        if (iter != options_.end())
+        {
+            handlerType = iter();
+        }
+
+        if (handlerType.empty())
+        {
+            handlerType = fileOperation::defaultFileHandler;
+        }
+
+        autoPtr<fileOperation> handler
+        (
+            fileOperation::New
+            (
+                handlerType,
+                writeInfoHeader
+            )
+        );
+        Foam::fileHandler(handler);
+    }
+
+
+    stringList slaveMachine;
+    stringList slaveProcs;
+
+    // Collect slave machine/pid
+    if (parRunControl_.parRun())
+    {
+        if (Pstream::master())
+        {
+            slaveMachine.setSize(Pstream::nProcs() - 1);
+            slaveProcs.setSize(Pstream::nProcs() - 1);
+            label proci = 0;
+            for
+            (
+                int slave = Pstream::firstSlave();
+                slave <= Pstream::lastSlave();
+                slave++
+            )
+            {
+                IPstream fromSlave(Pstream::commsTypes::scheduled, slave);
+
+                string slaveBuild;
+                label slavePid;
+                fromSlave >> slaveBuild >> slaveMachine[proci] >> slavePid;
+
+                slaveProcs[proci] = slaveMachine[proci]+"."+name(slavePid);
+                proci++;
+
+                // Check build string to make sure all processors are running
+                // the same build
+                if (slaveBuild != Foam::FOAMbuild)
+                {
+                    FatalErrorIn(executable())
+                        << "Master is running version " << Foam::FOAMbuild
+                        << "; slave " << proci << " is running version "
+                        << slaveBuild
+                        << exit(FatalError);
+                }
+            }
+        }
+        else
+        {
+            OPstream toMaster
+            (
+                Pstream::commsTypes::scheduled,
+                Pstream::masterNo()
+            );
+            toMaster << string(Foam::FOAMbuild) << hostName() << pid();
+        }
+    }
+
 
     // Case is a single processor run unless it is running parallel
     int nProcs = 1;
 
     // Roots if running distributed
     fileNameList roots;
-
 
     // If this actually is a parallel run
     if (parRunControl_.parRun())
@@ -607,6 +739,52 @@ void Foam::argList::parse
                 source = "-roots";
                 IStringStream is(options_["roots"]);
                 roots = readList<fileName>(is);
+
+                if (roots.size() != 1)
+                {
+                    dictNProcs = roots.size()+1;
+                }
+            }
+            else if (options_.found("hostRoots"))
+            {
+                source = "-hostRoots";
+                IStringStream is(options_["hostRoots"]);
+                List<Tuple2<wordRe, fileName>> hostRoots(is);
+
+                roots.setSize(Pstream::nProcs()-1);
+                forAll(hostRoots, i)
+                {
+                    const Tuple2<wordRe, fileName>& hostRoot = hostRoots[i];
+                    const wordRe& re = hostRoot.first();
+                    labelList matchedRoots(findStrings(re, slaveMachine));
+                    forAll(matchedRoots, matchi)
+                    {
+                        label slavei = matchedRoots[matchi];
+                        if (roots[slavei] != wordRe())
+                        {
+                            FatalErrorInFunction
+                                << "Slave " << slaveMachine[slavei]
+                                << " has multiple matching roots in "
+                                << hostRoots << exit(FatalError);
+                        }
+                        else
+                        {
+                            roots[slavei] = hostRoot.second();
+                        }
+                    }
+                }
+
+                // Check
+                forAll(roots, slavei)
+                {
+                    if (roots[slavei] == wordRe())
+                    {
+                        FatalErrorInFunction
+                            << "Slave " << slaveMachine[slavei]
+                            << " has no matching roots in "
+                            << hostRoots << exit(FatalError);
+                    }
+                }
 
                 if (roots.size() != 1)
                 {
@@ -703,7 +881,7 @@ void Foam::argList::parse
                 {
                     options_.set("case", roots[slave-1]/globalCase_);
 
-                    OPstream toSlave(Pstream::scheduled, slave);
+                    OPstream toSlave(Pstream::commsTypes::scheduled, slave);
                     toSlave << args_ << options_;
                 }
                 options_.erase("case");
@@ -750,7 +928,7 @@ void Foam::argList::parse
                     slave++
                 )
                 {
-                    OPstream toSlave(Pstream::scheduled, slave);
+                    OPstream toSlave(Pstream::commsTypes::scheduled, slave);
                     toSlave << args_ << options_;
                 }
             }
@@ -758,7 +936,11 @@ void Foam::argList::parse
         else
         {
             // Collect the master's argument list
-            IPstream fromMaster(Pstream::scheduled, Pstream::masterNo());
+            IPstream fromMaster
+            (
+                Pstream::commsTypes::scheduled,
+                Pstream::masterNo()
+            );
             fromMaster >> args_ >> options_;
 
             // Establish rootPath_/globalCase_/case_ for slave
@@ -775,53 +957,7 @@ void Foam::argList::parse
         case_ = globalCase_;
     }
 
-
-    stringList slaveProcs;
-
-    // Collect slave machine/pid
-    if (parRunControl_.parRun())
-    {
-        if (Pstream::master())
-        {
-            slaveProcs.setSize(Pstream::nProcs() - 1);
-            label proci = 0;
-            for
-            (
-                int slave = Pstream::firstSlave();
-                slave <= Pstream::lastSlave();
-                slave++
-            )
-            {
-                IPstream fromSlave(Pstream::scheduled, slave);
-
-                string slaveBuild;
-                string slaveMachine;
-                label slavePid;
-                fromSlave >> slaveBuild >> slaveMachine >> slavePid;
-
-                slaveProcs[proci++] = slaveMachine + "." + name(slavePid);
-
-                // Check build string to make sure all processors are running
-                // the same build
-                if (slaveBuild != Foam::FOAMbuild)
-                {
-                    FatalErrorIn(executable())
-                        << "Master is running version " << Foam::FOAMbuild
-                        << "; slave " << proci << " is running version "
-                        << slaveBuild
-                        << exit(FatalError);
-                }
-            }
-        }
-        else
-        {
-            OPstream toMaster(Pstream::scheduled, Pstream::masterNo());
-            toMaster << string(Foam::FOAMbuild) << hostName() << pid();
-        }
-    }
-
-
-    if (Pstream::master() && bannerEnabled)
+    if (Pstream::master() && writeInfoHeader)
     {
         Info<< "Case   : " << (rootPath_/globalCase_).c_str() << nl
             << "nProcs : " << nProcs << endl;
@@ -845,27 +981,27 @@ void Foam::argList::parse
 
     if (initialise)
     {
-        jobInfo.add("root", rootPath_);
-        jobInfo.add("case", globalCase_);
-        jobInfo.add("nProcs", nProcs);
+        jobInfo_.add("root", rootPath_);
+        jobInfo_.add("case", globalCase_);
+        jobInfo_.add("nProcs", nProcs);
         if (slaveProcs.size())
         {
-            jobInfo.add("slaves", slaveProcs);
+            jobInfo_.add("slaves", slaveProcs);
         }
         if (roots.size())
         {
-            jobInfo.add("roots", roots);
+            jobInfo_.add("roots", roots);
         }
-        jobInfo.write();
+        jobInfo_.write(executable_, rootPath_/globalCase_);
 
         // Switch on signal trapping. We have to wait until after Pstream::init
         // since this sets up its own ones.
-        sigFpe_.set(bannerEnabled);
-        sigInt_.set(bannerEnabled);
-        sigQuit_.set(bannerEnabled);
-        sigSegv_.set(bannerEnabled);
+        sigFpe_.set(writeInfoHeader);
+        sigInt_.set(writeInfoHeader);
+        sigQuit_.set(writeInfoHeader);
+        sigSegv_.set(writeInfoHeader);
 
-        if (bannerEnabled)
+        if (writeInfoHeader)
         {
             Info<< "fileModificationChecking : "
                 << "Monitoring run-time modified files using "
@@ -902,7 +1038,7 @@ void Foam::argList::parse
             }
         }
 
-        if (Pstream::master() && bannerEnabled)
+        if (Pstream::master() && writeInfoHeader)
         {
             Info<< endl;
             IOobject::writeDivider(Info);
@@ -915,7 +1051,11 @@ void Foam::argList::parse
 
 Foam::argList::~argList()
 {
-    jobInfo.end();
+    jobInfo_.end();
+
+    // Delete file handler to flush any remaining IO
+    autoPtr<fileOperation> dummy(nullptr);
+    fileHandler(dummy);
 }
 
 
@@ -934,6 +1074,7 @@ bool Foam::argList::setOption(const word& opt, const string& param)
             opt == "case"
          || opt == "parallel"
          || opt == "roots"
+         || opt == "hostRoots"
         )
         {
             FatalError
@@ -1007,6 +1148,7 @@ bool Foam::argList::unsetOption(const word& opt)
             opt == "case"
          || opt == "parallel"
          || opt == "roots"
+         || opt == "hostRoots"
         )
         {
             FatalError
@@ -1126,48 +1268,65 @@ void Foam::argList::displayDoc(bool source) const
 {
     const dictionary& docDict = debug::controlDict().subDict("Documentation");
     List<fileName> docDirs(docDict.lookup("doxyDocDirs"));
-    List<fileName> docExts(docDict.lookup("doxySourceFileExts"));
+    fileName docExt(docDict.lookup("doxySourceFileExt"));
 
     // For source code: change foo_8C.html to foo_8C_source.html
     if (source)
     {
-        forAll(docExts, extI)
-        {
-            docExts[extI].replace(".", "_source.");
-        }
+        docExt.replace(".", "_source.");
     }
 
     fileName docFile;
+    fileName httpServer;
     bool found = false;
 
     forAll(docDirs, dirI)
     {
-        forAll(docExts, extI)
+        // An HTTP server is treated as a special case ...
+        if (docDirs[dirI].component(0) == "http:")
         {
-            docFile = docDirs[dirI]/executable_ + docExts[extI];
+            httpServer = docDirs[dirI]/executable_ + docExt;
+        }
+        else
+        {
+            // ... all other entries are treated as local directories
+
+            // Remove the optional "file://"
+            if (docDirs[dirI].component(0) == "file:")
+            {
+                docDirs[dirI].replace("file://", string::null);
+            }
+
+
+            // Expand the file name
+            docFile = docDirs[dirI]/executable_ + docExt;
             docFile.expand();
 
+            // Check the existence of the file
             if (isFile(docFile))
             {
                 found = true;
                 break;
             }
         }
-        if (found)
-        {
-            break;
-        }
     }
 
-    if (found)
+    if (found || httpServer != fileName::null)
     {
         string docBrowser = getEnv("FOAM_DOC_BROWSER");
         if (docBrowser.empty())
         {
             docDict.lookup("docBrowser") >> docBrowser;
         }
-        // Can use FOAM_DOC_BROWSER='application file://%f' if required
-        docBrowser.replaceAll("%f", docFile);
+
+        if (found)
+        {
+            docBrowser += " file://" + docFile;
+        }
+        else
+        {
+            docBrowser += " " + httpServer;
+        }
 
         Info<< "Show documentation: " << docBrowser.c_str() << endl;
 
@@ -1225,7 +1384,7 @@ bool Foam::argList::check(bool checkArgs, bool checkOpts) const
 
 bool Foam::argList::checkRootCase() const
 {
-    if (!isDir(rootPath()))
+    if (!fileHandler().isDir(rootPath()))
     {
         FatalError
             << executable_
@@ -1235,9 +1394,12 @@ bool Foam::argList::checkRootCase() const
         return false;
     }
 
-    if (!isDir(path()) && Pstream::master())
+    fileName pathDir(fileHandler().filePath(path()));
+
+    if (pathDir.empty() && Pstream::master())
     {
         // Allow slaves on non-existing processor directories, created later
+        // (e.g. redistributePar)
         FatalError
             << executable_
             << ": cannot open case directory " << path()

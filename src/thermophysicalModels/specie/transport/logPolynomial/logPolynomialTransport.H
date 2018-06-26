@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2016-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -100,23 +100,9 @@ inline logPolynomialTransport<Thermo, PolySize> operator+
 );
 
 template<class Thermo, int PolySize>
-inline logPolynomialTransport<Thermo, PolySize> operator-
-(
-    const logPolynomialTransport<Thermo, PolySize>&,
-    const logPolynomialTransport<Thermo, PolySize>&
-);
-
-template<class Thermo, int PolySize>
 inline logPolynomialTransport<Thermo, PolySize> operator*
 (
     const scalar,
-    const logPolynomialTransport<Thermo, PolySize>&
-);
-
-template<class Thermo, int PolySize>
-inline logPolynomialTransport<Thermo, PolySize> operator==
-(
-    const logPolynomialTransport<Thermo, PolySize>&,
     const logPolynomialTransport<Thermo, PolySize>&
 );
 
@@ -163,9 +149,6 @@ public:
 
     // Constructors
 
-        //- Construct copy
-        inline logPolynomialTransport(const logPolynomialTransport&);
-
         //- Construct as named copy
         inline logPolynomialTransport
         (
@@ -173,17 +156,11 @@ public:
             const logPolynomialTransport&
         );
 
-        //- Construct from Istream
-        logPolynomialTransport(Istream& is);
-
         //- Construct from dictionary
         logPolynomialTransport(const dictionary& dict);
 
         //- Construct and return a clone
         inline autoPtr<logPolynomialTransport> clone() const;
-
-        // Selector from Istream
-        inline static autoPtr<logPolynomialTransport> New(Istream& is);
 
         // Selector from dictionary
         inline static autoPtr<logPolynomialTransport> New
@@ -210,7 +187,7 @@ public:
         inline scalar alphah(const scalar p, const scalar T) const;
 
         // Species diffusivity
-        //inline scalar D(const scalar p, const scalar T) const;
+        // inline scalar D(const scalar p, const scalar T) const;
 
         //- Write to Ostream
         void write(Ostream& os) const;
@@ -219,8 +196,9 @@ public:
     // Member operators
 
         inline void operator=(const logPolynomialTransport&);
+
         inline void operator+=(const logPolynomialTransport&);
-        inline void operator-=(const logPolynomialTransport&);
+
         inline void operator*=(const scalar);
 
 
@@ -232,21 +210,9 @@ public:
             const logPolynomialTransport&
         );
 
-        friend logPolynomialTransport operator- <Thermo, PolySize>
-        (
-            const logPolynomialTransport&,
-            const logPolynomialTransport&
-        );
-
         friend logPolynomialTransport operator* <Thermo, PolySize>
         (
             const scalar,
-            const logPolynomialTransport&
-        );
-
-        friend logPolynomialTransport operator== <Thermo, PolySize>
-        (
-            const logPolynomialTransport&,
             const logPolynomialTransport&
         );
 

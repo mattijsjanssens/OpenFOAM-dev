@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -25,17 +25,16 @@ Application
     chtMultiRegionFoam
 
 Description
-    Transient solver for buoyant, turbulent fluid flow and solid heat
-    conduction with conjugate heat transfer between solid and fluid regions.
-
-    It handles secondary fluid or solid circuits which can be coupled
-    thermally with the main fluid region. i.e radiators, etc.
+    Solver for steady or transient fluid flow and solid heat conduction, with
+    conjugate heat transfer between regions, buoyancy effects, turbulence,
+    reactions and radiation modelling.
 
 \*---------------------------------------------------------------------------*/
 
 #include "fvCFD.H"
-#include "rhoThermo.H"
 #include "turbulentFluidThermoModel.H"
+#include "rhoReactionThermo.H"
+#include "CombustionModel.H"
 #include "fixedGradientFvPatchFields.H"
 #include "regionProperties.H"
 #include "compressibleCourantNo.H"
@@ -44,6 +43,8 @@ Description
 #include "radiationModel.H"
 #include "fvOptions.H"
 #include "coordinateSystem.H"
+#include "pimpleMultiRegionControl.H"
+#include "pressureControl.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -53,22 +54,23 @@ int main(int argc, char *argv[])
     #define CREATE_MESH createMeshesPostProcess.H
     #include "postProcess.H"
 
-    #include "setRootCase.H"
+    #include "setRootCaseLists.H"
     #include "createTime.H"
     #include "createMeshes.H"
     #include "createFields.H"
     #include "initContinuityErrs.H"
+    pimpleMultiRegionControl pimples(fluidRegions, solidRegions);
+    #include "createFluidPressureControls.H"
     #include "createTimeControls.H"
     #include "readSolidTimeControls.H"
     #include "compressibleMultiRegionCourantNo.H"
     #include "solidRegionDiffusionNo.H"
     #include "setInitialMultiRegionDeltaT.H"
 
-    while (runTime.run())
+    while (pimples.run(runTime))
     {
         #include "readTimeControls.H"
         #include "readSolidTimeControls.H"
-        #include "readPIMPLEControls.H"
 
         #include "compressibleMultiRegionCourantNo.H"
         #include "solidRegionDiffusionNo.H"
@@ -78,26 +80,14 @@ int main(int argc, char *argv[])
 
         Info<< "Time = " << runTime.timeName() << nl << endl;
 
-        if (nOuterCorr != 1)
-        {
-            forAll(fluidRegions, i)
-            {
-                #include "storeOldFluidFields.H"
-            }
-        }
-
-
         // --- PIMPLE loop
-        for (int oCorr=0; oCorr<nOuterCorr; oCorr++)
+        while (pimples.loop())
         {
-            bool finalIter = oCorr == nOuterCorr-1;
-
             forAll(fluidRegions, i)
             {
                 Info<< "\nSolving for fluid region "
                     << fluidRegions[i].name() << endl;
                 #include "setRegionFluidFields.H"
-                #include "readFluidMultiRegionPIMPLEControls.H"
                 #include "solveFluid.H"
             }
 
@@ -106,10 +96,8 @@ int main(int argc, char *argv[])
                 Info<< "\nSolving for solid region "
                     << solidRegions[i].name() << endl;
                 #include "setRegionSolidFields.H"
-                #include "readSolidMultiRegionPIMPLEControls.H"
                 #include "solveSolid.H"
             }
-
         }
 
         runTime.write();

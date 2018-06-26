@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -54,6 +54,7 @@ Description
 #include "emptyPolyPatch.H"
 #include "removeCells.H"
 #include "meshSearch.H"
+#include "IOdictionary.H"
 
 using namespace Foam;
 
@@ -107,20 +108,20 @@ scalar getEdgeStats(const primitiveMesh& mesh, const direction excludeCmpt)
     label nY = 0;
     label nZ = 0;
 
-    scalar minX = GREAT;
-    scalar maxX = -GREAT;
+    scalar minX = great;
+    scalar maxX = -great;
     vector x(1, 0, 0);
 
-    scalar minY = GREAT;
-    scalar maxY = -GREAT;
+    scalar minY = great;
+    scalar maxY = -great;
     vector y(0, 1, 0);
 
-    scalar minZ = GREAT;
-    scalar maxZ = -GREAT;
+    scalar minZ = great;
+    scalar maxZ = -great;
     vector z(0, 0, 1);
 
-    scalar minOther = GREAT;
-    scalar maxOther = -GREAT;
+    scalar minOther = great;
+    scalar maxOther = -great;
 
     const edgeList& edges = mesh.edges();
 
@@ -628,7 +629,7 @@ int main(int argc, char *argv[])
     #include "createTime.H"
     #include "createPolyMesh.H"
 
-    // If nessecary add oldInternalFaces patch
+    // If necessary add oldInternalFaces patch
     label newPatchi = addPatch(mesh, "oldInternalFaces");
 
 
@@ -650,7 +651,7 @@ int main(int argc, char *argv[])
     // corrector for mesh motion
     twoDPointCorrector* correct2DPtr = nullptr;
 
-    if (motionObj.headerOk())
+    if (motionObj.typeHeaderOk<IOdictionary>(true))
     {
         Info<< "Reading " << runTime.constant() / "motionProperties"
             << endl << endl;

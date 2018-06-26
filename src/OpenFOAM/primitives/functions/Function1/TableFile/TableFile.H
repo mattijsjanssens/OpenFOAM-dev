@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -25,19 +25,20 @@ Class
     Foam::Function1Types::TableFile
 
 Description
-    Templated table container data entry where data is read from file.
+    Templated table container function where data is read from file.
 
+    Usage:
     \verbatim
         <entryName> tableFile;
         <entryName>Coeffs
         {
-            fileName            dataFile;    // name of data file
+            file                dataFile;    // name of data file
             outOfBounds         clamp;       // optional out-of-bounds handling
             interpolationScheme linear;      // optional interpolation method
         }
     \endverbatim
 
-    Items are stored in a list of Tuple2's. First column is always stored as
+    Data is stored as a list of Tuple2's. First column is always stored as
     scalar entries.  Data is read in the form, e.g. for an entry \<entryName\>
     that is (scalar, vector):
     \verbatim
@@ -46,7 +47,6 @@ Description
             (1.0 (4 5 6))
         );
     \endverbatim
-
 
 SourceFiles
     TableFile.C
@@ -100,12 +100,6 @@ public:
 
         //- Copy constructor
         TableFile(const TableFile<Type>& tbl);
-
-        //- Construct and return a clone
-        virtual tmp<Function1<Type>> clone() const
-        {
-            return tmp<Function1<Type>>(new TableFile<Type>(*this));
-        }
 
 
     //- Destructor

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2016-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -24,9 +24,6 @@ License
 Class
     Foam::functionObjects::wallHeatFlux
 
-Group
-    grpForcesFunctionObjects
-
 Description
     Calculates and write the heat-flux at wall patches as the
     volScalarField field 'wallHeatFlux'.
@@ -41,6 +38,7 @@ Description
         type        wallHeatFlux;
         libs        ("libfieldFunctionObjects.so");
         ...
+        region      fluid;
         patches     (".*Wall");
     }
     \endverbatim
@@ -50,6 +48,7 @@ Usage
         Property | Description                | Required   | Default value
         type     | type name: wallHeatFlux    | yes        |
         patches  | list of patches to process | no         | all wall patches
+        region   | region to be evaluated     | no         | default region
     \endtable
 
 Note
@@ -61,7 +60,6 @@ See also
     Foam::functionObjects::fvMeshFunctionObject
     Foam::functionObjects::logFiles
     Foam::functionObjects::writeLocalObjects
-    Foam::functionObjects::pressureTools
     Foam::functionObjects::timeControl
 
 SourceFiles
@@ -75,10 +73,8 @@ SourceFiles
 #include "fvMeshFunctionObject.H"
 #include "logFiles.H"
 #include "writeLocalObjects.H"
-#include "volFieldsFwd.H"
-#include "surfaceFieldsFwd.H"
 #include "HashSet.H"
-#include "turbulentFluidThermoModel.H"
+#include "volFieldsFwd.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -114,7 +110,8 @@ protected:
         //- Calculate the heat-flux
         void calcHeatFlux
         (
-            const compressible::turbulenceModel& turbModel,
+            const volScalarField& alpha,
+            const volScalarField& he,
             volScalarField& wallHeatFlux
         );
 

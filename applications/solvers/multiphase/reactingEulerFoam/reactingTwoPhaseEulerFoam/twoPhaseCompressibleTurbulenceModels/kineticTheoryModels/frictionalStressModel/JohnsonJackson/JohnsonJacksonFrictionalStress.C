@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -57,7 +57,7 @@ JohnsonJackson
 )
 :
     frictionalStressModel(dict),
-    coeffDict_(dict.subDict(typeName + "Coeffs")),
+    coeffDict_(dict.optionalSubDict(typeName + "Coeffs")),
     Fr_("Fr", dimensionSet(1, -1, -2, 0, 0), coeffDict_),
     eta_("eta", dimless, coeffDict_),
     p_("p", dimless, coeffDict_),
@@ -107,10 +107,10 @@ frictionalPressurePrime
 
     return Fr_*
     (
-        eta_*pow(max(alpha - alphaMinFriction, scalar(0)), eta_ - 1.0)
-       *(alphaMax-alpha)
+        eta_*pow(max(alpha - alphaMinFriction, scalar(0)), eta_ - 1)
+       *(alphaMax - alpha)
       + p_*pow(max(alpha - alphaMinFriction, scalar(0)), eta_)
-    )/pow(max(alphaMax - alpha, alphaDeltaMin_), p_ + 1.0);
+    )/pow(max(alphaMax - alpha, alphaDeltaMin_), p_ + 1);
 }
 
 
@@ -130,7 +130,7 @@ Foam::kineticTheoryModels::frictionalStressModels::JohnsonJackson::nu
 
 bool Foam::kineticTheoryModels::frictionalStressModels::JohnsonJackson::read()
 {
-    coeffDict_ <<= dict_.subDict(typeName + "Coeffs");
+    coeffDict_ <<= dict_.optionalSubDict(typeName + "Coeffs");
 
     Fr_.read(coeffDict_);
     eta_.read(coeffDict_);

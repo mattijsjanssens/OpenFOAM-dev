@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) YEAR OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -90,7 +90,7 @@ CONSTRUCT
     PARENT::evaluate();
 
     /*
-    //Initialise with the value entry if evaluation is not possible
+    // Initialise with the value entry if evaluation is not possible
     FVPATCHF::operator=
     (
         FIELD("value", dict, p.size())
@@ -207,7 +207,7 @@ void Foam::CLASS::updateCoeffs()
         (
             "phi"
         );
-    this->valueFraction() = 1.0 - pos(phip);
+    this->valueFraction() = 1.0 - pos0(phip);
 
     PARENT::updateCoeffs();
 }

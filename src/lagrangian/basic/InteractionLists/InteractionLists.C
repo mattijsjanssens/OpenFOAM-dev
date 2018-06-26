@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -38,8 +38,6 @@ void Foam::InteractionLists<ParticleType>::buildInteractionLists()
 {
     Info<< "Building InteractionLists with interaction distance "
         << maxDistance_ << endl;
-
-    Random rndGen(419715);
 
     const vector interactionVec = maxDistance_*vector::one;
 
@@ -158,7 +156,7 @@ void Foam::InteractionLists<ParticleType>::buildInteractionLists()
 
     treeBoundBox procBbRndExt
     (
-        treeBoundBox(mesh_.points()).extend(rndGen, 1e-4)
+        treeBoundBox(mesh_.points()).extend(1e-4)
     );
 
     indexedOctree<treeDataCell> coupledPatchRangeTree
@@ -965,14 +963,7 @@ void Foam::InteractionLists<ParticleType>::prepareParticleToBeReferred
         globalTransforms.transformIndex(ciat)
     );
 
-    particle->position() = transform.invTransformPosition(particle->position());
-
-    particle->transformProperties(-transform.t());
-
-    if (transform.hasR())
-    {
-        particle->transformProperties(transform.R().T());
-    }
+    particle->prepareForInteractionListReferral(transform);
 }
 
 
@@ -1227,6 +1218,15 @@ void Foam::InteractionLists<ParticleType>::receiveReferredData
                     typename ParticleType::iNew(mesh_)
                 );
             }
+        }
+    }
+
+    forAll(referredParticles_, refCelli)
+    {
+        IDLList<ParticleType>& refCell = referredParticles_[refCelli];
+        forAllIter(typename IDLList<ParticleType>, refCell, iter)
+        {
+            iter().correctAfterInteractionListReferral(ril_[refCelli][0]);
         }
     }
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -127,13 +127,13 @@ Foam::label Foam::scotchDecomp::decompose
 
             for (int slave=1; slave<Pstream::nProcs(); slave++)
             {
-                IPstream fromSlave(Pstream::scheduled, slave);
+                IPstream fromSlave(Pstream::commsTypes::scheduled, slave);
                 Field<label> nbrAdjncy(fromSlave);
                 Field<label> nbrXadj(fromSlave);
                 scalarField nbrWeights(fromSlave);
 
                 // Append.
-                //label procStart = nTotalCells;
+                // label procStart = nTotalCells;
                 forAll(nbrXadj, celli)
                 {
                     allXadj[nTotalCells] = nTotalConnections+nbrXadj[celli];
@@ -162,7 +162,7 @@ Foam::label Foam::scotchDecomp::decompose
             // Send allFinalDecomp back
             for (int slave=1; slave<Pstream::nProcs(); slave++)
             {
-                OPstream toSlave(Pstream::scheduled, slave);
+                OPstream toSlave(Pstream::commsTypes::scheduled, slave);
                 toSlave << SubField<label>
                 (
                     allFinalDecomp,
@@ -181,13 +181,21 @@ Foam::label Foam::scotchDecomp::decompose
         {
             // Send my part of the graph (already in global numbering)
             {
-                OPstream toMaster(Pstream::scheduled, Pstream::masterNo());
+                OPstream toMaster
+                (
+                    Pstream::commsTypes::scheduled,
+                    Pstream::masterNo()
+                );
                 toMaster<< adjncy << SubField<label>(xadj, xadj.size()-1)
                     << cWeights;
             }
 
             // Receive back decomposition
-            IPstream fromMaster(Pstream::scheduled, Pstream::masterNo());
+            IPstream fromMaster
+            (
+                Pstream::commsTypes::scheduled,
+                Pstream::masterNo()
+            );
             fromMaster >> finalDecomp;
         }
     }
@@ -266,9 +274,9 @@ Foam::label Foam::scotchDecomp::decomposeOneProc
                 Info<< "scotchDecomp : Using strategy " << strategy << endl;
             }
             SCOTCH_stratGraphMap(&stradat, strategy.c_str());
-            //fprintf(stdout, "S\tStrat=");
-            //SCOTCH_stratSave(&stradat, stdout);
-            //fprintf(stdout, "\n");
+            // fprintf(stdout, "S\tStrat=");
+            // SCOTCH_stratSave(&stradat, stdout);
+            // fprintf(stdout, "\n");
         }
     }
 
@@ -389,23 +397,23 @@ Foam::label Foam::scotchDecomp::decomposeOneProc
         //  numbers!
         //
         ////- Set up variable sizes architecture
-        //check
+        // check
         //(
         //    SCOTCH_archVcmplt(&archdat),
         //    "SCOTCH_archVcmplt"
         //);
         //
         ////- Stategy flags: go for quality or load balance (or leave default)
-        //SCOTCH_Num straval = 0;
+        // SCOTCH_Num straval = 0;
         ////straval |= SCOTCH_STRATQUALITY;
         ////straval |= SCOTCH_STRATQUALITY;
         //
         ////- Number of cells per agglomeration
         ////SCOTCH_Num agglomSize = SCOTCH_archSize(&archdat);
-        //SCOTCH_Num agglomSize = 3;
+        // SCOTCH_Num agglomSize = 3;
         //
         ////- Build strategy for agglomeration
-        //check
+        // check
         //(
         //    SCOTCH_stratGraphClusterBuild
         //    (
@@ -420,10 +428,10 @@ Foam::label Foam::scotchDecomp::decomposeOneProc
     }
 
 
-    //SCOTCH_Mapping mapdat;
-    //SCOTCH_graphMapInit(&grafdat, &mapdat, &archdat, nullptr);
-    //SCOTCH_graphMapCompute(&grafdat, &mapdat, &stradat); /* Perform mapping */
-    //SCOTCH_graphMapExit(&grafdat, &mapdat);
+    // SCOTCH_Mapping mapdat;
+    // SCOTCH_graphMapInit(&grafdat, &mapdat, &archdat, nullptr);
+    // SCOTCH_graphMapCompute(&grafdat, &mapdat, &stradat); // Perform mapping
+    // SCOTCH_graphMapExit(&grafdat, &mapdat);
 
 
     // Hack:switch off fpu error trapping
@@ -456,8 +464,8 @@ Foam::label Foam::scotchDecomp::decomposeOneProc
 
 
 
-    //finalDecomp.setSize(xadj.size()-1);
-    //check
+    // finalDecomp.setSize(xadj.size()-1);
+    // check
     //(
     //    SCOTCH_graphPart
     //    (

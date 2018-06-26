@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -24,9 +24,6 @@ License
 Class
     Foam::swirlFlowRateInletVelocityFvPatchVectorField
 
-Group
-    grpInletBoundaryConditions
-
 Description
     This boundary condition provides a volumetric- OR mass-flow normal vector
     boundary condition by its magnitude as an integral over its area with a
@@ -42,6 +39,8 @@ Usage
         Property     | Description             | Required    | Default value
         phi          | flux field name         | no          | phi
         rho          | density field name      | no          | rho
+        origin       | origin of rotation      | no          | patch centre
+        axis         | axis of rotation        | no          | -patch normal
         flowRate     | flow rate profile       | yes         |
         rpm          | rotational speed profile | yes        |
     \endtable
@@ -96,6 +95,12 @@ class swirlFlowRateInletVelocityFvPatchVectorField
 
         //- Name of the density field used to normalize the mass flux
         const word rhoName_;
+
+        //- Origin of the rotation
+        const vector origin_;
+
+        //- Axis of the rotation
+        const vector axis_;
 
         //- Inlet integral flow rate
         autoPtr<Function1<scalar>> flowRate_;

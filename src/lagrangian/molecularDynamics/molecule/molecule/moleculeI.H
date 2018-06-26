@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -149,7 +149,7 @@ inline Foam::molecule::constantProperties::constantProperties
             );
         }
 
-        if (eigenValues(momOfInertia).x() < VSMALL)
+        if (eigenValues(momOfInertia).x() < vSmall)
         {
             FatalErrorInFunction
                 << "An eigenvalue of the inertia tensor is zero, the molecule "
@@ -157,7 +157,7 @@ inline Foam::molecule::constantProperties::constantProperties
                 << nl << abort(FatalError);
         }
 
-        // Normalise the inertia tensor magnitude to avoid SMALL numbers in the
+        // Normalise the inertia tensor magnitude to avoid small numbers in the
         // components causing problems
 
         momOfInertia /= eigenValues(momOfInertia).x();
@@ -220,7 +220,7 @@ inline Foam::molecule::constantProperties::constantProperties
 inline Foam::molecule::molecule
 (
     const polyMesh& mesh,
-    const vector& position,
+    const barycentric& coordinates,
     const label celli,
     const label tetFacei,
     const label tetPti,
@@ -236,7 +236,42 @@ inline Foam::molecule::molecule
 
 )
 :
-    particle(mesh, position, celli, tetFacei, tetPti),
+    particle(mesh, coordinates, celli, tetFacei, tetPti),
+    Q_(Q),
+    v_(v),
+    a_(a),
+    pi_(pi),
+    tau_(tau),
+    specialPosition_(specialPosition),
+    potentialEnergy_(0.0),
+    rf_(Zero),
+    special_(special),
+    id_(id),
+    siteForces_(constProps.nSites(), Zero),
+    sitePositions_(constProps.nSites())
+{
+    setSitePositions(constProps);
+}
+
+
+inline Foam::molecule::molecule
+(
+    const polyMesh& mesh,
+    const vector& position,
+    const label celli,
+    const tensor& Q,
+    const vector& v,
+    const vector& a,
+    const vector& pi,
+    const vector& tau,
+    const vector& specialPosition,
+    const constantProperties& constProps,
+    const label special,
+    const label id
+
+)
+:
+    particle(mesh, position, celli),
     Q_(Q),
     v_(v),
     a_(a),
@@ -288,7 +323,7 @@ inline void Foam::molecule::constantProperties::setInteracionSiteBools
 
         pairPotentialSites_[i] = (findIndex(pairPotSiteIds, id) > -1);
 
-        electrostaticSites_[i] = (mag(siteCharges_[i]) > VSMALL);
+        electrostaticSites_[i] = (mag(siteCharges_[i]) > vSmall);
     }
 }
 
@@ -315,7 +350,7 @@ inline bool Foam::molecule::constantProperties::linearMoleculeTest() const
 
         dir /= mag(dir);
 
-        if (mag(refDir & dir) < 1 - SMALL)
+        if (mag(refDir & dir) < 1 - small)
         {
             return false;
         }

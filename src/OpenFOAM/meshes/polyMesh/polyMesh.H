@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -85,7 +85,7 @@ public:
         //- Enumeration defining the state of the mesh after a read update.
         //  Used for post-processing applications, where the mesh
         //  needs to update based on the files written in time
-        //  directores
+        //  directories
         enum readUpdateState
         {
             UNCHANGED,
@@ -150,7 +150,7 @@ private:
             mutable Vector<label> solutionD_;
 
             //- Base point for face decomposition into tets
-            mutable autoPtr<labelList> tetBasePtIsPtr_;
+            mutable autoPtr<labelIOList> tetBasePtIsPtr_;
 
             //- Search tree to allow spatial cell searching
             mutable autoPtr<indexedOctree<treeDataCell>> cellTreePtr_;
@@ -207,6 +207,9 @@ private:
         //- Calculate the cell shapes from the primitive
         //  polyhedral information
         void calcCellShapes() const;
+
+        //- Read and return the tetBasePtIs
+        autoPtr<labelIOList> readTetBasePtIs() const;
 
 
         // Helper functions for constructor from cell shapes
@@ -449,7 +452,7 @@ public:
             label nSolutionD() const;
 
             //- Return the tetBasePtIs
-            const labelList& tetBasePtIs() const;
+            const labelIOList& tetBasePtIs() const;
 
             //- Return the cell search tree
             const indexedOctree<treeDataCell>& cellTree() const;
@@ -489,6 +492,12 @@ public:
 
 
         // Mesh motion
+
+            //- Is mesh dynamic
+            virtual bool dynamic() const
+            {
+                return false;
+            }
 
             //- Is mesh moving
             bool moving() const
@@ -605,8 +614,8 @@ public:
             //- Clear primitive data (points, faces and cells)
             void clearPrimitives();
 
-            //- Clear geometry not used for CFD (cellTree, tetBasePtIs)
-            void clearAdditionalGeom();
+            //- Clear tet base points
+            void clearTetBasePtIs();
 
             //- Clear cell tree data
             void clearCellTree();

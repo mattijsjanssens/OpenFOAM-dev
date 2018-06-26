@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -223,8 +223,8 @@ void Foam::polyBoundaryMesh::calcGeometry()
 
     if
     (
-        Pstream::defaultCommsType == Pstream::blocking
-     || Pstream::defaultCommsType == Pstream::nonBlocking
+        Pstream::defaultCommsType == Pstream::commsTypes::blocking
+     || Pstream::defaultCommsType == Pstream::commsTypes::nonBlocking
     )
     {
         forAll(*this, patchi)
@@ -239,7 +239,7 @@ void Foam::polyBoundaryMesh::calcGeometry()
             operator[](patchi).calcGeometry(pBufs);
         }
     }
-    else if (Pstream::defaultCommsType == Pstream::scheduled)
+    else if (Pstream::defaultCommsType == Pstream::commsTypes::scheduled)
     {
         const lduSchedule& patchSchedule = mesh().globalData().patchSchedule();
 
@@ -892,7 +892,7 @@ bool Foam::polyBoundaryMesh::checkParallelSync(const bool report) const
                     Pout<< " ***Problem with boundary patch " << patchi
                         << " named " << bm[patchi].name()
                         << " of type " <<  bm[patchi].type()
-                        << ". The patch seems to be preceeded by processor"
+                        << ". The patch seems to be preceded by processor"
                         << " patches. This is can give problems."
                         << endl;
                 }
@@ -1010,8 +1010,8 @@ void Foam::polyBoundaryMesh::movePoints(const pointField& p)
 
     if
     (
-        Pstream::defaultCommsType == Pstream::blocking
-     || Pstream::defaultCommsType == Pstream::nonBlocking
+        Pstream::defaultCommsType == Pstream::commsTypes::blocking
+     || Pstream::defaultCommsType == Pstream::commsTypes::nonBlocking
     )
     {
         forAll(*this, patchi)
@@ -1026,7 +1026,7 @@ void Foam::polyBoundaryMesh::movePoints(const pointField& p)
             operator[](patchi).movePoints(pBufs, p);
         }
     }
-    else if (Pstream::defaultCommsType == Pstream::scheduled)
+    else if (Pstream::defaultCommsType == Pstream::commsTypes::scheduled)
     {
         const lduSchedule& patchSchedule = mesh().globalData().patchSchedule();
 
@@ -1060,8 +1060,8 @@ void Foam::polyBoundaryMesh::updateMesh()
 
     if
     (
-        Pstream::defaultCommsType == Pstream::blocking
-     || Pstream::defaultCommsType == Pstream::nonBlocking
+        Pstream::defaultCommsType == Pstream::commsTypes::blocking
+     || Pstream::defaultCommsType == Pstream::commsTypes::nonBlocking
     )
     {
         forAll(*this, patchi)
@@ -1076,7 +1076,7 @@ void Foam::polyBoundaryMesh::updateMesh()
             operator[](patchi).updateMesh(pBufs);
         }
     }
-    else if (Pstream::defaultCommsType == Pstream::scheduled)
+    else if (Pstream::defaultCommsType == Pstream::commsTypes::scheduled)
     {
         const lduSchedule& patchSchedule = mesh().globalData().patchSchedule();
 
@@ -1151,10 +1151,11 @@ bool Foam::polyBoundaryMesh::writeObject
 (
     IOstream::streamFormat fmt,
     IOstream::versionNumber ver,
-    IOstream::compressionType cmp
+    IOstream::compressionType cmp,
+    const bool valid
 ) const
 {
-    return regIOobject::writeObject(fmt, ver, IOstream::UNCOMPRESSED);
+    return regIOobject::writeObject(fmt, ver, IOstream::UNCOMPRESSED, valid);
 }
 
 // * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * * //

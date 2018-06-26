@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2016-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -57,7 +57,7 @@ JohnsonJacksonSchaeffer::JohnsonJacksonSchaeffer
 )
 :
     frictionalStressModel(dict),
-    coeffDict_(dict.subDict(typeName + "Coeffs")),
+    coeffDict_(dict.optionalSubDict(typeName + "Coeffs")),
     Fr_("Fr", dimensionSet(1, -1, -2, 0, 0), coeffDict_),
     eta_("eta", dimless, coeffDict_),
     p_("p", dimless, coeffDict_),
@@ -155,7 +155,7 @@ JohnsonJacksonSchaeffer::nu
                 0.5*pf[celli]*sin(phi_.value())
                /(
                     sqrt((1.0/3.0)*sqr(tr(D[celli])) - invariantII(D[celli]))
-                  + SMALL
+                  + small
                 );
         }
     }
@@ -174,7 +174,7 @@ JohnsonJacksonSchaeffer::nu
                     pf.boundaryField()[patchi]*sin(phi_.value())
                    /(
                         mag(U.boundaryField()[patchi].snGrad())
-                      + SMALL
+                      + small
                     )
                 );
         }
@@ -190,7 +190,7 @@ JohnsonJacksonSchaeffer::nu
 bool Foam::kineticTheoryModels::frictionalStressModels::
 JohnsonJacksonSchaeffer::read()
 {
-    coeffDict_ <<= dict_.subDict(typeName + "Coeffs");
+    coeffDict_ <<= dict_.optionalSubDict(typeName + "Coeffs");
 
     Fr_.read(coeffDict_);
     eta_.read(coeffDict_);

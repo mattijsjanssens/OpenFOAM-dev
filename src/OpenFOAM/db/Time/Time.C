@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -26,6 +26,7 @@ License
 #include "Time.H"
 #include "PstreamReduceOps.H"
 #include "argList.H"
+#include "IOdictionary.H"
 
 #include <sstream>
 
@@ -73,7 +74,7 @@ Foam::Time::fmtflags Foam::Time::format_(Foam::Time::general);
 
 int Foam::Time::precision_(6);
 
-const int Foam::Time::maxPrecision_(3 - log10(SMALL));
+const int Foam::Time::maxPrecision_(3 - log10(small));
 
 Foam::word Foam::Time::controlDictName("controlDict");
 
@@ -82,44 +83,26 @@ Foam::word Foam::Time::controlDictName("controlDict");
 
 void Foam::Time::adjustDeltaT()
 {
-    bool adjustTime = false;
-    scalar timeToNextWrite = VGREAT;
-
-    if (writeControl_ == wcAdjustableRunTime)
-    {
-        adjustTime = true;
-        timeToNextWrite = max
+    const scalar timeToNextWrite = min
+    (
+        max
         (
-            0.0,
+            0,
             (writeTimeIndex_ + 1)*writeInterval_ - (value() - startTime_)
-        );
-    }
+        ),
+        functionObjects_.timeToNextWrite()
+    );
 
-    if (adjustTime)
+    const scalar nSteps = timeToNextWrite/deltaT_;
+
+    // Ensure nStepsToNextWrite does not overflow
+    if (nSteps < labelMax)
     {
-        scalar nSteps = timeToNextWrite/deltaT_ - SMALL;
-
-        // For tiny deltaT the label can overflow!
-        if (nSteps < labelMax)
-        {
-            label nStepsToNextWrite = label(nSteps) + 1;
-
-            scalar newDeltaT = timeToNextWrite/nStepsToNextWrite;
-
-            // Control the increase of the time step to within a factor of 2
-            // and the decrease within a factor of 5.
-            if (newDeltaT >= deltaT_)
-            {
-                deltaT_ = min(newDeltaT, 2.0*deltaT_);
-            }
-            else
-            {
-                deltaT_ = max(newDeltaT, 0.2*deltaT_);
-            }
-        }
+        // Allow the time-step to increase by up to 1%
+        // to accommodate the next write time before splitting
+        const label nStepsToNextWrite = label(max(nSteps, 1) + 0.99);
+        deltaT_ = timeToNextWrite/nStepsToNextWrite;
     }
-
-    functionObjects_.adjustTimeStep();
 }
 
 
@@ -179,11 +162,12 @@ void Foam::Time::setControls()
 
     // Check if time directory exists
     // If not increase time precision to see if it is formatted differently.
-    if (!exists(timePath(), false))
+    if (!fileHandler().exists(timePath(), false))
     {
         int oldPrecision = precision_;
         int requiredPrecision = -1;
         bool found = false;
+        word oldTime(timeName());
         for
         (
             precision_ = maxPrecision_;
@@ -194,8 +178,15 @@ void Foam::Time::setControls()
             // Update the time formatting
             setTime(startTime_, 0);
 
+            word newTime(timeName());
+            if (newTime == oldTime)
+            {
+                break;
+            }
+            oldTime = newTime;
+
             // Check the existence of the time directory with the new format
-            found = exists(timePath(), false);
+            found = fileHandler().exists(timePath(), false);
 
             if (found)
             {
@@ -361,7 +352,7 @@ Foam::Time::Time
 
     stopAt_(saEndTime),
     writeControl_(wcTimeStep),
-    writeInterval_(GREAT),
+    writeInterval_(great),
     purgeWrite_(0),
     writeOnce_(false),
     subCycling_(false),
@@ -387,28 +378,12 @@ Foam::Time::Time
     // Time objects not registered so do like objectRegistry::checkIn ourselves.
     if (runTimeModifiable_)
     {
-        monitorPtr_.reset
-        (
-            new fileMonitor
-            (
-                regIOobject::fileModificationChecking == inotify
-             || regIOobject::fileModificationChecking == inotifyMaster
-            )
-        );
-
-        // File might not exist yet.
-        fileName f(controlDict_.filePath());
-
-        if (!f.size())
-        {
-            // We don't have this file but would like to re-read it.
-            // Possibly if in master-only reading mode. Use a non-existing
-            // file to keep fileMonitor synced.
-            f = controlDict_.objectPath();
-        }
-
-        controlDict_.watchIndex() = addWatch(f);
+        // Monitor all files that controlDict depends on
+        fileHandler().addWatches(controlDict_, controlDict_.files());
     }
+
+    // Clear dependent files
+    controlDict_.files().clear();
 }
 
 
@@ -453,7 +428,7 @@ Foam::Time::Time
 
     stopAt_(saEndTime),
     writeControl_(wcTimeStep),
-    writeInterval_(GREAT),
+    writeInterval_(great),
     purgeWrite_(0),
     writeOnce_(false),
     subCycling_(false),
@@ -485,28 +460,12 @@ Foam::Time::Time
     // Time objects not registered so do like objectRegistry::checkIn ourselves.
     if (runTimeModifiable_)
     {
-        monitorPtr_.reset
-        (
-            new fileMonitor
-            (
-                regIOobject::fileModificationChecking == inotify
-             || regIOobject::fileModificationChecking == inotifyMaster
-            )
-        );
-
-        // File might not exist yet.
-        fileName f(controlDict_.filePath());
-
-        if (!f.size())
-        {
-            // We don't have this file but would like to re-read it.
-            // Possibly if in master-only reading mode. Use a non-existing
-            // file to keep fileMonitor synced.
-            f = controlDict_.objectPath();
-        }
-
-        controlDict_.watchIndex() = addWatch(f);
+        // Monitor all files that controlDict depends on
+        fileHandler().addWatches(controlDict_, controlDict_.files());
     }
+
+    // Clear dependent files since not needed
+    controlDict_.files().clear();
 }
 
 
@@ -552,7 +511,7 @@ Foam::Time::Time
 
     stopAt_(saEndTime),
     writeControl_(wcTimeStep),
-    writeInterval_(GREAT),
+    writeInterval_(great),
     purgeWrite_(0),
     writeOnce_(false),
     subCycling_(false),
@@ -582,28 +541,12 @@ Foam::Time::Time
     // Time objects not registered so do like objectRegistry::checkIn ourselves.
     if (runTimeModifiable_)
     {
-        monitorPtr_.reset
-        (
-            new fileMonitor
-            (
-                regIOobject::fileModificationChecking == inotify
-             || regIOobject::fileModificationChecking == inotifyMaster
-            )
-        );
-
-        // File might not exist yet.
-        fileName f(controlDict_.filePath());
-
-        if (!f.size())
-        {
-            // We don't have this file but would like to re-read it.
-            // Possibly if in master-only reading mode. Use a non-existing
-            // file to keep fileMonitor synced.
-            f = controlDict_.objectPath();
-        }
-
-        controlDict_.watchIndex() = addWatch(f);
+        // Monitor all files that controlDict depends on
+        fileHandler().addWatches(controlDict_, controlDict_.files());
     }
+
+    // Clear dependent files since not needed
+    controlDict_.files().clear();
 }
 
 
@@ -647,7 +590,7 @@ Foam::Time::Time
 
     stopAt_(saEndTime),
     writeControl_(wcTimeStep),
-    writeInterval_(GREAT),
+    writeInterval_(great),
     purgeWrite_(0),
     writeOnce_(false),
     subCycling_(false),
@@ -668,9 +611,9 @@ Foam::Time::Time
 
 Foam::Time::~Time()
 {
-    if (controlDict_.watchIndex() != -1)
+    forAllReverse(controlDict_.watchIndices(), i)
     {
-        removeWatch(controlDict_.watchIndex());
+        fileHandler().removeWatch(controlDict_.watchIndices()[i]);
     }
 
     // Destroy function objects first
@@ -679,38 +622,6 @@ Foam::Time::~Time()
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-
-Foam::label Foam::Time::addWatch(const fileName& fName) const
-{
-    return monitorPtr_().addWatch(fName);
-}
-
-
-bool Foam::Time::removeWatch(const label watchIndex) const
-{
-    return monitorPtr_().removeWatch(watchIndex);
-}
-
-const Foam::fileName& Foam::Time::getFile(const label watchIndex) const
-{
-    return monitorPtr_().getFile(watchIndex);
-}
-
-
-Foam::fileMonitor::fileState Foam::Time::getState
-(
-    const label watchFd
-) const
-{
-    return monitorPtr_().getState(watchFd);
-}
-
-
-void Foam::Time::setUnmodified(const label watchFd) const
-{
-    monitorPtr_().setUnmodified(watchFd);
-}
-
 
 Foam::word Foam::Time::timeName(const scalar t, const int precision)
 {
@@ -734,33 +645,68 @@ Foam::instantList Foam::Time::times() const
 }
 
 
-Foam::word Foam::Time::findInstancePath(const instant& t) const
+Foam::word Foam::Time::findInstance
+(
+    const fileName& dir,
+    const word& name,
+    const IOobject::readOption rOpt,
+    const word& stopInstance
+) const
 {
-    const fileName directory = path();
-    const word& constantName = constant();
+    IOobject startIO
+    (
+        name,           // name might be empty!
+        timeName(),
+        dir,
+        *this,
+        rOpt
+    );
 
-    // Read directory entries into a list
-    fileNameList dirEntries(readDir(directory, fileName::DIRECTORY));
+    IOobject io
+    (
+        fileHandler().findInstance
+        (
+            startIO,
+            timeOutputValue(),
+            stopInstance
+        )
+    );
+    return io.instance();
+}
 
-    forAll(dirEntries, i)
+
+Foam::word Foam::Time::findInstancePath
+(
+    const fileName& directory,
+    const instant& t
+) const
+{
+    // Simplified version: use findTimes (readDir + sort). The expensive
+    // bit is the readDir, not the sorting. Tbd: avoid calling findInstancePath
+    // from filePath.
+
+    instantList timeDirs = findTimes(path(), constant());
+    // Note:
+    // - times will include constant (with value 0) as first element.
+    //   For backwards compatibility make sure to find 0 in preference
+    //   to constant.
+    // - list is sorted so could use binary search
+
+    forAllReverse(timeDirs, i)
     {
-        scalar timeValue;
-        if (readScalar(dirEntries[i].c_str(), timeValue) && t.equal(timeValue))
+        if (t.equal(timeDirs[i].value()))
         {
-            return dirEntries[i];
-        }
-    }
-
-    if (t.equal(0.0))
-    {
-        // Looking for 0 or constant. 0 already checked above.
-        if (isDir(directory/constantName))
-        {
-            return constantName;
+            return timeDirs[i].name();
         }
     }
 
     return word::null;
+}
+
+
+Foam::word Foam::Time::findInstancePath(const instant& t) const
+{
+    return findInstancePath(path(), t);
 }
 
 
@@ -784,7 +730,7 @@ Foam::instant Foam::Time::findClosestTime(const scalar t) const
     }
 
     label nearestIndex = -1;
-    scalar deltaT = GREAT;
+    scalar deltaT = great;
 
     for (label timei=1; timei < timeDirs.size(); ++timei)
     {
@@ -808,7 +754,7 @@ Foam::label Foam::Time::findClosestTimeIndex
 )
 {
     label nearestIndex = -1;
-    scalar deltaT = GREAT;
+    scalar deltaT = great;
 
     forAll(timeDirs, timei)
     {
@@ -844,9 +790,15 @@ Foam::dimensionedScalar Foam::Time::endTime() const
 }
 
 
+bool Foam::Time::running() const
+{
+    return value() < (endTime_ - 0.5*deltaT_);
+}
+
+
 bool Foam::Time::run() const
 {
-    bool running = value() < (endTime_ - 0.5*deltaT_);
+    bool running = this->running();
 
     if (!subCycling_)
     {
@@ -873,9 +825,8 @@ bool Foam::Time::run() const
             }
         }
 
-        // Update the "running" status following the
-        // possible side-effects from functionObjects
-        running = value() < (endTime_ - 0.5*deltaT_);
+        // Re-evaluate if running in case a function object has changed things
+        running = this->running();
     }
 
     return running;
@@ -913,7 +864,7 @@ bool Foam::Time::stopAt(const stopAtControls sa) const
     }
     else
     {
-        endTime_ = GREAT;
+        endTime_ = great;
     }
     return changed;
 }
@@ -924,6 +875,7 @@ void Foam::Time::setTime(const Time& t)
     value() = t.value();
     dimensionedScalar::name() = t.dimensionedScalar::name();
     timeIndex_ = t.timeIndex_;
+    fileHandler().setTime(*this);
 }
 
 
@@ -950,6 +902,7 @@ void Foam::Time::setTime(const instant& inst, const label newIndex)
     timeDict.readIfPresent("deltaT", deltaT_);
     timeDict.readIfPresent("deltaT0", deltaT0_);
     timeDict.readIfPresent("index", timeIndex_);
+    fileHandler().setTime(*this);
 }
 
 
@@ -964,6 +917,7 @@ void Foam::Time::setTime(const scalar newTime, const label newIndex)
     value() = newTime;
     dimensionedScalar::name() = timeName(timeToUserTime(newTime));
     timeIndex_ = newIndex;
+    fileHandler().setTime(*this);
 }
 
 
@@ -979,25 +933,29 @@ void Foam::Time::setEndTime(const scalar endTime)
 }
 
 
-void Foam::Time::setDeltaT
-(
-    const dimensionedScalar& deltaT,
-    const bool bAdjustDeltaT
-)
+void Foam::Time::setDeltaT(const dimensionedScalar& deltaT)
 {
-    setDeltaT(deltaT.value(), bAdjustDeltaT);
+    setDeltaT(deltaT.value());
 }
 
 
-void Foam::Time::setDeltaT(const scalar deltaT, const bool bAdjustDeltaT)
+void Foam::Time::setDeltaT(const scalar deltaT)
 {
-    deltaT_ = deltaT;
-    deltaTchanged_ = true;
+    setDeltaTNoAdjust(deltaT);
 
-    if (bAdjustDeltaT)
+    functionObjects_.setTimeStep();
+
+    if (writeControl_ == wcAdjustableRunTime)
     {
         adjustDeltaT();
     }
+}
+
+
+void Foam::Time::setDeltaTNoAdjust(const scalar deltaT)
+{
+    deltaT_ = deltaT;
+    deltaTchanged_ = true;
 }
 
 
@@ -1056,9 +1014,9 @@ Foam::Time& Foam::Time::operator++()
     if (!subCycling_)
     {
         // If the time is very close to zero reset to zero
-        if (mag(value()) < 10*SMALL*deltaT_)
+        if (mag(value()) < 10*small*deltaT_)
         {
-            setTime(0.0, timeIndex_);
+            setTime(0, timeIndex_);
         }
 
         if (sigStopAtWriteNow_.active() || sigWriteNow_.active())
@@ -1174,13 +1132,13 @@ Foam::Time& Foam::Time::operator++()
         {
             // Tolerance used when testing time equivalence
             const scalar timeTol =
-                max(min(pow(10.0, -precision_), 0.1*deltaT_), SMALL);
+                max(min(pow(10.0, -precision_), 0.1*deltaT_), small);
 
             // User-time equivalent of deltaT
             const scalar userDeltaT = timeToUserTime(deltaT_);
 
             // Time value obtained by reading timeName
-            scalar timeNameValue = -VGREAT;
+            scalar timeNameValue = -vGreat;
 
             // Check that new time representation differs from old one
             // reinterpretation of the word
@@ -1224,7 +1182,7 @@ Foam::Time& Foam::Time::operator++()
                     }
 
                     // Check if round-off error caused time-reversal
-                    scalar oldTimeNameValue = -VGREAT;
+                    scalar oldTimeNameValue = -vGreat;
                     if
                     (
                         readScalar(oldTimeName.c_str(), oldTimeNameValue)

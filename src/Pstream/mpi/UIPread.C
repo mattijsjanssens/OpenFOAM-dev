@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -60,7 +60,7 @@ Foam::UIPstream::UIPstream
     setOpened();
     setGood();
 
-    if (commsType == UPstream::nonBlocking)
+    if (commsType == commsTypes::nonBlocking)
     {
         // Message is already received into externalBuf
     }
@@ -79,7 +79,7 @@ Foam::UIPstream::UIPstream
         }
 
 
-        // If the buffer size is not specified, probe the incomming message
+        // If the buffer size is not specified, probe the incoming message
         // and set it
         if (!wantedSize)
         {
@@ -135,7 +135,11 @@ Foam::UIPstream::UIPstream(const int fromProcNo, PstreamBuffers& buffers)
     clearAtEnd_(true),
     messageSize_(0)
 {
-    if (commsType() != UPstream::scheduled && !buffers.finishedSendsCalled_)
+    if
+    (
+        commsType() != UPstream::commsTypes::scheduled
+     && !buffers.finishedSendsCalled_
+    )
     {
         FatalErrorInFunction
             << "PstreamBuffers::finishedSends() never called." << endl
@@ -147,7 +151,7 @@ Foam::UIPstream::UIPstream(const int fromProcNo, PstreamBuffers& buffers)
     setOpened();
     setGood();
 
-    if (commsType() == UPstream::nonBlocking)
+    if (commsType() == commsTypes::nonBlocking)
     {
         // Message is already received into externalBuf
         messageSize_ = buffers.recvBuf_[fromProcNo].size();
@@ -176,7 +180,7 @@ Foam::UIPstream::UIPstream(const int fromProcNo, PstreamBuffers& buffers)
                 << Foam::endl;
         }
 
-        // If the buffer size is not specified, probe the incomming message
+        // If the buffer size is not specified, probe the incoming message
         // and set it
         if (!wantedSize)
         {
@@ -251,7 +255,7 @@ Foam::label Foam::UIPstream::read
         error::printStack(Pout);
     }
 
-    if (commsType == blocking || commsType == scheduled)
+    if (commsType == commsTypes::blocking || commsType == commsTypes::scheduled)
     {
         MPI_Status status;
 
@@ -270,7 +274,7 @@ Foam::label Foam::UIPstream::read
         )
         {
             FatalErrorInFunction
-                << "MPI_Recv cannot receive incomming message"
+                << "MPI_Recv cannot receive incoming message"
                 << Foam::abort(FatalError);
 
             return 0;
@@ -294,14 +298,14 @@ Foam::label Foam::UIPstream::read
         {
             FatalErrorInFunction
                 << "buffer (" << label(bufSize)
-                << ") not large enough for incomming message ("
+                << ") not large enough for incoming message ("
                 << messageSize << ')'
                 << Foam::abort(FatalError);
         }
 
         return messageSize;
     }
-    else if (commsType == nonBlocking)
+    else if (commsType == commsTypes::nonBlocking)
     {
         MPI_Request request;
 
@@ -344,7 +348,7 @@ Foam::label Foam::UIPstream::read
     {
         FatalErrorInFunction
             << "Unsupported communications type "
-            << commsType
+            << int(commsType)
             << Foam::abort(FatalError);
 
         return 0;

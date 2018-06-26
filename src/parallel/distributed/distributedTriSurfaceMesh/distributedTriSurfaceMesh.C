@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -236,7 +236,7 @@ void Foam::distributedTriSurfaceMesh::distributeSegment
             // Alternative: any processor only gets clipped bit of
             // segment. This gives small problems with additional
             // truncation errors.
-            //splitSegment
+            // splitSegment
             //(
             //    segmentI,
             //    start,
@@ -865,14 +865,14 @@ Foam::distributedTriSurfaceMesh::independentlyDistributedBbs
 
     // Find bounding box for all triangles on new distribution.
 
-    // Initialise to inverted box (VGREAT, -VGREAT)
+    // Initialise to inverted box (vGreat, -vGreat)
     List<List<treeBoundBox>> bbs(Pstream::nProcs());
     forAll(bbs, proci)
     {
         bbs[proci].setSize(1);
-        //bbs[proci][0] = boundBox::invertedBox;
-        bbs[proci][0].min() = point( VGREAT,  VGREAT,  VGREAT);
-        bbs[proci][0].max() = point(-VGREAT, -VGREAT, -VGREAT);
+        // bbs[proci][0] = boundBox::invertedBox;
+        bbs[proci][0].min() = point( vGreat,  vGreat,  vGreat);
+        bbs[proci][0].max() = point(-vGreat, -vGreat, -vGreat);
     }
 
     forAll(s, triI)
@@ -1334,7 +1334,6 @@ Foam::distributedTriSurfaceMesh::distributedTriSurfaceMesh
 
 Foam::distributedTriSurfaceMesh::distributedTriSurfaceMesh(const IOobject& io)
 :
-    //triSurfaceMesh(io),
     triSurfaceMesh
     (
         IOobject
@@ -1346,7 +1345,8 @@ Foam::distributedTriSurfaceMesh::distributedTriSurfaceMesh(const IOobject& io)
             io.readOpt(),
             io.writeOpt(),
             io.registerObject()
-        )
+        ),
+        false
     ),
     dict_
     (
@@ -1416,7 +1416,7 @@ Foam::distributedTriSurfaceMesh::distributedTriSurfaceMesh
     const dictionary& dict
 )
 :
-    //triSurfaceMesh(io, dict),
+    // triSurfaceMesh(io, dict),
     triSurfaceMesh
     (
         IOobject
@@ -1429,7 +1429,8 @@ Foam::distributedTriSurfaceMesh::distributedTriSurfaceMesh
             io.writeOpt(),
             io.registerObject()
         ),
-        dict
+        dict,
+        false
     ),
     dict_
     (
@@ -1737,15 +1738,15 @@ void Foam::distributedTriSurfaceMesh::findLineAll
     // Tolerances:
     // To find all intersections we add a small vector to the last intersection
     // This is chosen such that
-    // - it is significant (SMALL is smallest representative relative tolerance;
+    // - it is significant (small is smallest representative relative tolerance;
     //   we need something bigger since we're doing calculations)
     // - if the start-end vector is zero we still progress
     const vectorField dirVec(end-start);
     const scalarField magSqrDirVec(magSqr(dirVec));
     const vectorField smallVec
     (
-        ROOTSMALL*dirVec
-      + vector(ROOTVSMALL,ROOTVSMALL,ROOTVSMALL)
+        rootSmall*dirVec
+      + vector(rootVSmall,rootVSmall,rootVSmall)
     );
 
     // Copy to input and compact any hits
@@ -1924,7 +1925,6 @@ void Foam::distributedTriSurfaceMesh::getNormal
     {
         label triI = triangleIndex[i];
         normal[i] = s[triI].normal(s.points());
-        normal[i] /= mag(normal[i]) + VSMALL;
     }
 
 
@@ -2133,7 +2133,7 @@ void Foam::distributedTriSurfaceMesh::distribute
 
         if (debug)
         {
-            //Pout<< "Overlapping with proc " << proci
+            // Pout<< "Overlapping with proc " << proci
             //    << " faces:" << faceSendMap[proci].size()
             //    << " points:" << pointSendMap[proci].size() << endl << endl;
         }
@@ -2241,7 +2241,7 @@ void Foam::distributedTriSurfaceMesh::distribute
         {
             if (faceSendSizes[Pstream::myProcNo()][proci] > 0)
             {
-                OPstream str(Pstream::blocking, proci);
+                OPstream str(Pstream::commsTypes::blocking, proci);
 
                 labelList pointMap;
                 triSurface subSurface
@@ -2254,7 +2254,7 @@ void Foam::distributedTriSurfaceMesh::distribute
                     )
                 );
 
-                //if (debug)
+                // if (debug)
                 //{
                 //    Pout<< "Sending to " << proci
                 //        << " faces:" << faceSendMap[proci].size()
@@ -2277,12 +2277,12 @@ void Foam::distributedTriSurfaceMesh::distribute
         {
             if (faceSendSizes[proci][Pstream::myProcNo()] > 0)
             {
-                IPstream str(Pstream::blocking, proci);
+                IPstream str(Pstream::commsTypes::blocking, proci);
 
                 // Receive
                 triSurface subSurface(str);
 
-                //if (debug)
+                // if (debug)
                 //{
                 //    Pout<< "Received from " << proci
                 //        << " faces:" << subSurface.size()
@@ -2303,7 +2303,7 @@ void Foam::distributedTriSurfaceMesh::distribute
                     pointConstructMap[proci]
                 );
 
-                //if (debug)
+                // if (debug)
                 //{
                 //    Pout<< "Current merged surface : faces:" << allTris.size()
                 //        << " points:" << allPoints.size() << endl << endl;
@@ -2376,7 +2376,8 @@ bool Foam::distributedTriSurfaceMesh::writeObject
 (
     IOstream::streamFormat fmt,
     IOstream::versionNumber ver,
-    IOstream::compressionType cmp
+    IOstream::compressionType cmp,
+    const bool valid
 ) const
 {
     // Make sure dictionary goes to same directory as surface
@@ -2403,7 +2404,7 @@ bool Foam::distributedTriSurfaceMesh::writeObject
     }
 
     // Dictionary needs to be written in ascii - binary output not supported.
-    return dict_.writeObject(IOstream::ASCII, ver, cmp);
+    return dict_.writeObject(IOstream::ASCII, ver, cmp, true);
 }
 
 

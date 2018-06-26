@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -154,8 +154,9 @@ public:
 
         // Interrogation
 
-            //- Return the file type: FILE, DIRECTORY or UNDEFINED
-            Type type() const;
+            //- Return the file type: FILE, DIRECTORY, UNDEFINED or
+            //  LINK (only if followLink=false)
+            Type type(const bool followLink = true) const;
 
             //- Return true if file name is absolute
             bool isAbsolute() const;
@@ -179,7 +180,7 @@ public:
             //
             word name() const;
 
-            //- Return file name (part beyond last /), subsitute for FOAM_CASE
+            //- Return file name (part beyond last /), substitute for FOAM_CASE
             string caseName() const;
 
             //- Return file name, optionally without extension
@@ -240,12 +241,6 @@ public:
 
 //- Assemble words and fileNames as pathnames by adding a '/' separator
 fileName operator/(const string&, const string&);
-
-
-//- Recursively search the given directory for the file
-//  returning the path relative to the directory or
-//  fileName::null if not found
-fileName search(const word& file, const fileName& directory);
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

@@ -18,7 +18,7 @@ FoamFile
 thermoType
 {
     type            heRhoThermo;
-    mixture         multiComponentMixture;
+    mixture         pureMixture;
     transport       const;
     thermo          hRefConst;
     equationOfState perfectGas;
@@ -28,22 +28,10 @@ thermoType
 
 dpdt no;
 
-species
-(
-    water
-);
-
-inertSpecie water;
-
-chemistryReader foamChemistryReader;
-
-foamChemistryFile "$FOAM_CASE/constant/reactions.gas";
-
-water
+mixture
 {
     specie
     {
-        nMoles          1;
         molWeight       18.0153;
     }
     equationOfState

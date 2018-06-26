@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2013-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -312,11 +312,11 @@ void Foam::PackingModels::Implicit<CloudType>::cacheFields(const bool store)
         );
         uCorrect_->correctBoundaryConditions();
 
-        //Info << endl;
-        //Info << "     alpha: " << alpha_.primitiveField() << endl;
-        //Info << "phiCorrect: " << phiCorrect_->primitiveField() << endl;
-        //Info << "  uCorrect: " << uCorrect_->primitiveField() << endl;
-        //Info << endl;
+        // Info << endl;
+        // Info << "     alpha: " << alpha_.primitiveField() << endl;
+        // Info << "phiCorrect: " << phiCorrect_->primitiveField() << endl;
+        // Info << "  uCorrect: " << uCorrect_->primitiveField() << endl;
+        // Info << endl;
     }
     else
     {
@@ -339,15 +339,12 @@ Foam::vector Foam::PackingModels::Implicit<CloudType>::velocityCorrection
     // containing tetrahedron and parcel coordinates within
     const label celli = p.cell();
     const label facei = p.tetFace();
-    const tetIndices tetIs(celli, facei, p.tetPt(), mesh);
-    FixedList<scalar, 4> tetCoordinates;
-    tetIs.tet(mesh).barycentric(p.position(), tetCoordinates);
 
     // cell velocity
     const vector U = uCorrect_()[celli];
 
     // face geometry
-    vector nHat = mesh.faces()[facei].normal(mesh.points());
+    vector nHat = mesh.faces()[facei].area(mesh.points());
     const scalar nMag = mag(nHat);
     nHat /= nMag;
 
@@ -368,7 +365,7 @@ Foam::vector Foam::PackingModels::Implicit<CloudType>::velocityCorrection
     }
 
     // interpolant equal to 1 at the cell centre and 0 at the face
-    const scalar t = tetCoordinates[0];
+    const scalar t = p.coordinates()[0];
 
     // the normal component of the velocity correction is interpolated linearly
     // the tangential component is equal to that at the cell centre

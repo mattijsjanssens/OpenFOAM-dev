@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2012-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2012-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -25,7 +25,7 @@ License
 
 #include "fileControl.H"
 #include "addToRunTimeSelectionTable.H"
-#include "tetrahedron.H"
+#include "tetPointRef.H"
 #include "scalarList.H"
 #include "vectorTools.H"
 #include "pointIOField.H"
@@ -122,7 +122,7 @@ Foam::fileControl::~fileControl()
 //    tensor alignment = Zero;
 //    forAll(bary, pI)
 //    {
-//        //alignment += bary[pI]*ch->vertex(pI)->alignment();
+//        // alignment += bary[pI]*ch->vertex(pI)->alignment();
 //
 //        // Find nearest point
 //        if (bary[pI] > nearest)

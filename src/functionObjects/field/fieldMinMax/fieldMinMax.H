@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,9 +23,6 @@ License
 
 Class
     Foam::functionObjects::fieldMinMax
-
-Group
-    grpFieldFunctionObjects
 
 Description
     Calculates the value and location of scalar minimum and maximum for a list
@@ -131,6 +128,8 @@ protected:
         (
             const word& fieldName,
             const word& outputName,
+            const label minCell,
+            const label maxCell,
             const vector& minC,
             const vector& maxC,
             const label minProci,

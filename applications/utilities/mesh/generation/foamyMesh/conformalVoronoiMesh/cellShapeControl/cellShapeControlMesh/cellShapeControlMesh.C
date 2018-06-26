@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2012-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2012-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -28,7 +28,7 @@ License
 #include "pointIOField.H"
 #include "scalarIOField.H"
 #include "triadIOField.H"
-#include "tetrahedron.H"
+#include "tetPointRef.H"
 #include "plane.H"
 #include "transform.H"
 #include "meshTools.H"
@@ -58,7 +58,7 @@ word cellShapeControlMesh::meshSubDir = "cellShapeControlMesh";
 //    geometryToConformTo.findSurfaceNearest
 //    (
 //        pt,
-//        sqr(GREAT),
+//        sqr(great),
 //        surfHit,
 //        hitSurface
 //    );
@@ -92,7 +92,7 @@ word cellShapeControlMesh::meshSubDir = "cellShapeControlMesh";
 //
 //    const label s = 36;//foamyHexMeshControls().alignmentSearchSpokes();
 //
-//    scalar closestSpokeHitDistance = GREAT;
+//    scalar closestSpokeHitDistance = great;
 //
 //    pointIndexHit closestSpokeHit;
 //
@@ -142,7 +142,7 @@ word cellShapeControlMesh::meshSubDir = "cellShapeControlMesh";
 //            }
 //        }
 //
-//        //external spoke
+//        // external spoke
 //
 //        Foam::point mirrorPt = pt + 2*d;
 //
@@ -194,7 +194,7 @@ word cellShapeControlMesh::meshSubDir = "cellShapeControlMesh";
 //    // Secondary alignment
 //    vector ns = np ^ na;
 //
-//    if (mag(ns) < SMALL)
+//    if (mag(ns) < small)
 //    {
 //        FatalErrorInFunction
 //            << "Parallel normals detected in spoke search." << nl
@@ -452,7 +452,7 @@ Foam::cellShapeControlMesh::~cellShapeControlMesh()
 void Foam::cellShapeControlMesh::barycentricCoords
 (
     const Foam::point& pt,
-    FixedList<scalar, 4>& bary,
+    barycentric& bary,
     Cell_handle& ch
 ) const
 {
@@ -472,7 +472,7 @@ void Foam::cellShapeControlMesh::barycentricCoords
             topoint(ch->vertex(3)->point())
         );
 
-        tet.barycentric(pt, bary);
+        bary = tet.pointToBarycentric(pt);
     }
 }
 
@@ -769,19 +769,19 @@ Foam::label Foam::cellShapeControlMesh::estimateCellCount
             scalar volume = CGAL::to_double(tet.volume());
 
             scalar averagedPointCellSize = 0;
-            //scalar averagedPointCellSize = 1;
+            // scalar averagedPointCellSize = 1;
 
             // Get an average volume by averaging the cell size of the vertices
             for (label vI = 0; vI < 4; ++vI)
             {
                 averagedPointCellSize += cit->vertex(vI)->targetCellSize();
-                //averagedPointCellSize *= cit->vertex(vI)->targetCellSize();
+                // averagedPointCellSize *= cit->vertex(vI)->targetCellSize();
             }
 
             averagedPointCellSize /= 4;
-            //averagedPointCellSize = ::sqrt(averagedPointCellSize);
+            // averagedPointCellSize = ::sqrt(averagedPointCellSize);
 
-//            if (averagedPointCellSize < SMALL)
+//            if (averagedPointCellSize < small)
 //            {
 //                Pout<< "Volume = " << volume << endl;
 //

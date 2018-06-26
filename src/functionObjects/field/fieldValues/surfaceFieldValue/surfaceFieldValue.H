@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,9 +23,6 @@ License
 
 Class
     Foam::functionObjects::fieldValues::surfaceFieldValue
-
-Group
-    grpFieldFunctionObjects
 
 Description
     Provides a 'face regionType' variant of the fieldValues function object.
@@ -116,6 +113,7 @@ Usage
     \plaintable
        none          | no operation
        sum           | sum
+       weightedSum   | weighted sum
        sumMag        | sum of component magnitudes
        sumDirection  | sum values which are positive in given direction
        sumDirectionBalance | sum of balance of values in given direction
@@ -124,6 +122,7 @@ Usage
        areaAverage   | area weighted average
        weightedAreaAverage | weighted area average
        areaIntegrate | area integral
+       weightedAreaIntegrate | weighted area integral
        min           | minimum
        max           | maximum
        CoV           | coefficient of variation: standard deviation/mean
@@ -209,6 +208,7 @@ public:
         {
             opNone,
             opSum,
+            opWeightedSum,
             opSumMag,
             opSumDirection,
             opSumDirectionBalance,
@@ -217,6 +217,7 @@ public:
             opAreaAverage,
             opWeightedAreaAverage,
             opAreaIntegrate,
+            opWeightedAreaIntegrate,
             opMin,
             opMax,
             opCoV,
@@ -225,7 +226,7 @@ public:
         };
 
         //- Operation type names
-        static const NamedEnum<operationType, 15> operationTypeNames_;
+        static const NamedEnum<operationType, 17> operationTypeNames_;
 
 
 private:

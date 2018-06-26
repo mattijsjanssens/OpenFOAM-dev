@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2013-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -45,6 +45,7 @@ License
 #include "fixedValueFvsPatchFields.H"
 #include "blendingMethod.H"
 #include "HashPtrTable.H"
+#include "UniformField.H"
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
@@ -183,7 +184,7 @@ Foam::twoPhaseSystem::twoPhaseSystem
             pair_,
             pair1In2_,
             pair2In1_,
-            false // Do not zero drag coefficent at fixed-flux BCs
+            false // Do not zero drag coefficient at fixed-flux BCs
         )
     );
 
@@ -444,7 +445,7 @@ void Foam::twoPhaseSystem::solve()
             )
         );
 
-        phase1_.correctInflowFlux(alphaPhic1);
+        phase1_.correctInflowOutflow(alphaPhic1);
 
         if (nAlphaSubCycles > 1)
         {
@@ -464,8 +465,8 @@ void Foam::twoPhaseSystem::solve()
                     alphaPhic10,
                     (alphaSubCycle.index()*Sp)(),
                     (Su - (alphaSubCycle.index() - 1)*Sp*alpha1)(),
-                    phase1_.alphaMax(),
-                    0
+                    UniformField<scalar>(phase1_.alphaMax()),
+                    zeroField()
                 );
 
                 if (alphaSubCycle.index() == 1)
@@ -490,8 +491,8 @@ void Foam::twoPhaseSystem::solve()
                 alphaPhic1,
                 Sp,
                 Su,
-                phase1_.alphaMax(),
-                0
+                UniformField<scalar>(phase1_.alphaMax()),
+                zeroField()
             );
 
             phase1_.alphaPhi() = alphaPhic1;
@@ -515,8 +516,7 @@ void Foam::twoPhaseSystem::solve()
             fvc::interpolate(phase1_.rho())*phase1_.alphaPhi();
 
         phase2_.alphaPhi() = phi_ - phase1_.alphaPhi();
-        alpha2 = scalar(1) - alpha1;
-        phase2_.correctInflowFlux(phase2_.alphaPhi());
+        phase2_.correctInflowOutflow(phase2_.alphaPhi());
         phase2_.alphaRhoPhi() =
             fvc::interpolate(phase2_.rho())*phase2_.alphaPhi();
 
@@ -525,6 +525,12 @@ void Foam::twoPhaseSystem::solve()
             << "  Min(" << alpha1.name() << ") = " << min(alpha1).value()
             << "  Max(" << alpha1.name() << ") = " << max(alpha1).value()
             << endl;
+
+        // Ensure the phase-fractions are bounded
+        alpha1.max(0);
+        alpha1.min(1);
+
+        alpha2 = scalar(1) - alpha1;
     }
 }
 
@@ -560,19 +566,6 @@ bool Foam::twoPhaseSystem::read()
     {
         return false;
     }
-}
-
-
-const Foam::dragModel& Foam::twoPhaseSystem::drag(const phaseModel& phase) const
-{
-    return drag_->phaseModel(phase);
-}
-
-
-const Foam::virtualMassModel&
-Foam::twoPhaseSystem::virtualMass(const phaseModel& phase) const
-{
-    return virtualMass_->phaseModel(phase);
 }
 
 

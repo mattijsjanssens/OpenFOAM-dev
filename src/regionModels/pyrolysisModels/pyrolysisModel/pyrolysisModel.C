@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -43,9 +43,7 @@ defineRunTimeSelectionTable(pyrolysisModel, dictionary);
 // * * * * * * * * * * * * Protected Member Functions  * * * * * * * * * * * //
 
 void pyrolysisModel::readPyrolysisControls()
-{
-    // do nothing
-}
+{}
 
 
 bool pyrolysisModel::read()
@@ -137,13 +135,13 @@ scalar pyrolysisModel::addMassSources
 
 scalar pyrolysisModel::solidRegionDiffNo() const
 {
-    return -GREAT;
+    return -great;
 }
 
 
 scalar pyrolysisModel::maxDiff() const
 {
-    return GREAT;
+    return great;
 }
 
 

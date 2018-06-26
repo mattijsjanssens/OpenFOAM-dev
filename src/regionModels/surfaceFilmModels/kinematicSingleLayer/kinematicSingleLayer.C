@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -49,13 +49,13 @@ namespace surfaceFilmModels
 
 defineTypeNameAndDebug(kinematicSingleLayer, 0);
 
-addToRunTimeSelectionTable(surfaceFilmModel, kinematicSingleLayer, mesh);
+addToRunTimeSelectionTable(surfaceFilmRegionModel, kinematicSingleLayer, mesh);
 
 // * * * * * * * * * * * * Protected Member Functions  * * * * * * * * * * * //
 
 bool kinematicSingleLayer::read()
 {
-    if (surfaceFilmModel::read())
+    if (surfaceFilmRegionModel::read())
     {
         const dictionary& solution = this->solution().subDict("PISO");
         solution.lookup("momentumPredictor") >> momentumPredictor_;
@@ -218,9 +218,11 @@ void kinematicSingleLayer::updateSubmodels()
     // Update injection model - mass returned is mass available for injection
     injection_.correct(availableMass_, cloudMassTrans_, cloudDiameterTrans_);
 
-    // Update source fields
-    const dimensionedScalar deltaT = time().deltaT();
-    rhoSp_ += cloudMassTrans_/magSf()/deltaT;
+    // Update transfer model - mass returned is mass available for transfer
+    transfer_.correct(availableMass_, cloudMassTrans_);
+
+    // Update mass source field
+    rhoSp_ += cloudMassTrans_/magSf()/time().deltaT();
 
     turbulence_->correct();
 }
@@ -237,7 +239,7 @@ void kinematicSingleLayer::continuityCheck()
         const volScalarField mass(deltaRho_*magSf());
         const dimensionedScalar totalMass =
             fvc::domainIntegrate(mass)
-          + dimensionedScalar("SMALL", dimMass*dimVolume, ROOTVSMALL);
+          + dimensionedScalar("small", dimMass*dimVolume, rootVSmall);
 
         const scalar sumLocalContErr =
             (
@@ -449,7 +451,7 @@ kinematicSingleLayer::kinematicSingleLayer
     const bool readFields
 )
 :
-    surfaceFilmModel(modelType, mesh, g, regionType),
+    surfaceFilmRegionModel(modelType, mesh, g, regionType),
 
     momentumPredictor_(solution().subDict("PISO").lookup("momentumPredictor")),
     nOuterCorr_(solution().subDict("PISO").lookupOrDefault("nOuterCorr", 1)),
@@ -461,7 +463,7 @@ kinematicSingleLayer::kinematicSingleLayer
 
     cumulativeContErr_(0.0),
 
-    deltaSmall_("deltaSmall", dimLength, SMALL),
+    deltaSmall_("deltaSmall", dimLength, small),
     deltaCoLimit_(solution().lookupOrDefault("deltaCoLimit", 1e-4)),
 
     rho_
@@ -792,6 +794,8 @@ kinematicSingleLayer::kinematicSingleLayer
 
     injection_(*this, coeffs_),
 
+    transfer_(*this, coeffs_),
+
     turbulence_(filmTurbulenceModel::New(*this, coeffs_)),
 
     forces_(*this, coeffs_),
@@ -869,7 +873,7 @@ void kinematicSingleLayer::preEvolveRegion()
         InfoInFunction << endl;
     }
 
-    surfaceFilmModel::preEvolveRegion();
+    surfaceFilmRegionModel::preEvolveRegion();
 
     transferPrimaryRegionThermoFields();
 
@@ -878,10 +882,10 @@ void kinematicSingleLayer::preEvolveRegion()
     transferPrimaryRegionSourceFields();
 
     // Reset transfer fields
-    //availableMass_ = mass();
-    availableMass_ = netMass();
+    availableMass_ = mass();
     cloudMassTrans_ == dimensionedScalar("zero", dimMass, 0.0);
     cloudDiameterTrans_ == dimensionedScalar("zero", dimLength, 0.0);
+    primaryMassTrans_ == dimensionedScalar("zero", dimMass, 0.0);
 }
 
 
@@ -940,7 +944,7 @@ scalar kinematicSingleLayer::CourantNumber() const
         const scalarField sumPhi
         (
             fvc::surfaceSum(mag(phi_))().primitiveField()
-          / (deltaRho_.primitiveField() + ROOTVSMALL)
+          / (deltaRho_.primitiveField() + rootVSmall)
         );
 
         forAll(delta_, i)
@@ -1025,6 +1029,15 @@ const volScalarField& kinematicSingleLayer::Tw() const
 }
 
 
+const volScalarField& kinematicSingleLayer::hs() const
+{
+    FatalErrorInFunction
+        << "hs field not available for " << type() << abort(FatalError);
+
+    return volScalarField::null();
+}
+
+
 const volScalarField& kinematicSingleLayer::Cp() const
 {
     FatalErrorInFunction
@@ -1045,23 +1058,7 @@ const volScalarField& kinematicSingleLayer::kappa() const
 
 tmp<volScalarField> kinematicSingleLayer::primaryMassTrans() const
 {
-    return tmp<volScalarField>
-    (
-        new volScalarField
-        (
-            IOobject
-            (
-                typeName + ":primaryMassTrans",
-                time().timeName(),
-                primaryMesh(),
-                IOobject::NO_READ,
-                IOobject::NO_WRITE,
-                false
-            ),
-            primaryMesh(),
-            dimensionedScalar("zero", dimMass/dimVolume/dimTime, 0.0)
-        )
-    );
+    return primaryMassTrans_;
 }
 
 
@@ -1098,6 +1095,7 @@ void kinematicSingleLayer::info()
         << gSum(alpha_.primitiveField()*magSf())/gSum(magSf()) <<  nl;
 
     injection_.info(Info);
+    transfer_.info(Info);
 }
 
 

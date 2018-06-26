@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,9 +23,6 @@ License
 
 Class
     Foam::fluxCorrectedVelocityFvPatchVectorField
-
-Group
-    grpOutletBoundaryConditions
 
 Description
     This boundary condition provides a velocity outlet boundary condition for
@@ -169,14 +166,11 @@ public:
 
     // Member functions
 
-        // Evaluation functions
-
-            //- Evaluate the patch field
-            virtual void evaluate
-            (
-                const Pstream::commsTypes commsType=Pstream::blocking
-            );
-
+        //- Evaluate the patch field
+        virtual void evaluate
+        (
+            const Pstream::commsTypes commsType=Pstream::commsTypes::blocking
+        );
 
         //- Write
         virtual void write(Ostream&) const;

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -101,7 +101,7 @@ void Foam::fvMesh::makeMagSf() const
             IOobject::NO_WRITE,
             false
         ),
-        mag(Sf()) + dimensionedScalar("vs", dimArea, VSMALL)
+        mag(Sf()) + dimensionedScalar("vs", dimArea, vSmall)
     );
 }
 
@@ -140,8 +140,8 @@ void Foam::fvMesh::makeC() const
         dimLength,
         cellCentres(),
         faceCentres(),
-        true,               //preserveCouples
-        true                //preserveProcOnly
+        true,               // preserveCouples
+        true                // preserveProcOnly
     );
 }
 
@@ -284,7 +284,7 @@ Foam::fvMesh::Vsc() const
             ts.value() - (ts0.value() - ts0.deltaTValue())
         )/ts0.deltaTValue();
 
-        if (tFrac < (1 - SMALL))
+        if (tFrac < (1 - small))
         {
             return V0() + tFrac*(V() - V0());
         }
@@ -314,7 +314,7 @@ Foam::fvMesh::Vsc0() const
           - (ts0.value() - ts0.deltaTValue())
         )/ts0.deltaTValue();
 
-        if (t0Frac > SMALL)
+        if (t0Frac > small)
         {
             return V0() + t0Frac*(V() - V0());
         }
@@ -433,7 +433,7 @@ const Foam::surfaceScalarField& Foam::fvMesh::phi() const
 
     // Set zero current time
     // mesh motion fluxes if the time has been incremented
-    if (phiPtr_->timeIndex() != time().timeIndex())
+    if (!time().subCycling() && phiPtr_->timeIndex() != time().timeIndex())
     {
         (*phiPtr_) = dimensionedScalar("0", dimVolume/dimTime, 0.0);
     }

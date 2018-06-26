@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -459,7 +459,7 @@ void Foam::multiphaseMixture::correctContactAngle
             scalar uTheta = tp().uTheta();
 
             // Calculate the dynamic contact angle if required
-            if (uTheta > SMALL)
+            if (uTheta > small)
             {
                 scalar thetaA = convertToRad*tp().thetaA(matched);
                 scalar thetaR = convertToRad*tp().thetaR(matched);
@@ -479,7 +479,7 @@ void Foam::multiphaseMixture::correctContactAngle
                 );
 
                 // Normalise nWall
-                nWall /= (mag(nWall) + SMALL);
+                nWall /= (mag(nWall) + small);
 
                 // Calculate Uwall resolved normal to the interface parallel to
                 // the interface
@@ -550,7 +550,8 @@ Foam::multiphaseMixture::nearInterface() const
 
     forAllConstIter(PtrDictionary<phase>, phases_, iter)
     {
-        tnearInt.ref() = max(tnearInt(), pos(iter() - 0.01)*pos(0.99 - iter()));
+        tnearInt.ref() =
+            max(tnearInt(), pos0(iter() - 0.01)*pos0(0.99 - iter()));
     }
 
     return tnearInt;
@@ -620,8 +621,8 @@ void Foam::multiphaseMixture::solveAlphas
             alphaPhiCorr,
             zeroField(),
             zeroField(),
-            1,
-            0,
+            oneField(),
+            zeroField(),
             true
         );
 
@@ -657,9 +658,7 @@ void Foam::multiphaseMixture::solveAlphas
         (
             geometricOneField(),
             alpha,
-            alphaPhi,
-            zeroField(),
-            zeroField()
+            alphaPhi
         );
 
         rhoPhi_ += alphaPhi*alpha.rho();
@@ -680,6 +679,14 @@ void Foam::multiphaseMixture::solveAlphas
         << ' ' << min(sumAlpha).value()
         << ' ' << max(sumAlpha).value()
         << endl;
+
+    // Correct the sum of the phase-fractions to avoid 'drift'
+    volScalarField sumCorr(1.0 - sumAlpha);
+    forAllIter(PtrDictionary<phase>, phases_, iter)
+    {
+        phase& alpha = iter();
+        alpha += alpha*sumCorr;
+    }
 
     calcAlphas();
 }

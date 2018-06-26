@@ -22,10 +22,10 @@ radiationModel  fvDOM;
 
 fvDOMCoeffs
 {
-    nPhi        2;          // azimuthal angles in PI/2 on X-Y.(from Y to X)
-    nTheta      2;          // polar angles in PI (from Z to X-Y plane)
-    convergence 1e-1;       // convergence criteria for radiation iteration
-    maxIter     1;          // maximum number of iterations
+    nPhi        2;      // azimuthal angles in PI/2 on X-Y.(from Y to X)
+    nTheta      2;      // polar angles in PI (from Z to X-Y plane)
+    tolerance   1e-1;   // convergence tolerance for radiation iteration
+    maxIter     1;      // maximum number of iterations
 }
 
 // Number of flow iterations per radiation iteration
@@ -48,12 +48,12 @@ greyMeanAbsorptionEmissionCoeffs
 
     CO2
     {
-        Tcommon         200;   //Common Temp
-        invTemp         true;   //Is the polynomio using inverse temperature.
-        Tlow            200;   //Low Temp
-        Thigh           2500;  //High Temp
+        Tcommon         200;   // Common Temp
+        invTemp         true;   // Is the polynomio using inverse temperature.
+        Tlow            200;   // Low Temp
+        Thigh           2500;  // High Temp
 
-        loTcoeffs       //coefss for T < Tcommon
+        loTcoeffs       // coefss for T < Tcommon
         (
             0           //  a0            +
             0           //  a1*T          +
@@ -62,7 +62,7 @@ greyMeanAbsorptionEmissionCoeffs
             0           //  a4*T^(+/-)4   +
             0           //  a5*T^(+/-)5   +
         );
-        hiTcoeffs        //coefss for T > Tcommon
+        hiTcoeffs        // coefss for T > Tcommon
         (
             18.741
             -121.31e3

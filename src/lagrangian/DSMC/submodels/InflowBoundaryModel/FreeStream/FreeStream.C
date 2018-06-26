@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -182,7 +182,7 @@ void Foam::FreeStream<CloudType>::inflow()
 
             scalar mass = cloud.constProps(typeId).mass();
 
-            if (min(boundaryT[patchi]) < SMALL)
+            if (min(boundaryT[patchi]) < small)
             {
                 FatalErrorInFunction
                     << "Zero boundary temperature detected, check boundaryT "
@@ -390,8 +390,8 @@ void Foam::FreeStream<CloudType>::inflow()
                     vector U =
                         sqrt(physicoChemical::k.value()*faceTemperature/mass)
                        *(
-                            rndGen.GaussNormal()*t1
-                          + rndGen.GaussNormal()*t2
+                            rndGen.scalarNormal()*t1
+                          + rndGen.scalarNormal()*t2
                         )
                       + (t1 & faceVelocity)*t1
                       + (t2 & faceVelocity)*t2
@@ -403,16 +403,7 @@ void Foam::FreeStream<CloudType>::inflow()
                         cloud.constProps(typeId).internalDegreesOfFreedom()
                     );
 
-                    cloud.addNewParcel
-                    (
-                        p,
-                        U,
-                        Ei,
-                        celli,
-                        globalFaceIndex,
-                        faceTetIs.tetPt(),
-                        typeId
-                    );
+                    cloud.addNewParcel(p, celli, U, Ei, typeId);
 
                     particlesInserted++;
                 }

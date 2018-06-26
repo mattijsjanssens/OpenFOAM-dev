@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -39,14 +39,16 @@ Description
 
 #include "fvCFD.H"
 #include "dynamicFvMesh.H"
-#include "MULES.H"
+#include "CMULES.H"
+#include "EulerDdtScheme.H"
+#include "localEulerDdtScheme.H"
+#include "CrankNicolsonDdtScheme.H"
 #include "subCycle.H"
-#include "interfaceProperties.H"
-#include "twoPhaseMixture.H"
-#include "twoPhaseMixtureThermo.H"
-#include "turbulentFluidThermoModel.H"
+#include "compressibleInterPhaseTransportModel.H"
 #include "pimpleControl.H"
+#include "fvOptions.H"
 #include "CorrectPhi.H"
+#include "fvcSmooth.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -54,14 +56,13 @@ int main(int argc, char *argv[])
 {
     #include "postProcess.H"
 
-    #include "setRootCase.H"
+    #include "setRootCaseLists.H"
     #include "createTime.H"
     #include "createDynamicFvMesh.H"
     #include "initContinuityErrs.H"
-    #include "createControl.H"
+    #include "createDyMControls.H"
     #include "createFields.H"
     #include "createUf.H"
-    #include "createControls.H"
     #include "CourantNo.H"
     #include "setInitialDeltaT.H"
 
@@ -70,74 +71,79 @@ int main(int argc, char *argv[])
     const volScalarField& psi1 = mixture.thermo1().psi();
     const volScalarField& psi2 = mixture.thermo2().psi();
 
-    turbulence->validate();
-
     // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
     Info<< "\nStarting time loop\n" << endl;
 
     while (runTime.run())
     {
-        #include "readControls.H"
+        #include "readDyMControls.H"
 
+        // Store divU from the previous mesh so that it can be mapped
+        // and used in correctPhi to ensure the corrected phi has the
+        // same divergence
+        volScalarField divU("divU0", fvc::div(fvc::absolute(phi, U)));
+
+        if (LTS)
         {
-            // Store divU from the previous mesh so that it can be mapped
-            // and used in correctPhi to ensure the corrected phi has the
-            // same divergence
-            volScalarField divU("divU0", fvc::div(fvc::absolute(phi, U)));
-
+            #include "setRDeltaT.H"
+        }
+        else
+        {
             #include "CourantNo.H"
+            #include "alphaCourantNo.H"
             #include "setDeltaT.H"
-
-            runTime++;
-
-            Info<< "Time = " << runTime.timeName() << nl << endl;
-
-            scalar timeBeforeMeshUpdate = runTime.elapsedCpuTime();
-
-            // Do any mesh changes
-            mesh.update();
-
-            if (mesh.changing())
-            {
-                Info<< "Execution time for mesh.update() = "
-                    << runTime.elapsedCpuTime() - timeBeforeMeshUpdate
-                    << " s" << endl;
-
-                gh = (g & mesh.C()) - ghRef;
-                ghf = (g & mesh.Cf()) - ghRef;
-            }
-
-            if (mesh.changing() && correctPhi)
-            {
-                // Calculate absolute flux from the mapped surface velocity
-                phi = mesh.Sf() & Uf;
-
-                #include "correctPhi.H"
-
-                // Make the fluxes relative to the mesh motion
-                fvc::makeRelative(phi, U);
-            }
         }
 
-        if (mesh.changing() && checkMeshCourantNo)
-        {
-            #include "meshCourantNo.H"
-        }
+        runTime++;
 
-        turbulence->correct();
+        Info<< "Time = " << runTime.timeName() << nl << endl;
 
         // --- Pressure-velocity PIMPLE corrector loop
         while (pimple.loop())
         {
-            #include "alphaEqnsSubCycle.H"
-
-            // correct interface on first PIMPLE corrector
-            if (pimple.corr() == 1)
+            if (pimple.firstIter() || moveMeshOuterCorrectors)
             {
-                interface.correct();
+                scalar timeBeforeMeshUpdate = runTime.elapsedCpuTime();
+
+                mesh.update();
+
+                if (mesh.changing())
+                {
+
+                    MRF.update();
+
+                    Info<< "Execution time for mesh.update() = "
+                        << runTime.elapsedCpuTime() - timeBeforeMeshUpdate
+                        << " s" << endl;
+
+                    gh = (g & mesh.C()) - ghRef;
+                    ghf = (g & mesh.Cf()) - ghRef;
+
+                    if (correctPhi)
+                    {
+                        // Calculate absolute flux
+                        // from the mapped surface velocity
+                        phi = mesh.Sf() & Uf;
+
+                        #include "correctPhi.H"
+
+                        // Make the fluxes relative to the mesh motion
+                        fvc::makeRelative(phi, U);
+
+                        mixture.correct();
+                    }
+
+                    if (checkMeshCourantNo)
+                    {
+                        #include "meshCourantNo.H"
+                    }
+                }
             }
 
-            solve(fvm::ddt(rho) + fvc::div(rhoPhi));
+            #include "alphaControls.H"
+            #include "compressibleAlphaEqnSubCycle.H"
+
+            turbulence.correctPhasePhi();
 
             #include "UEqn.H"
             #include "TEqn.H"
@@ -147,13 +153,12 @@ int main(int argc, char *argv[])
             {
                 #include "pEqn.H"
             }
+
+            if (pimple.turbCorr())
+            {
+                turbulence.correct();
+            }
         }
-
-        rho = alpha1*rho1 + alpha2*rho2;
-
-        // Correct p_rgh for consistency with p and the updated densities
-        p_rgh = p - rho*gh;
-        p_rgh.correctBoundaryConditions();
 
         runTime.write();
 

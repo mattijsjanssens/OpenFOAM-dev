@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -99,7 +99,7 @@ void Foam::volPointInterpolation::addSeparated
             refCast<coupledPointPatchField<Type>>
                 (pfbf[patchi]).initSwapAddSeparated
                 (
-                    Pstream::nonBlocking,
+                    Pstream::commsTypes::nonBlocking,
                     pfi
                 );
         }
@@ -115,7 +115,7 @@ void Foam::volPointInterpolation::addSeparated
             refCast<coupledPointPatchField<Type>>
                 (pfbf[patchi]).swapAddSeparated
                 (
-                    Pstream::nonBlocking,
+                    Pstream::commsTypes::nonBlocking,
                     pfi
                 );
         }
@@ -369,13 +369,14 @@ Foam::volPointInterpolation::interpolate
 
     if (!cache || vf.mesh().changing())
     {
-        // Delete any old occurences to avoid double registration
+        // Delete any old occurrences to avoid double registration
         if (db.objectRegistry::template foundObject<PointFieldType>(name))
         {
-            PointFieldType& pf = const_cast<PointFieldType&>
-            (
-                db.objectRegistry::template lookupObject<PointFieldType>(name)
-            );
+            PointFieldType& pf =
+                db.objectRegistry::template lookupObjectRef<PointFieldType>
+                (
+                    name
+                );
 
             if (pf.ownedByRegistry())
             {
@@ -417,12 +418,13 @@ Foam::volPointInterpolation::interpolate
         }
         else
         {
-            PointFieldType& pf = const_cast<PointFieldType&>
-            (
-                db.objectRegistry::template lookupObject<PointFieldType>(name)
-            );
+            PointFieldType& pf =
+                db.objectRegistry::template lookupObjectRef<PointFieldType>
+                (
+                    name
+                );
 
-            if (pf.upToDate(vf))    //TBD: , vf.mesh().points()))
+            if (pf.upToDate(vf))    // TBD: , vf.mesh().points()))
             {
                 solution::cachePrintMessage("Reusing", name, vf);
                 return pf;

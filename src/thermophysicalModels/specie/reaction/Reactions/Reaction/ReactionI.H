@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -47,6 +47,20 @@ inline const word& Reaction<ReactionThermo>::name() const
 
 
 template<class ReactionThermo>
+inline scalar Reaction<ReactionThermo>::Tlow() const
+{
+    return Tlow_;
+}
+
+
+template<class ReactionThermo>
+inline scalar Reaction<ReactionThermo>::Thigh() const
+{
+    return Thigh_;
+}
+
+
+template<class ReactionThermo>
 inline const List<typename Reaction<ReactionThermo>::specieCoeffs>&
 Reaction<ReactionThermo>::lhs() const
 {
@@ -67,9 +81,8 @@ Reaction<ReactionThermo>::rhs() const
 template<class ReactionThermo>
 inline Ostream& operator<<(Ostream& os, const Reaction<ReactionThermo>& r)
 {
-    OStringStream reaction;
-    os << r.reactionStr(reaction)<< token::END_STATEMENT <<nl;
-   return os;
+    r.write(os);
+    return os;
 }
 
 
