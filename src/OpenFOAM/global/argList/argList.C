@@ -36,6 +36,7 @@ License
 #include "fileOperation.H"
 #include "fileOperationInitialise.H"
 #include "stringListOps.H"
+#include "dlLibraryTable.H"
 
 #include <cctype>
 
@@ -85,6 +86,12 @@ Foam::argList::initValidTables::initValidTables()
         "handler",
         "override the fileHandler"
      );
+    argList::addOption
+    (
+        "libs",
+        "(lib1 .. libN)",
+        "pre-load libraries"
+     );
 
     Pstream::addValidParOptions(validParOptions);
 }
@@ -98,6 +105,7 @@ void Foam::argList::initValidTables::clear()
     argList::removeOption("hostRoots");
     argList::removeOption("noFunctionObjects");
     argList::removeOption("fileHandler");
+    argList::removeOption("libs");
 }
 
 
@@ -416,6 +424,41 @@ Foam::argList::argList
     args_(argc),
     options_(argc)
 {
+    // Pre-load any libraries
+    dlLibraryTable dlTable;
+    {
+        const string libsString(getEnv("FOAM_LIBS"));
+        if (!libsString.empty())
+        {
+            IStringStream is(libsString);
+            const fileNameList libNames(is);
+            //Info<< "Loading libraries " << libNames << endl;
+            forAll(libNames, i)
+            {
+                dlTable.open(libNames[i]);
+            }
+        }
+        for (int argI = 0; argI < argc; ++argI)
+        {
+            if (argv[argI][0] == '-')
+            {
+                const char *optionName = &argv[argI][1];
+                if (string(optionName) == "libs")
+                {
+                    const string libsString(argv[argI+1]);
+                    IStringStream is(libsString);
+                    const fileNameList libNames(is);
+                    //Info<< "Loading libraries " << libNames << endl;
+                    forAll(libNames, i)
+                    {
+                        dlTable.open(libNames[i]);
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
     // Check for fileHandler
     word handlerType(getEnv("FOAM_FILEHANDLER"));
     for (int argI = 0; argI < argc; ++argI)
