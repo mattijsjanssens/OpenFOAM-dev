@@ -36,7 +36,6 @@ License
 #include "fileOperation.H"
 #include "fileOperationInitialise.H"
 #include "stringListOps.H"
-#include "dlLibraryTable.H"
 
 #include <cctype>
 
@@ -424,8 +423,7 @@ Foam::argList::argList
     args_(argc),
     options_(argc)
 {
-    // Pre-load any libraries
-    dlLibraryTable dlTable;
+    // Pre-load any libraries. Note that we cannot use dlLibraryTable here
     {
         const string libsString(getEnv("FOAM_LIBS"));
         if (!libsString.empty())
@@ -435,7 +433,7 @@ Foam::argList::argList
             //Info<< "Loading libraries " << libNames << endl;
             forAll(libNames, i)
             {
-                dlTable.open(libNames[i]);
+                dlOpen(libNames[i]);
             }
         }
         for (int argI = 0; argI < argc; ++argI)
@@ -451,7 +449,7 @@ Foam::argList::argList
                     //Info<< "Loading libraries " << libNames << endl;
                     forAll(libNames, i)
                     {
-                        dlTable.open(libNames[i]);
+                        dlOpen(libNames[i]);
                     }
                     break;
                 }
