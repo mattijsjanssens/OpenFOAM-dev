@@ -1,8 +1,8 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -66,7 +66,7 @@ Foam::scalar Foam::seriesProfile::evaluateLift
     forAll(values, i)
     {
         // note: first contribution always zero since sin(0) = 0, but
-        // keep zero base to be consitent with drag coeffs
+        // keep zero base to be consistent with drag coeffs
         result += values[i]*sin(i*xIn);
     }
 

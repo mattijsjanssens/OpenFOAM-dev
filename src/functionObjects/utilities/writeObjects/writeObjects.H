@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -107,7 +107,7 @@ public:
 
         //- Re-enumeration defining the write options, based on the original
         //  ones at IOobject::writeOption
-        enum writeOption
+        enum class writeOption
         {
             AUTO_WRITE,
             NO_WRITE,

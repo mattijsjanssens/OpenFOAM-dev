@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -274,7 +274,6 @@ private:
             void locate
             (
                 const vector& position,
-                const vector* direction,
                 label celli,
                 const bool boundaryFail,
                 const string boundaryMsg
@@ -309,21 +308,34 @@ protected:
 
         //- Overridable function to handle the particle hitting a cyclicAMIPatch
         template<class TrackCloudType>
-        void hitCyclicAMIPatch(TrackCloudType&, trackingData&, const vector&);
+        void hitCyclicAMIPatch
+        (
+            const vector& displacement,
+            const scalar fraction,
+            TrackCloudType& cloud,
+            trackingData& td
+        );
 
         //- Overridable function to handle the particle hitting a
         //  cyclicACMIPatch
         template<class TrackCloudType>
-        void hitCyclicACMIPatch(TrackCloudType&, trackingData&, const vector&);
+        void hitCyclicACMIPatch
+        (
+            const vector& displacement,
+            const scalar fraction,
+            TrackCloudType& cloud,
+            trackingData& td
+        );
 
         //- Overridable function to handle the particle hitting an
         //  cyclicRepeatAMIPolyPatch
         template<class TrackCloudType>
         void hitCyclicRepeatAMIPatch
         (
-            TrackCloudType&,
-            trackingData&,
-            const vector&
+            const vector& displacement,
+            const scalar fraction,
+            TrackCloudType& cloud,
+            trackingData& td
         );
 
         //- Overridable function to handle the particle hitting a processorPatch
@@ -349,7 +361,7 @@ public:
             "celli tetFacei tetPti facei stepFraction origProc origId"
         );
 
-        //- Cumulative particle counter - used to provode unique ID
+        //- Cumulative particle counter - used to provide unique ID
         static label particleCount_;
 
 
@@ -559,16 +571,17 @@ public:
         template<class TrackCloudType>
         void hitFace
         (
-            const vector& direction,
+            const vector& displacement,
+            const scalar fraction,
             TrackCloudType& cloud,
             trackingData& td
         );
 
-        //- Convenience function. Cobines trackToFace and hitFace
+        //- Convenience function. Combines trackToFace and hitFace
         template<class TrackCloudType>
-        void trackToAndHitFace
+        scalar trackToAndHitFace
         (
-            const vector& direction,
+            const vector& displacement,
             const scalar fraction,
             TrackCloudType& cloud,
             trackingData& td
@@ -582,8 +595,8 @@ public:
 
     // Patch data
 
-        //- Get the normal and velocity of the current patch location
-        inline void patchData(vector& n, vector& U) const;
+        //- Get the normal and displacement of the current patch location
+        inline void patchData(vector& normal, vector& displacement) const;
 
 
     // Transformations

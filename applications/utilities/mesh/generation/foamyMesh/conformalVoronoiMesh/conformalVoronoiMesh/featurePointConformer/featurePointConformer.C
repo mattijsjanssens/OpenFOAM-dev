@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2013-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -340,7 +340,7 @@ void Foam::featurePointConformer::createMasterAndSlavePoints
             );
         }
 
-    } while (circ.circulate(CirculatorBase::CLOCKWISE));
+    } while (circ.circulate(CirculatorBase::direction::clockwise));
 
     addMasterAndSlavePoints
     (

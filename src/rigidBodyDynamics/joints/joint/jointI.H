@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2016-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -63,6 +63,14 @@ inline const Foam::List<Foam::spatialVector>& Foam::RBD::joint::S() const
 
 
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
+
+inline void Foam::RBD::joint::operator=(const joint& j)
+{
+    S_ = j.S_;
+    index_ = j.index_;
+    qIndex_ = j.qIndex_;
+}
+
 
 inline Foam::quaternion Foam::RBD::joint::unitQuaternion
 (

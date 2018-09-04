@@ -1,8 +1,8 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -39,9 +39,14 @@ Foam::ParticleForce<CloudType>::ParticleForce
 :
     owner_(owner),
     mesh_(mesh),
-    coeffs_(readCoeffs ? dict : dictionary::null)
+    coeffs_
+    (
+        readCoeffs
+      ? dict.optionalSubDict(forceType + "Coeffs")
+      : dictionary::null
+    )
 {
-    if (readCoeffs && (coeffs_.dictName() != forceType))
+    if (readCoeffs && coeffs_.isNull())
     {
         FatalIOErrorInFunction
         (

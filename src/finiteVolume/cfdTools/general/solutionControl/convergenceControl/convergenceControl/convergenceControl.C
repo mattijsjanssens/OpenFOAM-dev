@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -102,7 +102,7 @@ bool Foam::convergenceControl::endIfConverged(Time& time)
     {
         if (time.writeTime())
         {
-            time.stopAt(Time::saNoWriteNow);
+            time.stopAt(Time::stopAtControl::noWriteNow);
             time.setEndTime(time);
         }
         else

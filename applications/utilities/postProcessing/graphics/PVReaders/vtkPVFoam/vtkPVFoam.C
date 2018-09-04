@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -97,7 +97,8 @@ int Foam::vtkPVFoam::setTime(int nRequest, const double requestTimes[])
 {
     Time& runTime = dbPtr_();
 
-    // Get times list
+    // Get times list. Flush first to force refresh.
+    fileHandler().flush();
     instantList Times = runTime.times();
 
     int nearestIndex = timeIndex_;
@@ -247,11 +248,6 @@ Foam::vtkPVFoam::vtkPVFoam
     }
 
     fileName FileName(vtkFileName);
-
-    // Make sure not to use the threaded version - it does not like
-    // being loaded as a shared library - static cleanup order is problematic.
-    // For now just disable the threaded writer.
-    fileOperations::collatedFileOperation::maxThreadFileBufferSize = 0;
 
     // avoid argList and get rootPath/caseName directly from the file
     fileName fullCasePath(FileName.path());
@@ -589,6 +585,8 @@ double* Foam::vtkPVFoam::findTimes(int& nTimeSteps)
     if (dbPtr_.valid())
     {
         Time& runTime = dbPtr_();
+        // Get times list. Flush first to force refresh.
+        fileHandler().flush();
         instantList timeLst = runTime.times();
 
         // find the first time for which this mesh appears to exist

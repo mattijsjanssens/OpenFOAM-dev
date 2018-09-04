@@ -1,8 +1,8 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -84,6 +84,10 @@ public:
 
         //- Construct from UList of Key
         HashSet(const UList<Key>&);
+
+        //- Construct from FixedList of Key
+        template<unsigned Size>
+        HashSet(const FixedList<Key, Size>&);
 
         //- Construct as copy
         HashSet(const HashSet<Key, Hash>& hs)

@@ -1,8 +1,8 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -263,17 +263,29 @@ public:
             //- Overridable function to handle the particle hitting a cyclicAMI
             void hitCyclicAMIPatch
             (
+                const vector&,
+                const scalar,
                 Cloud<trackedParticle>&,
-                trackingData&,
-                const vector&
+                trackingData&
             );
 
             //- Overridable function to handle the particle hitting a cyclicACMI
             void hitCyclicACMIPatch
             (
+                const vector&,
+                const scalar,
                 Cloud<trackedParticle>&,
-                trackingData&,
-                const vector&
+                trackingData&
+            );
+
+            //- Overridable function to handle the particle hitting a
+            //  cyclicRepeatAMI
+            void hitCyclicRepeatAMIPatch
+            (
+                const vector&,
+                const scalar,
+                Cloud<trackedParticle>&,
+                trackingData&
             );
 
             //- Overridable function to handle the particle hitting a

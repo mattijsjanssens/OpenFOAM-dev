@@ -1,8 +1,8 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -81,7 +81,6 @@ Foam::combustionModel::combustionModel
     IOdictionary(createIOobject(thermo, combustionProperties)),
     mesh_(thermo.p().mesh()),
     turb_(turb),
-    active_(lookupOrDefault<Switch>("active", true)),
     coeffs_(optionalSubDict(modelType + "Coeffs")),
     modelType_(modelType)
 {}
@@ -99,7 +98,6 @@ bool Foam::combustionModel::read()
 {
     if (regIOobject::read())
     {
-        this->lookup("active") >> active_;
         coeffs_ = optionalSubDict(modelType_ + "Coeffs");
         return true;
     }

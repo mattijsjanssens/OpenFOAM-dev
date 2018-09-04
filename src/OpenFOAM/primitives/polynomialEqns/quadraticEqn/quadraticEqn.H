@@ -1,8 +1,8 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2017 OpenFOAM Foundation
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Copyright (C) 2017-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -53,8 +53,11 @@ class quadraticEqn
 {
 public:
 
-    //- Component labeling enumeration
-    enum components { A, B, C };
+    //- Coefficient indexing enumeration
+    struct coefficient
+    {
+        enum {a, b, c};
+    };
 
 
     // Constructors

@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -2017,7 +2017,7 @@ bool Foam::cellCuts::validLoop
 
                     if (meshFacei == -1)
                     {
-                        // Can't find face. Ilegal.
+                        // Can't find face. Illegal.
                         return false;
                     }
                 }

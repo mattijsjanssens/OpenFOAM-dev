@@ -1,8 +1,8 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -85,9 +85,6 @@ protected:
 
         //- Reference to the temperature field
         const volScalarField& T_;
-
-        //- Radiation model on/off flag
-        Switch radiation_;
 
         //- Radiation model dictionary
         dictionary coeffs_;
@@ -210,12 +207,6 @@ public:
 
 
         // Access
-
-            //- Radiation model on/off flag
-            const Switch radiation() const
-            {
-                return radiation_;
-            }
 
             //- Source term component (for power of T^4)
             virtual tmp<volScalarField> Rp() const = 0;

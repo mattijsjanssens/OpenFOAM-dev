@@ -1,8 +1,8 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -119,7 +119,7 @@ void Foam::functionObjects::fieldMinMax::calcMinMaxFields
 
         switch (mode)
         {
-            case mdMag:
+            case modeType::mag:
             {
                 const volScalarField magField(mag(field));
                 const volScalarField::Boundary& magFieldBoundary =
@@ -205,7 +205,7 @@ void Foam::functionObjects::fieldMinMax::calcMinMaxFields
                 }
                 break;
             }
-            case mdCmpt:
+            case modeType::cmpt:
             {
                 const typename fieldType::Boundary&
                     fieldBoundary = field.boundaryField();

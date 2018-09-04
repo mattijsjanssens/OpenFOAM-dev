@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -584,7 +584,6 @@ void Foam::Reaction<ReactionThermo>::dwdc
     const List<label>& c2s
 ) const
 {
-
     scalar pf, cf, pr, cr;
     label lRef, rRef;
 
@@ -700,13 +699,16 @@ void Foam::Reaction<ReactionThermo>::dwdc
 
     // When third-body species are involved, additional terms are added
     // beta function returns an empty list when third-body are not involved
-    if (this->beta().size() > 0)
+    const List<Tuple2<label, scalar>>& beta = this->beta();
+    if (notNull(beta))
     {
-        scalarField dcidc(this->beta().size());
+        // This temporary array needs to be cached for efficiency
+        scalarField dcidc(beta.size());
         this->dcidc(p, T, c, dcidc);
-        forAll(this->beta(), j)
+
+        forAll(beta, j)
         {
-            label sj = this-> beta()[j].first();
+            label sj = beta[j].first();
             sj = reduced ? c2s[sj] : sj;
             if (sj != -1)
             {

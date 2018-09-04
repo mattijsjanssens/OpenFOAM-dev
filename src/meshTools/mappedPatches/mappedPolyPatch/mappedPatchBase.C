@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -846,14 +846,14 @@ void Foam::mappedPatchBase::calcAMI() const
     // Construct/apply AMI interpolation to determine addressing and weights
     AMIPtr_.reset
     (
-        new AMIPatchToPatchInterpolation
+        new AMIInterpolation
         (
             patch_,
             samplePolyPatch(), // nbrPatch0,
             surfPtr(),
             faceAreaIntersect::tmMesh,
             true,
-            AMIPatchToPatchInterpolation::imFaceAreaWeight,
+            AMIInterpolation::imFaceAreaWeight,
             -1,
             AMIReverse_
         )
@@ -1362,7 +1362,7 @@ Foam::pointIndexHit Foam::mappedPatchBase::facePoint
                 (
                     cc,
                     d,
-                    intersection::HALF_RAY
+                    intersection::algorithm::halfRay
                 );
 
                 if (hitInfo.hit() && hitInfo.distance() > 0)

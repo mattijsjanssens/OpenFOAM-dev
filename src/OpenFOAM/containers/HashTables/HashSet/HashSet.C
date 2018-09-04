@@ -1,8 +1,8 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -32,6 +32,19 @@ License
 
 template<class Key, class Hash>
 Foam::HashSet<Key, Hash>::HashSet(const UList<Key>& lst)
+:
+    HashTable<nil, Key, Hash>(2*lst.size())
+{
+    forAll(lst, elemI)
+    {
+        this->insert(lst[elemI]);
+    }
+}
+
+
+template<class Key, class Hash>
+template<unsigned Size>
+Foam::HashSet<Key, Hash>::HashSet(const FixedList<Key, Size>& lst)
 :
     HashTable<nil, Key, Hash>(2*lst.size())
 {

@@ -1,8 +1,8 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -51,25 +51,6 @@ Foam::functionObjects::processorField::processorField
     fvMeshFunctionObject(name, runTime, dict)
 {
     read(dict);
-
-    volScalarField* procFieldPtr
-    (
-        new volScalarField
-        (
-            IOobject
-            (
-                "processorID",
-                mesh_.time().timeName(),
-                mesh_,
-                IOobject::NO_READ,
-                IOobject::NO_WRITE
-            ),
-            mesh_,
-            dimensionedScalar("0", dimless, 0.0)
-        )
-    );
-
-    mesh_.objectRegistry::store(procFieldPtr);
 }
 
 
@@ -91,10 +72,24 @@ bool Foam::functionObjects::processorField::read(const dictionary& dict)
 
 bool Foam::functionObjects::processorField::execute()
 {
-    mesh_.lookupObjectRef<volScalarField>("processorID") ==
-        dimensionedScalar("proci", dimless, Pstream::myProcNo());
+    word name("processorID");
 
-    return true;
+    tmp<volScalarField> tprocField
+    (
+        new volScalarField
+        (
+            IOobject
+            (
+                name,
+                mesh_.time().timeName(),
+                mesh_
+            ),
+            mesh_,
+            dimensionedScalar(name, dimless, Pstream::myProcNo())
+        )
+    );
+
+    return store(name, tprocField);
 }
 
 

@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2016-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -124,7 +124,8 @@ Foam::scalar Foam::functionObjects::timeControl::timeToNextWrite()
     if
     (
         active()
-     && writeControl_.control() == Foam::timeControl::ocAdjustableRunTime
+     && writeControl_.control() ==
+        Foam::timeControl::timeControls::adjustableRunTime
     )
     {
         const label  writeTimeIndex = writeControl_.executionIndex();

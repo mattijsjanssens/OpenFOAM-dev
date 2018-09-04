@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -127,7 +127,7 @@ void Foam::GAMGSolver::agglomerateMatrix
         const boolList& faceFlipMap =
             agglomeration_.faceFlipMap(fineLevelIndex);
 
-        // Check if matrix is asymetric and if so agglomerate both upper
+        // Check if matrix is asymmetric and if so agglomerate both upper
         // and lower coefficients ...
         if (fineMatrix.hasLower())
         {

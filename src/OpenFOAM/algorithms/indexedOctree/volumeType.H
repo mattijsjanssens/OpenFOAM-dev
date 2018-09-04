@@ -1,8 +1,8 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2013 OpenFOAM Foundation
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -59,10 +59,10 @@ public:
     //- Volume types
     enum type
     {
-        UNKNOWN = 0,
-        MIXED   = 1,
-        INSIDE  = 2,
-        OUTSIDE = 3
+        unknown = 0,
+        mixed   = 1,
+        inside  = 2,
+        outside = 3
     };
 
 
@@ -86,7 +86,7 @@ public:
         //- Construct null
         volumeType()
         :
-            t_(UNKNOWN)
+            t_(unknown)
         {}
 
         //- Construct from components

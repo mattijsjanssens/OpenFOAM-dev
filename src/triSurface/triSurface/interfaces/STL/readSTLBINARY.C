@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -43,7 +43,7 @@ bool Foam::triSurface::readSTLBINARY(const fileName& STLfileName)
     );
 
     // If the file is compressed, decompress it before reading.
-    if (!STLfilePtr->good() && isFile(STLfileName + ".gz", false))
+    if (!STLfilePtr->good() && isFile(STLfileName + ".gz", false, false))
     {
         compressed = true;
         STLfilePtr.reset(new igzstream((STLfileName + ".gz").c_str()));

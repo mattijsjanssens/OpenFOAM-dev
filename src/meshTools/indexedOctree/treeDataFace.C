@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -428,7 +428,7 @@ Foam::volumeType Foam::treeDataFace::getVolumeType
     // - tolerances are wrong. (if e.g. face has zero area)
     // - or (more likely) surface is not closed.
 
-    return volumeType::UNKNOWN;
+    return volumeType::unknown;
 }
 
 
@@ -568,7 +568,7 @@ bool Foam::treeDataFace::findIntersectOp::operator()
         dir,
         shape.mesh_.faceCentres()[facei],
         shape.mesh_.points(),
-        intersection::HALF_RAY
+        intersection::algorithm::halfRay
     );
 
     if (inter.hit() && inter.distance() <= 1)

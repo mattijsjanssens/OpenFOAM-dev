@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -92,7 +92,7 @@ void Foam::functionObjectList::listDir
 
     // Recurse into sub-directories
     {
-        fileNameList foDirs(fileHandler().readDir(dir, fileName::DIRECTORY));
+        fileNameList foDirs(fileHandler().readDir(dir, fileType::directory));
         forAll(foDirs, fd)
         {
             listDir(dir/foDirs[fd], foMap);

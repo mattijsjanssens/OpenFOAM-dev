@@ -1,8 +1,8 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2012-2015 OpenFOAM Foundation
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Copyright (C) 2012-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -99,11 +99,11 @@ bool Foam::Circulator<ContainerType>::circulate
     const CirculatorBase::direction dir
 )
 {
-    if (dir == CirculatorBase::CLOCKWISE)
+    if (dir == CirculatorBase::direction::clockwise)
     {
         operator++();
     }
-    else if (dir == CirculatorBase::ANTICLOCKWISE)
+    else if (dir == CirculatorBase::direction::anticlockwise)
     {
         operator--();
     }

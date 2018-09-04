@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -136,11 +136,11 @@ public:
     // Public data types
 
         //- Track direction enumerations
-        enum trackDirection
+        enum class trackDirection
         {
-            FORWARD,
-            BACKWARD,
-            BOTH
+            forward,
+            backward,
+            both
         };
 
         //- Track direction enumeration names

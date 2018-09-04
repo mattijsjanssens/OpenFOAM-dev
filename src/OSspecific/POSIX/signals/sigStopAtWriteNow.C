@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -100,7 +100,7 @@ void Foam::sigStopAtWriteNow::sigHandler(int)
     Info<< "sigStopAtWriteNow :"
         << " setting up write and stop at end of the next iteration"
         << nl << endl;
-    runTimePtr_->stopAt(Time::saWriteNow);
+    runTimePtr_->stopAt(Time::stopAtControl::writeNow);
 
     //// Throw signal (to old handler)
     // raise(signal_);

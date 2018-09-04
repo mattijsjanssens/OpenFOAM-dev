@@ -1,8 +1,8 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -404,6 +404,9 @@ public:
             //- Molecular weight [kg/kmol]
             virtual tmp<volScalarField> W() const = 0;
 
+            //- Molecular weight for patch [kg/kmol]
+            virtual tmp<scalarField> W(const label patchi) const = 0;
+
 
         // Access to transport state variables
 
@@ -422,21 +425,27 @@ public:
             //- Thermal diffusivity for temperature of mixture [J/m/s/K]
             virtual tmp<volScalarField> kappa() const = 0;
 
-            //- Thermal diffusivity for temperature
-            //  of mixture for patch [J/m/s/K]
+            //- Thermal diffusivity for temperature of mixture
+            //  for patch [J/m/s/K]
             virtual tmp<scalarField> kappa
             (
                 const label patchi
             ) const = 0;
 
-            //- Effective thermal diffusivity for temperature
+            //- Thermal diffusivity for energy of mixture [kg/m/s]
+            virtual tmp<volScalarField> alphahe() const = 0;
+
+            //- Thermal diffusivity for energy of mixture for patch [kg/m/s]
+            virtual tmp<scalarField> alphahe(const label patchi) const = 0;
+
+            //- Effective thermal turbulent diffusivity for temperature
             //  of mixture [J/m/s/K]
             virtual tmp<volScalarField> kappaEff
             (
                 const volScalarField&
             ) const = 0;
 
-            //- Effective thermal diffusivity for temperature
+            //- Effective thermal turbulent diffusivity for temperature
             //  of mixture for patch [J/m/s/K]
             virtual tmp<scalarField> kappaEff
             (
@@ -444,13 +453,14 @@ public:
                 const label patchi
             ) const = 0;
 
-            //- Effective thermal diffusivity of mixture [kg/m/s]
+            //- Effective thermal turbulent diffusivity of mixture [kg/m/s]
             virtual tmp<volScalarField> alphaEff
             (
                 const volScalarField& alphat
             ) const = 0;
 
-            //- Effective thermal diffusivity of mixture for patch [kg/m/s]
+            //- Effective thermal turbulent diffusivity of mixture
+            //  for patch [kg/m/s]
             virtual tmp<scalarField> alphaEff
             (
                 const scalarField& alphat,

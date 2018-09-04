@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -36,7 +36,7 @@ SourceFiles
 #define cyclicAMILduInterface_H
 
 #include "primitiveFieldsFwd.H"
-#include "AMIPatchToPatchInterpolation.H"
+#include "AMIInterpolation.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -81,8 +81,7 @@ public:
             virtual const cyclicAMILduInterface& neighbPatch() const = 0;
 
             //- Return a reference to the AMI interpolators
-            virtual const PtrList<AMIPatchToPatchInterpolation>&
-                AMIs() const = 0;
+            virtual const PtrList<AMIInterpolation>& AMIs() const = 0;
 
             // Return a reference to the AMI transformations
             virtual const List<vectorTensorTransform>&

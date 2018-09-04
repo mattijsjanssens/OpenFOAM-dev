@@ -1,8 +1,8 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2012-2015 OpenFOAM Foundation
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Copyright (C) 2012-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -162,7 +162,7 @@ bool uniformDistance::cellSize
         if
         (
             sideMode_ == smInside
-         && vTL[0] == volumeType::INSIDE
+         && vTL[0] == volumeType::inside
         )
         {
             size = surfaceCellSizeFunction_().interpolate(hitPt, index);
@@ -172,7 +172,7 @@ bool uniformDistance::cellSize
         else if
         (
             sideMode_ == smOutside
-         && vTL[0] == volumeType::OUTSIDE
+         && vTL[0] == volumeType::outside
         )
         {
             size = surfaceCellSizeFunction_().interpolate(hitPt, index);

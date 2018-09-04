@@ -1,8 +1,8 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2017 OpenFOAM Foundation
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Copyright (C) 2017-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -52,8 +52,11 @@ class linearEqn
 {
 public:
 
-    //- Component labeling enumeration
-    enum components { A, B };
+    //- Coefficient indexing enumeration
+    struct coefficient
+    {
+        enum {a, b};
+    };
 
 
     // Constructors

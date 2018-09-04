@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -627,12 +627,11 @@ Foam::label Foam::processorPolyPatch::matchFace
         return -1;
     }
 
-    enum CirculatorBase::direction circulateDirection
-        = CirculatorBase::CLOCKWISE;
+    CirculatorBase::direction circulateDirection = CirculatorBase::direction::clockwise;
 
     if (!sameOrientation)
     {
-        circulateDirection = CirculatorBase::ANTICLOCKWISE;
+        circulateDirection = CirculatorBase::direction::anticlockwise;
     }
 
     label matchFp = -1;
@@ -679,7 +678,7 @@ Foam::label Foam::processorPolyPatch::matchFace
             }
             while
             (
-                aCirc.circulate(CirculatorBase::CLOCKWISE),
+                aCirc.circulate(CirculatorBase::direction::clockwise),
                 bCirc2.circulate(circulateDirection)
             );
 

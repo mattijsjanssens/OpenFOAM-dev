@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2016-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -242,6 +242,9 @@ public:
 
 
     // Member Operators
+
+        //- Assignment
+        inline void operator=(const joint& j);
 
         //- Return the unit quaternion for this joint
         //  if it uses a quaternion representation for rotation

@@ -1,8 +1,8 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -77,9 +77,6 @@ protected:
         //- Reference to the turbulence model
         const compressibleTurbulenceModel& turb_;
 
-        //- Active
-        Switch active_;
-
         //- Dictionary of the model
         dictionary coeffs_;
 
@@ -137,9 +134,6 @@ public:
 
         //- Return const access to phi
         inline tmp<surfaceScalarField> phi() const;
-
-        //- Is combustion active?
-        inline const Switch& active() const;
 
         //- Return const dictionary of the model
         inline const dictionary& coeffs() const;

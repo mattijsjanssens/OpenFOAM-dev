@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2016-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -52,7 +52,7 @@ namespace joints
 
 void Foam::RBD::joints::composite::setLastJoint()
 {
-    //last().joint::operator=(*this);
+    last().joint::operator=(*this);
 }
 
 

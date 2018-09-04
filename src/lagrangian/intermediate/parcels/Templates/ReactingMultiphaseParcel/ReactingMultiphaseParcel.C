@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -581,7 +581,7 @@ void Foam::ReactingMultiphaseParcel<ParcelType>::calcDevolatilisation
         {
             const label id = composition.localToCarrierId(GAS, i);
             const scalar Cp = composition.carrier().Cp(id, td.pc(), Ts);
-            const scalar W = composition.carrier().W(id);
+            const scalar W = composition.carrier().Wi(id);
             const scalar Ni = dMassDV[i]/(this->areaS(d)*dt*W);
 
             // Dab calc'd using API vapour mass diffusivity function

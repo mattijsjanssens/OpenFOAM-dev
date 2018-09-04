@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -260,7 +260,7 @@ Foam::boolList Foam::triSurfaceSearch::calcInside
         {
             inside[sampleI] = false;
         }
-        else if (tree().getVolumeType(sample) == volumeType::INSIDE)
+        else if (tree().getVolumeType(sample) == volumeType::inside)
         {
             inside[sampleI] = true;
         }

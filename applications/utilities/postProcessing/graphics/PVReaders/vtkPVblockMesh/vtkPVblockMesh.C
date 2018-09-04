@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -31,7 +31,6 @@ License
 #include "Time.H"
 #include "patchZones.H"
 #include "OStringStream.H"
-#include "collatedFileOperation.H"
 
 // VTK includes
 #include "vtkDataArraySelection.h"
@@ -170,12 +169,6 @@ Foam::vtkPVblockMesh::vtkPVblockMesh
         Info<< "Foam::vtkPVblockMesh::vtkPVblockMesh - "
             << FileName << endl;
     }
-
-    // Make sure not to use the threaded version - it does not like
-    // being loaded as a shared library - static cleanup order is problematic.
-    // For now just disable the threaded writer.
-    fileOperations::collatedFileOperation::maxThreadFileBufferSize = 0;
-
 
     // avoid argList and get rootPath/caseName directly from the file
     fileName fullCasePath(fileName(FileName).path());

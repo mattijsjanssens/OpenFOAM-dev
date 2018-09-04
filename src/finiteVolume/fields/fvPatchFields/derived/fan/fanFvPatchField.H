@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -29,7 +29,7 @@ Description
     condition as a base.
 
     The jump is specified as a \c Function1 type, to enable the use of, e.g.
-    contant, polynomial, table values.
+    constant, polynomial, table values.
 
 Usage
     \table

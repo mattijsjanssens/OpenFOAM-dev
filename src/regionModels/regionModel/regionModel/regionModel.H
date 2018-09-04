@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -128,8 +128,7 @@ protected:
             mutable wordList interRegionAMINames_;
 
             //- List of AMI objects per coupled region
-            mutable PtrList<PtrList<AMIPatchToPatchInterpolation>>
-                interRegionAMI_;
+            mutable PtrList<PtrList<AMIInterpolation>> interRegionAMI_;
 
 
     // Protected member functions
@@ -141,7 +140,7 @@ protected:
         virtual bool read(const dictionary& dict);
 
         //- Create or return a new inter-region AMI object
-        virtual const AMIPatchToPatchInterpolation& interRegionAMI
+        virtual const AMIInterpolation& interRegionAMI
         (
             const regionModel& nbrRegion,
             const label regionPatchi,

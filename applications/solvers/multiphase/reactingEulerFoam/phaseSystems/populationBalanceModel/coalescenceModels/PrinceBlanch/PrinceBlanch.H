@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -88,7 +88,7 @@ Description
         \theta_{ij}^{LS}  |  Laminar shear collision rate [m3/s]
         \lambda_{ij}      |  Coalescence efficiency [-]
         r_{ij}            |  Equivalent radius [m]
-        \rho_c            |  Density of continous phase [kg/m3]
+        \rho_c            |  Density of continuous phase [kg/m3]
         \sigma            |  Surface tension [N/m]
         h_0               |  Initial film thickness [m]
         h_f               |  Critical film thickness [m]

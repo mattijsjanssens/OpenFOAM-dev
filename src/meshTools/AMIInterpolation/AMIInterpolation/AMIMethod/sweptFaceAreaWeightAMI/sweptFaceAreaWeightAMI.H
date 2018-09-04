@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2017-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -103,10 +103,9 @@ namespace Foam
                     Class sweptFaceAreaWeightAMI Declaration
 \*---------------------------------------------------------------------------*/
 
-template<class SourcePatch, class TargetPatch>
 class sweptFaceAreaWeightAMI
 :
-    public faceAreaWeightAMI<SourcePatch, TargetPatch>
+    public faceAreaWeightAMI
 {
 private:
 
@@ -248,7 +247,7 @@ public:
     // Constructors
 
         //- Use parent constructors
-        using faceAreaWeightAMI<SourcePatch, TargetPatch>::faceAreaWeightAMI;
+        using faceAreaWeightAMI::faceAreaWeightAMI;
 
 
     //- Destructor
@@ -259,12 +258,6 @@ public:
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-#ifdef NoRepository
-    #include "sweptFaceAreaWeightAMI.C"
-#endif
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

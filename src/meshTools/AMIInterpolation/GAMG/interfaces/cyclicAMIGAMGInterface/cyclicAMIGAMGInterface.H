@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -59,7 +59,7 @@ class cyclicAMIGAMGInterface
         const cyclicAMILduInterface& fineCyclicAMIInterface_;
 
         //- AMI interfaces
-        PtrList<AMIPatchToPatchInterpolation> AMIs_;
+        PtrList<AMIInterpolation> AMIs_;
 
         //- AMI transformations
         List<vectorTensorTransform> AMITransforms_;
@@ -136,7 +136,7 @@ public:
             }
 
             //- Return a reference to the AMI interpolators
-            virtual const PtrList<AMIPatchToPatchInterpolation>& AMIs() const
+            virtual const PtrList<AMIInterpolation>& AMIs() const
             {
                 return AMIs_;
             }

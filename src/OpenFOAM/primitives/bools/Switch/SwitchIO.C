@@ -1,8 +1,8 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -89,7 +89,7 @@ Foam::Istream& Foam::operator>>(Istream& is, Switch& s)
 
 Foam::Ostream& Foam::operator<<(Ostream& os, const Switch& s)
 {
-    os << Switch::names[s.switch_];
+    os << Switch::names[int(s.switch_)];
     os.check("Ostream& operator<<(Ostream&, const Switch&)");
     return os;
 }

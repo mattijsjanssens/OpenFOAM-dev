@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2012-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -407,8 +407,8 @@ void Foam::conformalVoronoiMesh::createEdgePointGroupByCirculating
     }
     while
     (
-        circ.circulate(CirculatorBase::CLOCKWISE),
-        circNormalDirs.circulate(CirculatorBase::CLOCKWISE)
+        circ.circulate(CirculatorBase::direction::clockwise),
+        circNormalDirs.circulate(CirculatorBase::direction::clockwise)
     );
 
 

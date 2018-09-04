@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -43,7 +43,7 @@ Foam::tmp<Foam::scalarField> Foam::LiquidEvaporationBoil<CloudType>::calcXc
     {
         Xc[i] =
             this->owner().thermo().carrier().Y()[i][celli]
-           /this->owner().thermo().carrier().W(i);
+           /this->owner().thermo().carrier().Wi(i);
     }
 
     return Xc/sum(Xc);

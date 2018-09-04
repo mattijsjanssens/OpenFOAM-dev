@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -323,9 +323,10 @@ void Foam::streamLineParticle::hitCyclicPatch
 
 void Foam::streamLineParticle::hitCyclicAMIPatch
 (
+    const vector&,
+    const scalar,
     streamLineParticleCloud&,
-    trackingData& td,
-    const vector&
+    trackingData& td
 )
 {
     // Remove particle
@@ -335,9 +336,23 @@ void Foam::streamLineParticle::hitCyclicAMIPatch
 
 void Foam::streamLineParticle::hitCyclicACMIPatch
 (
+    const vector&,
+    const scalar,
     streamLineParticleCloud&,
-    trackingData& td,
-    const vector&
+    trackingData& td
+)
+{
+    // Remove particle
+    td.keepParticle = false;
+}
+
+
+void Foam::streamLineParticle::hitCyclicRepeatAMIPatch
+(
+    const vector&,
+    const scalar,
+    streamLineParticleCloud&,
+    trackingData& td
 )
 {
     // Remove particle

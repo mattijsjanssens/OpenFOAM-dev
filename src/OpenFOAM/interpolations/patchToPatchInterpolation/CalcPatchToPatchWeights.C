@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -100,7 +100,7 @@ void PatchToPatchInterpolation<FromPatch, ToPatch>::calcPointAddressing() const
                 );
 
             // Grab distance to target
-            if (dir_ == intersection::CONTACT_SPHERE)
+            if (dir_ == intersection::direction::contactSphere)
             {
                 pointDistance[pointi] =
                     hitFace.contactSphereDiameter
@@ -179,7 +179,7 @@ void PatchToPatchInterpolation<FromPatch, ToPatch>::calcPointAddressing() const
                 hitPoint = ph.missPoint();
 
                 // Grab distance to target
-                if (dir_ == intersection::CONTACT_SPHERE)
+                if (dir_ == intersection::direction::contactSphere)
                 {
                     pointDistance[pointi] =
                         hitFace.contactSphereDiameter

@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -139,10 +139,10 @@ protected:
     // Protected data
 
         //- Enumeration for ensuring the right file is accessed
-        enum fileID
+        enum class fileID
         {
-            MAIN_FILE = 0,
-            BINS_FILE = 1
+            mainFile = 0,
+            binsFile = 1
         };
 
         //- Pressure, viscous and porous force per bin
@@ -214,6 +214,13 @@ protected:
 
 
     // Protected Member Functions
+
+        using logFiles::file;
+
+        Ostream& file(const fileID fid)
+        {
+            return logFiles::file(label(fid));
+        }
 
         //- Create file names for forces and bins
         wordList createFileNames(const dictionary& dict) const;

@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -64,7 +64,7 @@ public:
     // Public data
 
         //- Enumeration defining the type of action
-        enum actionType
+        enum class actionType
         {
             noWriteNow,    //!< stop immediately without writing data
             writeNow,      //!< write data and stop immediately

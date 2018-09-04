@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -192,11 +192,11 @@ public:
     // Public data types
 
         //- region type enumeration
-        enum regionTypes
+        enum class regionTypes
         {
-            stFaceZone,
-            stPatch,
-            stSampledSurface
+            faceZone,
+            patch,
+            sampledSurface
         };
 
         //- region type names
@@ -204,25 +204,25 @@ public:
 
 
         //- Operation type enumeration
-        enum operationType
+        enum class operationType
         {
-            opNone,
-            opSum,
-            opWeightedSum,
-            opSumMag,
-            opSumDirection,
-            opSumDirectionBalance,
-            opAverage,
-            opWeightedAverage,
-            opAreaAverage,
-            opWeightedAreaAverage,
-            opAreaIntegrate,
-            opWeightedAreaIntegrate,
-            opMin,
-            opMax,
-            opCoV,
-            opAreaNormalAverage,
-            opAreaNormalIntegrate
+            none,
+            sum,
+            weightedSum,
+            sumMag,
+            sumDirection,
+            sumDirectionBalance,
+            average,
+            weightedAverage,
+            areaAverage,
+            weightedAreaAverage,
+            areaIntegrate,
+            weightedAreaIntegrate,
+            min,
+            max,
+            CoV,
+            areaNormalAverage,
+            areaNormalIntegrate
         };
 
         //- Operation type names

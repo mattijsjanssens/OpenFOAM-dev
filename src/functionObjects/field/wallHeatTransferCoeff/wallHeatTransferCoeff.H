@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2017-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -130,11 +130,10 @@ protected:
         virtual void writeFileHeader(const label i);
 
         //- Calculate the heat transfer coefficient
-        void calcHeatTransferCoeff
+        tmp<volScalarField> calcHeatTransferCoeff
         (
             const volScalarField& nu,
-            const volScalarField& nut,
-            volScalarField& wallHeatTransferCoeff
+            const volScalarField& nut
         );
 
 

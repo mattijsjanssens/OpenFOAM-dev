@@ -1,8 +1,8 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2012-2015 OpenFOAM Foundation
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Copyright (C) 2012-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -243,7 +243,7 @@ Foam::cvControls::cvControls
 
     if (filterFaces_)
     {
-        filterEdges_ = Switch::ON;
+        filterEdges_ = Switch::switchType::on;
     }
 
     writeTetDualMesh_ = Switch(filteringDict.lookup("writeTetDualMesh"));

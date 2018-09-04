@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2017-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -198,38 +198,40 @@ public:
             virtual mode_t mode
             (
                 const fileName&,
+                const bool checkVariants = true,
                 const bool followLink = true
             ) const = 0;
 
-            //- Return the file type: DIRECTORY, FILE or LINK
-            virtual fileName::Type type
+            //- Return the file type: directory, file or link
+            virtual fileType type
             (
                 const fileName&,
+                const bool checkVariants = true,
                 const bool followLink = true
             ) const = 0;
 
-            //- Does the name exist (as DIRECTORY or FILE) in the file system?
+            //- Does the name exist (as directory or file) in the file system?
             //  Optionally enable/disable check for gzip file.
             virtual bool exists
             (
                 const fileName&,
-                const bool checkGzip=true,
+                const bool checkVariants = true,
                 const bool followLink = true
             ) const = 0;
 
-            //- Does the name exist as a DIRECTORY in the file system?
+            //- Does the name exist as a directory in the file system?
             virtual bool isDir
             (
                 const fileName&,
                 const bool followLink = true
             ) const = 0;
 
-            //- Does the name exist as a FILE in the file system?
+            //- Does the name exist as a file in the file system?
             //  Optionally enable/disable check for gzip file.
             virtual bool isFile
             (
                 const fileName&,
-                const bool checkGzip=true,
+                const bool checkVariants = true,
                 const bool followLink = true
             ) const = 0;
 
@@ -237,6 +239,7 @@ public:
             virtual off_t fileSize
             (
                 const fileName&,
+                const bool checkVariants = true,
                 const bool followLink = true
             ) const = 0;
 
@@ -244,6 +247,7 @@ public:
             virtual time_t lastModified
             (
                 const fileName&,
+                const bool checkVariants = true,
                 const bool followLink = true
             ) const = 0;
 
@@ -251,6 +255,7 @@ public:
             virtual double highResLastModified
             (
                 const fileName&,
+                const bool checkVariants = true,
                 const bool followLink = true
             ) const = 0;
 
@@ -258,8 +263,8 @@ public:
             virtual fileNameList readDir
             (
                 const fileName&,
-                const fileName::Type=fileName::FILE,
-                const bool filtergz=true,
+                const fileType = fileType::file,
+                const bool filterVariants = true,
                 const bool followLink = true
             ) const = 0;
 
@@ -484,6 +489,9 @@ public:
             //- Callback for time change
             virtual void setTime(const Time&) const
             {}
+
+            //- Forcibly wait until all output done. Flush any cached data
+            virtual void flush() const;
 
             //- Generate path (like io.path) from root+casename with any
             //  'processorXXX' replaced by procDir (usually 'processsors')

@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2017-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -104,11 +104,18 @@ class interfaceHeight
     // Private Enumerations
 
         //- File enumeration
-        enum fileID
+        enum class fileID
         {
-            HEIGHT_FILE = 0,
-            POSITION_FILE = 1
+            heightFile = 0,
+            positionFile = 1
         };
+
+        using logFiles::file;
+
+        Ostream& file(const fileID fid)
+        {
+            return logFiles::file(label(fid));
+        }
 
 
 protected:

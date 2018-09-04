@@ -1,8 +1,8 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2015 OpenFOAM Foundation
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -152,7 +152,7 @@ inline const Foam::mapDistribute& Foam::mappedPatchBase::map() const
 }
 
 
-inline const Foam::AMIPatchToPatchInterpolation& Foam::mappedPatchBase::AMI
+inline const Foam::AMIInterpolation& Foam::mappedPatchBase::AMI
 (
     bool forceUpdate
 ) const

@@ -1,8 +1,8 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -89,10 +89,10 @@ public:
             static const word EXT_PRIME2MEAN;
 
         //- Enumeration defining the averaging base type
-        enum baseType
+        enum class baseType
         {
-            ITER,
-            TIME
+            iter,
+            time
         };
 
 
@@ -198,16 +198,16 @@ public:
                 return baseTypeNames_[base_];
             }
 
-            //- Return true if base is ITER
+            //- Return true if base is iter
             Switch iterBase() const
             {
-                return base_ == ITER;
+                return base_ == baseType::iter;
             }
 
             //- Return true if base is time
             Switch timeBase() const
             {
-                return base_ == TIME;
+                return base_ == baseType::time;
             }
 
             scalar window() const

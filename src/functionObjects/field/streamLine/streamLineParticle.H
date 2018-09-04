@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -231,18 +231,30 @@ public:
             //  cyclicAMIPatch
             void hitCyclicAMIPatch
             (
+                const vector&,
+                const scalar,
                 streamLineParticleCloud&,
-                trackingData&,
-                const vector& direction
+                trackingData&
             );
 
             //- Overridable function to handle the particle hitting a
             //  cyclicACMIPatch
             void hitCyclicACMIPatch
             (
+                const vector&,
+                const scalar,
                 streamLineParticleCloud&,
-                trackingData&,
-                const vector& direction
+                trackingData&
+            );
+
+            //- Overridable function to handle the particle hitting a
+            //  cyclicRepeatAMIPatch
+            void hitCyclicRepeatAMIPatch
+            (
+                const vector&,
+                const scalar,
+                streamLineParticleCloud&,
+                trackingData&
             );
 
             //- Overridable function to handle the particle hitting a

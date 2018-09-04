@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2016-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -108,11 +108,10 @@ protected:
         virtual void writeFileHeader(const label i);
 
         //- Calculate the heat-flux
-        void calcHeatFlux
+        tmp<volScalarField> calcWallHeatFlux
         (
             const volScalarField& alpha,
-            const volScalarField& he,
-            volScalarField& wallHeatFlux
+            const volScalarField& he
         );
 
 

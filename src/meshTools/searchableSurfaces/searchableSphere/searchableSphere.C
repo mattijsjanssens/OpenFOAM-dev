@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -351,7 +351,7 @@ void Foam::searchableSphere::getVolumeType
 ) const
 {
     volType.setSize(points.size());
-    volType = volumeType::INSIDE;
+    volType = volumeType::inside;
 
     forAll(points, pointi)
     {
@@ -359,11 +359,11 @@ void Foam::searchableSphere::getVolumeType
 
         if (magSqr(pt - centre_) <= sqr(radius_))
         {
-            volType[pointi] = volumeType::INSIDE;
+            volType[pointi] = volumeType::inside;
         }
         else
         {
-            volType[pointi] = volumeType::OUTSIDE;
+            volType[pointi] = volumeType::outside;
         }
     }
 }

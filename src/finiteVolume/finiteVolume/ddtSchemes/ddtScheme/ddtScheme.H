@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -203,14 +203,14 @@ public:
             surfaceMesh
         > fluxFieldType;
 
-        tmp<surfaceScalarField> fvcDdtPhiCoeff
+        virtual tmp<surfaceScalarField> fvcDdtPhiCoeff
         (
             const GeometricField<Type, fvPatchField, volMesh>& U,
             const fluxFieldType& phi,
             const fluxFieldType& phiCorr
         );
 
-        tmp<surfaceScalarField> fvcDdtPhiCoeff
+        virtual tmp<surfaceScalarField> fvcDdtPhiCoeff
         (
             const GeometricField<Type, fvPatchField, volMesh>& U,
             const fluxFieldType& phi,
@@ -218,13 +218,13 @@ public:
             const volScalarField& rho
         );
 
-        tmp<surfaceScalarField> fvcDdtPhiCoeff
+        virtual tmp<surfaceScalarField> fvcDdtPhiCoeff
         (
             const GeometricField<Type, fvPatchField, volMesh>& U,
             const fluxFieldType& phi
         );
 
-        tmp<surfaceScalarField> fvcDdtPhiCoeff
+        virtual tmp<surfaceScalarField> fvcDdtPhiCoeff
         (
             const GeometricField<Type, fvPatchField, volMesh>& U,
             const fluxFieldType& phi,

@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -146,11 +146,6 @@ void Foam::timeSelector::addOptions
     (
         "latestTime",
         "select the latest time"
-    );
-    argList::addBoolOption
-    (
-        "newTimes",
-        "select the new times"
     );
     argList::addOption
     (
@@ -305,39 +300,6 @@ Foam::instantList Foam::timeSelector::selectIfPresent
     {
         // No timeSelector option specified. Do not change runTime.
         return instantList(1, instant(runTime.value(), runTime.timeName()));
-    }
-}
-
-
-Foam::instantList Foam::timeSelector::select
-(
-    Time& runTime,
-    const argList& args,
-    const word& fName
-)
-{
-    instantList timeDirs(timeSelector::select0(runTime, args));
-
-    if (timeDirs.size() && args.optionFound("newTimes"))
-    {
-        List<bool> selectTimes(timeDirs.size(), true);
-
-        forAll(timeDirs, timeI)
-        {
-            selectTimes[timeI] =
-               !fileHandler().exists
-                (
-                    runTime.path()
-                   /timeDirs[timeI].name()
-                   /fName
-                );
-        }
-
-        return subset(selectTimes, timeDirs);
-    }
-    else
-    {
-        return timeDirs;
     }
 }
 

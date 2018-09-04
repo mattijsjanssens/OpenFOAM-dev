@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -247,8 +247,10 @@ public:
             const point& p,
             const vector& n,
             const pointField&,
-            const intersection::algorithm alg = intersection::FULL_RAY,
-            const intersection::direction dir = intersection::VECTOR
+            const intersection::algorithm alg =
+                intersection::algorithm::fullRay,
+            const intersection::direction dir =
+                intersection::direction::vector
         ) const;
 
         //- Fast intersection with a ray.

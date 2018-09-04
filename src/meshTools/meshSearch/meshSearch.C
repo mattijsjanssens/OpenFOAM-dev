@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -847,7 +847,7 @@ Foam::List<Foam::pointIndexHit> Foam::meshSearch::intersections
 
 bool Foam::meshSearch::isInside(const point& p) const
 {
-    return (boundaryTree().getVolumeType(p) == volumeType::INSIDE);
+    return (boundaryTree().getVolumeType(p) == volumeType::inside);
 }
 
 

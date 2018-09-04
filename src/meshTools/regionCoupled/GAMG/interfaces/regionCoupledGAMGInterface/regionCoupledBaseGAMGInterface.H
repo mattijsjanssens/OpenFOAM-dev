@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -60,7 +60,7 @@ class regionCoupledBaseGAMGInterface
         const regionCoupledLduInterface& fineRegionCoupledLduInterface_;
 
         //- AMI interface
-        // autoPtr<AMIPatchToPatchInterpolation> amiPtr_;
+        // autoPtr<AMIInterpolation> amiPtr_;
 
 
     // Private Member Functions
@@ -128,7 +128,7 @@ public:
                 );
             }
 
-            // virtual const AMIPatchToPatchInterpolation& AMI() const
+            // virtual const AMIInterpolation& AMI() const
             //{
             //    return amiPtr_();
             //}

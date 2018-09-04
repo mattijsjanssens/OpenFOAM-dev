@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -30,8 +30,8 @@ License
 #include "PointEdgeWave.H"
 #include "syncTools.H"
 #include "interpolationTable.H"
-#include "mapPolyMesh.H"
 #include "pointConstraints.H"
+#include "mapPolyMesh.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -561,13 +561,18 @@ void Foam::displacementLayeredMotionMotionSolver::updateMesh
     const mapPolyMesh& mpm
 )
 {
+    FatalErrorInFunction
+        << "Probably inconsistent with points0MotionSolver" << nl
+        << "    Needs to be updated and tested."
+        << exit(FatalError);
+
     displacementMotionSolver::updateMesh(mpm);
 
     const vectorField displacement(this->newPoints() - points0_);
 
     forAll(points0_, pointi)
     {
-        label oldPointi = mpm.pointMap()[pointi];
+        const label oldPointi = mpm.pointMap()[pointi];
 
         if (oldPointi >= 0)
         {

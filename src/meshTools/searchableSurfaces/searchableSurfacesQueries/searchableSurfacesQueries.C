@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -609,11 +609,11 @@ void Foam::searchableSurfacesQueries::signedDistance
 
             volumeType vT = volType[i];
 
-            if (vT == volumeType::OUTSIDE)
+            if (vT == volumeType::outside)
             {
                 distance[pointi] = dist;
             }
-            else if (vT == volumeType::INSIDE)
+            else if (vT == volumeType::inside)
             {
                 distance[i] = -dist;
             }
@@ -621,12 +621,12 @@ void Foam::searchableSurfacesQueries::signedDistance
             {
                 switch (illegalHandling)
                 {
-                    case volumeType::OUTSIDE:
+                    case volumeType::outside:
                     {
                         distance[pointi] = dist;
                         break;
                     }
-                    case volumeType::INSIDE:
+                    case volumeType::inside:
                     {
                         distance[pointi] = -dist;
                         break;

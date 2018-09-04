@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2017-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -606,6 +606,18 @@ bool Foam::fileOperations::collatedFileOperation::writeObject
             return true;
         }
     }
+}
+
+void Foam::fileOperations::collatedFileOperation::flush() const
+{
+    if (debug)
+    {
+        Pout<< "collatedFileOperation::flush : clearing and waiting for thread"
+            << endl;
+    }
+    masterUncollatedFileOperation::flush();
+    // Wait for thread to finish (note: also removes thread)
+    writer_.waitAll();
 }
 
 

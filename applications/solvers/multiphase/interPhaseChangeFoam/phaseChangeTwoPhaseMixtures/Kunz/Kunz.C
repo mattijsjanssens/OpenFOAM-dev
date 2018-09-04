@@ -1,8 +1,8 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -66,8 +66,8 @@ Foam::phaseChangeTwoPhaseMixtures::Kunz::Kunz
 Foam::Pair<Foam::tmp<Foam::volScalarField>>
 Foam::phaseChangeTwoPhaseMixtures::Kunz::mDotAlphal() const
 {
-    const volScalarField& p = alpha1_.db().lookupObject<volScalarField>("p");
-    volScalarField limitedAlpha1(min(max(alpha1_, scalar(0)), scalar(1)));
+    const volScalarField& p = alpha1().db().lookupObject<volScalarField>("p");
+    volScalarField limitedAlpha1(min(max(alpha1(), scalar(0)), scalar(1)));
 
     return Pair<tmp<volScalarField>>
     (
@@ -81,8 +81,8 @@ Foam::phaseChangeTwoPhaseMixtures::Kunz::mDotAlphal() const
 Foam::Pair<Foam::tmp<Foam::volScalarField>>
 Foam::phaseChangeTwoPhaseMixtures::Kunz::mDotP() const
 {
-    const volScalarField& p = alpha1_.db().lookupObject<volScalarField>("p");
-    volScalarField limitedAlpha1(min(max(alpha1_, scalar(0)), scalar(1)));
+    const volScalarField& p = alpha1().db().lookupObject<volScalarField>("p");
+    volScalarField limitedAlpha1(min(max(alpha1(), scalar(0)), scalar(1)));
 
     return Pair<tmp<volScalarField>>
     (

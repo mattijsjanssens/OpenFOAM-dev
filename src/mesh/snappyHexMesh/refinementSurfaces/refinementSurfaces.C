@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -1314,11 +1314,11 @@ void Foam::refinementSurfaces::findInside
                     if
                     (
                         (
-                            volType[pointi] == volumeType::INSIDE
+                            volType[pointi] == volumeType::inside
                          && selectionMethod == surfaceZonesInfo::INSIDE
                         )
                      || (
-                            volType[pointi] == volumeType::OUTSIDE
+                            volType[pointi] == volumeType::outside
                          && selectionMethod == surfaceZonesInfo::OUTSIDE
                         )
                     )

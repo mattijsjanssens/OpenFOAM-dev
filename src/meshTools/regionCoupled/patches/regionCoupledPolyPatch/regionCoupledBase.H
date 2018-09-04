@@ -1,8 +1,8 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -37,7 +37,7 @@ SourceFiles
 #ifndef regionCoupledBase_H
 #define regionCoupledBase_H
 
-#include "AMIPatchToPatchInterpolation.H"
+#include "AMIInterpolation.H"
 #include "polyBoundaryMesh.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -71,7 +71,7 @@ private:
         const bool sameRegion_;
 
         //- AMI interpolation class
-        mutable autoPtr<AMIPatchToPatchInterpolation> AMIPtr_;
+        mutable autoPtr<AMIInterpolation> AMIPtr_;
 
         //- Flag to indicate that slave patch should be reversed for AMI
         const bool AMIReverse_;
@@ -154,7 +154,7 @@ public:
             const autoPtr<searchableSurface>& surfPtr() const;
 
             //- Return a reference to the AMI interpolator
-            const AMIPatchToPatchInterpolation& AMI() const;
+            const AMIInterpolation& AMI() const;
 
 
             // Interpolations

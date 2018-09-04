@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -225,11 +225,11 @@ Foam::radiation::greyMeanAbsorptionEmission::aCont(const label bandI) const
                 scalar invWt = 0.0;
                 forAll(mixture.Y(), s)
                 {
-                    invWt += mixture.Y(s)[celli]/mixture.W(s);
+                    invWt += mixture.Y(s)[celli]/mixture.Wi(s);
                 }
 
                 label index = mixture.species()[iter.key()];
-                scalar Xk = mixture.Y(index)[celli]/(mixture.W(index)*invWt);
+                scalar Xk = mixture.Y(index)[celli]/(mixture.Wi(index)*invWt);
 
                 Xipi = Xk*paToAtm(p[celli]);
             }

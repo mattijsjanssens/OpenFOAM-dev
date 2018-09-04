@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -190,14 +190,14 @@ public:
             (
                 const point& p,
                 const vector& q,
-                const intersection::algorithm = intersection::FULL_RAY,
-                const intersection::direction dir = intersection::VECTOR
+                const intersection::algorithm = intersection::algorithm::fullRay,
+                const intersection::direction dir = intersection::direction::vector
             ) const;
 
             //- Fast intersection with a ray.
             //  For a hit, the pointHit.distance() is the line parameter t :
-            //  intersection=p+t*q. Only defined for VISIBLE, FULL_RAY or
-            //  HALF_RAY. tol increases the virtual size of the triangle
+            //  intersection=p+t*q. Only defined for algorithm::visible, algorithm::fullRay or
+            //  algorithm::halfRay. tol increases the virtual size of the triangle
             // by a relative factor.
             inline pointHit intersection
             (

@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2015-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -165,7 +165,7 @@ update
         (
             "W",
             dimMass/dimMoles,
-            this->thermo_.composition().W(species1Index_)
+            this->thermo_.composition().Wi(species1Index_)
         )
     );
 
@@ -177,7 +177,7 @@ update
         (
             "W",
             dimMass/dimMoles,
-            this->thermo_.composition().W(species2Index_)
+            this->thermo_.composition().Wi(species2Index_)
         )
     );
 

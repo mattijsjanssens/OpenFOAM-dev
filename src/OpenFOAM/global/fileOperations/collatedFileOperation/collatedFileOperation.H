@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2017-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -154,6 +154,9 @@ public:
             ) const;
 
         // Other
+
+            //- Forcibly wait until all output done. Flush any cached data
+            virtual void flush() const;
 
             //- Actual name of processors dir
             virtual word processorsDir(const IOobject&) const;

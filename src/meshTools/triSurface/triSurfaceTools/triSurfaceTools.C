@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -2903,7 +2903,7 @@ Foam::surfaceLocation Foam::triSurfaceTools::trackToEdge
             // Start point is inside triangle. Trivial cases already handled
             // above.
 
-            // end point is on edge or point so cross currrent triangle to
+            // end point is on edge or point so cross current triangle to
             // see which edge is cut.
 
             nearest = cutEdge

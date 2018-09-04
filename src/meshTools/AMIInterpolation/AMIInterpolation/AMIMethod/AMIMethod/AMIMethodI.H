@@ -1,8 +1,8 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2013 OpenFOAM Foundation
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Copyright (C) 2013-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,9 +23,7 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-template<class SourcePatch, class TargetPatch>
-inline const Foam::labelList&
-Foam::AMIMethod<SourcePatch, TargetPatch>::srcNonOverlap() const
+inline const Foam::labelList& Foam::AMIMethod::srcNonOverlap() const
 {
     return srcNonOverlap_;
 }

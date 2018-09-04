@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -341,10 +341,7 @@ void FSD<ReactionThermo, ThermoType>::correct()
     this->wFuel_ ==
         dimensionedScalar("zero", dimMass/pow3(dimLength)/dimTime, 0.0);
 
-    if (this->active())
-    {
-        calculateSourceNorm();
-    }
+    calculateSourceNorm();
 }
 
 

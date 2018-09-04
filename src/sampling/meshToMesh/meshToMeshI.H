@@ -1,8 +1,8 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2012-2015 OpenFOAM Foundation
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Copyright (C) 2012-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -73,7 +73,7 @@ inline Foam::scalar Foam::meshToMesh::V() const
 }
 
 
-inline const Foam::PtrList<Foam::AMIPatchToPatchInterpolation>&
+inline const Foam::PtrList<Foam::AMIInterpolation>&
 Foam::meshToMesh::patchAMIs() const
 {
     return patchAMIs_;

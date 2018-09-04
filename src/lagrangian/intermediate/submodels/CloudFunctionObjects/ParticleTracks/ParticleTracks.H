@@ -1,8 +1,8 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -132,7 +132,7 @@ public:
             //- Return const access to the reset on write flag
             inline const Switch& resetOnWrite() const;
 
-            //- Rerurn the table of number of times a particle has hit a face
+            //- Return the table of number of times a particle has hit a face
             inline const hitTableType& faceHitCounter() const;
 
             //- Return const access to the cloud

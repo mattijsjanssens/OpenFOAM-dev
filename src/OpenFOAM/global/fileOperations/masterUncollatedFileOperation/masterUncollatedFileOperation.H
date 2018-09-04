@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2017-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -128,48 +128,52 @@ protected:
 
         class modeOp
         {
+            const bool checkVariants_;
             const bool followLink_;
         public:
-            modeOp(const bool followLink)
+            modeOp(const bool checkVariants, const bool followLink)
             :
+                checkVariants_(checkVariants),
                 followLink_(followLink)
             {}
 
             mode_t operator()(const fileName& fName) const
             {
-                return Foam::mode(fName, followLink_);
+                return Foam::mode(fName, checkVariants_, followLink_);
             }
         };
 
         class typeOp
         {
+            const bool checkVariants_;
             const bool followLink_;
         public:
-            typeOp(const bool followLink)
+            typeOp(const bool checkVariants, const bool followLink)
             :
+                checkVariants_(checkVariants),
                 followLink_(followLink)
             {}
 
             label operator()(const fileName& fName) const
             {
-                return Foam::type(fName, followLink_);
+                return label(Foam::type(fName, checkVariants_, followLink_));
             }
         };
 
         class existsOp
         {
-            const bool checkGzip_;
+            const bool checkVariants_;
             const bool followLink_;
         public:
-            existsOp(const bool checkGzip, const bool followLink)
+            existsOp(const bool checkVariants, const bool followLink)
             :
-                checkGzip_(checkGzip),
+                checkVariants_(checkVariants),
                 followLink_(followLink)
             {}
 
             bool operator()(const fileName& fName) const
             {
-                return Foam::exists(fName, checkGzip_, followLink_);
+                return Foam::exists(fName, checkVariants_, followLink_);
             }
         };
 
@@ -191,66 +195,82 @@ protected:
 
         class isFileOp
         {
-            const bool checkGzip_;
+            const bool checkVariants_;
             const bool followLink_;
         public:
-            isFileOp(const bool checkGzip, const bool followLink)
+            isFileOp(const bool checkVariants, const bool followLink)
             :
-                checkGzip_(checkGzip),
+                checkVariants_(checkVariants),
                 followLink_(followLink)
             {}
         public:
             bool operator()(const fileName& fName) const
             {
-                return Foam::isFile(fName, checkGzip_, followLink_);
+                return Foam::isFile(fName, checkVariants_, followLink_);
             }
         };
 
         class fileSizeOp
         {
+            const bool checkVariants_;
             const bool followLink_;
         public:
-            fileSizeOp(const bool followLink)
+            fileSizeOp(const bool checkVariants, const bool followLink)
             :
+                checkVariants_(checkVariants),
                 followLink_(followLink)
             {}
 
         public:
             off_t operator()(const fileName& fName) const
             {
-                return Foam::fileSize(fName, followLink_);
+                return Foam::fileSize(fName, checkVariants_, followLink_);
             }
         };
 
         class lastModifiedOp
         {
+            const bool checkVariants_;
             const bool followLink_;
         public:
-            lastModifiedOp(const bool followLink)
+            lastModifiedOp(const bool checkVariants, const bool followLink)
             :
+                checkVariants_(checkVariants),
                 followLink_(followLink)
             {}
 
         public:
             time_t operator()(const fileName& fName) const
             {
-                return Foam::lastModified(fName, followLink_);
+                return Foam::lastModified(fName, checkVariants_, followLink_);
             }
         };
 
         class lastModifiedHROp
         {
+            const bool checkVariants_;
             const bool followLink_;
         public:
-            lastModifiedHROp(const bool followLink)
+            lastModifiedHROp
+            (
+                const bool checkVariants,
+                const bool followLink
+            )
             :
+                checkVariants_(checkVariants),
                 followLink_(followLink)
             {}
 
         public:
             double operator()(const fileName& fName) const
             {
-                return Foam::highResLastModified(fName, followLink_);
+                return
+                    Foam::highResLastModified
+                    (
+                        fName,
+                        checkVariants_,
+                        followLink_
+                    );
             }
         };
 
@@ -351,25 +371,33 @@ protected:
 
         class readDirOp
         {
-            const fileName::Type type_;
-            const bool filtergz_;
+            const fileType type_;
+            const bool filterVariants_;
             const bool followLink_;
+
         public:
+
             readDirOp
             (
-                const fileName::Type type,
-                const bool filtergz,
+                const fileType type,
+                const bool filterVariants,
                 const bool followLink
             )
             :
                 type_(type),
-                filtergz_(filtergz),
+                filterVariants_(filterVariants),
                 followLink_(followLink)
             {}
 
             fileNameList operator()(const fileName& fName) const
             {
-                return Foam::readDir(fName, type_, filtergz_, followLink_);
+                return Foam::readDir
+                (
+                    fName,
+                    type_,
+                    filterVariants_,
+                    followLink_
+                );
             }
         };
 
@@ -433,15 +461,6 @@ protected:
             const word& processorsDir,
             const word& instancePath
         ) const;
-
-        //- Read file contents and send to processors
-        static void readAndSend
-        (
-            const fileName& filePath,
-            const IOstream::compressionType cmp,
-            const labelUList& procs,
-            PstreamBuffers& pBufs
-        );
 
         //- Detect file (possibly compressed), read file contents and send
         //  to processors
@@ -508,38 +527,40 @@ public:
             virtual mode_t mode
             (
                 const fileName&,
+                const bool checkVariants = true,
                 const bool followLink = true
             ) const;
 
-            //- Return the file type: DIRECTORY, FILE or LINK
-            virtual fileName::Type type
+            //- Return the file type: directory, file or link
+            virtual fileType type
             (
                 const fileName&,
+                const bool checkVariants = true,
                 const bool followLink = true
             ) const;
 
-            //- Does the name exist (as DIRECTORY or FILE) in the file system?
+            //- Does the name exist (as directory or file) in the file system?
             //  Optionally enable/disable check for gzip file.
             virtual bool exists
             (
                 const fileName&,
-                const bool checkGzip=true,
+                const bool checkVariants = true,
                 const bool followLink = true
             ) const;
 
-            //- Does the name exist as a DIRECTORY in the file system?
+            //- Does the name exist as a directory in the file system?
             virtual bool isDir
             (
                 const fileName&,
                 const bool followLink = true
             ) const;
 
-            //- Does the name exist as a FILE in the file system?
+            //- Does the name exist as a file in the file system?
             //  Optionally enable/disable check for gzip file.
             virtual bool isFile
             (
                 const fileName&,
-                const bool checkGzip=true,
+                const bool checkVariants = true,
                 const bool followLink = true
             ) const;
 
@@ -547,6 +568,7 @@ public:
             virtual off_t fileSize
             (
                 const fileName&,
+                const bool checkVariants = true,
                 const bool followLink = true
             ) const;
 
@@ -554,6 +576,7 @@ public:
             virtual time_t lastModified
             (
                 const fileName&,
+                const bool checkVariants = true,
                 const bool followLink = true
             ) const;
 
@@ -561,6 +584,7 @@ public:
             virtual double highResLastModified
             (
                 const fileName&,
+                const bool checkVariants = true,
                 const bool followLink = true
             ) const;
 
@@ -568,8 +592,8 @@ public:
             virtual fileNameList readDir
             (
                 const fileName&,
-                const fileName::Type=fileName::FILE,
-                const bool filtergz=true,
+                const fileType = fileType::file,
+                const bool filterVariants = true,
                 const bool followLink = true
             ) const;
 
@@ -751,6 +775,9 @@ public:
 
             //- Callback for time change
             virtual void setTime(const Time&) const;
+
+            //- Forcibly wait until all output done. Flush any cached data
+            virtual void flush() const;
 
             //- Return cached times
             const HashPtrTable<instantList>& times() const

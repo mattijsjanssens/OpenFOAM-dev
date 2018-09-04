@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2016-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -154,6 +154,9 @@ if (argList::postProcess(argc, argv))
         {
             Warning<< err << endl;
         }
+
+        // Clear the objects owned by the mesh
+        mesh.objectRegistry::clear();
 
         Info<< endl;
     }

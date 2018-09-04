@@ -1,8 +1,8 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2012 OpenFOAM Foundation
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Copyright (C) 2012-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -49,19 +49,19 @@ public:
     // Public data
 
         //- Direction type enumeration
-        enum direction
+        enum class direction
         {
-            NONE,
-            CLOCKWISE,
-            ANTICLOCKWISE
+            none,
+            clockwise,
+            anticlockwise
         };
 
 
     // Constructors
 
         //- Construct null
-        CirculatorBase(){};
-
+        CirculatorBase()
+        {}
 };
 
 

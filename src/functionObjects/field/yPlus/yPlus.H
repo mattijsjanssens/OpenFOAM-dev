@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2013-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -95,10 +95,9 @@ class yPlus
         virtual void writeFileHeader(const label i);
 
         //- Calculate y+
-        void calcYPlus
+        tmp<volScalarField> calcYPlus
         (
-            const turbulenceModel& turbModel,
-            volScalarField& yPlus
+            const turbulenceModel& turbModel
         );
 
         //- Disallow default bitwise copy construct

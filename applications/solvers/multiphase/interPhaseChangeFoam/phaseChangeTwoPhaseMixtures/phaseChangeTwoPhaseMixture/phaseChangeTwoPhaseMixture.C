@@ -1,8 +1,8 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2017 OpenFOAM Foundation
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -42,7 +42,7 @@ Foam::phaseChangeTwoPhaseMixture::phaseChangeTwoPhaseMixture
     const surfaceScalarField& phi
 )
 :
-    incompressibleTwoPhaseMixture(U, phi),
+    immiscibleIncompressibleTwoPhaseMixture(U, phi),
     phaseChangeTwoPhaseMixtureCoeffs_(optionalSubDict(type + "Coeffs")),
     pSat_("pSat", dimPressure, lookup("pSat"))
 {}
@@ -53,7 +53,7 @@ Foam::phaseChangeTwoPhaseMixture::phaseChangeTwoPhaseMixture
 Foam::Pair<Foam::tmp<Foam::volScalarField>>
 Foam::phaseChangeTwoPhaseMixture::vDotAlphal() const
 {
-    volScalarField alphalCoeff(1.0/rho1() - alpha1_*(1.0/rho1() - 1.0/rho2()));
+    volScalarField alphalCoeff(1.0/rho1() - alpha1()*(1.0/rho1() - 1.0/rho2()));
     Pair<tmp<volScalarField>> mDotAlphal = this->mDotAlphal();
 
     return Pair<tmp<volScalarField>>
@@ -75,7 +75,7 @@ Foam::phaseChangeTwoPhaseMixture::vDotP() const
 
 bool Foam::phaseChangeTwoPhaseMixture::read()
 {
-    if (incompressibleTwoPhaseMixture::read())
+    if (immiscibleIncompressibleTwoPhaseMixture::read())
     {
         phaseChangeTwoPhaseMixtureCoeffs_ = optionalSubDict(type() + "Coeffs");
         lookup("pSat") >> pSat_;

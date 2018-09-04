@@ -1,8 +1,8 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -68,14 +68,18 @@ Foam::radiation::noRadiation::~noRadiation()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-bool Foam::radiation::noRadiation::read()
-{
-    return radiationModel::read();
-}
+void Foam::radiation::noRadiation::correct()
+{}
 
 
 void Foam::radiation::noRadiation::calculate()
 {}
+
+
+bool Foam::radiation::noRadiation::read()
+{
+    return radiationModel::read();
+}
 
 
 Foam::tmp<Foam::volScalarField> Foam::radiation::noRadiation::Rp() const

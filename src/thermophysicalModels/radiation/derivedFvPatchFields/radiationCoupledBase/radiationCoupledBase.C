@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -35,27 +35,33 @@ License
 
 namespace Foam
 {
+namespace radiation
+{
     defineTypeNameAndDebug(radiationCoupledBase, 0);
-
-    template<>
-    const char* Foam::NamedEnum
-    <
-        Foam::radiationCoupledBase::emissivityMethodType,
-        2
-    >::names[] =
-    {
-        "solidRadiation",
-        "lookup"
-    };
+}
 }
 
-const Foam::NamedEnum<Foam::radiationCoupledBase::emissivityMethodType, 2>
-    Foam::radiationCoupledBase::emissivityMethodTypeNames_;
+template<>
+const char* Foam::NamedEnum
+<
+    Foam::radiation::radiationCoupledBase::emissivityMethodType,
+    2
+>::names[] =
+{
+    "solidRadiation",
+    "lookup"
+};
+
+const Foam::NamedEnum
+<
+    Foam::radiation::radiationCoupledBase::emissivityMethodType,
+    2
+> Foam::radiation::radiationCoupledBase::emissivityMethodTypeNames_;
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::radiationCoupledBase::radiationCoupledBase
+Foam::radiation::radiationCoupledBase::radiationCoupledBase
 (
     const fvPatch& patch,
     const word& calculationType,
@@ -68,7 +74,7 @@ Foam::radiationCoupledBase::radiationCoupledBase
 {}
 
 
-Foam::radiationCoupledBase::radiationCoupledBase
+Foam::radiation::radiationCoupledBase::radiationCoupledBase
 (
     const fvPatch& patch,
     const word& calculationType,
@@ -82,7 +88,7 @@ Foam::radiationCoupledBase::radiationCoupledBase
 {}
 
 
-Foam::radiationCoupledBase::radiationCoupledBase
+Foam::radiation::radiationCoupledBase::radiationCoupledBase
 (
     const fvPatch& patch,
     const dictionary& dict
@@ -133,13 +139,13 @@ Foam::radiationCoupledBase::radiationCoupledBase
 
 // * * * * * * * * * * * * * * * * Destructor    * * * * * * * * * * * * * * //
 
-Foam::radiationCoupledBase::~radiationCoupledBase()
+Foam::radiation::radiationCoupledBase::~radiationCoupledBase()
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-Foam::scalarField Foam::radiationCoupledBase::emissivity() const
+Foam::scalarField Foam::radiation::radiationCoupledBase::emissivity() const
 {
     switch (method_)
     {
@@ -175,13 +181,12 @@ Foam::scalarField Foam::radiationCoupledBase::emissivity() const
             mpp.distribute(emissivity);
 
             return emissivity;
-
         }
         break;
 
         case LOOKUP:
         {
-            // return local value
+            // Return local value
             return emissivity_;
         }
 
@@ -200,7 +205,7 @@ Foam::scalarField Foam::radiationCoupledBase::emissivity() const
 }
 
 
-void Foam::radiationCoupledBase::autoMap
+void Foam::radiation::radiationCoupledBase::autoMap
 (
     const fvPatchFieldMapper& m
 )
@@ -209,7 +214,7 @@ void Foam::radiationCoupledBase::autoMap
 }
 
 
-void Foam::radiationCoupledBase::rmap
+void Foam::radiation::radiationCoupledBase::rmap
 (
     const fvPatchScalarField& ptf,
     const labelList& addr
@@ -222,7 +227,7 @@ void Foam::radiationCoupledBase::rmap
 }
 
 
-void Foam::radiationCoupledBase::write(Ostream& os) const
+void Foam::radiation::radiationCoupledBase::write(Ostream& os) const
 {
     os.writeKeyword("emissivityMode") << emissivityMethodTypeNames_[method_]
         << token::END_STATEMENT << nl;

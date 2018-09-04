@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -325,7 +325,7 @@ public:
             const word& slavePatchName,
             const typeOfMatch tom,
             const bool coupleDecouple = false,
-            const intersection::algorithm algo = intersection::VISIBLE
+            const intersection::algorithm algo = intersection::algorithm::visible
         );
 
         //- Construct from dictionary

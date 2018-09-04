@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2015-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -36,7 +36,7 @@ wRatioByP() const
     (
         "W",
         dimMass/dimMoles,
-        this->thermo_.composition().W(saturatedIndex_)
+        this->thermo_.composition().Wi(saturatedIndex_)
     );
 
     return Wi/this->thermo_.W()/this->thermo_.p();

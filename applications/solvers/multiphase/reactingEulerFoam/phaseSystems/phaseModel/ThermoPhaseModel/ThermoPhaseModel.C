@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2015-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -150,6 +150,25 @@ Foam::ThermoPhaseModel<BasePhaseModel, ThermoType>::kappa
 ) const
 {
     return thermo_->kappa(patchi);
+}
+
+
+template<class BasePhaseModel, class ThermoType>
+Foam::tmp<Foam::volScalarField>
+Foam::ThermoPhaseModel<BasePhaseModel, ThermoType>::alphahe() const
+{
+    return thermo_->alphahe();
+}
+
+
+template<class BasePhaseModel, class ThermoType>
+Foam::tmp<Foam::scalarField>
+Foam::ThermoPhaseModel<BasePhaseModel, ThermoType>::alphahe
+(
+    const label patchi
+) const
+{
+    return thermo_->alphahe(patchi);
 }
 
 

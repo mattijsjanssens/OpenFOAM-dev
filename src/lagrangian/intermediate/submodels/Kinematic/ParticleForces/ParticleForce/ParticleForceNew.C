@@ -1,8 +1,8 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2011-2016 OpenFOAM Foundation
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -34,13 +34,20 @@ Foam::ParticleForce<CloudType>::New
     CloudType& owner,
     const fvMesh& mesh,
     const dictionary& dict,
-    const word& forceType
+    const word& name
 )
 {
-    Info<< "    Selecting particle force " << forceType << endl;
-
+    word forceType = name;
     typename dictionaryConstructorTable::iterator cstrIter =
         dictionaryConstructorTablePtr_->find(forceType);
+
+    if (cstrIter == dictionaryConstructorTablePtr_->end() && dict.found("type"))
+    {
+        forceType = dict.lookupType<word>("type");
+        cstrIter = dictionaryConstructorTablePtr_->find(forceType);
+    }
+
+    Info<< "    Selecting particle force " << forceType << endl;
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
@@ -62,7 +69,6 @@ Foam::ParticleForce<CloudType>::New
             dict
         )
     );
-
 }
 
 

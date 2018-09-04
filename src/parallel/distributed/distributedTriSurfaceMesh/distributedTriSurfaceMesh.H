@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     |
+   \\    /   O peration     | Website:  https://openfoam.org
     \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
@@ -210,7 +210,7 @@ private:
 
         // Surface redistribution
 
-            //- Finds new bounds based on an indepedent decomposition.
+            //- Finds new bounds based on an independent decomposition.
             List<List<treeBoundBox>> independentlyDistributedBbs
             (
                 const triSurface&
