@@ -839,22 +839,22 @@ void Foam::argList::parse
 
                 if (!decompDictStream.good())
                 {
-                    FatalError
-                        << "Cannot read "
-                        << decompDictStream.name()
-                        << exit(FatalError);
+                    // Assume non-distributed running
+                    dictNProcs = Pstream::nProcs();
                 }
-
-                dictionary decompDict(decompDictStream);
-
-                dictNProcs = readLabel
-                (
-                    decompDict.lookup("numberOfSubdomains")
-                );
-
-                if (decompDict.lookupOrDefault("distributed", false))
+                else
                 {
-                    decompDict.lookup("roots") >> roots;
+                    dictionary decompDict(decompDictStream);
+
+                    dictNProcs = readLabel
+                    (
+                        decompDict.lookup("numberOfSubdomains")
+                    );
+
+                    if (decompDict.lookupOrDefault("distributed", false))
+                    {
+                        decompDict.lookup("roots") >> roots;
+                    }
                 }
             }
 

@@ -43,6 +43,7 @@ options:
   -region <name>    specify alternative mesh region
   -touch            only create the file  (eg, .blockMesh, .OpenFOAM, etc)
   -touchAll         create .blockMesh, .OpenFOAM files (and for all regions)
+  -reconstruct      on-the-fly reconstruct fields
   -help             print the usage
 
 paraview options start with a double dashes
@@ -109,6 +110,11 @@ do
     -touchAll)
         optTouch=all
         requirePV=0
+        shift
+        ;;
+    -reconstruct)
+        export FOAM_LIBS='("libunallocated.so")'
+        export FOAM_FILEHANDLER='autoReconstruct'
         shift
         ;;
     --)
