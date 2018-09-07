@@ -579,6 +579,13 @@ Foam::fileOperations::masterUncollatedFileOperation::read
         {
             if (procValid[0])
             {
+                if (filePaths[0].empty())
+                {
+                    FatalIOErrorInFunction(filePaths[0])
+                        << "cannot find file " << io.objectPath()
+                        << exit(FatalIOError);
+                }
+
                 DynamicList<label> validProcs(Pstream::nProcs(comm));
                 for
                 (
