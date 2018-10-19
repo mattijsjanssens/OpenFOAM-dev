@@ -102,15 +102,20 @@ Description
 
     References:
     \verbatim
-        "Bubble Coalescence and Break-Up in Air-Sparged Bubble-Columns"
-        Prince, M.J., Blanch, H.W.
-        AIChE Journal, Vol. 36, Issue 10, 1990, pp. 1485-1499
+        Prince, M. J., & Blanch, H. W. (1990).
+        Bubble coalescence and break‐up in air‐sparged bubble columns.
+        AIChE journal, 36(10), 1485-1499.
     \endverbatim
 
 Usage
     \table
         Property     | Description             | Required    | Default value
-        C1           | Coefficient C1          | no          | 0.089
+        C1           | coefficient C1          | no          | 0.089
+        h0           | initial film thickness  | no          | 1e-4m
+        hf           | critical film thickness | no          | 1e-8m
+        turbulence   | Switch for collisions due to turbulence    | yes | none
+        buoyancy     | Switch for collisions due to buoyancy      | yes | none
+        laminarShear | Switch for collisions due to laminar shear | yes | none
     \endtable
 
 SourceFiles
@@ -152,13 +157,13 @@ class PrinceBlanch
         dimensionedScalar hf_;
 
         //- Switch for considering turbulent collisions
-        Switch turbulentCollisions_;
+        Switch turbulence_;
 
         //- Switch for considering buoyancy-induced collisions
-        Switch buoyantCollisions_;
+        Switch buoyancy_;
 
         //- Switch for considering buoyancy-induced collisions
-        Switch laminarShearCollisions_;
+        Switch laminarShear_;
 
 
 public:

@@ -53,19 +53,20 @@ Description
 
     References:
     \verbatim
-        "Validation of bubble breakage, coalescence and mass transfer models for
-         gas-liquid dispersion in agitated vessel"
-        Laakkonen, M., Alopaeus, V., Aittamaa, J.
-        Chemical Engineering Science, Vol. 61, 2006, pp. 218-228
-        Eq. 2-3, p. 220
+        Laakkonen, M., Alopaeus, V., & Aittamaa, J. (2006).
+        Validation of bubble breakage, coalescence and mass transfer models for
+        gas-liquid dispersion in agitated vessel.
+        Chemical engineering science, 61(1), 218-228.
+        Eq. 2-3, p. 220.
     \endverbatim
 
 Usage
     \table
         Property     | Description             | Required    | Default value
-        C1           | Coefficient C1          | no          | 6.0
-        C2           | Coefficient C2          | no          | 0.04
-        C3           | Coefficient C3          | no          | 0.01
+        C1           | coefficient C1          | no          | 6.0
+        C2           | coefficient C2          | no          | 0.04
+        C3           | coefficient C3          | no          | 0.01
+        daughterSizeDistributionModel | inh. from breakupModel | inherited |
     \endtable
 
 SourceFiles

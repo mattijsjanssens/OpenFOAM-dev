@@ -52,19 +52,17 @@ Description
     References:
     \verbatim
         Coalescence and breakup term formulation:
-            Kumar, S. & Ramkrishna, D. (1996).
-            On the solution of population balance equations by
-            discretization - I. A fixed pivot technique.
-            Chemical Engineering Science,
-            51(8), 1311-1332.
+        Kumar, S., & Ramkrishna, D. (1996).
+        On the solution of population balance equations by discretization-I. A
+        fixed pivot technique.
+        Chemical Engineering Science, 51(8), 1311-1332.
     \endverbatim
 
     \verbatim
         Binary breakup term formulation:
-            Liao, Y.; Oertel, R.; Kriebitzsch, S.; Schlegel, F.; Lucas, D.
-            (2018). A Discrete Population Balance Equation for Binary Breakage.
-            International Journal for Numerical Methods in Fluids,
-            DOI 10.1002/fld.4491.
+        Liao, Y., Oertel, R., Kriebitzsch, S., Schlegel, F., & Lucas, D. (2018).
+        A discrete population balance equation for binary breakage.
+        International Journal for Numerical Methods in Fluids, 87(4), 202-215.
     \endverbatim
 
 Usage
@@ -211,10 +209,10 @@ class populationBalanceModel
         const phaseModel& continuousPhase_;
 
         //- velocityGroups belonging to this populationBalance
-        List<velocityGroup*> velocityGroups_;
+        UPtrList<velocityGroup> velocityGroups_;
 
         //- sizeGroups belonging to this populationBalance
-        List<sizeGroup*> sizeGroups_;
+        UPtrList<sizeGroup> sizeGroups_;
 
         //- List of unordered phasePairs in this populationBalance
         phasePairTable phasePairs_;
@@ -270,18 +268,21 @@ class populationBalanceModel
         //- Zeroeth order rate
         autoPtr<volScalarField> nucleationRate_;
 
-        //- Total void fraction of phases belonging to this populationBalance
-        volScalarField alphas_;
+        //- Total void fraction
+        autoPtr<volScalarField> alphas_;
+
+        //- Mean Sauter diameter
+        autoPtr<volScalarField> dsm_;
 
         //- Average velocity
-        volVectorField U_;
+        autoPtr<volVectorField> U_;
 
 
     // Private member functions
 
         void registerVelocityAndSizeGroups();
 
-        void add(sizeGroup* group);
+        void add(sizeGroup& group);
 
         void createPhasePairs();
 
@@ -310,6 +311,8 @@ class populationBalanceModel
         void dmdt();
 
         void calcAlphas();
+
+        tmp<volScalarField> calcDsm();
 
         void calcVelocity();
 
@@ -389,10 +392,10 @@ public:
         inline const phaseModel& continuousPhase() const;
 
         //- Return the velocityGroups belonging to this populationBalance
-        inline const List<velocityGroup*>& velocityGroups() const;
+        inline const UPtrList<velocityGroup>& velocityGroups() const;
 
         //- Return the sizeGroups belonging to this populationBalance
-        inline const List<sizeGroup*>& sizeGroups() const;
+        inline const UPtrList<sizeGroup>& sizeGroups() const;
 
         //- Return list of unordered phasePairs in this populationBalance
         inline const phasePairTable& phasePairs() const;
