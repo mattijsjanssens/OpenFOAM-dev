@@ -562,6 +562,7 @@ Foam::fileOperations::uncollatedFileOperation::readStream
             FatalIOErrorInFunction(isPtr())
                 << "could not detect processor number"
                 << " from objectPath:" << io.objectPath()
+                << " fName:" << fName
                 << exit(FatalIOError);
         }
 
