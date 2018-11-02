@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     | Website:  https://openfoam.org
-    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,43 +23,49 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "diameterModel.H"
-
-// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
-
-namespace Foam
-{
-    defineTypeNameAndDebug(diameterModel, 0);
-    defineRunTimeSelectionTable(diameterModel, dictionary);
-}
-
+#include "eRefConstThermo.H"
+#include "IOstreams.H"
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::diameterModel::diameterModel
-(
-    const dictionary& diameterProperties,
-    const phaseModel& phase
-)
+template<class EquationOfState>
+Foam::eRefConstThermo<EquationOfState>::eRefConstThermo(const dictionary& dict)
 :
-    diameterProperties_(diameterProperties),
-    phase_(phase)
-{}
-
-
-// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
-
-Foam::diameterModel::~diameterModel()
+    EquationOfState(dict),
+    Cv_(readScalar(dict.subDict("thermodynamics").lookup("Cv"))),
+    Hf_(readScalar(dict.subDict("thermodynamics").lookup("Hf"))),
+    Tref_(readScalar(dict.subDict("thermodynamics").lookup("Tref"))),
+    Eref_(readScalar(dict.subDict("thermodynamics").lookup("Eref")))
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-bool Foam::diameterModel::read(const dictionary& phaseProperties)
+template<class EquationOfState>
+void Foam::eRefConstThermo<EquationOfState>::write(Ostream& os) const
 {
-    diameterProperties_ = phaseProperties.optionalSubDict(type() + "Coeffs");
+    EquationOfState::write(os);
 
-    return true;
+    dictionary dict("thermodynamics");
+    dict.add("Cv", Cv_);
+    dict.add("Hf", Hf_);
+    dict.add("Tref", Tref_);
+    dict.add("Eref", Eref_);
+    os  << indent << dict.dictName() << dict;
+}
+
+
+// * * * * * * * * * * * * * * * Ostream Operator  * * * * * * * * * * * * * //
+
+template<class EquationOfState>
+Foam::Ostream& Foam::operator<<
+(
+    Ostream& os,
+    const eRefConstThermo<EquationOfState>& ct
+)
+{
+    ct.write(os);
+    return os;
 }
 
 
