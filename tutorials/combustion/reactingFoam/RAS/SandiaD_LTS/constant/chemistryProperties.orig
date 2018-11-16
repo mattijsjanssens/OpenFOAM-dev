@@ -10,39 +10,47 @@ FoamFile
     version     2.0;
     format      ascii;
     class       dictionary;
-    object      fvSchemes;
+    location    "constant";
+    object      chemistryProperties;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-ddtSchemes
+#includeEtc "caseDicts/solvers/chemistry/TDAC/chemistryPropertiesFlame.cfg"
+
+chemistryType
 {
-    // For transient, replace steadyState, e.g. with Euler
-    default         steadyState;
+    solver            ode;
+    method            TDAC;
 }
 
-gradSchemes
+chemistry       on;
+
+initialChemicalTimeStep 1e-7;
+//maxChemicalTimeStep 1e-3;
+
+odeCoeffs
 {
-    default         Gauss linear;
+    solver          seulex;
+    absTol          1e-8;
+    relTol          1e-1;
 }
 
-divSchemes
+importantSpecies
 {
-    default         none;
+    CO2;
+    H2O;
+    CH4;
+    O2;
 }
 
-laplacianSchemes
+reduction
 {
-    default         Gauss linear uncorrected;
+    tolerance   1e-4;
 }
 
-interpolationSchemes
+tabulation
 {
-    default         linear;
-}
-
-snGradSchemes
-{
-    default         uncorrected;
+    tolerance   3e-3;
 }
 
 // ************************************************************************* //

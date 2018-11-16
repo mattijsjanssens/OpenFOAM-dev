@@ -241,7 +241,8 @@ else
                     $blockMeshDictDir \
                 ;
             do
-                [ -s "$parentDir/$check" ] || {
+                [ -s "$parentDir/$check" ] || [ -s "$parentDir/$check.orig" ] ||
+                {
                     [ -n "$warn" ] && echo "$warn" 1>&2
                     echo "    $parentDir/$check" 1>&2
                     unset warn
@@ -256,7 +257,8 @@ else
                     $fvControls/fvSolution \
                 ;
             do
-                [ -s "$parentDir/$check" ] || {
+                [ -s "$parentDir/$check" ] || [ -s "$parentDir/$check.orig" ] ||
+                {
                     [ -n "$warn" ] && echo "$warn" 1>&2
                     echo "    $parentDir/$check" 1>&2
                     unset warn
