@@ -67,7 +67,7 @@ Foam::radiation::radiativeIntensityRay::radiativeIntensityRay
             IOobject::NO_WRITE
         ),
         mesh_,
-        dimensionedScalar("I", dimMass/pow3(dimTime), 0.0)
+        dimensionedScalar(dimMass/pow3(dimTime), 0)
     ),
     qr_
     (
@@ -80,7 +80,7 @@ Foam::radiation::radiativeIntensityRay::radiativeIntensityRay
             IOobject::NO_WRITE
         ),
         mesh_,
-        dimensionedScalar("qr", dimMass/pow3(dimTime), 0.0)
+        dimensionedScalar(dimMass/pow3(dimTime), 0)
     ),
     qin_
     (
@@ -93,7 +93,7 @@ Foam::radiation::radiativeIntensityRay::radiativeIntensityRay
             IOobject::NO_WRITE
         ),
         mesh_,
-        dimensionedScalar("qin", dimMass/pow3(dimTime), 0.0)
+        dimensionedScalar(dimMass/pow3(dimTime), 0)
     ),
     qem_
     (
@@ -106,7 +106,7 @@ Foam::radiation::radiativeIntensityRay::radiativeIntensityRay
             IOobject::NO_WRITE
         ),
         mesh_,
-        dimensionedScalar("qem", dimMass/pow3(dimTime), 0.0)
+        dimensionedScalar(dimMass/pow3(dimTime), 0)
     ),
     d_(Zero),
     dAve_(Zero),
@@ -269,11 +269,7 @@ Foam::scalar Foam::radiation::radiativeIntensityRay::correct()
 
         IiEq.relax();
 
-        const solverPerformance ILambdaSol = solve
-        (
-            IiEq,
-            mesh_.solver("Ii")
-        );
+        const solverPerformance ILambdaSol = solve(IiEq, "Ii");
 
         const scalar initialRes =
             ILambdaSol.initialResidual()*omega_/dom_.omegaMax();
@@ -287,7 +283,7 @@ Foam::scalar Foam::radiation::radiativeIntensityRay::correct()
 
 void Foam::radiation::radiativeIntensityRay::addIntensity()
 {
-    I_ = dimensionedScalar("zero", dimMass/pow3(dimTime), 0.0);
+    I_ = dimensionedScalar(dimMass/pow3(dimTime), 0);
 
     forAll(ILambda_, lambdaI)
     {

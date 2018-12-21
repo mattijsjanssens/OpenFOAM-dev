@@ -43,6 +43,12 @@ Usage
       - \par -set \<value\>
         Adds or replaces the entry
 
+      - \par -merge \<value\>
+        Merges the entry
+
+      - \par -dict
+        Set, add or merge entry from a dictionary
+
       - \par -remove
         Remove the selected entry
 
@@ -263,6 +269,17 @@ int main(int argc, char *argv[])
         "value",
         "Add a new entry"
     );
+    argList::addOption
+    (
+        "merge",
+        "value",
+        "Merge entry"
+    );
+    argList::addBoolOption
+    (
+        "dict",
+        "Set, add or merge entry from a dictionary."
+    );
     argList::addBoolOption
     (
         "remove",
@@ -316,12 +333,12 @@ int main(int argc, char *argv[])
             << exit(FatalError, 1);
     }
 
-
-    bool changed = false;
-
     // Read but preserve headers
     dictionary dict;
     dict.read(dictFile(), true);
+
+
+    bool changed = false;
 
     if (listIncludes)
     {
@@ -366,15 +383,55 @@ int main(int argc, char *argv[])
         (
             args.optionReadIfPresent("set", newValue)
          || args.optionReadIfPresent("add", newValue)
+         || args.optionReadIfPresent("merge", newValue)
         )
         {
             const bool overwrite = args.optionFound("set");
+            const bool merge = args.optionFound("merge");
 
             Pair<word> dAk(dictAndKeyword(scopedName));
-
-            IStringStream str(string(dAk.second()) + ' ' + newValue + ';');
-            entry* ePtr(entry::New(str).ptr());
             const dictionary& d(lookupScopedDict(dict, dAk.first()));
+
+            entry* ePtr = nullptr;
+
+            if (args.optionFound("dict"))
+            {
+                const fileName fromDictFileName(newValue);
+                autoPtr<IFstream> fromDictFile(new IFstream(fromDictFileName));
+                if (!fromDictFile().good())
+                {
+                    FatalErrorInFunction
+                        << "Cannot open file " << fromDictFileName
+                        << exit(FatalError, 1);
+                }
+
+                dictionary fromDict(fromDictFile());
+
+                const entry* fePtr
+                (
+                    fromDict.lookupScopedEntryPtr
+                    (
+                        scopedName,
+                        false,
+                        true            // Support wildcards
+                    )
+                );
+
+                if (!fePtr)
+                {
+                    FatalErrorInFunction
+                        << "Cannot find entry " << entryName
+                        << " in file " << fromDictFileName
+                        << exit(FatalError, 1);
+                }
+
+                ePtr = fePtr->clone().ptr();
+            }
+            else
+            {
+                IStringStream str(string(dAk.second()) + ' ' + newValue + ';');
+                ePtr = entry::New(str).ptr();
+            }
 
             if (overwrite)
             {
@@ -382,7 +439,7 @@ int main(int argc, char *argv[])
             }
             else
             {
-                const_cast<dictionary&>(d).add(ePtr, false);
+                const_cast<dictionary&>(d).add(ePtr, merge);
             }
             changed = true;
 

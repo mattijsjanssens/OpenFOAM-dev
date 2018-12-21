@@ -53,7 +53,7 @@ Foam::PackingModels::Implicit<CloudType>::Implicit
             IOobject::NO_WRITE
         ),
         this->owner().mesh(),
-        dimensionedScalar("zero", dimless, 0.0),
+        dimensionedScalar(dimless, 0),
         zeroGradientFvPatchScalarField::typeName
     ),
     phiCorrect_(nullptr),
@@ -147,7 +147,7 @@ void Foam::PackingModels::Implicit<CloudType>::cacheFields(const bool store)
                 IOobject::NO_WRITE
             ),
             mesh,
-            dimensionedScalar("zero", dimDensity, 0),
+            dimensionedScalar(dimDensity, 0),
             zeroGradientFvPatchField<scalar>::typeName
         );
         rho.primitiveFieldRef() = max(rhoAverage.primitiveField(), rhoMin_);
@@ -168,7 +168,7 @@ void Foam::PackingModels::Implicit<CloudType>::cacheFields(const bool store)
                 IOobject::NO_WRITE
             ),
             mesh,
-            dimensionedScalar("zero", dimPressure, 0),
+            dimensionedScalar(dimPressure, 0),
             zeroGradientFvPatchField<scalar>::typeName
         );
 
@@ -301,14 +301,10 @@ void Foam::PackingModels::Implicit<CloudType>::cacheFields(const bool store)
         }
 
         // correction velocity
-        uCorrect_ = tmp<volVectorField>
+        uCorrect_ = volVectorField::New
         (
-            new volVectorField
-            (
-                cloudName + ":uCorrect",
-                fvc::reconstruct(phiCorrect_())
-            )
-
+            cloudName + ":uCorrect",
+            fvc::reconstruct(phiCorrect_())
         );
         uCorrect_->correctBoundaryConditions();
 

@@ -263,9 +263,7 @@ public:
         fvMatrix(const fvMatrix<Type>&);
 
         //- Construct as copy of tmp<fvMatrix<Type>> deleting argument
-        #ifndef NoConstructFromTmp
         fvMatrix(const tmp<fvMatrix<Type>>&);
-        #endif
 
         //- Construct from Istream given field to solve for
         fvMatrix(const GeometricField<Type, fvPatchField, volMesh>&, Istream&);
@@ -401,6 +399,10 @@ public:
             //- Solve coupled returning the solution statistics.
             //  Use the given solver controls
             SolverPerformance<Type> solveCoupled(const dictionary&);
+
+            //- Solve segregated or coupled returning the solution statistics.
+            //  Solver controls read from fvSolution
+            SolverPerformance<Type> solve(const word& name);
 
             //- Solve returning the solution statistics.
             //  Solver controls read from fvSolution
@@ -552,8 +554,7 @@ void checkMethod
 //- Solve returning the solution statistics given convergence tolerance
 //  Use the given solver controls
 template<class Type>
-SolverPerformance<Type> solve(fvMatrix<Type>&, const dictionary&);
-
+SolverPerformance<Type> solve(fvMatrix<Type>&, const word&);
 
 //- Solve returning the solution statistics given convergence tolerance,
 //  deleting temporary matrix after solution.
@@ -562,15 +563,13 @@ template<class Type>
 SolverPerformance<Type> solve
 (
     const tmp<fvMatrix<Type>>&,
-    const dictionary&
+    const word&
 );
-
 
 //- Solve returning the solution statistics given convergence tolerance
 //  Solver controls read fvSolution
 template<class Type>
 SolverPerformance<Type> solve(fvMatrix<Type>&);
-
 
 //- Solve returning the solution statistics given convergence tolerance,
 //  deleting temporary matrix after solution.
@@ -578,12 +577,10 @@ SolverPerformance<Type> solve(fvMatrix<Type>&);
 template<class Type>
 SolverPerformance<Type> solve(const tmp<fvMatrix<Type>>&);
 
-
 //- Return the correction form of the given matrix
 //  by subtracting the matrix multiplied by the current field
 template<class Type>
 tmp<fvMatrix<Type>> correction(const fvMatrix<Type>&);
-
 
 //- Return the correction form of the given temporary matrix
 //  by subtracting the matrix multiplied by the current field

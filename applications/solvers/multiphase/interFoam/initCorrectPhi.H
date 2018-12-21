@@ -13,21 +13,23 @@ if (correctPhi)
             IOobject::AUTO_WRITE
         ),
         mesh,
-        dimensionedScalar("rAU", dimTime/dimDensity, 1)
+        dimensionedScalar(dimTime/dimDensity, 1)
     );
 
     #include "correctPhi.H"
 }
 else
 {
+    nonOrthogonalSolutionControl pcorrControl(mesh, pimple.algorithmName());
+
     CorrectPhi
     (
         U,
         phi,
         p_rgh,
-        dimensionedScalar("rAUf", dimTime/rho.dimensions(), 1),
+        dimensionedScalar(dimTime/rho.dimensions(), 1),
         geometricZeroField(),
-        pimple
+        pcorrControl
     );
 
     #include "continuityErrs.H"

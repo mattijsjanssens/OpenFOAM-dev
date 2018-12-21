@@ -23,95 +23,78 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "fvMesh.H"
-#include "fvMatrix.H"
-#include "geometricOneField.H"
-#include "velocityRamping.H"
+#include "dynamicInterpolatedFvMesh.H"
+#include "volFields.H"
+#include "pointFields.H"
 #include "addToRunTimeSelectionTable.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 namespace Foam
 {
-namespace fv
-{
-    defineTypeNameAndDebug(velocityRamping, 0);
-    addToRunTimeSelectionTable(option, velocityRamping, dictionary);
-}
+    defineTypeNameAndDebug(dynamicInterpolatedFvMesh, 0);
+    addToRunTimeSelectionTable
+    (
+        dynamicFvMesh,
+        dynamicInterpolatedFvMesh,
+        IOobject
+    );
 }
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::fv::velocityRamping::velocityRamping
-(
-    const word& name,
-    const word& modelType,
-    const dictionary& dict,
-    const fvMesh& mesh
-)
+Foam::dynamicInterpolatedFvMesh::dynamicInterpolatedFvMesh(const IOobject& io)
 :
-    cellSetOption(name, modelType, dict, mesh),
-    velocity_(vector::zero),
-    ramp_(nullptr)
-{
-    read(dict);
-}
+    dynamicFvMesh(io),
+    dynamicMeshCoeffs_
+    (
+        IOdictionary
+        (
+            IOobject
+            (
+                "dynamicMeshDict",
+                io.time().constant(),
+                *this,
+                IOobject::MUST_READ_IF_MODIFIED,
+                IOobject::NO_WRITE,
+                false
+            )
+        ).optionalSubDict(typeName + "Coeffs")
+    ),
+    pointInterpolator_(*this, dynamicMeshCoeffs_),
+    displacement_(dynamicMeshCoeffs_.lookup("displacement")),
+    points0_
+    (
+        displacement_
+      ? new pointIOField(points0IO(*this))
+      : nullptr
+    )
+{}
+
+
+// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
+
+Foam::dynamicInterpolatedFvMesh::~dynamicInterpolatedFvMesh()
+{}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-void Foam::fv::velocityRamping::addSup
-(
-    fvMatrix<vector>& eqn,
-    const label fieldi
-)
+bool Foam::dynamicInterpolatedFvMesh::update()
 {
-    add(geometricOneField(), eqn, fieldi);
-}
-
-
-void Foam::fv::velocityRamping::addSup
-(
-    const volScalarField& rho,
-    fvMatrix<vector>& eqn,
-    const label fieldi
-)
-{
-    add(rho, eqn, fieldi);
-}
-
-
-void Foam::fv::velocityRamping::addSup
-(
-    const volScalarField& alpha,
-    const volScalarField& rho,
-    fvMatrix<vector>& eqn,
-    const label fieldi
-)
-{
-    add((alpha*rho)(), eqn, fieldi);
-}
-
-
-bool Foam::fv::velocityRamping::read(const dictionary& dict)
-{
-    if (cellSetOption::read(dict))
+    if (displacement_)
     {
-        fieldNames_ = wordList(1, coeffs_.lookupOrDefault<word>("U", "U"));
-
-        applied_.setSize(1, false);
-
-        velocity_ = dict.lookupType<vector>("velocity");
-
-        ramp_ = Function1<scalar>::New("ramp", dict);
-
-        return true;
+        fvMesh::movePoints(points0_() + pointInterpolator_.curPointField()());
     }
     else
     {
-        return false;
+        fvMesh::movePoints(pointInterpolator_.curPointField());
     }
+
+    lookupObjectRef<volVectorField>("U").correctBoundaryConditions();
+
+    return true;
 }
 
 

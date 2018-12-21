@@ -27,7 +27,7 @@ if (Y.size())
             (
                 IOobject("Yt", runTime.timeName(), mesh),
                 mesh,
-                dimensionedScalar("Yt", dimless, 0)
+                dimensionedScalar(dimless, 0)
             )
         );
     }
@@ -52,7 +52,7 @@ if (Y.size())
 
             fvOptions.constrain(YiEqn);
 
-            YiEqn.solve(mesh.solver("Yi"));
+            YiEqn.solve("Yi");
 
             fvOptions.correct(Yi);
 
