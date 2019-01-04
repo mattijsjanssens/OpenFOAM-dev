@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     | Website:  https://openfoam.org
-    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2018 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,110 +22,90 @@ License
     along with OpenFOAM.  If not, see <http://www.gnu.org/licenses/>.
 
 Class
-    Foam::midPoint
+    Foam::functionEntries::ifEntry
 
 Description
-    Mid-point interpolation (weighting factors = 0.5) scheme class.
+    Conditional parsing of dictionary entries.
+
+    E.g.
+    \verbatim
+        U_inlet 15;
+
+        #if #calc "${U_inlet} < 10"
+            ..
+        #else
+            ..
+        #endif
+    \endverbatim
+
+    Note:
+    - only supports single line, '\' is not supported
+    - condition should be readable as a \c Switch
+      (supports 0,1, true, false, etc.)
+
+See also
+    Foam::functionEntries::ifeqEntry
+    Foam::Switch
 
 SourceFiles
-    midPoint.C
+    ifEntry.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef midPoint_H
-#define midPoint_H
+#ifndef ifEntry_H
+#define ifEntry_H
 
-#include "surfaceInterpolationScheme.H"
-#include "volFields.H"
+#include "ifeqEntry.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
+namespace functionEntries
+{
 
 /*---------------------------------------------------------------------------*\
-                           Class midPoint Declaration
+                          Class ifEntry Declaration
 \*---------------------------------------------------------------------------*/
 
-template<class Type>
-class midPoint
+class ifEntry
 :
-    public surfaceInterpolationScheme<Type>
+    public ifeqEntry
 {
+    friend class ifeqEntry;
+
     // Private Member Functions
 
+        //- Execute the functionEntry in a sub-dict context
+        static bool execute
+        (
+            DynamicList<filePos>& stack,
+            dictionary& parentDict,
+            Istream& is
+        );
+
+        //- Disallow default bitwise copy construct
+        ifEntry(const ifEntry&);
+
         //- Disallow default bitwise assignment
-        void operator=(const midPoint&);
+        void operator=(const ifEntry&);
 
 
 public:
 
     //- Runtime type information
-    TypeName("midPoint");
-
-
-    // Constructors
-
-        //- Construct from mesh
-        midPoint(const fvMesh& mesh)
-        :
-            surfaceInterpolationScheme<Type>(mesh)
-        {}
-
-        //- Construct from Istream
-        midPoint(const fvMesh& mesh, Istream&)
-        :
-            surfaceInterpolationScheme<Type>(mesh)
-        {}
-
-        //- Construct from faceFlux and Istream
-        midPoint
-        (
-            const fvMesh& mesh,
-            const surfaceScalarField&,
-            Istream&
-        )
-        :
-            surfaceInterpolationScheme<Type>(mesh)
-        {}
-
+    ClassName("if");
 
     // Member Functions
 
-        //- Return the interpolation weighting factors
-        tmp<surfaceScalarField> weights
-        (
-            const GeometricField<Type, fvPatchField, volMesh>&
-        ) const
-        {
-            tmp<surfaceScalarField> taw
-            (
-                surfaceScalarField::New
-                (
-                    "midPointWeights",
-                    this->mesh(),
-                    dimensionedScalar(dimless, 0.5)
-                )
-            );
-
-            surfaceScalarField::Boundary& awBf =
-                taw.ref().boundaryFieldRef();
-
-            forAll(awBf, patchi)
-            {
-                if (!awBf[patchi].coupled())
-                {
-                    awBf[patchi] = 1.0;
-                }
-            }
-
-            return taw;
-        }
+        //- Execute the functionEntry in a sub-dict context
+        static bool execute(dictionary& parentDict, Istream& is);
 };
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+} // End namespace functionEntries
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

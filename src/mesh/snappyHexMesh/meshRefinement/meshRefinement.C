@@ -1817,18 +1817,11 @@ Foam::tmp<Foam::pointVectorField> Foam::meshRefinement::makeDisplacementField
     // postprocessable field.
     tmp<pointVectorField> tfld
     (
-        new pointVectorField
+        pointVectorField::New
         (
-            IOobject
-            (
-                "pointDisplacement",
-                mesh.time().timeName(),
-                mesh,
-                IOobject::NO_READ,
-                IOobject::AUTO_WRITE
-            ),
+            "pointDisplacement",
             pMesh,
-            dimensionedVector("displacement", dimLength, Zero),
+            dimensionedVector(dimLength, Zero),
             patchFieldTypes
         )
     );
