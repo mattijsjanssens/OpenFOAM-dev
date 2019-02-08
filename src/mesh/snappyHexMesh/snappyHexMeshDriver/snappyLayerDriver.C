@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     | Website:  https://openfoam.org
-    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2019 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -850,8 +850,6 @@ Foam::snappyLayerDriver::makeLayerDisplacementField
         }
     }
 
-
-    const polyMesh& mesh = pMesh();
 
     // Note: time().timeName() instead of meshRefinement::timeName() since
     // postprocessable field.
@@ -2834,11 +2832,25 @@ void Foam::snappyLayerDriver::mergePatchFacesUndo
         duplicateFace[cpl[1]] = cpl[0];
     }
 
+    // Get a set of which patches are to have faces merged
+    labelHashSet patchIDs(meshRefiner_.meshedPatches());
+    forAll(mesh.boundaryMesh(), patchi)
+    {
+        if (layerParams.mergeFaces()[patchi] == layerParameters::mergeFace::no)
+        {
+            patchIDs.unset(patchi);
+        }
+        if (layerParams.mergeFaces()[patchi] == layerParameters::mergeFace::yes)
+        {
+            patchIDs.set(patchi);
+        }
+    }
+
     label nChanged = meshRefiner_.mergePatchFacesUndo
     (
         minCos,
         concaveCos,
-        meshRefiner_.meshedPatches(),
+        patchIDs,
         motionDict,
         duplicateFace
     );

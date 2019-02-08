@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     | Website:  https://openfoam.org
-    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2019 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -94,12 +94,11 @@ namespace Foam
     >::names[] =
     {
         "mesh",
-        "noRefinement",
+        "refinement",
         "scalarLevels",
         "layerSets",
         "layerFields"
     };
-
 }
 
 const Foam::NamedEnum<Foam::meshRefinement::IOdebugType, 5>
@@ -1784,8 +1783,6 @@ Foam::tmp<Foam::pointVectorField> Foam::meshRefinement::makeDisplacementField
     const labelList& adaptPatchIDs
 )
 {
-    const polyMesh& mesh = pMesh();
-
     // Construct displacement field.
     const pointBoundaryMesh& pointPatches = pMesh.boundary();
 
@@ -2895,7 +2892,7 @@ void Foam::meshRefinement::write
         write();
     }
 
-    if (writeFlags && !(writeFlags & NOWRITEREFINEMENT))
+    if (writeFlags & WRITEREFINEMENT)
     {
         meshCutter_.write();
         surfaceIndex_.write();

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     | Website:  https://openfoam.org
-    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2019 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -88,7 +88,7 @@ uniformTotalPressureFvPatchScalarField
     const fvPatchFieldMapper& mapper
 )
 :
-    fixedValueFvPatchScalarField(p, iF),  // Don't map
+    fixedValueFvPatchScalarField(ptf, p, iF, mapper, false), // Don't map
     UName_(ptf.UName_),
     phiName_(ptf.phiName_),
     rhoName_(ptf.rhoName_),
@@ -229,9 +229,9 @@ void Foam::uniformTotalPressureFvPatchScalarField::write(Ostream& os) const
     fvPatchScalarField::write(os);
     writeEntryIfDifferent<word>(os, "U", "U", UName_);
     writeEntryIfDifferent<word>(os, "phi", "phi", phiName_);
-    os.writeKeyword("rho") << rhoName_ << token::END_STATEMENT << nl;
-    os.writeKeyword("psi") << psiName_ << token::END_STATEMENT << nl;
-    os.writeKeyword("gamma") << gamma_ << token::END_STATEMENT << nl;
+    Foam::writeEntry(os, "rho", rhoName_);
+    Foam::writeEntry(os, "psi", psiName_);
+    Foam::writeEntry(os, "gamma", gamma_);
     p0_->writeData(os);
     writeEntry("value", os);
 }
