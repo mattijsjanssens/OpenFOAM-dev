@@ -212,4 +212,14 @@ void Foam::pointBoundaryMesh::updateMesh()
 }
 
 
+void Foam::pointBoundaryMesh::reorder
+(
+    const labelUList& oldToNew,
+    const bool validBoundary
+)
+{
+    pointPatchList::reorder(oldToNew);
+}
+
+
 // ************************************************************************* //

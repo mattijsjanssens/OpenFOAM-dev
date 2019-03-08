@@ -107,6 +107,13 @@ public:
 
         //- Correct polyBoundaryMesh after topology update
         void updateMesh();
+
+        //- Reorders patches. Ordering does not have to be done in
+        //  ascending or descending order. Reordering has to be unique.
+        //  (is shuffle) If validBoundary calls updateMesh()
+        //  after reordering to recalculate data (so call needs to be parallel
+        //  sync in that case)
+        void reorder(const labelUList&, const bool validBoundary);
 };
 
 
