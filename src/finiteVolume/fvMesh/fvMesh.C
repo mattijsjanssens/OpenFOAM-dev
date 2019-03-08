@@ -856,6 +856,148 @@ void Foam::fvMesh::updateMesh(const mapPolyMesh& mpm)
 }
 
 
+void Foam::fvMesh::addPatch
+(
+    const label insertPatchi,
+    const polyPatch& patch,
+    const dictionary& patchFieldDict,
+    const word& defaultPatchFieldType,
+    const bool validBoundary
+)
+{
+    const label sz = boundary_.size();
+
+    polyMesh::addPatch
+    (
+        insertPatchi,
+        patch,
+        patchFieldDict,
+        defaultPatchFieldType,
+        validBoundary
+    );
+
+    boundary_.setSize(sz+1);
+    boundary_.set
+    (
+        sz,
+        fvPatch::New
+        (
+            boundaryMesh()[insertPatchi],
+            boundary_
+        )
+    );
+
+    addPatchFields<volScalarField>
+    (
+        patchFieldDict,
+        defaultPatchFieldType,
+        Zero
+    );
+    addPatchFields<volVectorField>
+    (
+        patchFieldDict,
+        defaultPatchFieldType,
+        Zero
+    );
+    addPatchFields<volSphericalTensorField>
+    (
+        patchFieldDict,
+        defaultPatchFieldType,
+        Zero
+    );
+    addPatchFields<volSymmTensorField>
+    (
+        patchFieldDict,
+        defaultPatchFieldType,
+        Zero
+    );
+    addPatchFields<volTensorField>
+    (
+        patchFieldDict,
+        defaultPatchFieldType,
+        Zero
+    );
+
+    // Surface fields
+
+    addPatchFields<surfaceScalarField>
+    (
+        patchFieldDict,
+        defaultPatchFieldType,
+        Zero
+    );
+    addPatchFields<surfaceVectorField>
+    (
+        patchFieldDict,
+        defaultPatchFieldType,
+        Zero
+    );
+    addPatchFields<surfaceSphericalTensorField>
+    (
+        patchFieldDict,
+        defaultPatchFieldType,
+        Zero
+    );
+    addPatchFields<surfaceSymmTensorField>
+    (
+        patchFieldDict,
+        defaultPatchFieldType,
+        Zero
+    );
+    addPatchFields<surfaceTensorField>
+    (
+        patchFieldDict,
+        defaultPatchFieldType,
+        Zero
+    );
+
+
+    // Create reordering list
+    // patches before insert position stay as is
+    // patches after insert position move one up
+    labelList newToOld(boundary_.size());
+    for (label i = 0; i < insertPatchi; i++)
+    {
+        newToOld[i] = i;
+    }
+    for (label i = insertPatchi; i < sz; i++)
+    {
+        newToOld[i+1] = i;
+    }
+    newToOld[insertPatchi] = boundary_.size()-1;
+
+    reorderPatches(newToOld, validBoundary);
+}
+
+
+void Foam::fvMesh::reorderPatches
+(
+    const labelUList& newToOld,
+    const bool validBoundary
+)
+{
+    polyMesh::reorderPatches(newToOld, validBoundary);
+
+    const labelList oldToNew(invert(boundary_.size(), newToOld));
+
+    // Shuffle into place
+    boundary_.reorder(oldToNew);
+    boundary_.setSize(newToOld.size());
+
+    reorderPatchFields<volScalarField>(newToOld);
+    reorderPatchFields<volVectorField>(newToOld);
+    reorderPatchFields<volSphericalTensorField>(newToOld);
+    reorderPatchFields<volSymmTensorField>(newToOld);
+    reorderPatchFields<volTensorField>(newToOld);
+
+    reorderPatchFields<surfaceScalarField>(newToOld);
+    reorderPatchFields<surfaceVectorField>(newToOld);
+    reorderPatchFields<surfaceSphericalTensorField>(newToOld);
+    reorderPatchFields<surfaceSymmTensorField>(newToOld);
+    reorderPatchFields<surfaceTensorField>(newToOld);
+}
+
+
 bool Foam::fvMesh::writeObject
 (
     IOstream::streamFormat fmt,

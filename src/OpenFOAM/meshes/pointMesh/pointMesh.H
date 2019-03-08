@@ -48,7 +48,7 @@ namespace Foam
 
 class pointMesh
 :
-    public MeshObject<polyMesh, UpdateableMeshObject, pointMesh>,
+    public MeshObject<polyMesh, PatchMeshObject, pointMesh>,
     public GeoMesh<polyMesh>
 {
     // Permanent data
@@ -122,13 +122,24 @@ public:
         }
 
 
-        // Mesh motion
+        // Mesh callbacks
 
             //- Move points
-            bool movePoints();
+            virtual bool movePoints();
 
             //- Update the mesh corresponding to given map
-            void updateMesh(const mapPolyMesh& mpm);
+            virtual void updateMesh(const mapPolyMesh& mpm);
+
+            //- Inserted patch at patchi
+            virtual void addPatch(const label patchi);
+
+            //- Reordered/removed trailing patches. If validBoundary call is
+            //  parallel synced and all add the same patch with same settings
+            virtual void reorderPatches
+            (
+                const labelUList& newToOld,
+                const bool validBoundary
+            );
 
 
     // Member Operators

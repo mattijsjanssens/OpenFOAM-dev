@@ -131,4 +131,53 @@ void Foam::pointMesh::updateMesh(const mapPolyMesh& mpm)
 }
 
 
+void Foam::pointMesh::reorderPatches
+(
+    const labelUList& newToOld,
+    const bool validBoundary
+)
+{
+    if (debug)
+    {
+        Pout<< "pointMesh::reorderPatches( const labelUList&, const bool): "
+            << "Updating for reordered patches." << endl;
+        Pout<< endl;
+    }
+
+    const labelList oldToNew(invert(boundary_.size(), newToOld));
+    boundary_.reorder(oldToNew, validBoundary);
+    boundary_.setSize(newToOld.size());
+
+Pout<< "****reorderPatchFields<pointScalarField>(newToOld); " << endl;
+//     reorderPatchFields<pointScalarField>(newToOld);
+//     reorderPatchFields<pointVectorField>(newToOld);
+//     reorderPatchFields<pointSphericalTensorField>(newToOld);
+//     reorderPatchFields<pointSymmTensorField>(newToOld);
+//     reorderPatchFields<pointTensorField>(newToOld);
+}
+
+
+void Foam::pointMesh::addPatch(const label patchi)
+{
+    if (debug)
+    {
+        Pout<< "pointMesh::addPatch(const label): "
+            << "Adding patch at " << patchi << endl;
+        Pout<< endl;
+    }
+
+
+    const label sz = boundary_.size();
+    boundary_.setSize(sz+1);
+
+    
+
+
+    boundary_.updateMesh();
+
+    // Map all registered point fields
+    mapFields(mpm);
+}
+
+
 // ************************************************************************* //

@@ -1000,6 +1000,124 @@ void Foam::polyMesh::addZones
 }
 
 
+void Foam::polyMesh::addPatch
+(
+    const label insertPatchi,
+    const polyPatch& patch,
+    const dictionary& patchFieldDict,
+    const word& defaultPatchFieldType,
+    const bool validBoundary
+)
+{
+    label startFacei = nFaces();
+    if (insertPatchi < boundary_.size())
+    {
+        startFacei = boundary_[insertPatchi].start();
+    }
+
+    // Clear local fields and e.g. polyMesh parallelInfo.
+    clearGeom();
+    clearAddressing(true);
+    // Clear all but PatchMeshObjects
+    meshObject::clearUpto
+    <
+        polyMesh,
+        TopologicalMeshObject,
+        PatchMeshObject
+    >
+    (
+        *this
+    );
+    meshObject::clearUpto
+    <
+        pointMesh,
+        TopologicalMeshObject,
+        PatchMeshObject
+    >
+    (
+        *this
+    );
+
+    const label sz = boundary_.size();
+
+    // Add polyPatch at the end
+    boundary_.setSize(sz+1);
+    boundary_.set
+    (
+        sz,
+        patch.clone
+        (
+            boundary_,
+            insertPatchi,   // index
+            0,              // size
+            startFacei      // start
+        )
+    );
+
+    // Warn mesh objects
+    meshObject::addPatch<polyMesh>(*this, insertPatchi);
+    meshObject::addPatch<pointMesh>(*this, insertPatchi);
+
+
+    // Create reordering list
+    // patches before insert position stay as is
+    // patches after insert position move one up
+    labelList newToOld(boundary_.size());
+    for (label i = 0; i < insertPatchi; i++)
+    {
+        newToOld[i] = i;
+    }
+    for (label i = insertPatchi; i < sz; i++)
+    {
+        newToOld[i+1] = i;
+    }
+    newToOld[insertPatchi] = sz;
+
+    reorderPatches(newToOld, validBoundary);
+}
+
+
+void Foam::polyMesh::reorderPatches
+(
+    const labelUList& newToOld,
+    const bool validBoundary
+)
+{
+    // Clear local fields and e.g. polyMesh parallelInfo.
+    clearGeom();
+    clearAddressing(true);
+    // Clear all but PatchMeshObjects
+    meshObject::clearUpto
+    <
+        polyMesh,
+        TopologicalMeshObject,
+        PatchMeshObject
+    >
+    (
+        *this
+    );
+    meshObject::clearUpto
+    <
+        pointMesh,
+        TopologicalMeshObject,
+        PatchMeshObject
+    >
+    (
+        *this
+    );
+
+    const labelList oldToNew(invert(boundary_.size(), newToOld));
+
+    // Shuffle into place and truncate
+    boundary_.reorder(oldToNew, validBoundary);
+    boundary_.setSize(boundary_.size());
+
+    // Warn mesh objects
+    meshObject::reorderPatches<polyMesh>(*this, newToOld, validBoundary);
+    meshObject::reorderPatches<pointMesh>(*this, newToOld, validBoundary);
+}
+
+
 const Foam::pointField& Foam::polyMesh::points() const
 {
     if (clearedPrimitives_)
