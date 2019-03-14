@@ -45,6 +45,7 @@ typename Foam::pTraits<Type>::labelType Foam::fvMesh::validComponents() const
 template<class GeoField>
 void Foam::fvMesh::addPatchFields
 (
+    const label insertPatchi,
     const dictionary& patchFieldDict,
     const word& defaultPatchFieldType,
     const typename GeoField::value_type& defaultPatchValue

@@ -1009,11 +1009,31 @@ void Foam::polyMesh::addPatch
     const bool validBoundary
 )
 {
+    const label sz = boundary_.size();
+
     label startFacei = nFaces();
-    if (insertPatchi < boundary_.size())
+    if (insertPatchi < sz)
     {
         startFacei = boundary_[insertPatchi].start();
     }
+
+    // Create reordering list
+    // patches before insert position stay as is
+    // patches after insert position move one up
+    labelList newToOld(boundary_.size()+1);
+    for (label i = 0; i < insertPatchi; i++)
+    {
+        newToOld[i] = i;
+    }
+    for (label i = insertPatchi; i < sz; i++)
+    {
+        newToOld[i+1] = i;
+    }
+    newToOld[insertPatchi] = -1;
+DebugVar(newToOld);
+    reorderPatches(newToOld, validBoundary);
+
+
 
     // Clear local fields and e.g. polyMesh parallelInfo.
     clearGeom();
@@ -1038,13 +1058,11 @@ void Foam::polyMesh::addPatch
         *this
     );
 
-    const label sz = boundary_.size();
 
     // Add polyPatch at the end
-    boundary_.setSize(sz+1);
     boundary_.set
     (
-        sz,
+        insertPatchi,
         patch.clone
         (
             boundary_,
@@ -1057,23 +1075,6 @@ void Foam::polyMesh::addPatch
     // Warn mesh objects
     meshObject::addPatch<polyMesh>(*this, insertPatchi);
     meshObject::addPatch<pointMesh>(*this, insertPatchi);
-
-
-    // Create reordering list
-    // patches before insert position stay as is
-    // patches after insert position move one up
-    labelList newToOld(boundary_.size());
-    for (label i = 0; i < insertPatchi; i++)
-    {
-        newToOld[i] = i;
-    }
-    for (label i = insertPatchi; i < sz; i++)
-    {
-        newToOld[i+1] = i;
-    }
-    newToOld[insertPatchi] = sz;
-
-    reorderPatches(newToOld, validBoundary);
 }
 
 

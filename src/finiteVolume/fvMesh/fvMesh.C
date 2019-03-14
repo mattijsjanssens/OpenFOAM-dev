@@ -879,7 +879,7 @@ void Foam::fvMesh::addPatch
     boundary_.setSize(sz+1);
     boundary_.set
     (
-        sz,
+        insertPatchi,
         fvPatch::New
         (
             boundaryMesh()[insertPatchi],
@@ -889,30 +889,35 @@ void Foam::fvMesh::addPatch
 
     addPatchFields<volScalarField>
     (
+        insertPatchi,
         patchFieldDict,
         defaultPatchFieldType,
         Zero
     );
     addPatchFields<volVectorField>
     (
+        insertPatchi,
         patchFieldDict,
         defaultPatchFieldType,
         Zero
     );
     addPatchFields<volSphericalTensorField>
     (
+        insertPatchi,
         patchFieldDict,
         defaultPatchFieldType,
         Zero
     );
     addPatchFields<volSymmTensorField>
     (
+        insertPatchi,
         patchFieldDict,
         defaultPatchFieldType,
         Zero
     );
     addPatchFields<volTensorField>
     (
+        insertPatchi,
         patchFieldDict,
         defaultPatchFieldType,
         Zero
@@ -922,51 +927,39 @@ void Foam::fvMesh::addPatch
 
     addPatchFields<surfaceScalarField>
     (
+        insertPatchi,
         patchFieldDict,
         defaultPatchFieldType,
         Zero
     );
     addPatchFields<surfaceVectorField>
     (
+        insertPatchi,
         patchFieldDict,
         defaultPatchFieldType,
         Zero
     );
     addPatchFields<surfaceSphericalTensorField>
     (
+        insertPatchi,
         patchFieldDict,
         defaultPatchFieldType,
         Zero
     );
     addPatchFields<surfaceSymmTensorField>
     (
+        insertPatchi,
         patchFieldDict,
         defaultPatchFieldType,
         Zero
     );
     addPatchFields<surfaceTensorField>
     (
+        insertPatchi,
         patchFieldDict,
         defaultPatchFieldType,
         Zero
     );
-
-
-    // Create reordering list
-    // patches before insert position stay as is
-    // patches after insert position move one up
-    labelList newToOld(boundary_.size());
-    for (label i = 0; i < insertPatchi; i++)
-    {
-        newToOld[i] = i;
-    }
-    for (label i = insertPatchi; i < sz; i++)
-    {
-        newToOld[i+1] = i;
-    }
-    newToOld[insertPatchi] = boundary_.size()-1;
-
-    reorderPatches(newToOld, validBoundary);
 }
 
 
