@@ -130,9 +130,6 @@ public:
             //- Update the mesh corresponding to given map
             virtual void updateMesh(const mapPolyMesh& mpm);
 
-            //- Inserted patch at patchi
-            virtual void addPatch(const label patchi);
-
             //- Reordered/removed trailing patches. If validBoundary call is
             //  parallel synced and all add the same patch with same settings
             virtual void reorderPatches
@@ -140,6 +137,9 @@ public:
                 const labelUList& newToOld,
                 const bool validBoundary
             );
+
+            //- Inserted patch at patchi
+            virtual void addPatch(const label patchi);
 
 
     // Member Operators

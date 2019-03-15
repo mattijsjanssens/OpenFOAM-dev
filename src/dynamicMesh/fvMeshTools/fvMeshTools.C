@@ -67,144 +67,14 @@ Foam::label Foam::fvMeshTools::addPatch
         }
     }
 
-
-    // Below is all quite a hack. Feel free to change once there is a better
-    // mechanism to insert and reorder patches.
-
-    // Clear local fields and e.g. polyMesh parallelInfo.
-    mesh.clearOut();
-
-    label sz = polyPatches.size();
-
-    fvBoundaryMesh& fvPatches = const_cast<fvBoundaryMesh&>(mesh.boundary());
-
-    // Add polyPatch at the end
-    polyPatches.setSize(sz+1);
-    polyPatches.set
+    mesh.addPatch
     (
-        sz,
-        patch.clone
-        (
-            polyPatches,
-            insertPatchi,   // index
-            0,              // size
-            startFacei      // start
-        )
-    );
-    fvPatches.setSize(sz+1);
-    fvPatches.set
-    (
-        sz,
-        fvPatch::New
-        (
-            polyPatches[sz],  // point to newly added polyPatch
-            mesh.boundary()
-        )
-    );
-
-    addPatchFields<volScalarField>
-    (
-        mesh,
+        insertPatchi,
+        patch,
         patchFieldDict,
         defaultPatchFieldType,
-        Zero
+        validBoundary
     );
-    addPatchFields<volVectorField>
-    (
-        mesh,
-        patchFieldDict,
-        defaultPatchFieldType,
-        Zero
-    );
-    addPatchFields<volSphericalTensorField>
-    (
-        mesh,
-        patchFieldDict,
-        defaultPatchFieldType,
-        Zero
-    );
-    addPatchFields<volSymmTensorField>
-    (
-        mesh,
-        patchFieldDict,
-        defaultPatchFieldType,
-        Zero
-    );
-    addPatchFields<volTensorField>
-    (
-        mesh,
-        patchFieldDict,
-        defaultPatchFieldType,
-        Zero
-    );
-
-    // Surface fields
-
-    addPatchFields<surfaceScalarField>
-    (
-        mesh,
-        patchFieldDict,
-        defaultPatchFieldType,
-        Zero
-    );
-    addPatchFields<surfaceVectorField>
-    (
-        mesh,
-        patchFieldDict,
-        defaultPatchFieldType,
-        Zero
-    );
-    addPatchFields<surfaceSphericalTensorField>
-    (
-        mesh,
-        patchFieldDict,
-        defaultPatchFieldType,
-        Zero
-    );
-    addPatchFields<surfaceSymmTensorField>
-    (
-        mesh,
-        patchFieldDict,
-        defaultPatchFieldType,
-        Zero
-    );
-    addPatchFields<surfaceTensorField>
-    (
-        mesh,
-        patchFieldDict,
-        defaultPatchFieldType,
-        Zero
-    );
-
-    // Create reordering list
-    // patches before insert position stay as is
-    labelList oldToNew(sz+1);
-    for (label i = 0; i < insertPatchi; i++)
-    {
-        oldToNew[i] = i;
-    }
-    // patches after insert position move one up
-    for (label i = insertPatchi; i < sz; i++)
-    {
-        oldToNew[i] = i+1;
-    }
-    // appended patch gets moved to insert position
-    oldToNew[sz] = insertPatchi;
-
-    // Shuffle into place
-    polyPatches.reorder(oldToNew, validBoundary);
-    fvPatches.reorder(oldToNew);
-
-    reorderPatchFields<volScalarField>(mesh, oldToNew);
-    reorderPatchFields<volVectorField>(mesh, oldToNew);
-    reorderPatchFields<volSphericalTensorField>(mesh, oldToNew);
-    reorderPatchFields<volSymmTensorField>(mesh, oldToNew);
-    reorderPatchFields<volTensorField>(mesh, oldToNew);
-    reorderPatchFields<surfaceScalarField>(mesh, oldToNew);
-    reorderPatchFields<surfaceVectorField>(mesh, oldToNew);
-    reorderPatchFields<surfaceSphericalTensorField>(mesh, oldToNew);
-    reorderPatchFields<surfaceSymmTensorField>(mesh, oldToNew);
-    reorderPatchFields<surfaceTensorField>(mesh, oldToNew);
 
     return insertPatchi;
 }
@@ -273,12 +143,8 @@ void Foam::fvMeshTools::zeroPatchFields(fvMesh& mesh, const label patchi)
 // Deletes last patch
 void Foam::fvMeshTools::trimPatches(fvMesh& mesh, const label nPatches)
 {
-    // Clear local fields and e.g. polyMesh globalMeshData.
-    mesh.clearOut();
-
     polyBoundaryMesh& polyPatches =
         const_cast<polyBoundaryMesh&>(mesh.boundaryMesh());
-    fvBoundaryMesh& fvPatches = const_cast<fvBoundaryMesh&>(mesh.boundary());
 
     if (polyPatches.empty())
     {
@@ -302,21 +168,8 @@ void Foam::fvMeshTools::trimPatches(fvMesh& mesh, const label nPatches)
             << " patches to be deleted" << abort(FatalError);
     }
 
-    // Remove actual patches
-    polyPatches.setSize(nPatches);
-    fvPatches.setSize(nPatches);
-
-    trimPatchFields<volScalarField>(mesh, nPatches);
-    trimPatchFields<volVectorField>(mesh, nPatches);
-    trimPatchFields<volSphericalTensorField>(mesh, nPatches);
-    trimPatchFields<volSymmTensorField>(mesh, nPatches);
-    trimPatchFields<volTensorField>(mesh, nPatches);
-
-    trimPatchFields<surfaceScalarField>(mesh, nPatches);
-    trimPatchFields<surfaceVectorField>(mesh, nPatches);
-    trimPatchFields<surfaceSphericalTensorField>(mesh, nPatches);
-    trimPatchFields<surfaceSymmTensorField>(mesh, nPatches);
-    trimPatchFields<surfaceTensorField>(mesh, nPatches);
+    labelList newToOld(identity(nPatches));
+    mesh.reorderPatches(newToOld, false);
 }
 
 
@@ -328,27 +181,8 @@ void Foam::fvMeshTools::reorderPatches
     const bool validBoundary
 )
 {
-    polyBoundaryMesh& polyPatches =
-        const_cast<polyBoundaryMesh&>(mesh.boundaryMesh());
-    fvBoundaryMesh& fvPatches = const_cast<fvBoundaryMesh&>(mesh.boundary());
-
-    // Shuffle into place
-    polyPatches.reorder(oldToNew, validBoundary);
-    fvPatches.reorder(oldToNew);
-
-    reorderPatchFields<volScalarField>(mesh, oldToNew);
-    reorderPatchFields<volVectorField>(mesh, oldToNew);
-    reorderPatchFields<volSphericalTensorField>(mesh, oldToNew);
-    reorderPatchFields<volSymmTensorField>(mesh, oldToNew);
-    reorderPatchFields<volTensorField>(mesh, oldToNew);
-    reorderPatchFields<surfaceScalarField>(mesh, oldToNew);
-    reorderPatchFields<surfaceVectorField>(mesh, oldToNew);
-    reorderPatchFields<surfaceSphericalTensorField>(mesh, oldToNew);
-    reorderPatchFields<surfaceSymmTensorField>(mesh, oldToNew);
-    reorderPatchFields<surfaceTensorField>(mesh, oldToNew);
-
-    // Remove last.
-    trimPatches(mesh, nNewPatches);
+    const labelList newToOld(invert(nNewPatches, oldToNew));
+    mesh.reorderPatches(newToOld, validBoundary);
 }
 
 

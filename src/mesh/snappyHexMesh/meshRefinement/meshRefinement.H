@@ -196,14 +196,6 @@ private:
 
     // Private Member Functions
 
-        //- Add patchfield of given type to all fields on mesh
-        template<class GeoField>
-        static void addPatchFields(fvMesh&, const word& patchFieldType);
-
-        //- Reorder patchfields of all fields on mesh
-        template<class GeoField>
-        static void reorderPatchFields(fvMesh&, const labelList& oldToNew);
-
         //- Find out which faces have changed given cells (old mesh labels)
         //  that were marked for refinement.
         static labelList getChangedFaces
@@ -899,19 +891,6 @@ public:
 
 
         // Other topo changes
-
-            //- Helper:append patch to end of mesh.
-            static label appendPatch
-            (
-                fvMesh&,
-                const label insertPatchi,
-                const word&,
-                const dictionary&
-            );
-
-            //- Helper:add patch to mesh. Update all registered fields.
-            //  Used by addMeshedPatch to add patches originating from surfaces.
-            static label addPatch(fvMesh&, const word& name, const dictionary&);
 
             //- Add patch originating from meshing. Update meshedPatches_.
             label addMeshedPatch(const word& name, const dictionary&);

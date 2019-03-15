@@ -199,59 +199,6 @@ void Foam::meshRefinement::collectAndPrint
 }
 
 
-template<class GeoField>
-void Foam::meshRefinement::addPatchFields
-(
-    fvMesh& mesh,
-    const word& patchFieldType
-)
-{
-    HashTable<GeoField*> flds
-    (
-        mesh.objectRegistry::lookupClass<GeoField>()
-    );
-
-    forAllIter(typename HashTable<GeoField*>, flds, iter)
-    {
-        GeoField& fld = *iter();
-        typename GeoField::Boundary& fldBf =
-            fld.boundaryFieldRef();
-
-        label sz = fldBf.size();
-        fldBf.setSize(sz+1);
-        fldBf.set
-        (
-            sz,
-            GeoField::Patch::New
-            (
-                patchFieldType,
-                mesh.boundary()[sz],
-                fld()
-            )
-        );
-    }
-}
-
-
-template<class GeoField>
-void Foam::meshRefinement::reorderPatchFields
-(
-    fvMesh& mesh,
-    const labelList& oldToNew
-)
-{
-    HashTable<GeoField*> flds
-    (
-        mesh.objectRegistry::lookupClass<GeoField>()
-    );
-
-    forAllIter(typename HashTable<GeoField*>, flds, iter)
-    {
-        iter()->boundaryFieldRef().reorder(oldToNew);
-    }
-}
-
-
 template<class Enum>
 int Foam::meshRefinement::readFlags
 (

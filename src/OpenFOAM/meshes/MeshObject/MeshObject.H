@@ -302,9 +302,6 @@ public:
         UpdateableMeshObject<Mesh>(typeName, obr)
     {}
 
-    //- Inserted patch at patchi
-    virtual void addPatch(const label patchi) = 0;
-
     //- Reordered/removed trailing patches. If validBoundary call is parallel
     //  synced and all add the same patch with same settings
     virtual void reorderPatches
@@ -312,6 +309,9 @@ public:
         const labelUList& newToOld,
         const bool validBoundary
     ) = 0;
+
+    //- Inserted patch at patchi
+    virtual void addPatch(const label patchi) = 0;
 };
 
 

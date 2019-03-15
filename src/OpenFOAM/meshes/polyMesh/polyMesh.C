@@ -1000,6 +1000,44 @@ void Foam::polyMesh::addZones
 }
 
 
+void Foam::polyMesh::reorderPatches
+(
+    const labelUList& newToOld,
+    const bool validBoundary
+)
+{
+    // Clear local fields and e.g. polyMesh parallelInfo.
+    //clearGeom();  // would clear out pointMesh
+    boundary_.clearGeom();
+    clearAddressing(true);
+    // Clear all but PatchMeshObjects
+    meshObject::clearUpto
+    <
+        polyMesh,
+        TopologicalMeshObject,
+        PatchMeshObject
+    >
+    (
+        *this
+    );
+    meshObject::clearUpto
+    <
+        pointMesh,
+        TopologicalMeshObject,
+        PatchMeshObject
+    >
+    (
+        *this
+    );
+
+    boundary_.shuffle(newToOld, validBoundary);
+
+    // Warn mesh objects
+    meshObject::reorderPatches<polyMesh>(*this, newToOld, validBoundary);
+    meshObject::reorderPatches<pointMesh>(*this, newToOld, validBoundary);
+}
+
+
 void Foam::polyMesh::addPatch
 (
     const label insertPatchi,
@@ -1030,14 +1068,14 @@ void Foam::polyMesh::addPatch
         newToOld[i+1] = i;
     }
     newToOld[insertPatchi] = -1;
-DebugVar(newToOld);
-    reorderPatches(newToOld, validBoundary);
 
-
+    reorderPatches(newToOld, false);
 
     // Clear local fields and e.g. polyMesh parallelInfo.
-    clearGeom();
+    //clearGeom();  // would clear out pointMesh as well
+    boundary_.clearGeom();
     clearAddressing(true);
+
     // Clear all but PatchMeshObjects
     meshObject::clearUpto
     <
@@ -1059,7 +1097,7 @@ DebugVar(newToOld);
     );
 
 
-    // Add polyPatch at the end
+    // Insert polyPatch
     boundary_.set
     (
         insertPatchi,
@@ -1072,50 +1110,14 @@ DebugVar(newToOld);
         )
     );
 
+    if (validBoundary)
+    {
+        boundary_.updateMesh();
+    }
+
     // Warn mesh objects
     meshObject::addPatch<polyMesh>(*this, insertPatchi);
     meshObject::addPatch<pointMesh>(*this, insertPatchi);
-}
-
-
-void Foam::polyMesh::reorderPatches
-(
-    const labelUList& newToOld,
-    const bool validBoundary
-)
-{
-    // Clear local fields and e.g. polyMesh parallelInfo.
-    clearGeom();
-    clearAddressing(true);
-    // Clear all but PatchMeshObjects
-    meshObject::clearUpto
-    <
-        polyMesh,
-        TopologicalMeshObject,
-        PatchMeshObject
-    >
-    (
-        *this
-    );
-    meshObject::clearUpto
-    <
-        pointMesh,
-        TopologicalMeshObject,
-        PatchMeshObject
-    >
-    (
-        *this
-    );
-
-    const labelList oldToNew(invert(boundary_.size(), newToOld));
-
-    // Shuffle into place and truncate
-    boundary_.reorder(oldToNew, validBoundary);
-    boundary_.setSize(boundary_.size());
-
-    // Warn mesh objects
-    meshObject::reorderPatches<polyMesh>(*this, newToOld, validBoundary);
-    meshObject::reorderPatches<pointMesh>(*this, newToOld, validBoundary);
 }
 
 

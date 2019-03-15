@@ -226,7 +226,7 @@ public:
         //  (is shuffle) If validBoundary calls updateMesh()
         //  after reordering to recalculate data (so call needs to be parallel
         //  sync in that case)
-        void reorder(const labelUList&, const bool validBoundary);
+        void shuffle(const labelUList& newToOld, const bool validBoundary);
 
         //- writeData member function required by regIOobject
         bool writeData(Ostream&) const;

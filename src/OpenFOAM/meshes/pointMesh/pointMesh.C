@@ -29,7 +29,7 @@ License
 #include "pointFields.H"
 #include "MapGeometricFields.H"
 #include "MapPointField.H"
-
+#include "facePointPatch.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -72,7 +72,7 @@ void Foam::pointMesh::mapFields(const mapPolyMesh& mpm)
 
 Foam::pointMesh::pointMesh(const polyMesh& pMesh)
 :
-    MeshObject<polyMesh, Foam::UpdateableMeshObject, pointMesh>(pMesh),
+    MeshObject<polyMesh, Foam::PatchMeshObject, pointMesh>(pMesh),
     GeoMesh<polyMesh>(pMesh),
     boundary_(*this, pMesh.boundaryMesh())
 {
@@ -144,16 +144,14 @@ void Foam::pointMesh::reorderPatches
         Pout<< endl;
     }
 
-    const labelList oldToNew(invert(boundary_.size(), newToOld));
-    boundary_.reorder(oldToNew, validBoundary);
-    boundary_.setSize(newToOld.size());
+    boundary_.shuffle(newToOld, validBoundary);
 
-Pout<< "****reorderPatchFields<pointScalarField>(newToOld); " << endl;
-//     reorderPatchFields<pointScalarField>(newToOld);
-//     reorderPatchFields<pointVectorField>(newToOld);
-//     reorderPatchFields<pointSphericalTensorField>(newToOld);
-//     reorderPatchFields<pointSymmTensorField>(newToOld);
-//     reorderPatchFields<pointTensorField>(newToOld);
+    objectRegistry& db = const_cast<objectRegistry&>(thisDb());
+    ReorderPatchFields<pointScalarField>(db, newToOld);
+    ReorderPatchFields<pointVectorField>(db, newToOld);
+    ReorderPatchFields<pointSphericalTensorField>(db, newToOld);
+    ReorderPatchFields<pointSymmTensorField>(db, newToOld);
+    ReorderPatchFields<pointTensorField>(db, newToOld);
 }
 
 
@@ -166,17 +164,33 @@ void Foam::pointMesh::addPatch(const label patchi)
         Pout<< endl;
     }
 
+    const polyBoundaryMesh& pbm = mesh().boundaryMesh();
+    if (pbm.size() != boundary_.size())
+    {
+        FatalErrorInFunction << "Problem :"
+            << " pointBoundaryMesh size :" << boundary_.size()
+            << " polyBoundaryMesh size :" << pbm.size()
+            << exit(FatalError);
+    }
 
-    const label sz = boundary_.size();
-    boundary_.setSize(sz+1);
+    boundary_.set(patchi, facePointPatch::New(pbm[patchi], boundary_).ptr());
 
-    
+    objectRegistry& db = const_cast<objectRegistry&>(thisDb());
+    const dictionary d;
+    const word patchFieldType("calculated");
 
-
-    boundary_.updateMesh();
-
-    // Map all registered point fields
-    mapFields(mpm);
+    AddPatchFields<pointScalarField>(db, patchi, d, patchFieldType, Zero);
+    AddPatchFields<pointVectorField>(db, patchi, d, patchFieldType, Zero);
+    AddPatchFields<pointSphericalTensorField>
+    (
+        db,
+        patchi,
+        d,
+        patchFieldType,
+        Zero
+    );
+    AddPatchFields<pointSymmTensorField>(db, patchi, d, patchFieldType, Zero);
+    AddPatchFields<pointTensorField>(db, patchi, d, patchFieldType, Zero);
 }
 
 

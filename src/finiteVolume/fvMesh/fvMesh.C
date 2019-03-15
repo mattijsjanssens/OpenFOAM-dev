@@ -887,36 +887,42 @@ void Foam::fvMesh::addPatch
         )
     );
 
-    addPatchFields<volScalarField>
+    objectRegistry& db = const_cast<objectRegistry&>(thisDb());
+    AddPatchFields<volScalarField>
     (
+        db,
         insertPatchi,
         patchFieldDict,
         defaultPatchFieldType,
         Zero
     );
-    addPatchFields<volVectorField>
+    AddPatchFields<volVectorField>
     (
+        db,
         insertPatchi,
         patchFieldDict,
         defaultPatchFieldType,
         Zero
     );
-    addPatchFields<volSphericalTensorField>
+    AddPatchFields<volSphericalTensorField>
     (
+        db,
         insertPatchi,
         patchFieldDict,
         defaultPatchFieldType,
         Zero
     );
-    addPatchFields<volSymmTensorField>
+    AddPatchFields<volSymmTensorField>
     (
+        db,
         insertPatchi,
         patchFieldDict,
         defaultPatchFieldType,
         Zero
     );
-    addPatchFields<volTensorField>
+    AddPatchFields<volTensorField>
     (
+        db,
         insertPatchi,
         patchFieldDict,
         defaultPatchFieldType,
@@ -925,36 +931,41 @@ void Foam::fvMesh::addPatch
 
     // Surface fields
 
-    addPatchFields<surfaceScalarField>
+    AddPatchFields<surfaceScalarField>
     (
+        db,
         insertPatchi,
         patchFieldDict,
         defaultPatchFieldType,
         Zero
     );
-    addPatchFields<surfaceVectorField>
+    AddPatchFields<surfaceVectorField>
     (
+        db,
         insertPatchi,
         patchFieldDict,
         defaultPatchFieldType,
         Zero
     );
-    addPatchFields<surfaceSphericalTensorField>
+    AddPatchFields<surfaceSphericalTensorField>
     (
+        db,
         insertPatchi,
         patchFieldDict,
         defaultPatchFieldType,
         Zero
     );
-    addPatchFields<surfaceSymmTensorField>
+    AddPatchFields<surfaceSymmTensorField>
     (
+        db,
         insertPatchi,
         patchFieldDict,
         defaultPatchFieldType,
         Zero
     );
-    addPatchFields<surfaceTensorField>
+    AddPatchFields<surfaceTensorField>
     (
+        db,
         insertPatchi,
         patchFieldDict,
         defaultPatchFieldType,
@@ -971,23 +982,20 @@ void Foam::fvMesh::reorderPatches
 {
     polyMesh::reorderPatches(newToOld, validBoundary);
 
-    const labelList oldToNew(invert(boundary_.size(), newToOld));
+    boundary_.shuffle(newToOld, validBoundary);
 
-    // Shuffle into place
-    boundary_.reorder(oldToNew);
-    boundary_.setSize(newToOld.size());
+    objectRegistry& db = const_cast<objectRegistry&>(thisDb());
+    ReorderPatchFields<volScalarField>(db, newToOld);
+    ReorderPatchFields<volVectorField>(db, newToOld);
+    ReorderPatchFields<volSphericalTensorField>(db, newToOld);
+    ReorderPatchFields<volSymmTensorField>(db, newToOld);
+    ReorderPatchFields<volTensorField>(db, newToOld);
 
-    reorderPatchFields<volScalarField>(newToOld);
-    reorderPatchFields<volVectorField>(newToOld);
-    reorderPatchFields<volSphericalTensorField>(newToOld);
-    reorderPatchFields<volSymmTensorField>(newToOld);
-    reorderPatchFields<volTensorField>(newToOld);
-
-    reorderPatchFields<surfaceScalarField>(newToOld);
-    reorderPatchFields<surfaceVectorField>(newToOld);
-    reorderPatchFields<surfaceSphericalTensorField>(newToOld);
-    reorderPatchFields<surfaceSymmTensorField>(newToOld);
-    reorderPatchFields<surfaceTensorField>(newToOld);
+    ReorderPatchFields<surfaceScalarField>(db, newToOld);
+    ReorderPatchFields<surfaceVectorField>(db, newToOld);
+    ReorderPatchFields<surfaceSphericalTensorField>(db, newToOld);
+    ReorderPatchFields<surfaceSymmTensorField>(db, newToOld);
+    ReorderPatchFields<surfaceTensorField>(db, newToOld);
 }
 
 

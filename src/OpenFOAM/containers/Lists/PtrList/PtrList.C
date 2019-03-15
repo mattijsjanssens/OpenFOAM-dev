@@ -244,6 +244,25 @@ void Foam::PtrList<T>::reorder(const labelUList& oldToNew)
 }
 
 
+template<class T>
+void Foam::PtrList<T>::shuffle(const labelUList& newToOld)
+{
+    List<T*> newPtrs_(newToOld.size(), reinterpret_cast<T*>(0));
+
+    forAll(newToOld, newI)
+    {
+        label oldI = newToOld[newI];
+
+        if (oldI >= 0 && oldI < this->size())
+        {
+            newPtrs_[newI] = this->ptrs_[oldI];
+        }
+    }
+
+    this->ptrs_.transfer(newPtrs_);
+}
+
+
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
 
 template<class T>

@@ -111,6 +111,17 @@ void Foam::fvBoundaryMesh::movePoints()
 }
 
 
+void Foam::fvBoundaryMesh::shuffle
+(
+    const labelUList& newToOld,
+    const bool validBoundary
+)
+{
+    fvPatchList& patches = *this;
+    patches.shuffle(newToOld);
+}
+
+
 Foam::lduInterfacePtrsList Foam::fvBoundaryMesh::interfaces() const
 {
     lduInterfacePtrsList interfaces(size());
