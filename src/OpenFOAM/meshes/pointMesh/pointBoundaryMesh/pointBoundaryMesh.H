@@ -102,11 +102,14 @@ public:
         //- Find patch indices given a name
         labelList findIndices(const keyType&, const bool useGroups) const;
 
-        //- Correct polyBoundaryMesh after moving points
+        //- Correct pointBoundaryMesh after moving points
         void movePoints(const pointField&);
 
-        //- Correct polyBoundaryMesh after topology update
+        //- Correct pointBoundaryMesh after topology update
         void updateMesh();
+
+        //- Create pointBoundaryMesh from polyBoundaryMesh
+        void reset(const polyBoundaryMesh&);
 
         //- Reorders patches. Ordering does not have to be done in
         //  ascending or descending order. Reordering has to be unique.

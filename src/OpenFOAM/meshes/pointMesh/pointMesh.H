@@ -121,6 +121,9 @@ public:
             return GeoMesh<polyMesh>::mesh_.thisDb();
         }
 
+        //- Reset for changed polyMesh
+        void reset(const bool validBoundary);
+
 
         // Mesh callbacks
 

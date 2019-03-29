@@ -323,7 +323,7 @@ class fvMeshDistribute
             (
                 const label domain,
                 const wordList& fieldNames,
-                fvMesh&,
+                typename GeoField::Mesh&,
                 PtrList<GeoField>&,
                 const dictionary& fieldDicts
             );

@@ -342,7 +342,7 @@ void Foam::fvMeshDistribute::receiveFields
 (
     const label domain,
     const wordList& fieldNames,
-    fvMesh& mesh,
+    typename GeoField::Mesh& mesh,
     PtrList<GeoField>& fields,
     const dictionary& fieldDicts
 )
@@ -371,8 +371,8 @@ void Foam::fvMeshDistribute::receiveFields
                 IOobject
                 (
                     fieldNames[i],
-                    mesh.time().timeName(),
-                    mesh,
+                    mesh.thisDb().time().timeName(),
+                    mesh.thisDb(),
                     IOobject::NO_READ,
                     IOobject::AUTO_WRITE
                 ),

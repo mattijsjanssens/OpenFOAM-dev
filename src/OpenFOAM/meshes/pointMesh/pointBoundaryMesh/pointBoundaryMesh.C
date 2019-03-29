@@ -42,17 +42,7 @@ Foam::pointBoundaryMesh::pointBoundaryMesh
     pointPatchList(basicBdry.size()),
     mesh_(m)
 {
-    // Set boundary patches
-    pointPatchList& Patches = *this;
-
-    forAll(Patches, patchi)
-    {
-        Patches.set
-        (
-            patchi,
-            facePointPatch::New(basicBdry[patchi], *this).ptr()
-        );
-    }
+    reset(basicBdry);
 }
 
 
@@ -208,6 +198,22 @@ void Foam::pointBoundaryMesh::updateMesh()
                 operator[](patchi).updateMesh(pBufs);
             }
         }
+    }
+}
+
+
+void Foam::pointBoundaryMesh::reset(const polyBoundaryMesh& basicBdry)
+{
+    // Set boundary patches
+    pointPatchList& Patches = *this;
+
+    forAll(Patches, patchi)
+    {
+        Patches.set
+        (
+            patchi,
+            facePointPatch::New(basicBdry[patchi], *this).ptr()
+        );
     }
 }
 

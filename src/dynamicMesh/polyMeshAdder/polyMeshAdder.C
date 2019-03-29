@@ -36,6 +36,9 @@ License
 #include "polyRemovePoint.H"
 #include "polyTopoChange.H"
 
+#include "pointMesh.H"
+#include "facePointPatch.H"
+
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
 // Get index of patch in new set of patchnames/types
@@ -1964,6 +1967,8 @@ Foam::autoPtr<Foam::mapAddedPolyMesh> Foam::polyMeshAdder::add
     // Now we have extracted all information from all meshes.
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+    bool havePointMesh = mesh0.foundObject<pointMesh>(pointMesh::typeName);
+
     mesh0.resetMotion();    // delete any oldPoints.
     mesh0.resetPrimitives
     (
@@ -1993,6 +1998,34 @@ Foam::autoPtr<Foam::mapAddedPolyMesh> Foam::polyMeshAdder::add
         czCells,
         mesh0
     );
+
+    if (havePointMesh)
+    {
+        // Reset pointMesh
+DebugVar("done");
+        const pointMesh& pMesh0 = pointMesh::New(mesh0);
+
+        const_cast<pointMesh&>(pMesh0).reset(validBoundary);
+
+
+//         pointBoundaryMesh& patches =
+//             const_cast<pointBoundaryMesh&>(pMesh0.boundary());
+// 
+//         const polyBoundaryMesh& pbm0 = mesh0.boundaryMesh();
+// 
+//         //TBD. Something like: patches.reset(pbm0);
+//         patches.setSize(pbm0.size());
+//         forAll(patches, patchi)
+//         {
+// DebugVar(patchi);
+//             patches.set
+//             (
+//                 patchi,
+//                 facePointPatch::New(pbm0[patchi], patches).ptr()
+//             );
+//         }
+DebugVar("done");
+    }
 
     return mapPtr;
 }
