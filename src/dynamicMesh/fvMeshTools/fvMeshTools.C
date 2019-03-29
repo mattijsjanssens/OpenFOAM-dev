@@ -181,7 +181,19 @@ void Foam::fvMeshTools::reorderPatches
     const bool validBoundary
 )
 {
-    const labelList newToOld(invert(nNewPatches, oldToNew));
+    // Note: oldToNew might have entries beyond nNewPatches so
+    // cannot use invert
+    //const labelList newToOld(invert(nNewPatches, oldToNew));
+    labelList newToOld(nNewPatches, -1);
+    forAll(oldToNew, i)
+    {
+        label newi = oldToNew[i];
+
+        if (newi >= 0 && newi < nNewPatches)
+        {
+            newToOld[newi] = i;
+        }
+    }
     mesh.reorderPatches(newToOld, validBoundary);
 }
 
