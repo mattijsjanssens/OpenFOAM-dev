@@ -1006,8 +1006,8 @@ void Foam::polyMesh::reorderPatches
     const bool validBoundary
 )
 {
-    // Clear local fields and e.g. polyMesh parallelInfo.
-    //clearGeom();  // would clear out pointMesh
+    // Clear local fields and e.g. polyMesh parallelInfo. Do not clearGeom
+    // so we keep PatchMeshObjects intact.
     boundary_.clearGeom();
     clearAddressing(true);
     // Clear all but PatchMeshObjects

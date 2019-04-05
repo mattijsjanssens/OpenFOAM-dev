@@ -49,6 +49,11 @@ namespace Foam
 
 void Foam::fvMesh::clearGeomNotOldVol()
 {
+    if (debug)
+    {
+        Pout<< FUNCTION_NAME << "clearGeomNotOldVol" << endl;
+    }
+
     meshObject::clearUpto
     <
         fvMesh,
@@ -111,6 +116,11 @@ void Foam::fvMesh::updateGeomNotOldVol()
 
 void Foam::fvMesh::clearGeom()
 {
+    if (debug)
+    {
+        Pout<< FUNCTION_NAME << "Clearing geometric data" << endl;
+    }
+
     clearGeomNotOldVol();
 
     deleteDemandDrivenData(V0Ptr_);
@@ -125,7 +135,7 @@ void Foam::fvMesh::clearAddressing(const bool isMeshUpdate)
 {
     if (debug)
     {
-        InfoInFunction << "isMeshUpdate: " << isMeshUpdate << endl;
+        Pout<< FUNCTION_NAME << "isMeshUpdate: " << isMeshUpdate << endl;
     }
 
     if (isMeshUpdate)
@@ -166,7 +176,7 @@ void Foam::fvMesh::storeOldVol(const scalarField& V)
     {
         if (debug)
         {
-            InfoInFunction
+            Pout<< FUNCTION_NAME
                 << " Storing old time volumes since from time " << curTimeIndex_
                 << " and time now " << time().timeIndex()
                 << " V:" << V.size()
@@ -213,12 +223,12 @@ void Foam::fvMesh::storeOldVol(const scalarField& V)
 
         if (debug)
         {
-            InfoInFunction
+            Pout<< FUNCTION_NAME
                 << " Stored old time volumes V0:" << V0Ptr_->size()
                 << endl;
             if (V00Ptr_)
             {
-                InfoInFunction
+                Pout<< FUNCTION_NAME
                     << " Stored oldold time volumes V00:" << V00Ptr_->size()
                     << endl;
             }
@@ -264,7 +274,7 @@ Foam::fvMesh::fvMesh(const IOobject& io)
 {
     if (debug)
     {
-        InfoInFunction << "Constructing fvMesh from IOobject" << endl;
+        Pout<< FUNCTION_NAME << "Constructing fvMesh from IOobject" << endl;
     }
 
     // Check the existence of the cell volumes and read if present
@@ -374,7 +384,7 @@ Foam::fvMesh::fvMesh
 {
     if (debug)
     {
-        InfoInFunction << "Constructing fvMesh from cellShapes" << endl;
+        Pout<< FUNCTION_NAME << "Constructing fvMesh from cellShapes" << endl;
     }
 }
 
@@ -408,7 +418,7 @@ Foam::fvMesh::fvMesh
 {
     if (debug)
     {
-        InfoInFunction << "Constructing fvMesh from components" << endl;
+        Pout<< FUNCTION_NAME << "Constructing fvMesh from components" << endl;
     }
 }
 
@@ -441,7 +451,7 @@ Foam::fvMesh::fvMesh
 {
     if (debug)
     {
-        InfoInFunction << "Constructing fvMesh from components" << endl;
+        Pout<< FUNCTION_NAME << "Constructing fvMesh from components" << endl;
     }
 }
 
@@ -479,7 +489,7 @@ void Foam::fvMesh::removeFvBoundary()
 {
     if (debug)
     {
-        InfoInFunction << "Removing boundary patches." << endl;
+        Pout<< FUNCTION_NAME << "Removing boundary patches." << endl;
     }
 
     // Remove fvBoundaryMesh data first.
@@ -495,7 +505,7 @@ Foam::polyMesh::readUpdateState Foam::fvMesh::readUpdate()
 {
     if (debug)
     {
-        InfoInFunction << "Updating fvMesh.  ";
+        Pout<< FUNCTION_NAME << "Updating fvMesh.  ";
     }
 
     polyMesh::readUpdateState state = polyMesh::readUpdate();
@@ -563,7 +573,7 @@ void Foam::fvMesh::mapFields(const mapPolyMesh& meshMap)
 {
     if (debug)
     {
-        InfoInFunction
+        Pout<< FUNCTION_NAME
             << " nOldCells:" << meshMap.nOldCells()
             << " nCells:" << nCells()
             << " nOldFaces:" << meshMap.nOldFaces()
@@ -865,6 +875,20 @@ void Foam::fvMesh::addPatch
     const bool validBoundary
 )
 {
+    // Remove my local data (see updateMesh)
+    // Clear mesh motion flux
+    deleteDemandDrivenData(phiPtr_);
+
+    // Clear the sliced fields
+    clearGeomNotOldVol();
+
+    // Clear the current volume and other geometry factors
+    surfaceInterpolation::clearOut();
+
+    // Clear any non-updateable addressing
+    clearAddressing(true);
+
+
     const label sz = boundary_.size();
 
     polyMesh::addPatch

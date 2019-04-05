@@ -81,7 +81,6 @@ Foam::autoPtr<Foam::mapAddedPolyMesh> Foam::fvMeshAdder::add
         mesh0.foundObject<pointMesh>(pointMesh::typeName);
     if (havePointMesh)
     {
-Pout<< "*** FOUND POINTMESH" << endl;
         const polyBoundaryMesh& pbm0 = mesh0.boundaryMesh();
         oldMeshPoints0.setSize(pbm0.size());
         forAll(pbm0, patchi)
@@ -89,13 +88,6 @@ Pout<< "*** FOUND POINTMESH" << endl;
             oldMeshPoints0[patchi] = pbm0[patchi].meshPoints();
         }
     }
-
-DebugVar("** Befroe");
-    mesh0.clearOut();
-//mesh0.clearGeom();
-//mesh0.clearAddressing(true);
-DebugVar("** After");
-
 
     // Resulting merged mesh (polyMesh only!)
     autoPtr<mapAddedPolyMesh> mapPtr
@@ -137,11 +129,16 @@ DebugVar("** After");
     {
         // Recreate point mesh
         const pointMesh& pointMesh0 = pointMesh::New(mesh0);
-DebugVar(pointMesh0.size());
 
         MapPointFields<scalar>(mapPtr, pointMesh0, oldMeshPoints0, mesh1);
         MapPointFields<vector>(mapPtr, pointMesh0, oldMeshPoints0, mesh1);
-        MapPointFields<sphericalTensor>(mapPtr, pointMesh0, oldMeshPoints0, mesh1);
+        MapPointFields<sphericalTensor>
+        (
+            mapPtr,
+            pointMesh0,
+            oldMeshPoints0,
+            mesh1
+        );
         MapPointFields<symmTensor>(mapPtr, pointMesh0, oldMeshPoints0, mesh1);
         MapPointFields<tensor>(mapPtr, pointMesh0, oldMeshPoints0, mesh1);
     }
