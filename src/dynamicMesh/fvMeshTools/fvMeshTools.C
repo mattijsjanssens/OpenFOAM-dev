@@ -24,6 +24,7 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "fvMeshTools.H"
+#include "pointFields.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -90,16 +91,22 @@ void Foam::fvMeshTools::setPatchFields
     setPatchFields<volSphericalTensorField>(mesh, patchi, patchFieldDict);
     setPatchFields<volSymmTensorField>(mesh, patchi, patchFieldDict);
     setPatchFields<volTensorField>(mesh, patchi, patchFieldDict);
+
     setPatchFields<surfaceScalarField>(mesh, patchi, patchFieldDict);
     setPatchFields<surfaceVectorField>(mesh, patchi, patchFieldDict);
-    setPatchFields<surfaceSphericalTensorField>
-    (
-        mesh,
-        patchi,
-        patchFieldDict
-    );
+    setPatchFields<surfaceSphericalTensorField>(mesh, patchi, patchFieldDict);
     setPatchFields<surfaceSymmTensorField>(mesh, patchi, patchFieldDict);
     setPatchFields<surfaceTensorField>(mesh, patchi, patchFieldDict);
+
+    if (mesh.foundObject<pointMesh>(pointMesh::typeName))
+    {
+        pointMesh& pm = const_cast<pointMesh&>(pointMesh::New(mesh));
+        setPatchFields<pointScalarField>(pm, patchi, patchFieldDict);
+        setPatchFields<pointVectorField>(pm, patchi, patchFieldDict);
+        setPatchFields<pointSphericalTensorField>(pm, patchi, patchFieldDict);
+        setPatchFields<pointSymmTensorField>(pm, patchi, patchFieldDict);
+        setPatchFields<pointTensorField>(pm, patchi, patchFieldDict);
+    }
 }
 
 
@@ -107,67 +114,25 @@ void Foam::fvMeshTools::zeroPatchFields(fvMesh& mesh, const label patchi)
 {
     setPatchFields<volScalarField>(mesh, patchi, Zero);
     setPatchFields<volVectorField>(mesh, patchi, Zero);
-    setPatchFields<volSphericalTensorField>
-    (
-        mesh,
-        patchi,
-        Zero
-    );
-    setPatchFields<volSymmTensorField>
-    (
-        mesh,
-        patchi,
-        Zero
-    );
+    setPatchFields<volSphericalTensorField>(mesh, patchi, Zero);
+    setPatchFields<volSymmTensorField>(mesh, patchi, Zero);
     setPatchFields<volTensorField>(mesh, patchi, Zero);
+
     setPatchFields<surfaceScalarField>(mesh, patchi, Zero);
     setPatchFields<surfaceVectorField>(mesh, patchi, Zero);
-    setPatchFields<surfaceSphericalTensorField>
-    (
-        mesh,
-        patchi,
-        Zero
-    );
-    setPatchFields<surfaceSymmTensorField>
-    (
-        mesh,
-        patchi,
-        Zero
-    );
+    setPatchFields<surfaceSphericalTensorField>(mesh, patchi, Zero);
+    setPatchFields<surfaceSymmTensorField>(mesh, patchi, Zero);
     setPatchFields<surfaceTensorField>(mesh, patchi, Zero);
-}
 
-
-// Deletes last patch
-void Foam::fvMeshTools::trimPatches(fvMesh& mesh, const label nPatches)
-{
-    polyBoundaryMesh& polyPatches =
-        const_cast<polyBoundaryMesh&>(mesh.boundaryMesh());
-
-    if (polyPatches.empty())
+    if (mesh.foundObject<pointMesh>(pointMesh::typeName))
     {
-        FatalErrorInFunction
-            << "No patches in mesh"
-            << abort(FatalError);
+        pointMesh& pm = const_cast<pointMesh&>(pointMesh::New(mesh));
+        setPatchFields<pointScalarField>(pm, patchi, Zero);
+        setPatchFields<pointVectorField>(pm, patchi, Zero);
+        setPatchFields<pointSphericalTensorField>(pm, patchi, Zero);
+        setPatchFields<pointSymmTensorField>(pm, patchi, Zero);
+        setPatchFields<pointTensorField>(pm, patchi, Zero);
     }
-
-    label nFaces = 0;
-    for (label patchi = nPatches; patchi < polyPatches.size(); patchi++)
-    {
-        nFaces += polyPatches[patchi].size();
-    }
-    reduce(nFaces, sumOp<label>());
-
-    if (nFaces)
-    {
-        FatalErrorInFunction
-            << "There are still " << nFaces
-            << " faces in " << polyPatches.size()-nPatches
-            << " patches to be deleted" << abort(FatalError);
-    }
-
-    labelList newToOld(identity(nPatches));
-    mesh.reorderPatches(newToOld, false);
 }
 
 

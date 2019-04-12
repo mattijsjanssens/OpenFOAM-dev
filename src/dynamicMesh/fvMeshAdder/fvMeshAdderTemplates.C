@@ -760,15 +760,10 @@ void Foam::fvMeshAdder::MapPointField
                     if (fnd == newMeshPointMap.end())
                     {
                         // Possibly an internal point
-                        //fld.primitiveFieldRef()[newPointi] = 
-                        Pout<< "** internal point:" << newPointi
-                            << " at:" << mesh().points()[newPointi] << endl;
                     }
                     else
                     {
                         // Part of new patch
-                        Pout<< "old patchpoint:" << oldPointi
-                            << " new patchpoint:" << fnd() << endl;
                         newToOld[fnd()] = oldPointi;
                     }
                 }
@@ -835,15 +830,10 @@ void Foam::fvMeshAdder::MapPointField
                         if (fnd == newMpm.end())
                         {
                             // Possibly an internal point
-                            //fld.primitiveFieldRef()[newPointi] = 
-                            Pout<< "** internal point:" << newPointi
-                                << " at:" << mesh().points()[newPointi] << endl;
                         }
                         else
                         {
                             // Part of new patch
-                            Pout<< "old patchpoint:" << oldPointi
-                                << " new patchpoint:" << fnd() << endl;
                             newToAdded[fnd()] = oldPointi;
                         }
                     }
@@ -875,8 +865,6 @@ void Foam::fvMeshAdder::MapPointField
                         if (fnd != newMpm.end())
                         {
                             // Part of new patch
-                            Pout<< "old patchpoint:" << oldPointi
-                                << " new patchpoint:" << fnd() << endl;
                             oldToNew[oldPointi] = fnd();
                         }
                     }
