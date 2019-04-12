@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     | Website:  https://openfoam.org
-    \\  /    A nd           | Copyright (C) 2017-2018 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2017-2019 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -624,21 +624,9 @@ bool Foam::fileOperations::uncollatedFileOperation::read
                 << " from file " << endl;
         }
 
-        // Set flag for e.g. codeStream
-        const bool oldGlobal = io.globalObject();
-        io.globalObject() = masterOnly;
-        // If codeStream originates from dictionary which is
-        // not IOdictionary we have a problem so use global
-        const bool oldFlag = regIOobject::masterOnlyReading;
-        regIOobject::masterOnlyReading = masterOnly;
-
         // Read file
         ok = io.readData(io.readStream(typeName));
         io.close();
-
-        // Restore flags
-        io.globalObject() = oldGlobal;
-        regIOobject::masterOnlyReading = oldFlag;
 
         if (debug)
         {

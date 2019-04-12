@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     | Website:  https://openfoam.org
-    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2019 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -49,16 +49,6 @@ SourceFiles
 namespace Foam
 {
 
-namespace functionEntries
-{
-    class codeStream;
-}
-namespace fileOperations
-{
-    class uncollatedFileOperation;
-    class masterUncollatedFileOperation;
-}
-
 /*---------------------------------------------------------------------------*\
                          Class regIOobject Declaration
 \*---------------------------------------------------------------------------*/
@@ -76,9 +66,6 @@ protected:
             const IOstream::streamFormat PstreamFormat,
             const word& typeName
         );
-
-        //- To flag master-only reading of objects
-        static bool masterOnlyReading;
 
 
 private:
@@ -111,13 +98,6 @@ private:
 
 
 public:
-
-        //- Declare friendship with any classes that need access to
-        //  masterOnlyReading
-        friend class functionEntries::codeStream;
-        friend class fileOperations::uncollatedFileOperation;
-        friend class fileOperations::masterUncollatedFileOperation;
-
 
     // Static data
 
@@ -276,6 +256,10 @@ public:
             //- Read object if modified (as set by call to modified)
             virtual bool readIfModified();
 
+            //- Is object same for all processors
+            //  Defaults to false, must be overridden by global IO classes
+            virtual bool global() const;
+
 
         // Writing
 
@@ -294,15 +278,6 @@ public:
 
             //- Write using setting from DB
             virtual bool write(const bool valid = true) const;
-
-
-        // Other
-
-            //- Is object global
-            virtual bool global() const
-            {
-                return false;
-            }
 
 
     // Member operators

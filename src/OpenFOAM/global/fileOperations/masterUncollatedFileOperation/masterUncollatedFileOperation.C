@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     | Website:  https://openfoam.org
-    \\  /    A nd           | Copyright (C) 2017-2018 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2017-2019 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -2100,7 +2100,7 @@ bool Foam::fileOperations::masterUncollatedFileOperation::read
 {
     bool ok = true;
 
-    if (io.globalObject())
+    if (io.global())
     {
         if (debug)
         {
@@ -2129,21 +2129,13 @@ bool Foam::fileOperations::masterUncollatedFileOperation::read
         // scatter operation for regIOobjects
 
         // Get my communication order
-        // const List<Pstream::commsStruct>& comms =
-        //(
-        //    (Pstream::nProcs(comm_) < Pstream::nProcsSimpleSum)
-        //  ? Pstream::linearCommunication(comm_)
-        //  : Pstream::treeCommunication(comm_)
-        //);
-        // const Pstream::commsStruct& myComm = comms[Pstream::myProcNo(comm_)];
         const List<Pstream::commsStruct>& comms =
         (
-            (Pstream::nProcs(Pstream::worldComm) < Pstream::nProcsSimpleSum)
-          ? Pstream::linearCommunication(Pstream::worldComm)
-          : Pstream::treeCommunication(Pstream::worldComm)
+            (Pstream::nProcs() < Pstream::nProcsSimpleSum)
+          ? Pstream::linearCommunication()
+          : Pstream::treeCommunication()
         );
-        const Pstream::commsStruct& myComm =
-            comms[Pstream::myProcNo(Pstream::worldComm)];
+        const Pstream::commsStruct& myComm = comms[Pstream::myProcNo()];
 
         // Receive from up
         if (myComm.above() != -1)

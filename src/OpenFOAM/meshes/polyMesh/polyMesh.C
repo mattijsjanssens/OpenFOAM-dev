@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     | Website:  https://openfoam.org
-    \\  /    A nd           | Copyright (C) 2011-2018 OpenFOAM Foundation
+    \\  /    A nd           | Copyright (C) 2011-2019 OpenFOAM Foundation
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -289,8 +289,10 @@ Foam::polyMesh::polyMesh(const IOobject& io)
     globalMeshDataPtr_(nullptr),
     moving_(false),
     topoChanging_(false),
-    curMotionTimeIndex_(time().timeIndex()),
-    oldPointsPtr_(nullptr)
+    curMotionTimeIndex_(-1),
+    oldPointsPtr_(nullptr),
+    oldCellCentresPtr_(nullptr),
+    storeOldCellCentres_(false)
 {
     if (!owner_.headerClassName().empty())
     {
@@ -471,8 +473,10 @@ Foam::polyMesh::polyMesh
     globalMeshDataPtr_(nullptr),
     moving_(false),
     topoChanging_(false),
-    curMotionTimeIndex_(time().timeIndex()),
-    oldPointsPtr_(nullptr)
+    curMotionTimeIndex_(-1),
+    oldPointsPtr_(nullptr),
+    oldCellCentresPtr_(nullptr),
+    storeOldCellCentres_(false)
 {
     // Check if the faces and cells are valid
     forAll(faces_, facei)
@@ -622,8 +626,10 @@ Foam::polyMesh::polyMesh
     globalMeshDataPtr_(nullptr),
     moving_(false),
     topoChanging_(false),
-    curMotionTimeIndex_(time().timeIndex()),
-    oldPointsPtr_(nullptr)
+    curMotionTimeIndex_(-1),
+    oldPointsPtr_(nullptr),
+    oldCellCentresPtr_(nullptr),
+    storeOldCellCentres_(false)
 {
     // Check if faces are valid
     forAll(faces_, facei)
@@ -1173,19 +1179,39 @@ const Foam::labelList& Foam::polyMesh::faceNeighbour() const
 
 const Foam::pointField& Foam::polyMesh::oldPoints() const
 {
+    if (!moving_)
+    {
+        return points_;
+    }
+
     if (oldPointsPtr_.empty())
     {
-        if (debug)
-        {
-            WarningInFunction
-                << endl;
-        }
-
-        oldPointsPtr_.reset(new pointField(points_));
-        curMotionTimeIndex_ = time().timeIndex();
+        FatalErrorInFunction
+            << "Old points have not been stored"
+            << exit(FatalError);
     }
 
     return oldPointsPtr_();
+}
+
+
+const Foam::pointField& Foam::polyMesh::oldCellCentres() const
+{
+    storeOldCellCentres_ = true;
+
+    if (!moving_)
+    {
+        return cellCentres();
+    }
+
+    if (oldCellCentresPtr_.empty())
+    {
+        FatalErrorInFunction
+            << "Old cell centres have not been stored"
+            << exit(FatalError);
+    }
+
+    return oldCellCentresPtr_();
 }
 
 
@@ -1270,12 +1296,16 @@ Foam::tmp<Foam::scalarField> Foam::polyMesh::movePoints
 
     moving(true);
 
-    // Pick up old points
+    // Pick up old points and cell centres
     if (curMotionTimeIndex_ != time().timeIndex())
     {
-        // Mesh motion in the new time step
         oldPointsPtr_.clear();
         oldPointsPtr_.reset(new pointField(points_));
+        if (storeOldCellCentres_)
+        {
+            oldCellCentresPtr_.clear();
+            oldCellCentresPtr_.reset(new pointField(cellCentres()));
+        }
         curMotionTimeIndex_ = time().timeIndex();
     }
 
@@ -1354,8 +1384,9 @@ Foam::tmp<Foam::scalarField> Foam::polyMesh::movePoints
 
 void Foam::polyMesh::resetMotion() const
 {
-    curMotionTimeIndex_ = 0;
+    curMotionTimeIndex_ = -1;
     oldPointsPtr_.clear();
+    oldCellCentresPtr_.clear();
 }
 
 
