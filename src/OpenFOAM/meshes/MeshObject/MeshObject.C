@@ -367,6 +367,53 @@ void Foam::meshObject::updateMesh(objectRegistry& obr, const mapPolyMesh& mpm)
 
 
 template<class Mesh>
+void Foam::meshObject::distributeMesh
+(
+    objectRegistry& obr,
+    const mapDistributePolyMesh& mpm
+)
+{
+    HashTable<GeometricMeshObject<Mesh>*> meshObjects
+    (
+        obr.lookupClass<GeometricMeshObject<Mesh>>()
+    );
+
+    if (meshObject::debug)
+    {
+        Pout<< "meshObject::distributeMesh(objectRegistry&, "
+               "const mapDistributePolyMesh& mpm) : updating "
+            << Mesh::typeName
+            << " meshObjects for region " << obr.name() << endl;
+    }
+
+    forAllIter
+    (
+        typename HashTable<GeometricMeshObject<Mesh>*>,
+        meshObjects,
+        iter
+    )
+    {
+        if (isA<PatchMeshObject<Mesh>>(*iter()))
+        {
+            if (meshObject::debug)
+            {
+                Pout<< "    Distributing " << iter()->name() << endl;
+            }
+            dynamic_cast<PatchMeshObject<Mesh>*>(iter())->distributeMesh(mpm);
+        }
+        else
+        {
+            if (meshObject::debug)
+            {
+                Pout<< "    Destroying " << iter()->name() << endl;
+            }
+            obr.checkOut(*iter());
+        }
+    }
+}
+
+
+template<class Mesh>
 void Foam::meshObject::addPatch(objectRegistry& obr, const label patchi)
 {
     HashTable<GeometricMeshObject<Mesh>*> meshObjects

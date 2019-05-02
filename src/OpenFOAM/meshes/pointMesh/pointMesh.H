@@ -144,6 +144,9 @@ public:
             //- Inserted patch at patchi
             virtual void addPatch(const label patchi);
 
+            //- Change according to map
+            virtual void distributeMesh(const mapDistributePolyMesh&);
+
 
     // Member Operators
 

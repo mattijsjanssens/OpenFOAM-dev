@@ -126,4 +126,16 @@ void Foam::polyMesh::updateMesh(const mapPolyMesh& mpm)
 }
 
 
+void Foam::polyMesh::distributeMesh(const mapDistributePolyMesh& mpm)
+{
+    if (debug)
+    {
+        InfoInFunction << "Doing distributeMesh" << endl;
+    }
+
+    meshObject::distributeMesh<polyMesh>(*this, mpm);
+    meshObject::distributeMesh<pointMesh>(*this, mpm);
+}
+
+
 // ************************************************************************* //

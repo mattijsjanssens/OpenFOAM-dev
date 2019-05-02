@@ -78,6 +78,7 @@ namespace Foam
 
 // Forward declarations
 class mapPolyMesh;
+class mapDistributePolyMesh;
 
 /*---------------------------------------------------------------------------*\
                          Class MeshObject Declaration
@@ -193,6 +194,13 @@ public:
             objectRegistry&,
             const labelUList& newToOld,
             const bool validBoundary
+        );
+
+        template<class Mesh>
+        static void distributeMesh
+        (
+            objectRegistry&,
+            const mapDistributePolyMesh&
         );
 
         template<class Mesh, template<class> class MeshObjectType>
@@ -312,6 +320,9 @@ public:
 
     //- Inserted patch at patchi
     virtual void addPatch(const label patchi) = 0;
+
+    //- Change according to map
+    virtual void distributeMesh(const mapDistributePolyMesh&) = 0;
 };
 
 

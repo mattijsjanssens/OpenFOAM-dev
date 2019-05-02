@@ -1000,6 +1000,32 @@ void Foam::fvMesh::reorderPatches
 }
 
 
+void Foam::fvMesh::distributeMesh(const mapDistributePolyMesh& mpm)
+{
+    // Update polyMesh.
+    polyMesh::distributeMesh(mpm);
+
+    if (VPtr_)
+    {
+    }
+
+    // Clear the sliced fields
+    clearGeomNotOldVol();
+
+    // Map all fields
+    distributeFields(mpm);
+
+    // Clear the current volume and other geometry factors
+    surfaceInterpolation::clearOut();
+
+    // Clear any non-updateable addressing
+    clearAddressing(true);
+
+    meshObject::distributeMesh<fvMesh>(*this, mpm);
+    meshObject::distributeMesh<lduMesh>(*this, mpm);
+}
+
+
 bool Foam::fvMesh::writeObject
 (
     IOstream::streamFormat fmt,

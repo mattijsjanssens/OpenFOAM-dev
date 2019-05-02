@@ -213,4 +213,13 @@ void Foam::pointMesh::addPatch(const label patchi)
 }
 
 
+void Foam::pointMesh::distributeMesh(const mapDistributePolyMesh&)
+{
+    if (debug)
+    {
+        Pout<< "pointMesh::distributeMesh(const mapDistributePolyMesh&)"<< endl;
+    }
+}
+
+
 // ************************************************************************* //

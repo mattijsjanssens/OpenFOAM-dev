@@ -70,7 +70,7 @@ namespace Foam
 
 class fvMeshLduAddressing;
 class volMesh;
-
+class mapDistributePolyMesh;
 
 /*---------------------------------------------------------------------------*\
                            Class fvMesh Declaration
@@ -344,6 +344,12 @@ public:
 
             //- Map all fields in time using given map.
             virtual void mapFields(const mapPolyMesh& mpm);
+
+            //- Update mesh corresponding to the given map
+            virtual void distributeMesh(const mapDistributePolyMesh& mpm);
+
+            //- Map all fields in time using given map.
+            virtual void distributeFields(const mapDistributePolyMesh& mpm);
 
             //- Add/insert single patch. If validBoundary the new situation
             //  is consistent across processors.
