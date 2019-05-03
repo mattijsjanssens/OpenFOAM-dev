@@ -130,7 +130,7 @@ void Foam::polyMesh::distributeMesh(const mapDistributePolyMesh& mpm)
 {
     if (debug)
     {
-        InfoInFunction << "Doing distributeMesh" << endl;
+        Pout<< FUNCTION_NAME << " : Doing distributeMesh" << endl;
     }
 
     meshObject::distributeMesh<polyMesh>(*this, mpm);

@@ -1537,7 +1537,7 @@ void Foam::fvMeshSubset::setLargeCellSubset
         fvMeshSubsetPtr_,
         IOobject
         (
-            baseMesh().name(),
+            baseMesh().name() + "_subset",
             baseMesh().time().timeName(),
             baseMesh().time(),
             IOobject::NO_READ,

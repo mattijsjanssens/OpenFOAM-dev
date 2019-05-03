@@ -36,6 +36,7 @@ License
 #include "fvMeshMapper.H"
 #include "mapClouds.H"
 #include "MeshObject.H"
+#include "mapDistributePolyMesh.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -1002,18 +1003,28 @@ void Foam::fvMesh::reorderPatches
 
 void Foam::fvMesh::distributeMesh(const mapDistributePolyMesh& mpm)
 {
+    // Mesh primitives and (registered) fields have already been distributed
+    // at this point. Do additional data.
+
     // Update polyMesh.
     polyMesh::distributeMesh(mpm);
 
-    if (VPtr_)
+    if (V0Ptr_)
     {
+        mpm.distributeCellData(*V0Ptr_);
+    }
+    if (V00Ptr_)
+    {
+        mpm.distributeCellData(*V00Ptr_);
+    }
+    if (phiPtr_)
+    {
+        // Distribute and flip
+        mpm.distributeFaceData(*phiPtr_);
     }
 
     // Clear the sliced fields
     clearGeomNotOldVol();
-
-    // Map all fields
-    distributeFields(mpm);
 
     // Clear the current volume and other geometry factors
     surfaceInterpolation::clearOut();

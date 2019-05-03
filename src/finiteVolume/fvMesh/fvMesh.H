@@ -348,9 +348,6 @@ public:
             //- Update mesh corresponding to the given map
             virtual void distributeMesh(const mapDistributePolyMesh& mpm);
 
-            //- Map all fields in time using given map.
-            virtual void distributeFields(const mapDistributePolyMesh& mpm);
-
             //- Add/insert single patch. If validBoundary the new situation
             //  is consistent across processors.
             virtual void addPatch

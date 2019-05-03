@@ -94,7 +94,7 @@ Foam::pointMesh::~pointMesh()
 {
     if (debug)
     {
-        Pout<< "~pointMesh::pointMesh()"
+        Pout<< "~pointMesh::pointMesh() of " << name()
             << endl;
         error::printStack(Pout);
     }
@@ -219,6 +219,8 @@ void Foam::pointMesh::distributeMesh(const mapDistributePolyMesh&)
     {
         Pout<< "pointMesh::distributeMesh(const mapDistributePolyMesh&)"<< endl;
     }
+    // Nothing to be done here since mesh and fields already distributed
+    // externally and above reorderPatches/addPatch
 }
 
 
