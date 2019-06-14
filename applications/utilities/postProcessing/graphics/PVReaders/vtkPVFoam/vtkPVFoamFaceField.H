@@ -29,6 +29,8 @@ InClass
 #ifndef vtkPVFoamFaceField_H
 #define vtkPVFoamFaceField_H
 
+#include "surfaceFields.H"
+
 // VTK includes
 #include "vtkCellData.h"
 #include "vtkFloatArray.h"
@@ -107,6 +109,179 @@ void Foam::vtkPVFoam::convertFaceField
         ->AddArray(cellData);
 
     cellData->Delete();
+}
+
+
+template<class Type>
+void Foam::vtkPVFoam::convertFaceField
+(
+    const GeometricField<Type, fvsPatchField, surfaceMesh>& tf,
+    vtkMultiBlockDataSet* output,
+    const arrayRange& range,
+    const label datasetNo,
+    const fvMesh& mesh,
+    const labelList& faceLabels
+)
+{
+    const label nComp = pTraits<Type>::nComponents;
+    const label nInternalFaces = mesh.nInternalFaces();
+
+    vtkFloatArray* cellData = vtkFloatArray::New();
+    cellData->SetNumberOfTuples(faceLabels.size());
+    cellData->SetNumberOfComponents(nComp);
+    cellData->Allocate(nComp*faceLabels.size());
+    cellData->SetName(tf.name().c_str());
+
+    if (debug)
+    {
+        Info<< "convert convertFaceField: "
+            << tf.name()
+            << " size = " << tf.size()
+            << " nComp=" << nComp
+            << " nTuples = " << faceLabels.size() <<  endl;
+    }
+
+    // To avoid whichPatch first flatten the field
+    Field<Type> flatFld(mesh.nFaces(), Zero);
+    SubField<Type>(flatFld, nInternalFaces) = tf.internalField();
+    forAll(tf.boundaryField(), patchi)
+    {
+        const fvsPatchField<Type>& fvs = tf.boundaryField()[patchi];
+
+        SubField<Type>
+        (
+            flatFld,
+            fvs.size(),
+            fvs.patch().start()
+        ) = fvs;
+    }
+
+
+    // for interior faces: average owner/neighbour
+    // for boundary faces: owner
+    forAll(faceLabels, facei)
+    {
+        const label faceNo = faceLabels[facei];
+
+        float vec[nComp];
+        for (direction d=0; d<nComp; ++d)
+        {
+            vec[d] = component(flatFld[faceNo], d);
+        }
+        vtkOpenFOAMTupleRemap<Type>(vec);
+
+        cellData->InsertTuple(facei, vec);
+    }
+
+    vtkPolyData::SafeDownCast
+    (
+        GetDataSetFromBlock(output, range, datasetNo)
+    )   ->GetCellData()
+        ->AddArray(cellData);
+
+    cellData->Delete();
+}
+
+
+template<class Type>
+void Foam::vtkPVFoam::convertFaceFields
+(
+    const fvMesh& mesh,
+    const IOobjectList& objects,
+    vtkMultiBlockDataSet* output
+)
+{
+    forAllConstIter(IOobjectList, objects, iter)
+    {
+        // restrict to GeometricField<Type, ...>
+        if
+        (
+            iter()->headerClassName()
+         != GeometricField<Type, fvsPatchField, surfaceMesh>::typeName
+        )
+        {
+            continue;
+        }
+
+        // Load field
+        const GeometricField<Type, fvsPatchField, surfaceMesh> tf
+        (
+            *iter(),
+            mesh
+        );
+
+        //
+        // Convert face zones - if activated
+        //
+        for
+        (
+            int partId = arrayRangeFaceZones_.start();
+            partId < arrayRangeFaceZones_.end();
+            ++partId
+        )
+        {
+            const word zoneName = getPartName(partId);
+            const label datasetNo = partDataset_[partId];
+
+            if (!partStatus_[partId] || datasetNo < 0)
+            {
+                continue;
+            }
+
+            const faceZoneMesh& zMesh = mesh.faceZones();
+            const label zoneId = zMesh.findZoneID(zoneName);
+
+            if (zoneId < 0)
+            {
+                continue;
+            }
+
+            convertFaceField
+            (
+                tf,
+                output,
+                arrayRangeFaceZones_,
+                datasetNo,
+                mesh,
+                zMesh[zoneId]
+            );
+
+            // TODO: points
+        }
+
+        //
+        // Convert face sets - if activated
+        //
+        for
+        (
+            int partId = arrayRangeFaceSets_.start();
+            partId < arrayRangeFaceSets_.end();
+            ++partId
+        )
+        {
+            const word selectName = getPartName(partId);
+            const label datasetNo = partDataset_[partId];
+
+            if (!partStatus_[partId] || datasetNo < 0)
+            {
+                continue;
+            }
+
+            const faceSet fSet(mesh, selectName);
+
+            convertFaceField
+            (
+                tf,
+                output,
+                arrayRangeFaceSets_,
+                datasetNo,
+                mesh,
+                fSet.toc()
+            );
+
+            // TODO: points
+        }
+    }
 }
 
 

@@ -264,7 +264,7 @@
             </StringVectorProperty>
             <StringVectorProperty
                 name="PointFieldStatus"
-                label="Point Fields"
+                label="Point/Surface Fields"
                 command="SetPointFieldArrayStatus"
                 number_of_elements="0"
                 repeat_command="1"
@@ -278,7 +278,7 @@
                     </RequiredProperties>
                 </ArraySelectionDomain>
                 <Documentation>
-                    Select point fields to load
+                    Select point/surface fields to load
                 </Documentation>
             </StringVectorProperty>
 

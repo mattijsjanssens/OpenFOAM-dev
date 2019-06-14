@@ -427,15 +427,54 @@ void Foam::vtkPVFoam::updateInfo()
         fieldsChanged_ = true;
     }
 
-    // Update volume, point and lagrangian fields
+    // Update volume, surface, point and lagrangian fields
     updateInfoFields<fvPatchField, volMesh>
     (
         reader_->GetVolFieldSelection()
     );
-    updateInfoFields<pointPatchField, pointMesh>
-    (
-        reader_->GetPointFieldSelection()
-    );
+//     updateInfoFields<fvsPatchField, surfaceMesh>
+//     (
+//         reader_->GetSurfaceFieldSelection()
+//     );
+//     updateInfoFields<pointPatchField, pointMesh>
+//     (
+//         reader_->GetPointFieldSelection()
+//     );
+    {
+        // Use the db directly since this might be called without a mesh,
+        // but the region must get added back in
+        word regionPrefix;
+        if (meshRegion_ != polyMesh::defaultRegion)
+        {
+            regionPrefix = meshRegion_;
+        }
+
+        vtkDataArraySelection* select = reader_->GetPointFieldSelection();
+
+        stringList enabledEntries(getSelectedArrayEntries(select));
+        select->RemoveAllArrays();
+
+        const Time& runTime = dbPtr_();
+        const instantList times = runTime.times();
+        addToSelection<fvsPatchField, surfaceMesh>
+        (
+            select,
+            runTime,
+            times,
+            regionPrefix
+        );
+        addToSelection<pointPatchField, pointMesh>
+        (
+            select,
+            runTime,
+            times,
+            regionPrefix
+        );
+
+        // Restore the enabled selections
+        setSelectedArrayEntries(select, enabledEntries);
+    }
+
     updateInfoLagrangianFields();
 
     if (debug)
@@ -557,7 +596,12 @@ void Foam::vtkPVFoam::Update
 
     // Update fields
     convertVolFields(output);
-    convertPointFields(output);
+    //convertSurfaceFields(output);
+    convertPointFields
+    (
+        output,
+        (reader_->GetIncludeZones() || reader_->GetIncludeSets())
+    );
     convertLagrangianFields(lagrangianOutput);
     if (debug)
     {

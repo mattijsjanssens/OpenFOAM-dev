@@ -1,6 +1,7 @@
 /* Note: enable vtkPolyhedron when available */
 
 EXE_INC = \
+     -Wno-old-style-cast \
     -I$(LIB_SRC)/meshTools/lnInclude \
     -I$(LIB_SRC)/finiteVolume/lnInclude \
     -I$(LIB_SRC)/dynamicMesh/lnInclude \

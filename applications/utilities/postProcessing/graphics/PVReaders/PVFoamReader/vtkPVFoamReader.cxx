@@ -78,6 +78,7 @@ vtkPVFoamReader::vtkPVFoamReader()
 
     PartSelection = vtkDataArraySelection::New();
     VolFieldSelection = vtkDataArraySelection::New();
+//    SurfaceFieldSelection = vtkDataArraySelection::New();
     PointFieldSelection = vtkDataArraySelection::New();
     LagrangianFieldSelection = vtkDataArraySelection::New();
 
@@ -100,6 +101,11 @@ vtkPVFoamReader::vtkPVFoamReader()
         vtkCommand::ModifiedEvent,
         this->SelectionObserver
     );
+//     SurfaceFieldSelection->AddObserver
+//     (
+//         vtkCommand::ModifiedEvent,
+//         this->SelectionObserver
+//     );
     PointFieldSelection->AddObserver
     (
         vtkCommand::ModifiedEvent,
@@ -139,6 +145,7 @@ vtkPVFoamReader::~vtkPVFoamReader()
 
     PartSelection->RemoveObserver(this->SelectionObserver);
     VolFieldSelection->RemoveObserver(this->SelectionObserver);
+//    SurfaceFieldSelection->RemoveObserver(this->SelectionObserver);
     PointFieldSelection->RemoveObserver(this->SelectionObserver);
     LagrangianFieldSelection->RemoveObserver(this->SelectionObserver);
 
@@ -146,6 +153,7 @@ vtkPVFoamReader::~vtkPVFoamReader()
 
     PartSelection->Delete();
     VolFieldSelection->Delete();
+//    SurfaceFieldSelection->Delete();
     PointFieldSelection->Delete();
     LagrangianFieldSelection->Delete();
 }
@@ -551,6 +559,51 @@ void vtkPVFoamReader::SetVolFieldArrayStatus(const char* name, int status)
         VolFieldSelection->DisableArray(name);
     }
 }
+
+
+// // ----------------------------------------------------------------------
+// // surfaceField selection list control
+// 
+// vtkDataArraySelection* vtkPVFoamReader::GetSurfaceFieldSelection()
+// {
+//     vtkDebugMacro(<<"GetSurfaceFieldSelection");
+//     return SurfaceFieldSelection;
+// }
+// 
+// 
+// int vtkPVFoamReader::GetNumberOfSurfaceFieldArrays()
+// {
+//     vtkDebugMacro(<<"GetNumberOfSurfaceFieldArrays");
+//     return SurfaceFieldSelection->GetNumberOfArrays();
+// }
+// 
+// 
+// const char* vtkPVFoamReader::GetSurfaceFieldArrayName(int index)
+// {
+//     vtkDebugMacro(<<"GetSurfaceFieldArrayName");
+//     return SurfaceFieldSelection->GetArrayName(index);
+// }
+// 
+// 
+// int vtkPVFoamReader::GetSurfaceFieldArrayStatus(const char* name)
+// {
+//     vtkDebugMacro(<<"GetSurfaceFieldArrayStatus");
+//     return SurfaceFieldSelection->ArrayIsEnabled(name);
+// }
+// 
+// 
+// void vtkPVFoamReader::SetSurfaceFieldArrayStatus(const char* name, int status)
+// {
+//     vtkDebugMacro(<<"SetSurfaceFieldArrayStatus");
+//     if (status)
+//     {
+//         SurfaceFieldSelection->EnableArray(name);
+//     }
+//     else
+//     {
+//         SurfaceFieldSelection->DisableArray(name);
+//     }
+// }
 
 
 // ----------------------------------------------------------------------

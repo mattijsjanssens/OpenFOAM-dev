@@ -29,6 +29,8 @@ InClass
 #ifndef vtkPVFoamUpdateInfoFields_H
 #define vtkPVFoamUpdateInfoFields_H
 
+#include "surfaceFields.H"
+
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 template<template<class> class patchType, class meshType>
@@ -100,38 +102,7 @@ void Foam::vtkPVFoam::updateInfoFields
 
     select->RemoveAllArrays();
 
-    forAll(times, timei)
-    {
-        // Search for list of objects for this time and mesh region
-        IOobjectList objects(dbPtr_(), times[timei].name(), regionPrefix);
-
-        //- Add volume fields to GUI
-        addToSelection<GeometricField<scalar, patchType, meshType>>
-        (
-            select,
-            objects
-        );
-        addToSelection<GeometricField<vector, patchType, meshType>>
-        (
-            select,
-            objects
-        );
-        addToSelection<GeometricField<sphericalTensor, patchType, meshType>>
-        (
-            select,
-            objects
-        );
-        addToSelection<GeometricField<symmTensor, patchType, meshType>>
-        (
-            select,
-            objects
-        );
-        addToSelection<GeometricField<tensor, patchType, meshType>>
-        (
-            select,
-            objects
-        );
-    }
+    addToSelection<patchType, meshType>(select, dbPtr_(), times, regionPrefix);
 
     // Restore the enabled selections
     setSelectedArrayEntries(select, enabledEntries);
