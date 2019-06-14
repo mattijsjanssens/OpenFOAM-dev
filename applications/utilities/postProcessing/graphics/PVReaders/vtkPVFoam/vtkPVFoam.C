@@ -600,7 +600,7 @@ void Foam::vtkPVFoam::Update
     convertPointFields
     (
         output,
-        (reader_->GetIncludeZones() || reader_->GetIncludeSets())
+        true    //(reader_->GetIncludeZones() || reader_->GetIncludeSets())
     );
     convertLagrangianFields(lagrangianOutput);
     if (debug)

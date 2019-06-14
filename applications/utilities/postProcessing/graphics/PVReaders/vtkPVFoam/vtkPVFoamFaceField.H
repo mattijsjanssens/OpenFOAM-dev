@@ -30,6 +30,7 @@ InClass
 #define vtkPVFoamFaceField_H
 
 #include "surfaceFields.H"
+#include "emptyFvsPatchField.H"
 
 // VTK includes
 #include "vtkCellData.h"
@@ -209,6 +210,41 @@ void Foam::vtkPVFoam::convertFaceFields
             *iter(),
             mesh
         );
+
+        //
+        // Convert patches - if activated
+        //
+        for
+        (
+            int partId = arrayRangePatches_.start();
+            partId < arrayRangePatches_.end();
+            ++partId
+        )
+        {
+            const word patchName = getPartName(partId);
+            const label datasetNo = partDataset_[partId];
+            const label patchId = mesh.boundaryMesh().findPatchID(patchName);
+
+            if (!partStatus_[partId] || datasetNo < 0 || patchId < 0)
+            {
+                continue;
+            }
+
+            const fvsPatchField<Type>& ptf = tf.boundaryField()[patchId];
+
+            if (!isType<emptyFvsPatchField<Type>>(ptf))
+            {
+                convertPatchField
+                (
+                    tf.name(),
+                    ptf,
+                    output,
+                    arrayRangePatches_,
+                    datasetNo
+                );
+            }
+        }
+
 
         //
         // Convert face zones - if activated
