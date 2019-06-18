@@ -155,12 +155,12 @@ public:
 //     const char* GetSurfaceFieldArrayName(int index);
 
     // Description:
-    // pointField selection list control
-    virtual vtkDataArraySelection* GetPointFieldSelection();
-    int  GetNumberOfPointFieldArrays();
-    int  GetPointFieldArrayStatus(const char* name);
-    void SetPointFieldArrayStatus(const char* name, int status);
-    const char* GetPointFieldArrayName(int index);
+    // Field selection list control
+    virtual vtkDataArraySelection* GetFieldSelection();
+    int  GetNumberOfFieldArrays();
+    int  GetFieldArrayStatus(const char* name);
+    void SetFieldArrayStatus(const char* name, int status);
+    const char* GetFieldArrayName(int index);
 
     // Description:
     // lagrangianField selection list control
@@ -245,7 +245,7 @@ private:
     vtkDataArraySelection* PartSelection;
     vtkDataArraySelection* VolFieldSelection;
 //    vtkDataArraySelection* SurfaceFieldSelection;
-    vtkDataArraySelection* PointFieldSelection;
+    vtkDataArraySelection* FieldSelection;
     vtkDataArraySelection* LagrangianFieldSelection;
 
     //- Cached data for output port0 (experimental!)

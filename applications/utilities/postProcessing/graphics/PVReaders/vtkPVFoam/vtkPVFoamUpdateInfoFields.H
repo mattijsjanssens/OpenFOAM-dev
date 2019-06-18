@@ -55,7 +55,8 @@ void Foam::vtkPVFoam::updateInfoFields
         regionPrefix = meshRegion_;
     }
 
-    const instantList times = dbPtr_().times();
+    const Time& runTime = dbPtr_();
+    const instantList times = runTime.times();
 
     stringList enabledEntries;
 
@@ -74,7 +75,7 @@ void Foam::vtkPVFoam::updateInfoFields
         forAll(times, timei)
         {
             // Search for list of objects for this time and mesh region
-            IOobjectList objects(dbPtr_(), times[timei].name(), regionPrefix);
+            IOobjectList objects(runTime, times[timei].name(), regionPrefix);
 
             forAllConstIter(IOobjectList, objects, iter)
             {
@@ -102,7 +103,28 @@ void Foam::vtkPVFoam::updateInfoFields
 
     select->RemoveAllArrays();
 
-    addToSelection<patchType, meshType>(select, dbPtr_(), times, regionPrefix);
+//    addToSelection<patchType, meshType>(select, runTime, times, regionPrefix);
+    addToSelection<fvPatchField, volMesh>
+    (
+        select,
+        runTime,
+        times,
+        regionPrefix
+    );
+    addToSelection<fvsPatchField, surfaceMesh>
+    (
+        select,
+        runTime,
+        times,
+        regionPrefix
+    );
+    addToSelection<pointPatchField, pointMesh>
+    (
+        select,
+        runTime,
+        times,
+        regionPrefix
+    );
 
     // Restore the enabled selections
     setSelectedArrayEntries(select, enabledEntries);

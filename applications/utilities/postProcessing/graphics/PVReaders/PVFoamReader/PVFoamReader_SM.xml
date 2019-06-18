@@ -212,7 +212,7 @@
             </StringVectorProperty>
             <StringVectorProperty
                 name="VolFieldStatus"
-                label="Volume Fields"
+                label="Fields"
                 command="SetVolFieldArrayStatus"
                 number_of_elements="0"
                 repeat_command="1"
@@ -226,7 +226,7 @@
                     </RequiredProperties>
                 </ArraySelectionDomain>
                 <Documentation>
-                    Select volume fields to load
+                    Select fields to load
                 </Documentation>
             </StringVectorProperty>
 
@@ -256,31 +256,32 @@
                 </Documentation>
             </StringVectorProperty>
 
-            <!-- Available pointFields array -->
+            <!-- Available Fields array
             <StringVectorProperty
-                name="PointFieldArrayStatus"
+                name="FieldArrayStatus"
                 information_only="1">
-                <ArraySelectionInformationHelper attribute_name="PointField"/>
+                <ArraySelectionInformationHelper attribute_name="Field"/>
             </StringVectorProperty>
             <StringVectorProperty
-                name="PointFieldStatus"
-                label="Point/Surface Fields"
-                command="SetPointFieldArrayStatus"
+                name="FieldStatus"
+                label="Fields"
+                command="SetFieldArrayStatus"
                 number_of_elements="0"
                 repeat_command="1"
                 number_of_elements_per_command="2"
                 element_types="2 0"
-                information_property="PointFieldArrayStatus"
+                information_property="FieldArrayStatus"
                 animateable="0">
                 <ArraySelectionDomain name="array_list">
                     <RequiredProperties>
-                        <Property name="PointFieldArrayStatus" function="ArrayList"/>
+                        <Property name="FieldArrayStatus" function="ArrayList"/>
                     </RequiredProperties>
                 </ArraySelectionDomain>
                 <Documentation>
-                    Select point/surface fields to load
+                    Select fields to load
                 </Documentation>
             </StringVectorProperty>
+             -->
 
             <PropertyGroup label="Selection">
                 <Property name="UiIncludeSets"/>
@@ -290,10 +291,10 @@
                 <Property name="PartStatus"/>
                 <Property name="VolFieldArrayStatus"/>
                 <Property name="VolFieldStatus"/>
+                <!-- <Property name="FieldArrayStatus"/>
+                <Property name="FieldStatus"/> -->
                 <Property name="LagrangianFieldArrayStatus"/>
                 <Property name="LagrangianFieldStatus"/>
-                <Property name="PointFieldArrayStatus"/>
-                <Property name="PointFieldStatus"/>
             </PropertyGroup>
 
             <Hints>

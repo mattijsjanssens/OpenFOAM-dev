@@ -494,12 +494,12 @@ class vtkPVFoam
             ////- Convert surface fields
             //void convertSurfaceFields(vtkMultiBlockDataSet*);
 
-            //- Convert point fields
-            void convertPointFields
-            (
-                vtkMultiBlockDataSet*,
-                const bool includeSurfaceFields
-            );
+//            //- Convert point fields
+//            void convertPointFields
+//            (
+//                vtkMultiBlockDataSet*,
+//                const bool includeSurfaceFields
+//            );
 
             //- Convert Lagrangian fields
             void convertLagrangianFields(vtkMultiBlockDataSet*);

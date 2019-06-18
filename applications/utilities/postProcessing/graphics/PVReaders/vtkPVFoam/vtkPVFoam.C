@@ -438,7 +438,7 @@ void Foam::vtkPVFoam::updateInfo()
 //     );
 //     updateInfoFields<pointPatchField, pointMesh>
 //     (
-//         reader_->GetPointFieldSelection()
+//         reader_->GetFieldSelection()
 //     );
     {
         // Use the db directly since this might be called without a mesh,
@@ -449,13 +449,20 @@ void Foam::vtkPVFoam::updateInfo()
             regionPrefix = meshRegion_;
         }
 
-        vtkDataArraySelection* select = reader_->GetPointFieldSelection();
+        vtkDataArraySelection* select = reader_->GetFieldSelection();
 
         stringList enabledEntries(getSelectedArrayEntries(select));
         select->RemoveAllArrays();
 
         const Time& runTime = dbPtr_();
         const instantList times = runTime.times();
+        addToSelection<fvPatchField, volMesh>
+        (
+            select,
+            runTime,
+            times,
+            regionPrefix
+        );
         addToSelection<fvsPatchField, surfaceMesh>
         (
             select,
@@ -597,11 +604,11 @@ void Foam::vtkPVFoam::Update
     // Update fields
     convertVolFields(output);
     //convertSurfaceFields(output);
-    convertPointFields
-    (
-        output,
-        true    //(reader_->GetIncludeZones() || reader_->GetIncludeSets())
-    );
+    //convertPointFields
+    //(
+    //    output,
+    //    true    //(reader_->GetIncludeZones() || reader_->GetIncludeSets())
+    //);
     convertLagrangianFields(lagrangianOutput);
     if (debug)
     {
