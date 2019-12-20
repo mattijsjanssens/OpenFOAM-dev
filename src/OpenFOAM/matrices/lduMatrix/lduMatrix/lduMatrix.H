@@ -684,7 +684,8 @@ public:
                 const lduInterfaceFieldPtrsList& interfaces,
                 const scalarField& psiif,
                 scalarField& result,
-                const direction cmpt
+                const direction cmpt,
+                const label startRequest // starting request (for non-blocking)
             ) const;
 
 

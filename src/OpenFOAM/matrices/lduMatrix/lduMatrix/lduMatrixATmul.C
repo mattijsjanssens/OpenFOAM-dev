@@ -53,6 +53,8 @@ void Foam::lduMatrix::Amul
     const scalar* const __restrict__ upperPtr = upper().begin();
     const scalar* const __restrict__ lowerPtr = lower().begin();
 
+    const label startRequest = Pstream::nRequests();
+
     // Initialise the update of interfaced interfaces
     initMatrixInterfaces
     (
@@ -85,7 +87,8 @@ void Foam::lduMatrix::Amul
         interfaces,
         psi,
         Apsi,
-        cmpt
+        cmpt,
+        startRequest
     );
 
     tpsi.clear();
@@ -113,6 +116,8 @@ void Foam::lduMatrix::Tmul
 
     const scalar* const __restrict__ lowerPtr = lower().begin();
     const scalar* const __restrict__ upperPtr = upper().begin();
+
+    const label startRequest = Pstream::nRequests();
 
     // Initialise the update of interfaced interfaces
     initMatrixInterfaces
@@ -144,7 +149,8 @@ void Foam::lduMatrix::Tmul
         interfaces,
         psi,
         Tpsi,
-        cmpt
+        cmpt,
+        startRequest
     );
 
     tpsi.clear();
@@ -243,6 +249,8 @@ void Foam::lduMatrix::residual
         }
     }
 
+    const label startRequest = Pstream::nRequests();
+
     // Initialise the update of interfaced interfaces
     initMatrixInterfaces
     (
@@ -275,7 +283,8 @@ void Foam::lduMatrix::residual
         interfaces,
         psi,
         rA,
-        cmpt
+        cmpt,
+        startRequest
     );
 }
 

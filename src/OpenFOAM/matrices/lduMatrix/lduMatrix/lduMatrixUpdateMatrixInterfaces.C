@@ -99,7 +99,8 @@ void Foam::lduMatrix::updateMatrixInterfaces
     const lduInterfaceFieldPtrsList& interfaces,
     const scalarField& psiif,
     scalarField& result,
-    const direction cmpt
+    const direction cmpt,
+    const label startRequest
 ) const
 {
     if (Pstream::defaultCommsType == Pstream::commsTypes::blocking)
@@ -174,7 +175,7 @@ void Foam::lduMatrix::updateMatrixInterfaces
             else
             {
                 // Block for all requests and remove storage
-                UPstream::waitRequests();
+                UPstream::waitRequests(startRequest);
             }
         }
 

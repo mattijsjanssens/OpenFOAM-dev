@@ -126,6 +126,8 @@ void Foam::GaussSeidelSmoother::smooth
     {
         bPrime = source;
 
+        const label startRequest = Pstream::nRequests();
+
         matrix_.initMatrixInterfaces
         (
             mBouCoeffs,
@@ -141,7 +143,8 @@ void Foam::GaussSeidelSmoother::smooth
             interfaces_,
             psi,
             bPrime,
-            cmpt
+            cmpt,
+            startRequest
         );
 
         scalar psii;

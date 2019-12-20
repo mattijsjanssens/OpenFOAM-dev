@@ -49,6 +49,8 @@ void Foam::GAMGSolver::interpolate
     Apsi = 0;
     scalar* __restrict__ ApsiPtr = Apsi.begin();
 
+    const label startRequest = Pstream::nRequests();
+
     m.initMatrixInterfaces
     (
         interfaceBouCoeffs,
@@ -71,7 +73,8 @@ void Foam::GAMGSolver::interpolate
         interfaces,
         psi,
         Apsi,
-        cmpt
+        cmpt,
+        startRequest
     );
 
     const label nCells = m.diag().size();

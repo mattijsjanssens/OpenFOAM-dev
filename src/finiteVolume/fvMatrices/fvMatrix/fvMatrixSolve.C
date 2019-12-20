@@ -165,6 +165,7 @@ Foam::SolverPerformance<Type> Foam::fvMatrix<Type>::solveSegregated
         // Use the initMatrixInterfaces and updateMatrixInterfaces to correct
         // bouCoeffsCmpt for the explicit part of the coupled boundary
         // conditions
+        const label startRequest = Pstream::nRequests();
         initMatrixInterfaces
         (
             bouCoeffsCmpt,
@@ -180,7 +181,8 @@ Foam::SolverPerformance<Type> Foam::fvMatrix<Type>::solveSegregated
             interfaces,
             psiCmpt,
             sourceCmpt,
-            cmpt
+            cmpt,
+            startRequest
         );
 
         solverPerformance solverPerf;

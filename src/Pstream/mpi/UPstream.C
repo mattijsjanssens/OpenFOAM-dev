@@ -294,32 +294,35 @@ void Foam::reduce
     label& requestID
 )
 {
-#ifdef MPIX_COMM_TYPE_SHARED
-    // Assume mpich2 with non-blocking collectives extensions. Once mpi3
-    // is available this will change.
-    MPI_Request request;
-    scalar v = Value;
-    MPIX_Ireduce
-    (
-        &v,
-        &Value,
-        1,
-        MPI_SCALAR,
-        MPI_SUM,
-        0,              // root
-        PstreamGlobals::MPICommunicators_[communicator],
-        &request
-    );
+#ifdef MPI_VERSION
+    #if (MPI_VERSION >= 3)
+        MPI_Request request;
+        scalar v = Value;
+        MPI_Iallreduce
+        (
+            &v,
+            &Value,
+            1,
+            MPI_SCALAR,
+            MPI_SUM,
+            PstreamGlobals::MPICommunicators_[communicator],
+            &request
+        );
 
-    requestID = PstreamGlobals::outstandingRequests_.size();
-    PstreamGlobals::outstandingRequests_.append(request);
+        requestID = PstreamGlobals::outstandingRequests_.size();
+        PstreamGlobals::outstandingRequests_.append(request);
 
-    if (UPstream::debug)
-    {
-        Pout<< "UPstream::allocateRequest for non-blocking reduce"
-            << " : request:" << requestID
-            << endl;
-    }
+        if (UPstream::debug)
+        {
+            Pout<< "UPstream::allocateRequest for non-blocking reduce"
+                << " : request:" << requestID
+                << endl;
+        }
+    #else
+        // Non-blocking not yet implemented in mpi
+        reduce(Value, bop, tag, communicator);
+        requestID = -1;
+    #endif
 #else
     // Non-blocking not yet implemented in mpi
     reduce(Value, bop, tag, communicator);
