@@ -46,7 +46,7 @@ DynamicList<MPI_Request> PstreamGlobals::outstandingRequests_;
 
 // Free'd non-blocking operations.
 //! \cond fileScope
-//DynamicList<label> PstreamGlobals::freedRequests_;
+DynamicList<label> PstreamGlobals::freedRequests_;
 //! \endcond
 
 // Max outstanding message tag operations.

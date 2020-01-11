@@ -191,7 +191,15 @@ void sumReduce
 void reduce
 (
     scalar& Value,
-    const sumOp<scalar>& bop,
+    const int tag,
+    const label comm,
+    label& request
+);
+
+void reduce
+(
+    scalar Value[],
+    const int size,
     const int tag,
     const label comm,
     label& request

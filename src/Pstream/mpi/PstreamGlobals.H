@@ -55,6 +55,8 @@ namespace PstreamGlobals
 
     extern DynamicList<MPI_Request> outstandingRequests_;
 
+    extern DynamicList<label> freedRequests_;
+
     extern int nTags_;
 
     extern DynamicList<int> freedTags_;

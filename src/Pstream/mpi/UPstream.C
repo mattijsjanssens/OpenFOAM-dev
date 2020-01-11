@@ -167,7 +167,15 @@ void Foam::UPstream::exit(int errnum)
 
     if (PstreamGlobals::outstandingRequests_.size())
     {
-        label n = PstreamGlobals::outstandingRequests_.size();
+        label n = 0;
+        forAll(PstreamGlobals::outstandingRequests_, i)
+        {
+            if (findIndex(PstreamGlobals::freedRequests_, i) == -1)
+            {
+                n++;
+            }
+        }
+
         PstreamGlobals::outstandingRequests_.clear();
 
         WarningInFunction
@@ -288,16 +296,23 @@ void Foam::sumReduce
 void Foam::reduce
 (
     scalar& Value,
-    const sumOp<scalar>& bop,
     const int tag,
     const label communicator,
     label& requestID
 )
 {
-#ifdef MPI_VERSION
-    #if (MPI_VERSION >= 3)
-        MPI_Request request;
-        scalar v = Value;
+    if (UPstream::warnComm != -1 && communicator != UPstream::warnComm)
+    {
+        Pout<< "** sumReduce:" << Value << " with comm:" << communicator
+            << " warnComm:" << UPstream::warnComm
+            << endl;
+        error::printStack(Pout);
+    }
+#if defined(MPI_VERSION) && (MPI_VERSION >= 3)
+    MPI_Request request;
+    scalar v = Value;
+    if
+    (
         MPI_Iallreduce
         (
             &v,
@@ -307,25 +322,124 @@ void Foam::reduce
             MPI_SUM,
             PstreamGlobals::MPICommunicators_[communicator],
             &request
-        );
+        )
+    )
+    {
+        FatalErrorInFunction
+            << "MPI_Iallreduce failed for " << v
+            << Foam::abort(FatalError);
+    }
 
+    if (PstreamGlobals::freedRequests_.size())
+    {
+        requestID = PstreamGlobals::freedRequests_.remove();
+    }
+    else
+    {
         requestID = PstreamGlobals::outstandingRequests_.size();
         PstreamGlobals::outstandingRequests_.append(request);
+    }
 
-        if (UPstream::debug)
-        {
-            Pout<< "UPstream::allocateRequest for non-blocking reduce"
-                << " : request:" << requestID
-                << endl;
-        }
-    #else
-        // Non-blocking not yet implemented in mpi
-        reduce(Value, bop, tag, communicator);
-        requestID = -1;
-    #endif
+    if (UPstream::debug)
+    {
+        Pout<< "UPstream::allocateRequest for non-blocking reduce"
+            << " : request:" << requestID
+            << endl;
+    }
 #else
     // Non-blocking not yet implemented in mpi
-    reduce(Value, bop, tag, communicator);
+    if
+    (
+        MPI_Allreduce
+        (
+            MPI_IN_PLACE,
+            Value,
+            1,
+            MPI_SCALAR,
+            MPI_SUM,
+            PstreamGlobals::MPICommunicators_[communicator]
+        )
+    )
+    {
+        FatalErrorInFunction
+            << "MPI_Allreduce failed for " << Value << Foam::abort(FatalError);
+    }
+    requestID = -1;
+#endif
+}
+
+
+void Foam::reduce
+(
+    scalar Value[],
+    const int size,
+    const int tag,
+    const label communicator,
+    label& requestID
+)
+{
+    if (UPstream::warnComm != -1 && communicator != UPstream::warnComm)
+    {
+        Pout<< "** sumReduce:" << UList<scalar>(Value, size)
+            << " with comm:" << communicator
+            << " warnComm:" << UPstream::warnComm << endl;
+        error::printStack(Pout);
+    }
+#if defined(MPI_VERSION) && (MPI_VERSION >= 3)
+    MPI_Request request;
+    if
+    (
+        MPI_Iallreduce
+        (
+            MPI_IN_PLACE,
+            Value,
+            size,
+            MPI_SCALAR,
+            MPI_SUM,
+            PstreamGlobals::MPICommunicators_[communicator],
+            &request
+        )
+    )
+    {
+        FatalErrorInFunction
+            << "MPI_Iallreduce failed for " << UList<scalar>(Value, size)
+            << Foam::abort(FatalError);
+    }
+
+    if (PstreamGlobals::freedRequests_.size())
+    {
+        requestID = PstreamGlobals::freedRequests_.remove();
+    }
+    else
+    {
+        requestID = PstreamGlobals::outstandingRequests_.size();
+        PstreamGlobals::outstandingRequests_.append(request);
+    }
+
+    if (UPstream::debug)
+    {
+        Pout<< "UPstream::allocateRequest for non-blocking reduce"
+            << " : request:" << requestID << endl;
+    }
+#else
+    // Non-blocking not yet implemented in mpi
+    if
+    (
+        MPI_Allreduce
+        (
+            MPI_IN_PLACE,
+            Value,
+            size,
+            MPI_SCALAR,
+            MPI_SUM,
+            PstreamGlobals::MPICommunicators_[communicator]
+        )
+    )
+    {
+        FatalErrorInFunction
+            << "MPI_Allreduce failed for " << UList<scalar>(Value, size)
+            << Foam::abort(FatalError);
+    }
     requestID = -1;
 #endif
 }
@@ -781,6 +895,9 @@ void Foam::UPstream::waitRequest(const label i)
         FatalErrorInFunction
             << "MPI_Wait returned with error" << Foam::endl;
     }
+
+    // Push index onto free cache
+    PstreamGlobals::freedRequests_.append(i);
 
     if (debug)
     {

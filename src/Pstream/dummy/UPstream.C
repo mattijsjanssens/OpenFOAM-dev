@@ -77,7 +77,18 @@ void Foam::sumReduce
 {}
 
 
-void Foam::reduce(scalar&, const sumOp<scalar>&, const int, const label, label&)
+void Foam::reduce(scalar&, const int, const label, label&)
+{}
+
+
+void Foam::reduce
+(
+    scalar Value[],
+    const int size,
+    const int,
+    const label,
+    label&
+)
 {}
 
 
