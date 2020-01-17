@@ -178,12 +178,16 @@ void Foam::UPstream::exit(int errnum)
 
         PstreamGlobals::outstandingRequests_.clear();
 
-        WarningInFunction
-            << "There are still " << n << " outstanding MPI_Requests." << endl
-            << "This means that your code exited before doing a"
-            << " UPstream::waitRequests()." << endl
-            << "This should not happen for a normal code exit."
-            << endl;
+        if (n)
+        {
+            WarningInFunction
+                << "There are still " << n << " outstanding MPI_Requests."
+                << endl
+                << "This means that your code exited before doing a"
+                << " UPstream::waitRequests()." << endl
+                << "This should not happen for a normal code exit."
+                << endl;
+        }
     }
 
     // Clean mpi communicators
