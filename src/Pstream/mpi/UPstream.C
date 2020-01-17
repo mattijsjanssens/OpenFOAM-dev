@@ -310,12 +310,11 @@ void Foam::reduce
     }
 #if defined(MPI_VERSION) && (MPI_VERSION >= 3)
     MPI_Request request;
-    scalar v = Value;
     if
     (
         MPI_Iallreduce
         (
-            &v,
+            MPI_IN_PLACE,
             &Value,
             1,
             MPI_SCALAR,
@@ -326,13 +325,14 @@ void Foam::reduce
     )
     {
         FatalErrorInFunction
-            << "MPI_Iallreduce failed for " << v
+            << "MPI_Iallreduce failed for " << Value
             << Foam::abort(FatalError);
     }
 
     if (PstreamGlobals::freedRequests_.size())
     {
         requestID = PstreamGlobals::freedRequests_.remove();
+        PstreamGlobals::outstandingRequests_[requestID] = request;
     }
     else
     {
@@ -371,7 +371,7 @@ void Foam::reduce
 
 void Foam::reduce
 (
-    scalar Value[],
+    scalar values[],
     const int size,
     const int tag,
     const label communicator,
@@ -380,7 +380,7 @@ void Foam::reduce
 {
     if (UPstream::warnComm != -1 && communicator != UPstream::warnComm)
     {
-        Pout<< "** sumReduce:" << UList<scalar>(Value, size)
+        Pout<< "** sumReduce:" << UList<scalar>(values, size)
             << " with comm:" << communicator
             << " warnComm:" << UPstream::warnComm << endl;
         error::printStack(Pout);
@@ -392,7 +392,7 @@ void Foam::reduce
         MPI_Iallreduce
         (
             MPI_IN_PLACE,
-            Value,
+            values,
             size,
             MPI_SCALAR,
             MPI_SUM,
@@ -402,13 +402,15 @@ void Foam::reduce
     )
     {
         FatalErrorInFunction
-            << "MPI_Iallreduce failed for " << UList<scalar>(Value, size)
+            << "MPI_Iallreduce failed for " << UList<scalar>(values, size)
             << Foam::abort(FatalError);
     }
+
 
     if (PstreamGlobals::freedRequests_.size())
     {
         requestID = PstreamGlobals::freedRequests_.remove();
+        PstreamGlobals::outstandingRequests_[requestID] = request;
     }
     else
     {
@@ -428,7 +430,7 @@ void Foam::reduce
         MPI_Allreduce
         (
             MPI_IN_PLACE,
-            Value,
+            values,
             size,
             MPI_SCALAR,
             MPI_SUM,
@@ -437,7 +439,7 @@ void Foam::reduce
     )
     {
         FatalErrorInFunction
-            << "MPI_Allreduce failed for " << UList<scalar>(Value, size)
+            << "MPI_Allreduce failed for " << UList<scalar>(values, size)
             << Foam::abort(FatalError);
     }
     requestID = -1;
@@ -873,7 +875,7 @@ void Foam::UPstream::waitRequest(const label i)
             << endl;
     }
 
-    if (i >= PstreamGlobals::outstandingRequests_.size())
+    if (i < 0 || i >= PstreamGlobals::outstandingRequests_.size())
     {
         FatalErrorInFunction
             << "There are " << PstreamGlobals::outstandingRequests_.size()
